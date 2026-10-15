@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node scripts/build-web.mjs",
     "check": "node proto/check.mjs && python sim/test_sim.py",
-    "android": "npm run build && npx cap sync android && npx cap open android"
+    "android": "npm run build && npx cap sync android && npx cap open android",
+    "assets": "node scripts/app-art.mjs"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.2.1",
@@ -17,6 +18,7 @@
     "@revenuecat/purchases-capacitor": "^13.7.4"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.5.3"
+    "@capacitor/cli": "^8.5.3",
+    "@resvg/resvg-js": "^2.6.2"
   }
 }
