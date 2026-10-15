@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1920">
+  <defs><linearGradient id="bg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#0f2219"/><stop offset="1" stop-color="#1d3b2a"/></linearGradient>
+  <radialGradient id="glow"><stop offset="0" stop-color="#ffd27a" stop-opacity=".35"/><stop offset=".5" stop-color="#f0b543" stop-opacity=".12"/><stop offset="1" stop-color="#f0b543" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1280" height="1920" fill="url(#bg)"/><circle cx="768" cy="857.6" r="704" fill="url(#glow)"/><svg x="307.2" y="524.8" width="640" height="640" viewBox="0 0 100 100">
+    <defs><radialGradient id="pg0"><stop offset="0" stop-color="#fff3a0" stop-opacity=".9"/><stop offset="1" stop-color="#f0b543" stop-opacity="0"/></radialGradient></defs>
+    <circle cx="80" cy="62" r="20" fill="url(#pg0)"/>
+    <ellipse cx="48" cy="74" rx="28" ry="22" fill="#6b4a3a"/>
+    <ellipse cx="48" cy="80" rx="16" ry="12" fill="#8a6650"/>
+    <circle cx="48" cy="46" r="23" fill="#7a5644"/>
+    <ellipse cx="48" cy="25" rx="21" ry="8" fill="#5f9a45"/><ellipse cx="44" cy="22" rx="12" ry="5" fill="#7cc46a"/>
+    <path d="M52 18 Q55 8 62 9 Q58 15 52 18 Z" fill="#9be08a"/>
+    <circle cx="39" cy="44" r="2.8" fill="#1a120d"/><circle cx="57" cy="44" r="2.8" fill="#1a120d"/>
+    <circle cx="40" cy="43" r=".9" fill="#fff"/><circle cx="58" cy="43" r=".9" fill="#fff"/>
+    <ellipse cx="48" cy="55" rx="10" ry="7" fill="#e8b4a0"/><circle cx="48" cy="51" r="4" fill="#e0607e"/>
+    <ellipse cx="34" cy="53" rx="4" ry="2.5" fill="#e0607e" opacity=".35"/><ellipse cx="62" cy="53" rx="4" ry="2.5" fill="#e0607e" opacity=".35"/>
+    <path d="M44 60 Q48 63 52 60" stroke="#5a3a2a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="30" cy="80" rx="7" ry="5" fill="#e8b4a0"/>
+    <path d="M66 70 L78 58" stroke="#5a4a3a" stroke-width="2.5"/><ellipse cx="66" cy="72" rx="7" ry="5" fill="#e8b4a0"/>
+    <path d="M76 50 Q80 44 84 50" stroke="#c9b48a" stroke-width="1.5" fill="none"/>
+    <rect x="75" y="51" width="10" height="13" rx="2.5" fill="#f7d77a" stroke="#6b5a3a" stroke-width="1.5"/><circle cx="80" cy="57.5" r="2.5" fill="#fff"/></svg><text x="640" y="1369.6" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="153.6" fill="#ffd27a">Glimmerwood</text></svg>
