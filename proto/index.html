@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Shardgrid Prototype</title>
+<style>
+  :root { --paper: #efe9dd; --ink: #1f2430; --muted: #6b6457; --accent: #c8553d; }
+  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink);
+    font: 16px/1.3 system-ui, sans-serif; overflow: hidden; touch-action: none; user-select: none; }
+  canvas { display: block; }
+  #hud { position: absolute; top: 10px; left: 0; right: 0; display: flex; justify-content: space-between;
+    align-items: flex-start; padding: 0 16px; pointer-events: none; }
+  #score { font-size: 34px; font-weight: 800; letter-spacing: -1px; }
+  #best { font-size: 13px; color: var(--muted); }
+  #best.near { color: var(--accent); animation: pulse .6s ease-in-out infinite alternate; }
+  @keyframes pulse { to { transform: scale(1.12); } }
+  #lvl { text-align: right; font-size: 13px; color: var(--muted); }
+  #bar { width: 120px; height: 6px; background: #d8d0c0; border-radius: 3px; margin-top: 4px; overflow: hidden; }
+  #fill { height: 100%; width: 0; background: var(--ink); transition: width .4s; }
+  #combo { position: absolute; left: 0; right: 0; text-align: center; font-weight: 800; font-size: 22px;
+    color: var(--accent); opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
+  #toast { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); background: var(--ink);
+    color: var(--paper); padding: 12px 18px; border-radius: 10px; font-weight: 700; opacity: 0;
+    transition: opacity .3s; pointer-events: none; text-align: center; }
+  #over { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+    background: rgba(31, 36, 48, .55); }
+  #over .card { background: var(--paper); border-radius: 14px; padding: 22px 26px; text-align: center; min-width: 240px; }
+  #over h2 { margin: 0 0 4px; font-size: 15px; color: var(--muted); font-weight: 600; }
+  #final { font-size: 44px; font-weight: 800; }
+  #over button { display: block; width: 100%; margin-top: 10px; padding: 12px; border: 0; border-radius: 10px;
+    font: inherit; font-weight: 700; cursor: pointer; }
+  #rescue { background: var(--accent); color: #fff; }
+  #again { background: var(--ink); color: var(--paper); }
+  #note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud">
+  <div><div id="score">0</div><div id="best">Best 0</div></div>
+  <div id="lvl"><span id="lvlText">Level 1 · Glass</span><div id="bar"><div id="fill"></div></div></div>
+</div>
+<div id="combo"></div>
+<div id="toast"></div>
+<div id="over"><div class="card">
+  <h2>Round over</h2>
+  <div id="final">0</div>
+  <div id="overBest"></div>
+  <button id="rescue">Rescue: shatter 3 lines</button>
+  <button id="again">Play again</button>
+  <div id="note">In the real game, Rescue is a rewarded ad (once per round).</div>
+</div></div>
+<script type="module">
+import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, fitsAnywhere, deal,
+  rescueCells, xpToNext } from "./game.js";
+
+const cfg = await (await fetch("../sim/generator.json")).json();
+const cat = buildCatalog(cfg);
+const THEMES = [
+  ["Glass", ["#7fd1c7", "#5fb3c9", "#9ad0e8", "#4f9fa8"]],
+  ["Paper", ["#f2c5a0", "#e8a87c", "#f6dcb8", "#d98f6b"]],
+  ["Slate", ["#a4adbc", "#8693a8", "#c3c9d4", "#6f7d94"]],
+  ["Copper", ["#d9895b", "#b86b45", "#e8a77e", "#a35a3a"]],
+  ["Gold", ["#f2c94c", "#e0b23a", "#f7dc85", "#c9982b"]],
+];
+
+// --- persistent progress (per-browser convenience only) ---
+const store = { get(k, d) { try { return JSON.parse(localStorage.getItem("sg." + k)) ?? d; } catch { return d; } },
+                set(k, v) { try { localStorage.setItem("sg." + k, JSON.stringify(v)); } catch {} } };
+let best = store.get("best", 0), level = store.get("level", 1), xp = store.get("xp", 0);
+
+// --- round state ---
+let board, tray, colors, uid, score, shown, combo, miss, rescueUsed, over;
+const theme = () => THEMES[Math.min(level, THEMES.length) - 1];
+function newRound() {
+  board = Array(64).fill(0); colors = {}; uid = 1; score = 0; shown = 0; combo = 0; miss = 0;
+  rescueUsed = false; over = false; bestFlagged = false;
+  tray = deal(Math.random, board, cat, cfg);
+  $("over").style.display = "none";
+}
+let bestFlagged = false;
+const $ = (id) => document.getElementById(id);
+
+// --- audio (synth, no assets) ---
+let ac;
+function tone(freq, dur = 0.12, type = "sine", vol = 0.15, when = 0) {
+  ac ??= new AudioContext();
+  const t = ac.currentTime + when, o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur);
+}
+const buzz = (ms) => navigator.vibrate?.(ms);
+
+// --- layout ---
+const cv = $("cv"), ctx = cv.getContext("2d");
+let W, H, cell, bx, by, trayY, dpr;
+function layout() {
+  dpr = devicePixelRatio || 1; W = innerWidth; H = innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cell = Math.floor(Math.min((W - 32) / N, (H - 90 - 30) / (N + 3.4)));
+  bx = Math.round((W - cell * N) / 2); by = 80; trayY = by + cell * N + 24;
+  $("combo").style.top = (by - 34) + "px";
+}
+addEventListener("resize", layout); layout();
+
+// --- drawing ---
+function drawShard(cellsAt, colorOf, idOf, size, ox, oy, alpha = 1) {
+  // fused piece: fill each cell, bevel only on edges between different pieces
+  ctx.globalAlpha = alpha;
+  for (const [r, c] of cellsAt) { ctx.fillStyle = colorOf(r, c); ctx.fillRect(ox + c * size, oy + r * size, size + 0.5, size + 0.5); }
+  const lw = Math.max(1.5, size * 0.07);
+  ctx.lineWidth = lw;
+  for (const [r, c] of cellsAt) {
+    const id = idOf(r, c), x = ox + c * size, y = oy + r * size;
+    const edge = (dr, dc) => idOf(r + dr, c + dc) !== id;
+    ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.beginPath();
+    if (edge(-1, 0)) { ctx.moveTo(x, y + lw / 2); ctx.lineTo(x + size, y + lw / 2); }
+    if (edge(0, -1)) { ctx.moveTo(x + lw / 2, y); ctx.lineTo(x + lw / 2, y + size); }
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(0,0,0,.28)"; ctx.beginPath();
+    if (edge(1, 0)) { ctx.moveTo(x, y + size - lw / 2); ctx.lineTo(x + size, y + size - lw / 2); }
+    if (edge(0, 1)) { ctx.moveTo(x + size - lw / 2, y); ctx.lineTo(x + size - lw / 2, y + size); }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+const pieceColor = (p) => theme()[1][p.family % 4];
+function drawPiece(p, size, ox, oy, alpha) {
+  const set = new Set(p.cells.map(([r, c]) => r + "," + c));
+  drawShard(p.cells, () => pieceColor(p), (r, c) => set.has(r + "," + c) ? 1 : 0, size, ox, oy, alpha);
+}
+function trayRect(i) {
+  const slot = (cell * N) / 3, s = cell * 0.55, p = tray[i];
+  return { s, x: bx + slot * i + (slot - p.w * s) / 2, y: trayY + (cell * 2.9 - p.h * s) / 2, slot };
+}
+
+// --- particles ---
+let parts = [];
+function shatter(idxs, colorAt, stagger = 14) {
+  idxs.forEach((i, k) => {
+    const r = Math.floor(i / N), c = i % N, col = colorAt(i);
+    for (let j = 0; j < 5; j++) parts.push({
+      x: bx + (c + Math.random()) * cell, y: by + (r + Math.random()) * cell,
+      vx: (Math.random() - .5) * 6, vy: -Math.random() * 6 - 1, rot: Math.random() * 6, vr: (Math.random() - .5) * .4,
+      s: cell * (.18 + Math.random() * .22), col, life: 1, delay: k * stagger,
+    });
+  });
+}
+
+// --- input ---
+let drag = null; // {i, piece, x, y, touch}
+cv.addEventListener("pointerdown", (e) => {
+  if (over) return;
+  for (let i = 0; i < tray.length; i++) {
+    if (!tray[i]) continue;
+    const t = trayRect(i);
+    if (e.clientX >= bx + t.slot * i && e.clientX < bx + t.slot * (i + 1) && e.clientY >= trayY - 10 && e.clientY < trayY + cell * 3) {
+      drag = { i, piece: tray[i], x: e.clientX, y: e.clientY, touch: e.pointerType === "touch" };
+      cv.setPointerCapture(e.pointerId); tone(330, .05, "triangle", .06); return;
+    }
+  }
+});
+cv.addEventListener("pointermove", (e) => { if (drag) { drag.x = e.clientX; drag.y = e.clientY; } });
+cv.addEventListener("pointerup", () => {
+  if (!drag) return;
+  const t = target();
+  if (t) commit(drag.i, t.r, t.c);
+  drag = null;
+});
+function target() {
+  const p = drag.piece, lift = drag.touch ? cell * 1.6 : cell * 0.4;
+  const x = drag.x - (p.w * cell) / 2, y = drag.y - lift - (p.h * cell) / 2;
+  const r = Math.round((y - by) / cell), c = Math.round((x - bx) / cell);
+  return canPlace(board, p, r, c) ? { r, c, x, y } : { x, y, bad: true };
+}
+
+// --- turn ---
+function commit(i, r, c) {
+  const p = tray[i], id = uid++;
+  colors[id] = pieceColor(p);
+  board = place(board, p, r, c, id);
+  score += p.cells.length;
+  tone(220, .06, "triangle", .12); buzz(8);
+  const lines = fullLines(board), n = lines.rows.length + lines.cols.length;
+  if (n) {
+    combo++; miss = 0;
+    const cells = lineCells(lines), before = board;
+    shatter(cells.sort((a, b) => (a % N + Math.floor(a / N)) - (b % N + Math.floor(b / N))), (k) => colors[before[k]]);
+    board = clearCells(board, cells);
+    score += 10 * n * n * combo;
+    const base = 440 * 2 ** ((Math.min(combo, 12) * 2) / 12);
+    for (let k = 0; k < n; k++) tone(base * 2 ** ((k * 4) / 12), .35, "sine", .14, k * .06);
+    buzz(25); flashCombo(n);
+    gainXp(n);
+  } else if (combo && ++miss >= 3) {
+    combo = 0; miss = 0; tone(196, .25, "sine", .07);
+  }
+  tray = tray.map((q, k) => (k === i ? null : q)); // pieces keep their slots
+  if (tray.every((q) => !q)) tray = deal(Math.random, board, cat, cfg);
+  if (!tray.some((q) => q && fitsAnywhere(board, q))) endRound();
+}
+function flashCombo(n) {
+  const el = $("combo");
+  el.textContent = (n > 1 ? `${n} lines! ` : "") + (combo > 1 ? `Combo ×${combo}` : "");
+  el.style.opacity = el.textContent ? 1 : 0; el.style.transform = "scale(1.15)";
+  setTimeout(() => (el.style.transform = "scale(1)"), 120);
+  clearTimeout(flashCombo.t); flashCombo.t = setTimeout(() => (el.style.opacity = 0), 1100);
+}
+function gainXp(lines) {
+  xp += lines;
+  while (xp >= xpToNext(level)) {
+    xp -= xpToNext(level); level++;
+    const t = THEMES[level - 1];
+    toast(`Level ${level}` + (t ? `<br><small>Unlocked: ${t[0]} shards</small>` : "<br><small>More unlocks in the full game</small>"));
+    [523, 659, 784, 1047].forEach((f, k) => tone(f, .2, "triangle", .1, k * .08));
+  }
+  store.set("xp", xp); store.set("level", level);
+}
+function toast(html) {
+  const el = $("toast"); el.innerHTML = html; el.style.opacity = 1;
+  clearTimeout(toast.t); toast.t = setTimeout(() => (el.style.opacity = 0), 1800);
+}
+function endRound() {
+  over = true;
+  if (score > best) { best = score; store.set("best", best); }
+  setTimeout(() => {
+    $("final").textContent = score;
+    $("overBest").textContent = score >= best ? "New best!" : `Best ${best}`;
+    $("rescue").style.display = rescueUsed ? "none" : "block";
+    $("over").style.display = "flex";
+    tone(262, .5, "sine", .08); tone(196, .7, "sine", .06, .15);
+  }, 700);
+}
+$("again").onclick = newRound;
+$("rescue").onclick = () => {
+  rescueUsed = true; over = false; $("over").style.display = "none";
+  const cells = rescueCells(board, cfg.rescue_lines), before = board;
+  shatter(cells, (k) => colors[before[k]], 6);
+  board = clearCells(board, cells);
+  tray = deal(Math.random, board, cat, cfg);
+  [392, 523, 659].forEach((f, k) => tone(f, .3, "sine", .12, k * .07)); buzz(40);
+  if (!tray.some((q) => fitsAnywhere(board, q))) endRound();
+};
+
+// --- frame ---
+function frame() {
+  ctx.clearRect(0, 0, W, H);
+  // board
+  ctx.fillStyle = "#1f2430"; roundRect(bx - 8, by - 8, cell * N + 16, cell * N + 16, 14); ctx.fill();
+  ctx.fillStyle = "#2a3040";
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    roundRect(bx + c * cell + 2, by + r * cell + 2, cell - 4, cell - 4, 4); ctx.fill();
+  }
+  const filled = []; for (let i = 0; i < 64; i++) if (board[i]) filled.push([Math.floor(i / N), i % N]);
+  const idAt = (r, c) => (r < 0 || r >= N || c < 0 || c >= N) ? 0 : board[r * N + c];
+  drawShard(filled, (r, c) => colors[board[r * N + c]], idAt, cell, bx, by, over ? .5 : 1);
+
+  // drag ghost + glow of lines that would clear
+  if (drag) {
+    const t = target();
+    if (!t.bad) {
+      drawPiece(drag.piece, cell, bx + t.c * cell, by + t.r * cell, .35);
+      const after = place(board, drag.piece, t.r, t.c, -1), glow = lineCells(fullLines(after));
+      ctx.fillStyle = `rgba(255,255,255,${.25 + .15 * Math.sin(performance.now() / 90)})`;
+      for (const i of glow) ctx.fillRect(bx + (i % N) * cell, by + Math.floor(i / N) * cell, cell, cell);
+    }
+    drawPiece(drag.piece, cell, t.x, t.y, .95);
+  }
+  // tray
+  tray.forEach((p, i) => { if (p && drag?.i !== i) { const t = trayRect(i);
+    drawPiece(p, t.s, t.x, t.y, fitsAnywhere(board, p) ? 1 : .3); } });
+  // particles
+  parts = parts.filter((p) => p.life > 0);
+  for (const p of parts) {
+    if (p.delay > 0) { p.delay -= 16; continue; }
+    p.x += p.vx; p.y += p.vy; p.vy += .35; p.rot += p.vr; p.life -= .022;
+    ctx.save(); ctx.globalAlpha = Math.max(p.life, 0); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+    ctx.fillStyle = p.col; ctx.beginPath(); ctx.moveTo(-p.s / 2, p.s / 2); ctx.lineTo(0, -p.s / 2); ctx.lineTo(p.s / 2, p.s / 3);
+    ctx.fill(); ctx.restore();
+  }
+  // HUD
+  shown += (score - shown) * .15; if (Math.abs(score - shown) < .5) shown = score;
+  $("score").textContent = Math.round(shown);
+  $("best").textContent = `Best ${Math.max(best, score)}`;
+  $("best").className = best > 0 && score >= best * .9 && score < best ? "near" : "";
+  if (best > 0 && score > best && !bestFlagged) { bestFlagged = true; toast("New best!"); }
+  $("lvlText").textContent = `Level ${level} · ${theme()[0]}`;
+  $("fill").style.width = (100 * xp / xpToNext(level)) + "%";
+  requestAnimationFrame(frame);
+}
+function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+
+newRound();
+frame();
+</script>
+</body>
+</html>
