@@ -53,7 +53,7 @@
   .opts { display: flex; gap: 6px; margin-top: 10px; }
   .opts button { margin: 0; padding: 7px; font-size: 13px; font-weight: 600; background: transparent; color: var(--muted); border: 1px solid var(--line); }
   .opts button.on { color: var(--text); border-color: var(--muted); }
-  .bramble { font-style: italic; color: var(--muted); margin: 8px 0 2px; }
+  .puddock { font-style: italic; color: var(--muted); margin: 8px 0 2px; }
   .ico { display: inline-block; vertical-align: middle; flex: none; }
   .shimmer { animation: shimmer 3.2s ease-in-out infinite; }
   @keyframes shimmer { 0% { transform: translateX(-6px); } 45%, 100% { transform: translateX(34px); } }
@@ -61,7 +61,7 @@
   .hero { display: flex; align-items: center; gap: 10px; margin: -6px 0 4px; }
   .hero > div { min-width: 0; } .hero h1 { font-size: 34px; }
   .card { overflow-x: hidden; }
-  .hero .pip { animation: bob 3s ease-in-out infinite; }
+  .hero .dibble { animation: bob 3s ease-in-out infinite; }
   @keyframes bob { 50% { transform: translateY(-4px) rotate(-2deg); } }
   .pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(240,181,67,.12); border: 1px solid rgba(240,181,67,.35);
     border-radius: 999px; padding: 4px 12px 4px 6px; font-weight: 700; color: var(--amber); font-size: 18px; }
@@ -160,7 +160,7 @@
     border-radius: 4px 12px 12px 4px; box-shadow: 0 2px 0 #7a5f33; position: relative; padding-left: 16px; text-shadow: none; }
   .shopItem button::before { content: ""; position: absolute; left: 5px; top: 50%; width: 5px; height: 5px; margin-top: -2.5px;
     border-radius: 50%; background: #6b5030; }
-  /* haul: Bramble's ledger on parchment */
+  /* haul: Puddock's ledger on parchment */
   .ledger { background: linear-gradient(180deg, #f3e6c4, #e4cf9e); color: #3a2410; border-radius: 6px; padding: 10px 12px 12px;
     margin: 10px 0 8px; box-shadow: 0 3px 0 #a88a53, inset 0 0 22px rgba(140,100,40,.25); transform: rotate(-.6deg); }
   .ledger h3 { margin: 0 0 4px; font-size: 15px; letter-spacing: .5px; color: #6b3f12; text-align: center; border-bottom: 1px dashed #a88a53; padding-bottom: 5px; }
@@ -174,6 +174,37 @@
   .hud > div:first-child { background: linear-gradient(180deg, #6e4a2c, #4f331d); border: 2px solid #2b1a0e; border-radius: 10px;
     padding: 2px 12px 4px; box-shadow: 0 3px 0 #2b1a0e; }
   .hud > div:first-child small { color: #d9c49c; }
+  .twoBtn { display: flex; gap: 8px; } .twoBtn button { flex: 1; }
+  @property --a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+  .mine.legend { border: 2px solid transparent !important;
+    background: linear-gradient(rgba(40,22,8,.92), rgba(40,22,8,.92)) padding-box,
+                conic-gradient(from var(--a), #fff6c8, #f0b543, #a8761a, #f0b543, #fff6c8) border-box !important;
+    box-shadow: 0 0 16px rgba(240,181,67,.45) !important; animation: ring 4s linear infinite; }
+  @keyframes ring { to { --a: 360deg; } }
+  .mine.legend .info b { color: #ffd27a; }
+  .mine.teaser { cursor: default; opacity: .9; border-style: dashed !important; }
+  .trialTag { position: absolute; left: 50%; top: 50px; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 4px;
+    background: #f0b543; color: #3a2208; font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; box-shadow: 0 2px 0 #7a4a12; white-space: nowrap; }
+  .tabs { display: flex; gap: 6px; margin: 12px 0 2px; }
+  .tabs button { margin: 0; padding: 7px; font-size: 14px; background: linear-gradient(180deg, #84593a, #613f25); color: #f6ead0; border: 2px solid #2b1a0e; box-shadow: 0 3px 0 #2b1a0e; }
+  .tabs button.on { background: linear-gradient(180deg, #ffd98a, #e8a52f); color: #3a2208; border-color: #8a5a1a; box-shadow: 0 3px 0 #7a4a12; }
+  .talkArt { display: flex; justify-content: center; margin-top: -4px; }
+  .talkArt .puddock { animation: bob 2.6s ease-in-out infinite; }
+  .talkBubble { font-size: 16px; line-height: 1.4; margin: 6px 0 4px; min-height: 66px; }
+  .talkBubble::before { left: 50%; top: -6px; margin: 0 0 0 -6px; border: 6px solid transparent; border-bottom-color: #f3e6c4; border-top: 0; }
+  .gift { display: flex; gap: 10px; align-items: center; background: rgba(30,16,6,.38); border-radius: 12px; padding: 8px; margin-top: 10px; animation: pop .5s ease-out; }
+  .gift div { flex: 1; } .gift small { display: block; }
+  @keyframes pop { from { transform: scale(.85); opacity: 0; } }
+  .campWrap { border-radius: 14px; overflow: hidden; border: 2px solid #2b1a0e; box-shadow: inset 0 0 18px rgba(0,0,0,.5); line-height: 0; }
+  .campProg { margin: 10px 0 4px; } .campProg small { display: block; margin-top: 4px; text-align: center; }
+  .bar { height: 10px; border-radius: 6px; background: rgba(30,16,6,.5); overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,.5); }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, #7cc46a, #f0b543); border-radius: 6px; }
+  .custRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+  .custRow > span { width: 56px; font-weight: 700; font-size: 13px; color: #d9c49c; }
+  .chip { width: auto; margin: 0; padding: 5px 10px; font-size: 13px; background: linear-gradient(180deg, #84593a, #613f25); color: #f6ead0;
+    border: 2px solid #2b1a0e; box-shadow: 0 2px 0 #2b1a0e; display: inline-flex; align-items: center; gap: 4px; }
+  .chip.on { background: linear-gradient(180deg, #ffd98a, #e8a52f); color: #3a2208; border-color: #8a5a1a; }
+  .chip .sw { width: 16px; height: 16px; border-radius: 4px; display: inline-block; border: 1px solid rgba(0,0,0,.4); }
 </style>
 </head>
 <body>
@@ -186,14 +217,15 @@
 <div id="toast"></div>
 
 <section id="home" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
-  <div class="hero"><span id="pipArt"></span><div><h1>Glimmerwood</h1><div class="tag" style="margin:4px 0 0">Mine glowing crystals before the roots close in.</div></div></div>
+  <div class="hero"><span id="dibbleArt"></span><div><h1>Glimmerwood</h1><div class="tag" style="margin:4px 0 0">Mine glowing crystals before the roots close in.</div></div></div>
   <div class="pill" id="homeGoldPill"><span id="coinA"></span><span id="homeGold">0</span></div>
   <div class="seg"><button id="mExp"><span id="icoExp"></span>Expedition<small>beat the Rootline</small></button>
     <button id="mCalm"><span id="icoCalm"></span>Calm Grove<small>no timer, ×0.6 gold</small></button></div>
   <div id="mines"></div>
   <button id="dig"><span class="btnrow"><span id="icoDig"></span>Dig</span></button>
   <button id="daily" class="alt"></button>
-  <button id="toMarket" class="alt"><span class="btnrow"><span id="icoStall"></span>Old Bramble's Market</span></button>
+  <div class="twoBtn"><button id="toMarket" class="alt"><span class="btnrow"><span id="icoStall"></span>Market</span></button>
+    <button id="toCamp" class="alt"><span class="btnrow"><span id="icoCamp"></span>Dibble's Camp</span></button></div>
   <div class="opts"><button id="oSound"></button><button id="oVib"></button><button id="oGlyph"></button></div>
   <div class="note">Fair dealing: crystals are dealt at random. Never by ads, purchases or how close you are to your best.</div>
 </div></div></section>
@@ -201,11 +233,11 @@
 <section id="end" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
   <div class="causeIco" id="causeIco"></div>
   <h2 id="endTitle" style="text-align:center">The roots closed the tunnel</h2>
-  <div class="tag" id="endSub" style="text-align:center;margin-bottom:6px">Pip climbs out with the haul.</div>
+  <div class="tag" id="endSub" style="text-align:center;margin-bottom:6px">Dibble climbs out with the haul.</div>
   <div id="newBest" class="gold" style="font-size:20px;display:none;text-align:center">New best haul!</div>
   <button id="rescue" class="ad"></button>
-  <div class="speech"><span id="brambleArtEnd"></span><div class="bubble" id="brambleLine"></div></div>
-  <div class="ledger"><h3>OLD BRAMBLE'S LEDGER</h3>
+  <div class="speech"><span id="puddockArtEnd"></span><div class="bubble" id="puddockLine"></div></div>
+  <div class="ledger"><h3>OLD PUDDOCK'S LEDGER</h3>
     <div class="haulGrid" id="haulList"></div>
     <div class="total"><span>Haul value</span><span class="gold" id="haulTotalWrap"><span id="coinB"></span><span id="haulTotal">0g</span></span></div></div>
   <button id="sell2" class="ad"></button>
@@ -214,18 +246,35 @@
 </div></div></section>
 
 <section id="market" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><div class="awning"></div><div class="card">
-  <h2>Old Bramble's Market</h2>
-  <div class="speech"><span id="brambleArtMkt"></span><div class="bubble">"Shiny rocks, shiny coins. Fair trade, little mole."</div></div>
+  <h2>Old Puddock's Market</h2>
+  <div class="speech"><span id="puddockArtMkt"></span><div class="bubble">"Shiny rocks, shiny coins. Fair trade, little mole."</div></div>
   <div class="pill"><span id="coinC"></span><span id="mktGold">0</span></div>
+  <div class="tabs" id="mktTabs"><button data-tab="tools">Tools</button><button data-tab="camp">Camp</button><button data-tab="maps">Maps</button></div>
   <div id="shop"></div>
   <button id="mktBack" class="alt"><span class="btnrow"><span id="icoBack"></span>Back to the mines</span></button>
+</div></div></section>
+
+<section id="talk" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
+  <div class="talkArt" id="talkArt"></div>
+  <div class="bubble talkBubble" id="talkLine"></div>
+  <div id="talkGift"></div>
+  <button id="talkNext">Go on…</button>
+</div></div></section>
+
+<section id="campScr" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
+  <h2>Dibble's Camp</h2>
+  <div class="tag" style="margin:0 0 8px">Everything you buy from Old Puddock ends up here.</div>
+  <div id="campArt" class="campWrap"></div>
+  <div id="campProg" class="campProg"></div>
+  <div id="campCustom"></div>
+  <button id="campBack" class="alt"><span class="btnrow"><span id="icoBack2"></span>Back to the mines</span></button>
 </div></div></section>
 
 <script type="module">
 import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, fitsAnywhere, deal,
   rescueCells, breakCells, pureVeinCells } from "./game.js";
 
-import { gem, coin, icon, pip, bramble, scene, forest, vine } from "./art.js";
+import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp } from "./art.js";
 const cfg0 = await (await fetch("../sim/generator.json")).json();
 const $ = (id) => document.getElementById(id);
 
@@ -238,44 +287,63 @@ const CRYSTALS = {
   garnet:    { name: "Garnet",      color: "#d0507a", glyph: "■", cut: "trillion" },
   ember:     { name: "Ember Shard", color: "#ff6a3d", glyph: "✦", cut: "star" },
   moonstone: { name: "Moonstone",   color: "#d7def5", glyph: "◐", cut: "cabochon" },
-  glowcap:   { name: "Glowcap Gem", color: "#9b7cf2", glyph: "✿", cut: "round" },
+  glowcap:   { name: "Gloamcap", color: "#9b7cf2", glyph: "✿", cut: "round" },
   sapphire:  { name: "Pine Sapphire", color: "#4f7fe8", glyph: "◇", cut: "step" },
   frost:     { name: "Frostspar",   color: "#9fe6ff", glyph: "❄", cut: "prism" },
   topaz:     { name: "Deep Topaz",  color: "#f29f4c", glyph: "▼", cut: "trillion" },
   geode:     { name: "Geode",       color: "#b06ad8", glyph: "⬢", cut: "geode" },
-  heart:     { name: "Heartstone",  color: "#ff4f7a", glyph: "♥", cut: "heart" },
+  heart:     { name: "Rootheart",  color: "#ff4f7a", glyph: "♥", cut: "heart" },
 };
 for (const [k, v] of Object.entries(cfg0.crystals)) Object.assign(CRYSTALS[k], v); // value, ember, bloom, freeze
 const BIOMES = [ // gameplay (cost, drain, gem weights, shapes) lives in sim/generator.json, shared with the sims
-  { id: "hollow", name: "Mossy Hollow", pal: { bg: "#1f3a28", cave: "#101c14", root: "#5a4a32", ground: "#2f5a2f", glow: "#8fd18b" },
+  { id: "hollow", name: "Mossy Hollow", pal: { bg: "#1f3a28", cave: "#101c14", root: "#5a4a32", ground: "#2f5a2f", glow: "#8fd18b", feature: "moss" },
     blurb: "Soft moss, easy veins. Match one crystal type in a line for ×2." },
-  { id: "ember", name: "Ember Roots", pal: { bg: "#3a1f17", cave: "#1c0f0b", root: "#6b2f22", ground: "#2a1610", glow: "#ff6a3d" },
+  { id: "ember", name: "Cinderroot Caverns", pal: { bg: "#3a1f17", cave: "#1c0f0b", root: "#6b2f22", ground: "#2a1610", glow: "#ff6a3d", feature: "lava" },
     blurb: "Embers shatter everything around them, and chain." },
-  { id: "grotto", name: "Glowcap Grotto", pal: { bg: "#241a3a", cave: "#100b1c", root: "#4a3a5a", ground: "#1c1630", glow: "#9b7cf2", caps: true },
-    blurb: "Glowcap gems feed the roots: +1s for every one you break." },
-  { id: "frostpine", name: "Frostpine Deep", pal: { bg: "#17283a", cave: "#0a121c", root: "#3a4a5a", ground: "#22364a", glow: "#9fe6ff", snow: true },
+  { id: "grotto", name: "Gloamcap Grotto", pal: { bg: "#241a3a", cave: "#100b1c", root: "#4a3a5a", ground: "#1c1630", glow: "#9b7cf2", feature: "caps" },
+    blurb: "Gloamcap gems feed the roots: +1s for every one you break." },
+  { id: "frostpine", name: "Frostpine Deep", pal: { bg: "#17283a", cave: "#0a121c", root: "#3a4a5a", ground: "#22364a", glow: "#9fe6ff", feature: "snow" },
     blurb: "Breaking Frostspar freezes the Rootline for a moment." },
-  { id: "gulch", name: "Geode Gulch", pal: { bg: "#33281c", cave: "#160f09", root: "#5a4632", ground: "#3a2e20", glow: "#b06ad8" },
+  { id: "gulch", name: "Geode Gulch", pal: { bg: "#33281c", cave: "#160f09", root: "#5a4632", ground: "#3a2e20", glow: "#b06ad8", feature: "geode" },
     blurb: "Rare geodes are worth a fortune. Rings of stone get in the way." },
-  { id: "heartwood", name: "Heartwood", pal: { bg: "#3a1724", cave: "#1a0a10", root: "#7a3a2a", ground: "#2a1018", glow: "#ff4f7a" },
-    blurb: "The great tree's heart. Every special at once, and Heartstones." },
+  { id: "heartwood", name: "Heartroot Deep", pal: { bg: "#3a1724", cave: "#1a0a10", root: "#7a3a2a", ground: "#2a1018", glow: "#ff4f7a", feature: "heart" },
+    blurb: "The great tree's heart. Every special at once, and Roothearts." },
 ].map((b) => ({ families: {}, ...b, ...cfg0.biomes[b.id] }));
+const BANNERS = { "#5fa04e": "Moss green", "#c8553d": "Ember red", "#9b7cf2": "Gloamcap violet", "#4f7fe8": "Frost blue", "#f0c75a": "Royal gold" };
 const SHOP = [
-  { id: "lantern", icon: "lantern", kind: "up", name: "Lantern", desc: "+5s of Rootline", base: 150, max: 10 },
-  { id: "pick", icon: "pickaxe", kind: "up", name: "Pickaxe", desc: "+10% crystal value", base: 200, max: 10 },
-  { id: "charm", icon: "charm", kind: "up", name: "Root Charm", desc: "+10% time from every vein", base: 180, max: 10 },
-  ...BIOMES.slice(1).map((b) => ({ id: "biome:" + b.id, icon: "map", kind: "biome", name: `Map to ${b.name}`, desc: b.blurb, price: b.cost })),
-  { id: "fireflies", icon: "fireflies", kind: "once", name: "Firefly roots", desc: "Fireflies drift along your Rootline", price: 600 },
-  { id: "dewdrop", icon: "dewdrop", kind: "once", name: "Dewdrop pouch", desc: "More tiny 1-cell crystals in your trays", price: 900 },
+  // Tools: permanent upgrades, price ×1.6 per level
+  { id: "lantern", tab: "tools", icon: "lantern", kind: "up", name: "Lantern", desc: "+5s of Rootline", base: 150, max: 15 },
+  { id: "pick", tab: "tools", icon: "pickaxe", kind: "up", name: "Pickaxe", desc: "+10% crystal value", base: 200, max: 15 },
+  { id: "charm", tab: "tools", icon: "charm", kind: "up", name: "Root Charm", desc: "+10% time from every vein", base: 180, max: 15 },
+  { id: "lens", tab: "tools", icon: "lens", kind: "up", name: "Gem Lens", desc: "Pure veins pay +0.5× more", base: 900, max: 6 },
+  { id: "tongs", tab: "tools", icon: "tongs", kind: "up", name: "Ember Tongs", desc: "+25% gold from crystals an ember shatters", base: 3000, max: 6 },
+  { id: "sieve", tab: "tools", icon: "sieve", kind: "up", name: "Lucky Sieve", desc: "Geodes and Roothearts turn up 15% more", base: 25000, max: 5 },
+  { id: "dewdrop", tab: "tools", icon: "dewdrop", kind: "once", name: "Dewdrop pouch", desc: "More tiny 1-cell crystals in your trays", price: 900 },
+  // Camp: looks only, shown at Dibble's Camp
+  { id: "tent:patchwork", tab: "camp", icon: "tent", kind: "camp", name: "Patchwork tent", desc: "Scraps from every mine, stitched by Dibble", price: 1500 },
+  { id: "tent:treehouse", tab: "camp", icon: "tent", kind: "camp", name: "Treehouse", desc: "A ladder, a lookout, a lamp in the window", price: 20000 },
+  { id: "tent:pavilion", tab: "camp", icon: "tent", kind: "camp", name: "Crystal pavilion", desc: "A roof of Frostspar that hums at night", price: 90000 },
+  ...Object.entries(BANNERS).slice(1).map(([c, n], k) => ({ id: "banner:" + c, tab: "camp", icon: "banner", color: c, kind: "camp", name: `${n} banner`, desc: "Fly your colours over camp", price: [400, 2500, 8000, 40000][k] })),
+  { id: "fire:forge", tab: "camp", icon: "forge", kind: "camp", name: "Stone forge", desc: "Swap the campfire for a roaring forge", price: 12000 },
+  { id: "decor:mushrooms", tab: "camp", icon: "mushroom", kind: "camp", name: "Gloamcap garden", desc: "Mushrooms that light the path home", price: 3000 },
+  { id: "decor:jars", tab: "camp", icon: "jar", kind: "camp", name: "Firefly jars", desc: "Borrowed fireflies (they come back)", price: 5000 },
+  { id: "decor:hammock", tab: "camp", icon: "hammock", kind: "camp", name: "Moss hammock", desc: "For naps between digs", price: 9000 },
+  { id: "decor:cart", tab: "camp", icon: "cart", kind: "camp", name: "Puddock's spare cart", desc: "He says it's a loan. It isn't.", price: 60000 },
+  { id: "fireflies", tab: "camp", icon: "fireflies", kind: "once", name: "Firefly roots", desc: "Fireflies drift along your Rootline while you dig", price: 600 },
+  // Maps
+  ...BIOMES.slice(1).map((b) => ({ id: "biome:" + b.id, tab: "maps", icon: "map", kind: "biome", name: `Map to ${b.name}`, desc: b.blurb, price: b.cost })),
 ];
 
 // ---------- save (per-browser) ----------
 const store = { get(k, d) { try { return JSON.parse(localStorage.getItem("gw." + k)) ?? d; } catch { return d; } },
                 set(k, v) { try { localStorage.setItem("gw." + k, JSON.stringify(v)); } catch {} } };
-const save = { gold: 0, up: { lantern: 0, pick: 0, charm: 0 }, owned: [], biomes: ["hollow"], best: {}, sel: "hollow",
-  mode: "exp", opt: { sound: true, vib: true, glyph: false }, daily: { last: "", streak: 0, best: 0 }, ...store.get("save", {}) };
+const DEFAULTS = { gold: 0, up: { lantern: 0, pick: 0, charm: 0, lens: 0, tongs: 0, sieve: 0 }, owned: [], biomes: ["hollow"], best: {}, sel: "hollow",
+  mode: "exp", opt: { sound: true, vib: true, glyph: false }, daily: { last: "", streak: 0, best: 0 },
+  metPuddock: false, trial: [], found: [], camp: { tent: "canvas", banner: "#5fa04e", fire: "ring", hide: [] } };
+const stored = store.get("save", {});
+const save = { ...DEFAULTS, ...stored, up: { ...DEFAULTS.up, ...stored.up }, camp: { ...DEFAULTS.camp, ...stored.camp } };
 const CALM_MULT = 0.6;
-const BRAMBLE = ["\"Fine rocks. Finer than my cousin's, anyway.\"", "\"Every vein you break, the roots grow kinder.\"",
+const PUDDOCK = ["\"Fine rocks. Finer than my cousin's, anyway.\"", "\"Every vein you break, the roots grow kinder.\"",
   "\"Slow digging is still digging, little mole.\"", "\"Hmph. I've seen worse hauls. Mine, mostly.\"",
   "\"The Glimmerwood remembers good miners.\"", "\"Pure veins! Now that's a mole with an eye.\"",
   "\"Rest your paws. The crystals will wait.\"", "\"Coins for crystals. Fair as rain.\""];
@@ -285,8 +353,9 @@ const mulberry = (a) => () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.i
 const qs = new URLSearchParams(location.search);
 if (qs.has("gold")) save.gold = +qs.get("gold"); // ?gold=5000 to try the market quickly
 const persist = () => store.set("save", save);
-const price = (it) => it.kind === "up" ? Math.round(it.base * 1.7 ** save.up[it.id]) : it.price;
+const price = (it) => it.kind === "up" ? Math.round(it.base * 1.6 ** save.up[it.id]) : it.price;
 const valueMult = () => (1 + 0.1 * save.up.pick) * (calm ? CALM_MULT : 1) * (biome?.richness || 1); // deeper veins are purer
+const canEnter = (id) => save.biomes.includes(id) || save.trial.includes(id);
 
 // ---------- audio (synth, no assets) ----------
 let ac;
@@ -321,14 +390,15 @@ const lerpHex = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i
 
 // ---------- round state ----------
 let biome, cat, board, meta, tray, uid, combo, miss, rescueUsed, state = "home", endCause, calm = false, daily = false, rng = Math.random;
-let frozenUntil = 0, time, maxTime, started, haul, floats = [], parts = [];
+let bonus = 0, frozenUntil = 0, time, maxTime, started, haul, floats = [], parts = [];
 function catalogFor(b) {
   const fam = { ...structuredClone(cfg0.families), ...b.families };
   if (save.owned.includes("dewdrop")) fam.dot.weight += 4;
   return buildCatalog({ ...cfg0, families: fam });
 }
 function pickType() {
-  const e = Object.entries(biome.types), total = e.reduce((s, [, w]) => s + w, 0);
+  const rare = (t) => (t === "geode" || t === "heart" ? 1 + .15 * save.up.sieve : 1);
+  const e = Object.entries(biome.types).map(([t, w]) => [t, w * rare(t)]), total = e.reduce((s, [, w]) => s + w, 0);
   let x = rng() * total;
   for (const [t, w] of e) if ((x -= w) < 0) return t;
   return e[0][0];
@@ -340,13 +410,19 @@ const isEmber = (u) => !!CRYSTALS[typeOf(u)]?.ember;
 function startDig(isDaily = false) {
   daily = isDaily; calm = !daily && save.mode === "calm";
   rng = daily ? mulberry(+today().replaceAll("-", "")) : Math.random; // same crystals for everyone today
+  if (!daily && !canEnter(save.sel)) save.sel = "hollow";
   biome = BIOMES.find((b) => b.id === (daily ? "hollow" : save.sel)); cat = daily ? buildCatalog(cfg0) : catalogFor(biome);
+  if (!daily && !save.biomes.includes(biome.id)) { // Puddock's trial map: one entry, then it crumbles
+    save.trial = save.trial.filter((x) => x !== biome.id); persist();
+    setTimeout(() => toast("Puddock's old map crumbles as you step inside.<br><small>One dig, make it count!</small>", 2600), 300);
+  }
+  bonus = 0;
   board = Array(64).fill(0); meta = {}; uid = 1; combo = 0; miss = 0; rescueUsed = false;
   haul = {}; frozenUntil = 0; maxTime = T.max_time + 5 * save.up.lantern; time = maxTime; started = false;
   tray = dealTray(); state = "play"; show(null);
   $("biomeName").textContent = daily ? `Daily Dig · ${today()}` : biome.name + (calm ? " · Calm" : "");
 }
-const haulValue = () => Math.round(Object.entries(haul).reduce((s, [t, n]) => s + n * CRYSTALS[t].value, 0) * valueMult());
+const haulValue = () => Math.round((Object.entries(haul).reduce((s, [t, n]) => s + n * CRYSTALS[t].value, 0) + bonus) * valueMult());
 
 // ---------- crystal drawing ----------
 function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, glyph = "", cut = "brilliant") {
@@ -431,7 +507,7 @@ function rootColor(f) {
 }
 function drawRootline(now) {
   const f = Math.max(0, time / maxTime), p = rootPath(), len = p.L * f, col = now < frozenUntil ? "#bfefff" : rootColor(f);
-  // dead bramble track underneath
+  // dead puddock track underneath
   ctx.strokeStyle = "rgba(80,40,30,.35)"; ctx.lineWidth = 3; ctx.setLineDash([3, 7]); ctx.beginPath();
   p.segs.forEach(([a, b, c, d]) => { ctx.moveTo(a, b); ctx.lineTo(c, d); }); ctx.stroke(); ctx.setLineDash([]);
   if (len <= 0) return;
@@ -506,7 +582,13 @@ function commit(i, r, c) {
     combo++; miss = 0;
     const { cells, embers } = breakCells(board, lines, isEmber), pure = pureVeinCells(board, lines, typeOf), before = board;
     let gained = 0;
-    for (const k of cells) { const t = typeOf(before[k]), m = pure.has(k) ? 2 : 1; haul[t] = (haul[t] || 0) + m; gained += CRYSTALS[t].value * m; }
+    const inLine = new Set(lineCells(lines)), lens = .5 * save.up.lens, tongs = .25 * save.up.tongs;
+    for (const k of cells) {
+      const t = typeOf(before[k]), v = CRYSTALS[t].value, m = pure.has(k) ? 2 : 1;
+      haul[t] = (haul[t] || 0) + m; gained += v * m;
+      const extra = (pure.has(k) ? v * lens : 0) + (!inLine.has(k) ? v * m * tongs : 0); // Gem Lens, Ember Tongs
+      bonus += extra; gained += extra;
+    }
     gained = Math.round(gained * valueMult());
     const ctr = cells.reduce((a, k) => [a[0] + (k % N), a[1] + Math.floor(k / N)], [0, 0]).map((v) => v / cells.length);
     shatter(cells.sort((a, b) => (a % N + Math.floor(a / N)) - (b % N + Math.floor(b / N))), (k) => CRYSTALS[typeOf(before[k])].color);
@@ -539,19 +621,20 @@ function endRound(cause) {
   tone(262, .5, "sine", .08); tone(196, .7, "sine", .06, .15);
   setTimeout(() => {
     $("endTitle").textContent = cause === "time" ? "The roots closed the tunnel" : "No room left to dig";
-    $("endSub").textContent = "Pip climbs out with the haul. Nothing is lost.";
+    $("endSub").textContent = "Dibble climbs out with the haul. Nothing is lost.";
     $("causeIco").innerHTML = cause === "time" ? icon("vine", 44) : icon("board", 44);
     $("rescue").innerHTML = `<span class="btnrow">${icon(cause === "time" ? "regrow" : "shatter", 22)}${cause === "time" ? `Roots regrow +${T.rescue_time}s` : "Shatter the 3 fullest veins"}</span>`;
     $("rescue").style.display = rescueUsed ? "none" : "block";
     $("haulList").innerHTML = Object.entries(haul).map(([t, n]) => `<div class="haulTile">${gem(CRYSTALS[t].color, 34, save.opt.glyph ? CRYSTALS[t].glyph : "", CRYSTALS[t].cut)}
       <b>×${n}</b><small>${CRYSTALS[t].name}</small><small>${Math.round(n * CRYSTALS[t].value * valueMult())}g</small></div>`).join("") ||
       `<div class="note" style="grid-column:1/-1">No crystals this time.</div>`;
-    $("sell2").innerHTML = `<span class="btnrow">${coin(20)}${coin(20)}Bramble's double deal: ×2</span>`;
-    $("sell").innerHTML = `<span class="btnrow">${coin(20)}Sell to Old Bramble</span>`;
+    if (bonus) $("haulList").innerHTML += `<div class="haulTile">${icon(save.up.tongs ? "tongs" : "lens", 34)}<b>+${Math.round(bonus * valueMult())}g</b><small>Lens & tongs</small></div>`;
+    $("sell2").innerHTML = `<span class="btnrow">${coin(20)}${coin(20)}Puddock's double deal: ×2</span>`;
+    $("sell").innerHTML = `<span class="btnrow">${coin(20)}Sell to Old Puddock</span>`;
     $("haulTotal").textContent = haulValue() + "g";
     $("sell2").style.display = haulValue() ? "block" : "none";
     $("newBest").style.display = haulValue() > (daily ? save.daily.best : save.best[bestKey()] || 0) && haulValue() ? "block" : "none";
-    $("brambleLine").textContent = BRAMBLE[Math.floor(Math.random() * BRAMBLE.length)];
+    $("puddockLine").textContent = PUDDOCK[Math.floor(Math.random() * PUDDOCK.length)];
     show("end");
   }, 650);
 }
@@ -571,6 +654,7 @@ const bestKey = () => biome.id + (calm ? ":calm" : "");
 function sell(mult) {
   const v = haulValue() * mult;
   save.gold += v;
+  for (const t of Object.keys(haul)) if (!save.found.includes(t)) save.found.push(t);
   if (daily) {
     const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
     if (save.daily.last !== today()) save.daily = { last: today(), streak: save.daily.last === y ? save.daily.streak + 1 : 1, best: haulValue() };
@@ -580,13 +664,16 @@ function sell(mult) {
   for (let k = 0; k < Math.min(12, 3 + v / 40); k++) tone(1568 + (k % 3) * 200, .08, "square", .03, k * .05);
   state = "home"; renderHome(); show("home");
   if (v) toast(`+${v} gold`);
+  if (!save.metPuddock) setTimeout(() => talk(() => { renderHome(); show("home"); }), 900); // first haul: meet the merchant
 }
 $("sell").onclick = () => sell(1);
 $("sell2").onclick = () => sell(2);
 
 // ---------- home and market ----------
 function show(id) {
-  document.body.classList.toggle("playing", !id); for (const s of ["home", "end", "market"]) $(s).classList.toggle("show", s === id); $("hud").style.visibility = id === "home" || id === "market" ? "hidden" : "visible"; }
+  document.body.classList.toggle("playing", !id);
+  for (const s of ["home", "end", "market", "talk", "campScr"]) $(s).classList.toggle("show", s === id);
+  $("hud").style.visibility = id && id !== "end" ? "hidden" : "visible"; }
 function renderHome() {
   $("homeGold").textContent = save.gold;
   $("mExp").classList.toggle("on", save.mode === "exp"); $("mCalm").classList.toggle("on", save.mode === "calm");
@@ -600,28 +687,31 @@ function renderHome() {
     <small style="display:block;font-weight:400;font-size:12px;color:var(--muted);margin-top:3px">${st ? `${st}-day streak` : "Same crystals for everyone, once a day"}</small>`;
   $("daily").disabled = done;
   $("mines").innerHTML = BIOMES.map((b) => {
-    const open = save.biomes.includes(b.id);
+    const owned = save.biomes.includes(b.id), open = canEnter(b.id), trial = !owned && open, last = b === BIOMES[BIOMES.length - 1];
     const best = save.best[b.id + (save.mode === "calm" ? ":calm" : "")], cols = Object.keys(b.types).map((t) => CRYSTALS[t].color);
-    return `<div class="mine ${open ? "" : "locked"} ${save.sel === b.id ? "sel" : ""}" data-id="${b.id}">
+    return `<div class="mine ${open ? "" : "locked"} ${save.sel === b.id ? "sel" : ""} ${last ? "legend" : ""}" data-id="${b.id}">
       ${scene(cols, b.pal, 134, 80)}
-      ${open ? "" : `<span class="lockTag">${icon("lock", 22)}${b.cost}g</span>`}
+      ${open ? "" : `<span class="lockTag">${icon("lock", 22)}${b.cost}g</span>`}${trial ? `<span class="trialTag">${icon("ticket", 18)}Trial map · 1 dig</span>` : ""}
       <div class="info"><b>${b.name}</b>${open && best ? ` <small class="gold">· best ${best}g</small>` : ""}
         <div class="gems">${Object.keys(b.types).map((t) => gem(CRYSTALS[t].color, 18, "", CRYSTALS[t].cut)).join("")}</div>
-        <small style="display:block;color:var(--muted);font-size:12.5px;margin-top:2px">${open ? b.blurb : "Buy the map at Old Bramble's Market."}</small></div></div>`;
-  }).join("");
-  for (const el of document.querySelectorAll(".mine")) el.onclick = () => {
-    if (!save.biomes.includes(el.dataset.id)) return;
+        <small style="display:block;color:var(--muted);font-size:12.5px;margin-top:2px">${open ? b.blurb : "Buy the map at Old Puddock's Market."}</small></div></div>`;
+  }).join("") + `<div class="mine teaser">${mystery(134, 80)}<div class="info"><b>More caves soon…</b>
+    <small style="display:block;color:var(--muted);font-size:12.5px;margin-top:2px">Old Puddock swears there's something even deeper. He won't say what.</small></div></div>`;
+  for (const el of document.querySelectorAll(".mine[data-id]")) el.onclick = () => {
+    if (!canEnter(el.dataset.id)) return;
     save.sel = el.dataset.id; persist(); renderHome();
   };
 }
 const mapTile = (id) => { const b = BIOMES.find((x) => x.id === id); return scene(Object.keys(b.types).map((t) => CRYSTALS[t].color), b.pal, 46, 46); };
+let mktTab = "tools";
 function renderMarket() {
   $("mktGold").textContent = save.gold;
-  $("shop").innerHTML = SHOP.map((it) => {
+  for (const b of document.querySelectorAll("#mktTabs button")) b.classList.toggle("on", b.dataset.tab === mktTab);
+  $("shop").innerHTML = SHOP.filter((it) => it.tab === mktTab).map((it) => {
     const lvl = it.kind === "up" ? save.up[it.id] : 0;
     const done = it.kind === "up" ? lvl >= it.max : it.kind === "biome" ? save.biomes.includes(it.id.split(":")[1]) : save.owned.includes(it.id);
     const cost = price(it);
-    return `<div class="shopItem"><span class="tile">${it.kind === "biome" ? mapTile(it.id.split(":")[1]) : icon(it.icon, 34)}</span><span class="grow"><b>${it.name}</b><small>${it.desc}</small>
+    return `<div class="shopItem"><span class="tile" ${it.color ? `style="color:${it.color}"` : ""}>${it.kind === "biome" ? mapTile(it.id.split(":")[1]) : icon(it.icon, 34)}</span><span class="grow"><b>${it.name}</b><small>${it.desc}</small>
       ${it.kind === "up" ? `<span class="pips" title="level ${lvl} of ${it.max}">${[...Array(it.max)].map((_, k) => `<i class="${k < lvl ? "on" : ""}"></i>`).join("")}</span>` : ""}</span>
       <button data-id="${it.id}" ${done || save.gold < cost ? "disabled" : ""}>${done ? (it.kind === "up" ? "Max" : "Owned ✓") : coin(16) + cost}</button></div>`;
   }).join("");
@@ -631,7 +721,11 @@ function renderMarket() {
     save.gold -= cost;
     if (it.kind === "up") save.up[it.id]++;
     else if (it.kind === "biome") { const b = it.id.split(":")[1]; save.biomes.push(b); save.sel = b; }
-    else save.owned.push(it.id);
+    else {
+      save.owned.push(it.id);
+      const [grp, val] = it.id.split(":");
+      if (grp === "tent" || grp === "banner" || grp === "fire") save.camp[grp] = val; // wear it straight away
+    }
     persist(); renderMarket();
     [784, 988, 1175].forEach((f, k) => tone(f, .15, "triangle", .08, k * .06));
   };
@@ -641,7 +735,67 @@ $("daily").onclick = () => startDig(true);
 $("mExp").onclick = () => { save.mode = "exp"; persist(); renderHome(); };
 $("mCalm").onclick = () => { save.mode = "calm"; persist(); renderHome(); };
 for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).onclick = () => { save.opt[k] = !save.opt[k]; persist(); renderHome(); };
-$("toMarket").onclick = () => { renderMarket(); show("market"); };
+$("toMarket").onclick = () => save.metPuddock ? (renderMarket(), show("market")) : talk(() => { renderMarket(); show("market"); });
+for (const b of document.querySelectorAll("#mktTabs button")) b.onclick = () => { mktTab = b.dataset.tab; renderMarket(); };
+$("toCamp").onclick = () => { renderCamp(); show("campScr"); };
+$("campBack").onclick = () => { renderHome(); show("home"); };
+
+// ---------- meeting Old Puddock ----------
+const INTRO = [
+  "Well now! A mole with a lantern. Haven't seen one of those since the old oak fell. Name's Puddock. <b>Old</b> Puddock, to the Glimmerwood.",
+  "I trade coins for crystals, and crystals for… well, more coins. Bring me what you dig and I'll keep that lantern burning.",
+  "Here, take this. An old map to <b>Cinderroot Caverns</b>, worn thin as a leaf. It'll get you in <b>once</b>. Bring back something warm, eh?",
+];
+function talk(then) {
+  let k = 0;
+  const step = () => {
+    $("talkLine").innerHTML = INTRO[k];
+    const lastStep = k === INTRO.length - 1;
+    $("talkGift").innerHTML = lastStep ? `<div class="gift">${mapTile("ember")}<div><b>Puddock's old map</b><small>Cinderroot Caverns · good for one dig</small></div>${icon("ticket", 28)}</div>` : "";
+    $("talkNext").innerHTML = lastStep ? `<span class="btnrow">${icon("map", 22)}Take the map</span>` : "Go on…";
+    tone(220 + k * 40, .12, "triangle", .07); tone(180 + k * 30, .1, "triangle", .05, .1);
+  };
+  $("talkNext").onclick = () => {
+    if (++k < INTRO.length) return step();
+    save.metPuddock = true; if (!save.biomes.includes("ember") && !save.trial.includes("ember")) save.trial.push("ember");
+    persist(); [784, 988, 1175, 1568].forEach((f, j) => tone(f, .18, "triangle", .08, j * .07)); then();
+  };
+  step(); show("talk");
+}
+
+// ---------- Dibble's Camp: every purchase shows up here ----------
+function campState() {
+  const own = (id) => save.owned.includes(id) && !save.camp.hide.includes(id);
+  return { ...save.up, mines: BIOMES.filter((b) => save.biomes.includes(b.id)).map((b) => b.pal.glow),
+    found: Object.keys(CRYSTALS).map((t) => save.found.includes(t) ? { color: CRYSTALS[t].color, cut: CRYSTALS[t].cut } : null),
+    tent: save.camp.tent, banner: save.camp.banner, fire: save.camp.fire,
+    decor: { mushrooms: own("decor:mushrooms"), jars: own("decor:jars"), hammock: own("decor:hammock"), cart: own("decor:cart"), flies: save.owned.includes("fireflies") } };
+}
+function campProgress() {
+  const ups = SHOP.filter((i) => i.kind === "up"), extras = SHOP.filter((i) => i.kind !== "up");
+  const have = ups.reduce((s, i) => s + save.up[i.id], 0) + extras.filter((i) => i.kind === "biome" ? save.biomes.includes(i.id.split(":")[1]) : save.owned.includes(i.id)).length + save.found.length;
+  const total = ups.reduce((s, i) => s + i.max, 0) + extras.length + Object.keys(CRYSTALS).length;
+  return have / total;
+}
+function renderCamp() {
+  $("campArt").innerHTML = camp(campState(), gem, dibble(100));
+  const pc = campProgress();
+  $("campProg").innerHTML = `<div class="bar"><i style="width:${(pc * 100).toFixed(1)}%"></i></div><small>Camp ${Math.round(pc * 100)}% grown · ${save.found.length}/${Object.keys(CRYSTALS).length} gems on the shelf</small>`;
+  const chip = (grp, val, label, swatch) => `<button class="chip ${save.camp[grp] === val ? "on" : ""}" data-grp="${grp}" data-val="${val}">${swatch || ""}${label}</button>`;
+  const tents = [["canvas", "Canvas"], ["patchwork", "Patchwork"], ["treehouse", "Treehouse"], ["pavilion", "Pavilion"]].filter(([v]) => v === "canvas" || save.owned.includes("tent:" + v));
+  const banners = Object.entries(BANNERS).filter(([c], k) => !k || save.owned.includes("banner:" + c));
+  const fires = [["ring", "Campfire"], ["forge", "Forge"]].filter(([v]) => v === "ring" || save.owned.includes("fire:" + v));
+  const decor = SHOP.filter((i) => i.id.startsWith("decor:") && save.owned.includes(i.id));
+  $("campCustom").innerHTML = `
+    <div class="custRow"><span>Tent</span>${tents.map(([v, l]) => chip("tent", v, l)).join("")}</div>
+    <div class="custRow"><span>Banner</span>${banners.map(([c, l]) => chip("banner", c, "", `<i class="sw" style="background:${c}" title="${l}"></i>`)).join("")}</div>
+    <div class="custRow"><span>Fire</span>${fires.map(([v, l]) => chip("fire", v, l)).join("")}</div>
+    ${decor.length ? `<div class="custRow"><span>Decor</span>${decor.map((i) => `<button class="chip ${save.camp.hide.includes(i.id) ? "" : "on"}" data-hide="${i.id}">${i.name}</button>`).join("")}</div>` : ""}
+    <div class="note">Lanterns = Lantern level · tool rack = Pickaxe · the sapling = Root Charm · signpost = mines opened · shelf = gem types found. More in Old Puddock's Camp tab.</div>`;
+  for (const b of $("campCustom").querySelectorAll("[data-grp]")) b.onclick = () => { save.camp[b.dataset.grp] = b.dataset.val; persist(); renderCamp(); tone(660, .08, "triangle", .06); };
+  for (const b of $("campCustom").querySelectorAll("[data-hide]")) b.onclick = () => {
+    const h = save.camp.hide, id = b.dataset.hide; save.camp.hide = h.includes(id) ? h.filter((x) => x !== id) : [...h, id]; persist(); renderCamp(); };
+}
 $("mktBack").onclick = () => { renderHome(); show("home"); };
 
 // ---------- frame ----------
@@ -708,7 +862,7 @@ if (qs.has("debug")) window.gw = { place: (i, r, c) => commit(i, r, c), get tray
 $("world").innerHTML = forest();
 for (const el of document.querySelectorAll(".vineSlot")) el.outerHTML = vine();
 $("flies").innerHTML = [...Array(14)].map((_, k) => `<i class="fly" style="left:${(k * 37) % 100}%;top:${20 + (k * 53) % 70}%;animation-delay:${-k * 0.7}s,${-k * 0.37}s"></i>`).join("");
-$("pipArt").innerHTML = pip(92); $("brambleArtEnd").innerHTML = bramble(52); $("brambleArtMkt").innerHTML = bramble(60);
+$("dibbleArt").innerHTML = dibble(92); $("talkArt").innerHTML = puddock(120); $("icoCamp").innerHTML = icon("campIco", 24); $("icoBack2").innerHTML = icon("back", 20); $("puddockArtEnd").innerHTML = puddock(52); $("puddockArtMkt").innerHTML = puddock(60);
 for (const id of ["coinA", "coinB", "coinC"]) $(id).innerHTML = coin(22);
 $("coinHud").innerHTML = coin(26);
 $("icoExp").innerHTML = icon("vine", 26); $("icoCalm").innerHTML = icon("leaf", 26);
