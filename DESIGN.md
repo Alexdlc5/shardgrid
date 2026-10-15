@@ -43,14 +43,16 @@ Dig an expedition → break crystals → sell the haul to Old Bramble for gold
 
 **1. Mines (biomes).** You pay gold once to open each new mine. Each mine adds new crystal types worth more, one new special, its own crystal **shapes**, and a faster Rootline.
 
-| Mine | Open cost | New crystals | Special | Rootline speed |
-|---|---|---|---|---|
-| **Mossy Hollow** | start | Moss Quartz 1g · Leaf Jade 2g · Sun Amber 3g | Pure vein | ×1.0 |
-| **Ember Roots** | 1,200g | + Garnet 3g · Ember 4g | Ember chain | ×1.15 |
-| Glowcap Grotto | 5,000g | + Glowcap 6g | Spores | ×1.25 |
-| Frostpine Deep | 15,000g | + Frost 8g | Freeze | ×1.35 |
-| Geode Gulch | 40,000g | + Geode 25g | Geode | ×1.45 |
-| Heartwood | 100,000g | all | all, plus "Heartwood season" weekly rules | ×1.6 |
+| Mine | Open cost | Gems (cut) | Special (built) | New shape | Rootline |
+|---|---|---|---|---|---|
+| **Mossy Hollow** | start | Moss Quartz 1g (brilliant) · Leaf Jade 2g (step) · Sun Amber 3g (pear) | Pure vein ×2 | — | ×1.0 |
+| **Ember Roots** | 1,200g | + Garnet 3g (trillion) · Ember Shard 4g (star) | Embers shatter their 3×3, chain | plus / flame | ×1.15 |
+| **Glowcap Grotto** | 5,000g | + Moonstone 5g (cabochon) · Glowcap Gem 6g (round) | Each Glowcap broken: +1 s | cap (U) | ×1.25 |
+| **Frostpine Deep** | 15,000g | + Pine Sapphire 7g (step) · Frostspar 8g (prism) | Frostspar freezes the Rootline 1.5 s each (max 8 s) | snowflake (X) | ×1.35 |
+| **Geode Gulch** | 40,000g | + Deep Topaz 9g (trillion) · Geode 25g (rough, rare) | Rare jackpot gem | ring (hollow 3×3) | ×1.45 |
+| **Heartwood** | 100,000g | mix of everything + Heartstone 40g (heart, rare) | All specials at once | heart | ×1.6 |
+
+Built 2026-10-15 in the prototype. Simplified from the brainstorm: Glowcap *spores* became +time, and the two-hit *geode* became a rare jackpot. The spreading and two-hit versions stay on the list for later.
 
 **2. Tools (permanent upgrades, price ×1.7 per level, 10 levels each).** The game gets *easier* as you upgrade, while mines get *harder*. That tug-of-war is what keeps progress feeling earned.
 
@@ -119,14 +121,18 @@ Not built yet: Undo (some rivals offer it; ours is planned as a rewarded offer, 
 
 ## Sim impact
 
-The Rootline makes rounds end on **time** as well as on a stuck board, so the M1 band (placements per game) no longer describes a round. The sim now models it (`python sim/sim.py --timed`): timer constants and mines live in `sim/generator.json` (`rootline`, `biomes`), shared with the prototype; each bot takes seconds per placement (random 2 ± 0.7 s, greedy 3 ± 1 s, lookahead 4.5 ± 1.5 s); ember crystals chain-break as in `breakCells`.
+The Rootline makes rounds end on **time** as well as on a stuck board, so the M1 band (placements per game) no longer describes a round. The sim now models it (`python sim/sim.py --timed`): timer constants, the six mines and the crystal specials live in `sim/generator.json` (`rootline`, `biomes`, `crystals`), shared with the prototype; each bot takes seconds per placement (random 2 ± 0.7 s, greedy 3 ± 1 s, lookahead 4.5 ± 1.5 s); embers chain-break as in `breakCells`, Glowcap adds +1 s per gem broken, Frostspar pauses the drain 1.5 s per gem (8 s cap).
 
 Results, 2026-10-15, current constants (max 60 s, refill 3.5 s/line, combo +25%):
 
 | Bot @ mine | Expedition p10 / p50 / p90 | Ends on time / stuck | Placements p50 |
 |---|---|---|---|
 | greedy @ Mossy Hollow (n=10k) | 1:32 / **3:24** / 8:47 | 32% / 68% | 68 |
-| greedy @ Ember Roots (n=10k) | 1:14 / **1:36** / 2:37 | 92% / 8% | 32 |
+| greedy @ Ember Roots ×1.15 (n=10k) | 1:14 / **1:36** / 2:34 | 91% / 9% | 32 |
+| greedy @ Glowcap Grotto ×1.25 | 1:19 / **2:42** / 7:04 | 37% / 63% | 53 |
+| greedy @ Frostpine Deep ×1.35 | 1:06 / **2:19** / 5:55 | 22% / 78% | 47 |
+| greedy @ Geode Gulch ×1.45 | 0:57 / **1:11** / 1:59 | 88% / 12% | 23 |
+| greedy @ Heartwood ×1.6 | 0:53 / **1:23** / 3:05 | 89% / 11% | 27 |
 | lookahead @ Mossy Hollow (n=2k) | 1:28 / 1:49 / 3:20 | 99% / 1% | 24 |
 | greedy @ Mossy Hollow, 1 rescue | 2:43 / 5:46 / 13:00 | 48% / 52% | 115 |
 
@@ -137,5 +143,6 @@ What it tells us:
 2. **Ember Roots is twice as short and ends on time 92% of the time.** Isolated: drain ×1.15 alone (Hollow shapes and crystals) cuts the median 3:24 → 2:10 (Hollow sits near break-even, so drain is very sensitive), and embers cut it further, because cells an ember shatters are not *lines*, so they refill no time and leave fewer lines to clear later. Options: refill a little per ember-shattered cell, a higher `max_time` per mine, or a lower Ember drain (~×1.05). Not tuned yet; the owner's call.
 3. **The slow, careful bot dies sooner** (lookahead 1:49 vs greedy 3:24): at 4.5 s a placement the clock, not the board, ends 99% of its runs. The Rootline rewards speed over planning; that supports making Calm Grove prominent for players who like to think (open question 1).
 4. The rescue (+20 s or shatter 3) adds about 2½ minutes at the median.
+5. **Mines with a time special outlast faster-drain mines without one.** Bloom lifts Glowcap Grotto from 1:42 to 2:42, and freeze lifts Frostpine Deep from 1:19 to 2:19 (measured by switching each special off). **Geode Gulch has no time special and is the shortest mine (1:11, 88% time-outs)**, shorter than Heartwood. Mines don't get harder in a steady line yet: the order is Hollow > Grotto > Frostpine > Ember ≈ Heartwood > Gulch. The difficulty curve should come from the drain multipliers on purpose, not from which specials a mine happens to have; this needs tuning (likely Gulch and Ember first).
 
 The bots' think times are guesses; once the prototype has real players, measure seconds per placement and replace `bot_seconds`.

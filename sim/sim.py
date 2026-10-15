@@ -204,16 +204,18 @@ def play(seed, bot, cat, cum, cfg, rescues=0):
 
 def play_timed(seed, bot, cat, cum, cfg, biome, rescues=0):
     """One Rootline expedition in `biome`, the bot thinking bot_seconds per placement.
+    Each piece gets a crystal type; specials (cfg["crystals"]) chain-break, refill or freeze.
     Returns (seconds, cause, placements, rescues_used); cause is time, stuck or capped."""
-    rl, bm = cfg["rootline"], cfg["biomes"][biome]
+    rl, bm, cr = cfg["rootline"], cfg["biomes"][biome], cfg["crystals"]
     rate, top = rl["drain"] * bm["drain"], rl["max_time"]
     mean, sd = rl["bot_seconds"][bot]
-    share = bm["types"].get("ember", 0) / sum(bm["types"].values())
+    kinds, kw = list(bm["types"]), list(bm["types"].values())
     gen, brng, trng = random.Random(seed), random.Random(seed ^ 0x5EED), random.Random(seed ^ 0x7173)
-    b = e = placed = used = combo = miss = 0
-    clock, left, started, cause = 0.0, top, False, "capped"
+    sp = {t: 0 for t in kinds if t in cr}  # special type -> its cells
+    b = placed = used = combo = miss = 0
+    clock, left, frozen, started, cause = 0.0, top, 0.0, False, "capped"
     tray = deal(gen, b, cat, cum, cfg)
-    hot = [trng.random() < share for _ in tray]  # ember pieces
+    kind = trng.choices(kinds, kw, k=len(tray))
     while placed < CAP:
         mv = BOTS[bot](brng, b, tray, cat)
         end = None
@@ -221,10 +223,11 @@ def play_timed(seed, bot, cat, cum, cfg, biome, rescues=0):
             end = "stuck"
         else:
             think = max(0.5, trng.gauss(mean, sd))
-            if started and think * rate >= left:  # the Rootline only drains after the first placement
-                clock, left, end = clock + left / rate, 0, "time"
+            still = min(think, max(0.0, frozen - clock))  # Frostspar pauses the drain
+            if started and (think - still) * rate >= left:  # drain starts after the first placement
+                clock, left, end = clock + still + left / rate, 0, "time"
             else:
-                clock, left = clock + think, left - think * rate * started
+                clock, left = clock + think, left - (think - still) * rate * started
         if end:
             if used == rescues:
                 cause = end
@@ -234,28 +237,37 @@ def play_timed(seed, bot, cat, cum, cfg, biome, rescues=0):
                 left = min(top, rl["rescue_time"])
             else:
                 b = rescue(b, cfg["rescue_lines"])
-                e &= b
+                sp = {t: c & b for t, c in sp.items()}
                 tray = deal(gen, b, cat, cum, cfg)
-                hot = [trng.random() < share for _ in tray]
+                kind = trng.choices(kinds, kw, k=len(tray))
                 left = max(left, rl["rescue_time"])
             continue
         i, m = mv[0], mv[3]
-        b, e, started = b | m, e | (m if hot[i] else 0), True
+        b, started = b | m, True
+        if kind[i] in sp:
+            sp[kind[i]] |= m
         nb, n = clear(b)
         if n:
-            broken = ember_break(b, e, b & ~nb)
-            b, e = b & ~broken, e & ~broken
+            embers = sum(c for t, c in sp.items() if cr[t].get("ember"))  # disjoint, so sum == or
+            broken = ember_break(b, embers, b & ~nb)
+            hit = {t: (c & broken).bit_count() for t, c in sp.items()}
+            bloom = sum(k * cr[t].get("bloom", 0) for t, k in hit.items())
+            freeze = sum(k * cr[t].get("freeze", 0) for t, k in hit.items())
+            b, sp = b & ~broken, {t: c & ~broken for t, c in sp.items()}
             combo, miss = combo + 1, 0
-            left = min(top, left + rl["refill_per_line"] * n * (1 + rl["combo_bonus"] * (combo - 1)))
+            add = rl["refill_per_line"] * n * (1 + rl["combo_bonus"] * (combo - 1))
+            left = min(top, left + add + bloom)
+            if freeze:
+                frozen = max(frozen, clock) + min(rl["freeze_max"], freeze)
         elif combo:
             miss += 1
             if miss >= rl["combo_break"]:
                 combo = miss = 0
         placed += 1
-        tray, hot = tray[:i] + tray[i + 1:], hot[:i] + hot[i + 1:]
+        tray, kind = tray[:i] + tray[i + 1:], kind[:i] + kind[i + 1:]
         if not tray:
             tray = deal(gen, b, cat, cum, cfg)
-            hot = [trng.random() < share for _ in tray]
+            kind = trng.choices(kinds, kw, k=len(tray))
     return clock, cause, placed, used
 
 
