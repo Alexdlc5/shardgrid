@@ -108,7 +108,7 @@ const cfg0 = await (await fetch("../sim/generator.json")).json();
 const $ = (id) => document.getElementById(id);
 
 // ---------- tuning (all Remote Config later) ----------
-const T = { maxTime: 60, drain: 1, refillPerLine: 3.5, comboBonus: 0.25, rescueTime: 20, warn: 0.25 };
+const T = cfg0.rootline; // timer tuning, shared with sim/sim.py
 const CRYSTALS = {
   moss:   { name: "Moss Quartz", color: "#8fd18b", value: 1, glyph: "●" },
   jade:   { name: "Leaf Jade",   color: "#35b38a", value: 2, glyph: "▲" },
@@ -117,10 +117,9 @@ const CRYSTALS = {
   ember:  { name: "Ember Shard", color: "#ff6a3d", value: 4, ember: true, glyph: "✦" },
 };
 const BIOMES = [
-  { id: "hollow", name: "Mossy Hollow", cost: 0, drain: 1, types: { moss: 5, jade: 3, amber: 2 }, families: {},
+  { id: "hollow", name: "Mossy Hollow", cost: 0, ...cfg0.biomes.hollow, // drain, types, families: in generator.json
     blurb: "Soft moss, easy veins. Match one crystal type in a line for ×2." },
-  { id: "ember", name: "Ember Roots", cost: 1200, drain: 1.15, types: { moss: 2, jade: 2, amber: 2, garnet: 2, ember: 1.3 },
-    families: { flame: { weight: 2, art: [".X.", "XXX", ".X."] } },
+  { id: "ember", name: "Ember Roots", cost: 1200, ...cfg0.biomes.ember,
     blurb: "Embers shatter everything around them, and chain." },
 ];
 const SHOP = [
@@ -205,7 +204,7 @@ function startDig(isDaily = false) {
   rng = daily ? mulberry(+today().replaceAll("-", "")) : Math.random; // same crystals for everyone today
   biome = BIOMES.find((b) => b.id === (daily ? "hollow" : save.sel)); cat = daily ? buildCatalog(cfg0) : catalogFor(biome);
   board = Array(64).fill(0); meta = {}; uid = 1; combo = 0; miss = 0; rescueUsed = false;
-  haul = {}; maxTime = T.maxTime + 5 * save.up.lantern; time = maxTime; started = false;
+  haul = {}; maxTime = T.max_time + 5 * save.up.lantern; time = maxTime; started = false;
   tray = dealTray(); state = "play"; show(null);
   $("biomeName").textContent = daily ? `Daily Dig · ${today()}` : biome.name + (calm ? " · Calm" : "");
 }
@@ -367,7 +366,7 @@ function commit(i, r, c) {
     const ctr = cells.reduce((a, k) => [a[0] + (k % N), a[1] + Math.floor(k / N)], [0, 0]).map((v) => v / cells.length);
     shatter(cells.sort((a, b) => (a % N + Math.floor(a / N)) - (b % N + Math.floor(b / N))), (k) => CRYSTALS[typeOf(before[k])].color);
     board = clearCells(board, cells);
-    const add = T.refillPerLine * n * (1 + .1 * save.up.charm) * (1 + T.comboBonus * (combo - 1));
+    const add = T.refill_per_line * n * (1 + .1 * save.up.charm) * (1 + T.combo_bonus * (combo - 1));
     time = Math.min(maxTime, time + add);
     float(`+${gained}g`, bx + (ctr[0] + .5) * cell, by + (ctr[1] + .5) * cell);
     float(`+${add.toFixed(1)}s`, bx + cell * N / 2, by - 30, "#9be08a");
@@ -377,7 +376,7 @@ function commit(i, r, c) {
     if (embers) { toast(embers > 3 ? `Ember chain ×${embers}!` : "Ember burst!"); tone(70, .5, "triangle", .3); tone(110, .35, "sawtooth", .05); buzz(60); }
     buzz(25);
     $("comboTxt").textContent = combo > 1 ? `Combo ×${combo}` : "";
-  } else if (combo && ++miss >= 3) { combo = 0; miss = 0; $("comboTxt").textContent = ""; tone(196, .25, "sine", .06); }
+  } else if (combo && ++miss >= T.combo_break) { combo = 0; miss = 0; $("comboTxt").textContent = ""; tone(196, .25, "sine", .06); }
   tray[i] = null;
   if (tray.every((q) => !q)) tray = dealTray();
   if (!tray.some((q) => q && fitsAnywhere(board, q.piece))) endRound("stuck");
@@ -391,7 +390,7 @@ function endRound(cause) {
   setTimeout(() => {
     $("endTitle").textContent = cause === "time" ? "The roots closed the tunnel" : "No room left to dig";
     $("endSub").textContent = "Pip climbs out with the haul. Nothing is lost.";
-    $("rescue").textContent = cause === "time" ? `Roots regrow +${T.rescueTime}s` : "Shatter the 3 fullest veins";
+    $("rescue").textContent = cause === "time" ? `Roots regrow +${T.rescue_time}s` : "Shatter the 3 fullest veins";
     $("rescue").style.display = rescueUsed ? "none" : "block";
     $("haulList").innerHTML = Object.entries(haul).map(([t, n]) => `<div class="row"><span class="gem" style="background:${CRYSTALS[t].color}"></span>
       <span class="grow">${CRYSTALS[t].name}<small>${n} × ${CRYSTALS[t].value}g</small></span><span>${Math.round(n * CRYSTALS[t].value * valueMult())}g</span></div>`).join("") ||
@@ -405,12 +404,12 @@ function endRound(cause) {
 }
 $("rescue").onclick = () => {
   rescueUsed = true; state = "play"; show(null);
-  if (endCause === "time") time = Math.min(maxTime, T.rescueTime);
+  if (endCause === "time") time = Math.min(maxTime, T.rescue_time);
   else {
     const cells = rescueCells(board, 3), before = board;
     shatter(cells, (k) => CRYSTALS[typeOf(before[k])].color, 5);
     board = clearCells(board, cells); tray = dealTray();
-    if (time < T.rescueTime) time = T.rescueTime;
+    if (time < T.rescue_time) time = T.rescue_time;
   }
   [392, 523, 659].forEach((f, k) => tone(f, .3, "sine", .12, k * .07)); buzz(40);
   if (!tray.some((q) => q && fitsAnywhere(board, q.piece))) endRound("stuck");

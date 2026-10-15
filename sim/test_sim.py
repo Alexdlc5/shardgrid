@@ -2,8 +2,8 @@
 import inspect
 import json
 
-from sim import (BOTS, CFG_PATH, ROWS, COLS, clear, deal, isolated, load, orientations, play,
-                 rescue)
+from sim import (BOTS, CFG_PATH, ROWS, COLS, catalog, clear, deal, ember_break, isolated, load,
+                 orientations, play, play_timed, rescue)
 
 cfg = json.loads(CFG_PATH.read_text())
 cat = load(cfg)
@@ -41,5 +41,17 @@ for bot in BOTS.values():
 
 # a rescue never shortens a game
 assert play(3, BOTS["greedy"], cat, cum, cfg, rescues=1)[0] >= play(3, BOTS["greedy"], cat, cum, cfg)[0]
+
+# ember chain, same case as proto/check.mjs: row 0 all ember breaks (1,0),(1,1); ember (1,1) chains to (2,2)
+b = ROWS[0] | 1 << 8 | 1 << 9 | 1 << 18 | 1 << 30
+assert ember_break(b, ROWS[0] | 1 << 9, ROWS[0]) == ROWS[0] | 1 << 8 | 1 << 9 | 1 << 18
+assert ember_break(b, 0, ROWS[0]) == ROWS[0]
+
+# timed: deterministic, ends on a known cause, a rescue never shortens an expedition
+for biome in cfg["biomes"]:
+    tc, tcum = catalog(cfg, biome)
+    g = play_timed(5, "greedy", tc, tcum, cfg, biome)
+    assert g == play_timed(5, "greedy", tc, tcum, cfg, biome) and g[1] in ("time", "stuck", "capped")
+    assert play_timed(5, "greedy", tc, tcum, cfg, biome, rescues=1)[0] >= g[0]
 
 print("ok")

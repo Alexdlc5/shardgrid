@@ -119,4 +119,23 @@ Not built yet: Undo (some rivals offer it; ours is planned as a rewarded offer, 
 
 ## Sim impact
 
-The Rootline makes rounds end on **time** as well as on a stuck board, so the M1 band (placements per game) no longer describes a round. Next sim step: give each bot a seconds-per-placement model and tune `max_time`, drain and refill so a typical expedition lasts **3–5 minutes**.
+The Rootline makes rounds end on **time** as well as on a stuck board, so the M1 band (placements per game) no longer describes a round. The sim now models it (`python sim/sim.py --timed`): timer constants and mines live in `sim/generator.json` (`rootline`, `biomes`), shared with the prototype; each bot takes seconds per placement (random 2 ± 0.7 s, greedy 3 ± 1 s, lookahead 4.5 ± 1.5 s); ember crystals chain-break as in `breakCells`.
+
+Results, 2026-10-15, current constants (max 60 s, refill 3.5 s/line, combo +25%):
+
+| Bot @ mine | Expedition p10 / p50 / p90 | Ends on time / stuck | Placements p50 |
+|---|---|---|---|
+| greedy @ Mossy Hollow (n=10k) | 1:32 / **3:24** / 8:47 | 32% / 68% | 68 |
+| greedy @ Ember Roots (n=10k) | 1:14 / **1:36** / 2:37 | 92% / 8% | 32 |
+| lookahead @ Mossy Hollow (n=2k) | 1:28 / 1:49 / 3:20 | 99% / 1% | 24 |
+| greedy @ Mossy Hollow, 1 rescue | 2:43 / 5:46 / 13:00 | 48% / 52% | 115 |
+
+`--check` now gates **greedy median in Mossy Hollow at 3–5 min**; it passes at 3:24, near the low edge.
+
+What it tells us:
+1. **Mossy Hollow hits the target as is**, and most rounds end on a stuck board, so the timer adds tension without being the usual cause of death.
+2. **Ember Roots is twice as short and ends on time 92% of the time.** Isolated: drain ×1.15 alone (Hollow shapes and crystals) cuts the median 3:24 → 2:10 (Hollow sits near break-even, so drain is very sensitive), and embers cut it further, because cells an ember shatters are not *lines*, so they refill no time and leave fewer lines to clear later. Options: refill a little per ember-shattered cell, a higher `max_time` per mine, or a lower Ember drain (~×1.05). Not tuned yet; the owner's call.
+3. **The slow, careful bot dies sooner** (lookahead 1:49 vs greedy 3:24): at 4.5 s a placement the clock, not the board, ends 99% of its runs. The Rootline rewards speed over planning; that supports making Calm Grove prominent for players who like to think (open question 1).
+4. The rescue (+20 s or shatter 3) adds about 2½ minutes at the median.
+
+The bots' think times are guesses; once the prototype has real players, measure seconds per placement and replace `bot_seconds`.
