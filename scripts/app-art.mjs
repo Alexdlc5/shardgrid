@@ -1,7 +1,7 @@
-// Regenerate the Android launcher icon and splash from proto/art.js (Dibble). Run: npm run assets
-// Writes source SVG/PNG to assets/ and every density into android/app/src/main/res/.
+// Regenerate the app icon and splash from proto/art.js (Dibble). Run: npm run assets
+// Writes source SVG/PNG to assets/, every Android density into android/app/src/main/res/, and the iOS asset catalog.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { inflateSync } from "node:zlib";
+import { inflateSync, deflateSync, crc32 } from "node:zlib";
 import { tmpdir } from "node:os";
 import { Resvg } from "@resvg/resvg-js";
 import { dibble } from "../proto/art.js";
@@ -70,3 +70,18 @@ for (const [d, [k, w, h]] of Object.entries(densities)) {
 }
 put(`${res}/drawable/splash.png`, png(svgs.splash(480, 320), 480));
 console.log("assets/ and android res/ regenerated");
+
+// iOS: one 1024px icon (App Store rejects any alpha channel, so write plain RGB) and a 2732px square splash.
+function rgbPng(svg, width) {
+  const img = new Resvg(svg, { fitTo: { mode: "width", value: width }, font: { fontFiles: [font], loadSystemFonts: false, defaultFontFamily: "Fredoka" } }).render();
+  const { width: w, height: h, pixels } = img, raw = Buffer.alloc((w * 3 + 1) * h);
+  for (let y = 0; y < h; y++) { raw[y * (w * 3 + 1)] = 0; for (let x = 0; x < w; x++) { const i = (y * w + x) * 4, o = y * (w * 3 + 1) + 1 + x * 3; raw[o] = pixels[i]; raw[o + 1] = pixels[i + 1]; raw[o + 2] = pixels[i + 2]; } }
+  const chunk = (type, data) => { const len = Buffer.alloc(4); len.writeUInt32BE(data.length); const td = Buffer.concat([Buffer.from(type), data]); const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(td)); return Buffer.concat([len, td, crc]); };
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2; // 8-bit RGB
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk("IHDR", ihdr), chunk("IDAT", deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
+}
+const ios = "ios/App/App/Assets.xcassets";
+put(`${ios}/AppIcon.appiconset/AppIcon-512@2x.png`, rgbPng(svgs.icon, 1024));
+const sq = png(svgs.splash(2732, 2732), 2732);
+for (const f of ["splash-2732x2732.png", "splash-2732x2732-1.png", "splash-2732x2732-2.png"]) put(`${ios}/Splash.imageset/${f}`, sq);
+console.log("iOS icon and splash regenerated");

@@ -310,5 +310,24 @@
     "heart": {
       "value": 120
     }
+  },
+  "pilfermoths": {
+    "chance": {
+      "hollow": 0.12,
+      "ember": 0.2,
+      "grotto": 0.24,
+      "frostpine": 0.24,
+      "gulch": 0.3,
+      "heartwood": 0.34
+    },
+    "max_alive": {
+      "default": 1,
+      "heartwood": 2
+    },
+    "grace_placements": 6,
+    "nibble_share": 0.08,
+    "max_nibbles": 3,
+    "loot_mult": 1.5,
+    "loot_bonus": 4
   }
 }

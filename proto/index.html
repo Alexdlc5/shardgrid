@@ -211,6 +211,31 @@
   .iap button { width: auto; margin: 0; padding: 7px 12px; font-size: 15px; }
   .linkBtn { background: none !important; border: 0 !important; box-shadow: none !important; color: #d9c49c !important; font-size: 13px;
     text-decoration: underline; padding: 4px; margin: 4px 0 0; text-shadow: none; }
+  /* ===== satisfying UI ===== */
+  button { transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .12s, filter .12s; }
+  button:hover:not(:disabled) { filter: brightness(1.06); transform: translateY(-1px); }
+  button:active:not(:disabled) { transform: translateY(3px) scale(.97); transition-duration: .05s; }
+  .screen.show .hang { animation: swingIn .7s cubic-bezier(.34,1.56,.64,1) both; transform-origin: 50% -40px; }
+  @keyframes swingIn { 0% { transform: translateY(-70px) rotate(-6deg); opacity: 0; } 55% { transform: translateY(4px) rotate(2.5deg); opacity: 1; }
+    75% { transform: rotate(-1deg); } 100% { transform: none; } }
+  #toast { transition: opacity .25s, transform .3s cubic-bezier(.34,1.56,.64,1); }
+  .flyCoin { position: fixed; left: 0; top: 0; z-index: 50; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.4)); }
+  .spark { position: fixed; left: 0; top: 0; z-index: 50; width: 12px; height: 12px; margin: -6px; pointer-events: none;
+    background: #ffd27a; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); }
+  .pips i { transition: background .3s, transform .3s cubic-bezier(.34,1.56,.64,1); } .pips i.on { transform: scaleY(1.25); }
+  .chip { transition: transform .18s cubic-bezier(.34,1.56,.64,1); } .chip.on { transform: scale(1.06); }
+  .tile svg.dibble { margin-top: 2px; }
+  /* ===== camp: a full-width living scene above the signboard ===== */
+  .campScreen { flex-direction: column; align-items: center; padding-top: 0 !important; background: rgba(5,12,8,.55); }
+  .campStage { position: relative; width: min(100vw, 720px); flex: none; touch-action: none; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+  .campStage .campArt { display: block; }
+  .campStage [data-tap] { cursor: pointer; }
+  .campFx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .campPop, .campSpark, .campSay { position: absolute; color: #fff6c8; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,.5); font-size: 20px; }
+  .campSpark { color: #ffd27a; font-size: 18px; }
+  .campSay { background: #f3e6c4; color: #3a2410; padding: 6px 10px; border-radius: 12px; font-size: 14px; font-style: italic; text-shadow: none; white-space: nowrap; }
+  .campHint { position: absolute; right: 10px; bottom: 8px; font-size: 12px; color: rgba(246,234,208,.7); pointer-events: none; }
+  .campScreen .hang { margin-top: 34px; }
 </style>
 </head>
 <body>
@@ -232,7 +257,7 @@
   <button id="daily" class="alt"></button>
   <div class="twoBtn"><button id="toMarket" class="alt"><span class="btnrow"><span id="icoStall"></span>Market</span></button>
     <button id="toCamp" class="alt"><span class="btnrow"><span id="icoCamp"></span>Dibble's Camp</span></button></div>
-  <div class="opts"><button id="oSound"></button><button id="oVib"></button><button id="oGlyph"></button><button id="oPrivacy"></button></div>
+  <div class="opts"><button id="oMusic"></button><button id="oSound"></button><button id="oVib"></button><button id="oGlyph"></button><button id="oPrivacy"></button></div>
   <div class="note">Fair dealing: crystals are dealt at random. Never by ads, purchases or how close you are to your best.</div>
 </div></div></section>
 
@@ -256,7 +281,7 @@
   <div class="speech"><span id="puddockArtMkt"></span><div class="bubble">"Shiny rocks, shiny coins. Fair trade, little mole."</div></div>
   <div class="pill"><span id="coinC"></span><span id="mktGold">0</span></div>
   <div id="iapRow"></div>
-  <div class="tabs" id="mktTabs"><button data-tab="tools">Tools</button><button data-tab="camp">Camp</button><button data-tab="maps">Maps</button></div>
+  <div class="tabs" id="mktTabs"><button data-tab="tools">Tools</button><button data-tab="wardrobe">Wardrobe</button><button data-tab="camp">Camp</button><button data-tab="maps">Maps</button></div>
   <div id="shop"></div>
   <button id="mktBack" class="alt"><span class="btnrow"><span id="icoBack"></span>Back to the mines</span></button>
 </div></div></section>
@@ -268,10 +293,12 @@
   <button id="talkNext">Go on…</button>
 </div></div></section>
 
-<section id="campScr" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
+<section id="campScr" class="screen campScreen">
+  <div class="campStage" id="campStage"><div id="campArt"></div><div id="campFx" class="campFx"></div>
+    <div class="campHint">Tap things around camp ✦</div></div>
+  <div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
   <h2>Dibble's Camp</h2>
   <div class="tag" style="margin:0 0 8px">Everything you buy from Old Puddock ends up here.</div>
-  <div id="campArt" class="campWrap"></div>
   <div id="campProg" class="campProg"></div>
   <div id="campCustom"></div>
   <button id="campBack" class="alt"><span class="btnrow"><span id="icoBack2"></span>Back to the mines</span></button>
@@ -281,9 +308,10 @@
 import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, fitsAnywhere, deal,
   rescueCells, breakCells, pureVeinCells } from "./game.js";
 
-import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp } from "./art.js";
+import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, DEFAULT_LOOK, FUR } from "./art.js";
+import { soundtrack } from "./music.js";
 import { platform, track } from "./platform.js";
-const cfg0 = await (await fetch("../sim/generator.json")).json();
+const cfg0 = await (await fetch("../sim/generator.json", { cache: "no-cache" })).json();
 const $ = (id) => document.getElementById(id);
 
 // ---------- tuning (all Remote Config later) ----------
@@ -318,6 +346,22 @@ const BIOMES = [ // gameplay (cost, drain, gem weights, shapes) lives in sim/gen
     blurb: "The great tree's heart. Every special at once, and Roothearts." },
 ].map((b) => ({ families: {}, ...b, ...cfg0.biomes[b.id] }));
 const BANNERS = { "#5fa04e": "Moss green", "#c8553d": "Ember red", "#9b7cf2": "Gloamcap violet", "#4f7fe8": "Frost blue", "#f0c75a": "Royal gold" };
+const LOOKS = {
+  hat: { none: "No hat", leaf: "Leaf cap", mushroom: "Toadstool cap", beanie: "Knit beanie", flowers: "Flower crown", miner: "Miner's helmet" },
+  scarf: { none: "No scarf", "#c8553d": "Ember scarf", "#35b38a": "Jade scarf", "#4f7fe8": "Frost scarf", "#9b7cf2": "Gloam scarf", "#f0c75a": "Gold scarf" },
+  lantern: { amber: "Amber lantern", paper: "Paper lantern", jar: "Firefly jar", crystal: "Crystal lantern" },
+  fur: { cocoa: "Cocoa fur", sand: "Sand fur", slate: "Slate fur", snow: "Snow fur", rosewood: "Rosewood fur" },
+};
+const LOOK_FREE = { hat: ["none", "leaf"], scarf: ["none"], lantern: ["amber"], fur: ["cocoa"] };
+const lookOwned = (part, v) => LOOK_FREE[part].includes(v) || save.owned.includes(`look:${part}:${v}`);
+const WARDROBE = [
+  ["scarf", "#c8553d", 300, "Knitted by a very patient spider"], ["scarf", "#35b38a", 600, "Smells faintly of mint"], ["hat", "mushroom", 800, "Spotted, springy, slightly magical"],
+  ["fur", "sand", 1000, "A sunny dye from Puddock's jars"], ["scarf", "#4f7fe8", 1200, "Stays cool, even near embers"], ["hat", "beanie", 1500, "With a pompom that bounces"],
+  ["lantern", "paper", 2000, "Glows a warm sunset red"], ["scarf", "#9b7cf2", 2500, "Faintly glows in Gloamcap Grotto"], ["fur", "slate", 3000, "Moody, mysterious, very soft"],
+  ["hat", "flowers", 4000, "Picked fresh every morning"], ["lantern", "jar", 5000, "Three fireflies who like you"], ["scarf", "#f0c75a", 6000, "Woven from gold thread"],
+  ["fur", "snow", 9000, "White as Frostpine powder"], ["hat", "miner", 12000, "A proper mole's helmet, with a lamp"], ["fur", "rosewood", 15000, "A rare red from Heartroot sap"],
+  ["lantern", "crystal", 20000, "Cut from a single Frostspar"],
+];
 const SHOP = [
   // Tools: permanent upgrades, price ×1.6 per level
   { id: "lantern", tab: "tools", icon: "lantern", kind: "up", name: "Lantern", desc: "+5s of Rootline", base: 150, max: 15 },
@@ -327,6 +371,8 @@ const SHOP = [
   { id: "tongs", tab: "tools", icon: "tongs", kind: "up", name: "Ember Tongs", desc: "+25% gold from crystals an ember shatters", base: 3000, max: 6 },
   { id: "sieve", tab: "tools", icon: "sieve", kind: "up", name: "Lucky Sieve", desc: "Geodes and Roothearts turn up 15% more", base: 25000, max: 5 },
   { id: "dewdrop", tab: "tools", icon: "dewdrop", kind: "once", name: "Dewdrop pouch", desc: "More tiny 1-cell crystals in your trays", price: 900 },
+  // Wardrobe: Dibble's looks
+  ...WARDROBE.map(([part, val, price, desc]) => ({ id: `look:${part}:${val}`, tab: "wardrobe", kind: "look", part, val, name: LOOKS[part][val], desc, price })),
   // Camp: looks only, shown at Dibble's Camp
   { id: "tent:patchwork", tab: "camp", icon: "tent", kind: "camp", name: "Patchwork tent", desc: "Scraps from every mine, stitched by Dibble", price: 1500 },
   { id: "tent:treehouse", tab: "camp", icon: "tent", kind: "camp", name: "Treehouse", desc: "A ladder, a lookout, a lamp in the window", price: 20000 },
@@ -345,11 +391,11 @@ const SHOP = [
 // ---------- save (per-browser) ----------
 const store = { get(k, d) { try { return JSON.parse(localStorage.getItem("gw." + k)) ?? d; } catch { return d; } },
                 set(k, v) { try { localStorage.setItem("gw." + k, JSON.stringify(v)); } catch {} } };
-const DEFAULTS = { gold: 0, up: { lantern: 0, pick: 0, charm: 0, lens: 0, tongs: 0, sieve: 0 }, owned: [], biomes: ["hollow"], best: {}, sel: "hollow",
-  mode: "exp", opt: { sound: true, vib: true, glyph: false }, daily: { last: "", streak: 0, best: 0 },
+const DEFAULTS = { look: { ...DEFAULT_LOOK }, gold: 0, up: { lantern: 0, pick: 0, charm: 0, lens: 0, tongs: 0, sieve: 0 }, owned: [], biomes: ["hollow"], best: {}, sel: "hollow",
+  mode: "exp", opt: { music: true, sound: true, vib: true, glyph: false }, daily: { last: "", streak: 0, best: 0 },
   metPuddock: false, trial: [], found: [], camp: { tent: "canvas", banner: "#5fa04e", fire: "ring", hide: [] } };
-const stored = store.get("save", {});
-const save = { ...DEFAULTS, ...stored, up: { ...DEFAULTS.up, ...stored.up }, camp: { ...DEFAULTS.camp, ...stored.camp } };
+const stored = store.get("save", {}); if (stored.opt && stored.opt.music === undefined) stored.opt.music = true;
+const save = { ...DEFAULTS, ...stored, up: { ...DEFAULTS.up, ...stored.up }, look: { ...DEFAULTS.look, ...stored.look }, camp: { ...DEFAULTS.camp, ...stored.camp } };
 const CALM_MULT = 0.6;
 const PUDDOCK = ["\"Fine rocks. Finer than my cousin's, anyway.\"", "\"Every vein you break, the roots grow kinder.\"",
   "\"Slow digging is still digging, little mole.\"", "\"Hmph. I've seen worse hauls. Mine, mostly.\"",
@@ -377,6 +423,9 @@ function tone(freq, dur = .12, type = "sine", vol = .14, when = 0) {
     o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur);
   } catch {}
 }
+const ui = { tap: () => { tone(620, .05, "sine", .06); tone(420, .07, "sine", .04, .03); },
+  buy: () => { [1319, 1760, 2093].forEach((f, k) => tone(f, .14, "triangle", .07, k * .05)); tone(3000, .05, "square", .015, .16); },
+  whoosh: () => tone(300, .18, "sine", .03), chirp: () => { tone(1500, .08, "sine", .06); tone(1900, .1, "sine", .05, .08); } };
 const buzz = (ms) => save.opt.vib && navigator.userActivation?.hasBeenActive !== false && navigator.vibrate?.(ms); // browsers block vibrate before a tap
 
 // ---------- layout ----------
@@ -398,7 +447,7 @@ const lerpHex = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i
 
 // ---------- round state ----------
 let biome, cat, board, meta, tray, uid, combo, miss, rescueUsed, state = "home", endCause, calm = false, daily = false, rng = Math.random;
-let bonus = 0, frozenUntil = 0, time, maxTime, started, haul, floats = [], parts = [];
+let stolen = 0, moths = [], placedN = 0, mothRng = Math.random, bonus = 0, frozenUntil = 0, time, maxTime, started, haul, floats = [], parts = [];
 function catalogFor(b) {
   const fam = { ...structuredClone(cfg0.families), ...b.families };
   if (save.owned.includes("dewdrop")) fam.dot.weight += 4;
@@ -424,14 +473,94 @@ function startDig(isDaily = false) {
     save.trial = save.trial.filter((x) => x !== biome.id); persist();
     setTimeout(() => toast("Puddock's old map crumbles as you step inside.<br><small>One dig, make it count!</small>", 2600), 300);
   }
-  bonus = 0;
+  bonus = 0; stolen = 0; moths = []; placedN = 0;
+  mothRng = daily ? mulberry(+today().replaceAll("-", "") + 777) : Math.random; // daily: same moths for everyone
   board = Array(64).fill(0); meta = {}; uid = 1; combo = 0; miss = 0; rescueUsed = false;
   haul = {}; frozenUntil = 0; maxTime = T.max_time + 5 * save.up.lantern; time = maxTime; started = false;
   tray = dealTray(); state = "play"; show(null);
+  soundtrack.play(daily ? "hollow" : biome.id);
   $("biomeName").textContent = daily ? `Daily Dig · ${today()}` : biome.name + (calm ? " · Calm" : "");
   track("round_start", { mine: biome.id, mode: daily ? "daily" : calm ? "calm" : "expedition" });
 }
-const haulValue = () => Math.round((Object.entries(haul).reduce((s, [t, n]) => s + n * CRYSTALS[t].value, 0) + bonus) * valueMult());
+const rawHaul = () => Object.entries(haul).reduce((s, [t, n]) => s + n * CRYSTALS[t].value, 0) + bonus;
+const haulValue = () => Math.max(0, Math.round((rawHaul() - stolen) * valueMult()));
+
+// ---------- Pilfermoths: fluffy cave moths drawn to glimmer. They nibble your haul; clear a line through one to
+// shoo it and it drops everything it took, plus a bit. They never touch how pieces are dealt.
+const PM = cfg0.pilfermoths;
+const isMoth = (u) => meta[u]?.type === "moth";
+const nbrs = (i, diag) => { const r = Math.floor(i / N), c = i % N, out = [];
+  for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { if (!dr && !dc) continue; if (!diag && dr && dc) continue;
+    const rr = r + dr, cc = c + dc; if (rr >= 0 && rr < N && cc >= 0 && cc < N) out.push(rr * N + cc); } return out; };
+const crystalNbrs = (i) => nbrs(i, true).filter((j) => board[j] && !isMoth(board[j])).length;
+const mothXY = (i) => [bx + (i % N + .5) * cell, by + (Math.floor(i / N) + .5) * cell];
+function mothTurn() {
+  if (calm) return; // Calm Grove stays calm
+  for (const m of [...moths]) {
+    if (crystalNbrs(m.i) && rawHaul() - stolen > 0) { // nibble
+      const amt = Math.max(1, Math.round((rawHaul() - stolen) * PM.nibble_share));
+      stolen += amt; m.stolen += amt; m.nibbles++; m.nibbleAt = performance.now();
+      const [x, y] = mothXY(m.i); float(`-${Math.round(amt * valueMult())}g`, x, y - cell * .4, "#ff8f8f");
+      tone(260, .06, "square", .03); tone(200, .07, "square", .03, .06); buzz(12);
+      if (m.nibbles >= PM.max_nibbles) { // flies off with it
+        board[m.i] = 0; moths = moths.filter((x) => x !== m);
+        pops.push({ text: "It flew off!", life: 1, col: "#ff8f8f" }); [880, 660, 440].forEach((f, k) => tone(f, .12, "triangle", .05, k * .06));
+        continue;
+      }
+    }
+    const step = nbrs(m.i, false).filter((j) => !board[j]).sort((a, b) => crystalNbrs(b) - crystalNbrs(a))[0]; // hop toward glimmer
+    if (step !== undefined) { board[step] = m.uid; board[m.i] = 0; m.from = m.i; m.i = step; m.hopAt = performance.now(); }
+  }
+  const max = PM.max_alive[biome.id] || PM.max_alive.default;
+  if (placedN >= PM.grace_placements && moths.length < max && mothRng() < (PM.chance[biome.id] || 0)) { // a new one flutters in
+    const empty = board.map((u, i) => (u ? -1 : i)).filter((i) => i >= 0).sort((a, b) => crystalNbrs(b) - crystalNbrs(a));
+    if (empty.length > 3) {
+      const i = empty[Math.floor(mothRng() * Math.min(6, empty.length))], id = 900000 + uid++;
+      meta[id] = { type: "moth" }; board[i] = id; moths.push({ uid: id, i, from: i, stolen: 0, nibbles: 0, hopAt: performance.now(), bornAt: performance.now() });
+      pops.push({ text: "A Pilfermoth!", life: 1, col: "#c9b6ff" }); [1200, 1500, 1350].forEach((f, k) => tone(f, .07, "sine", .04, k * .05));
+    }
+  }
+}
+function shooMoths(cells) { // called with the cells a clear is about to remove
+  let loot = 0;
+  for (const k of cells) { const m = moths.find((x) => x.uid === board[k]); if (!m) continue;
+    loot += m.stolen * PM.loot_mult + PM.loot_bonus; stolen -= m.stolen; moths = moths.filter((x) => x !== m);
+    const [x, y] = mothXY(m.i); starBurst(x, y, 14, "#c9b6ff");
+    pops.push({ text: "Shooed!", life: 1, col: "#c9b6ff" }); [784, 988, 1319].forEach((f, k) => tone(f, .14, "sine", .06, k * .05)); }
+  bonus += loot; return loot;
+}
+function drawMoth(m, now) {
+  const t = Math.min(1, (now - m.hopAt) / 260), [x0, y0] = mothXY(m.from), [x1, y1] = mothXY(m.i);
+  const born = Math.min(1, (now - m.bornAt) / 400), s = cell * .5 * (born < 1 ? .4 + .6 * born : 1);
+  const x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t - Math.sin(t * Math.PI) * cell * .35 + Math.sin(now / 280 + m.uid) * cell * .04;
+  const flap = Math.sin(now / 70 + m.uid) * .35, wig = now - (m.nibbleAt || 0) < 300 ? Math.sin(now / 25) * .12 : 0, ink = "#3a2418";
+  ctx.save(); ctx.translate(x, y); ctx.rotate(wig);
+  ctx.fillStyle = "rgba(201,182,255,.18)"; ctx.beginPath(); ctx.arc(0, 0, s * 1.6, 0, 7); ctx.fill();
+  for (const side of [-1, 1]) { // wings
+    ctx.save(); ctx.scale(side, 1); ctx.rotate(-.5 + flap);
+    ctx.fillStyle = "#efe6ff"; ctx.strokeStyle = ink; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.ellipse(s * .85, -s * .25, s * .7, s * .48, -.4, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#c9b6ff"; ctx.beginPath(); ctx.arc(s * 1, -s * .3, s * .17, 0, 7); ctx.fill(); ctx.restore();
+  }
+  ctx.strokeStyle = ink; ctx.lineWidth = 1.3; ctx.fillStyle = "#fff6d8";
+  for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(side * s * .2, -s * .6); ctx.quadraticCurveTo(side * s * .35, -s * 1.15, side * s * .6, -s * 1.1); ctx.stroke();
+    ctx.beginPath(); ctx.arc(side * s * .62, -s * 1.1, s * .13, 0, 7); ctx.fill(); ctx.stroke(); }
+  ctx.fillStyle = "#b9a6e8"; ctx.beginPath(); ctx.arc(0, 0, s * .62, 0, 7); ctx.fill(); ctx.stroke(); // fluffy body
+  ctx.fillStyle = "#fff6d8"; for (let k = -2; k <= 2; k++) { ctx.beginPath(); ctx.arc(k * s * .15, s * .38, s * .14, 0, 7); ctx.fill(); }
+  for (const side of [-1, 1]) { // big glossy eyes
+    ctx.fillStyle = "#2a1a12"; ctx.beginPath(); ctx.ellipse(side * s * .23, -s * .08, s * .14, s * .18, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(side * s * .23 + s * .05, -s * .15, s * .06, 0, 7); ctx.fill(); }
+  ctx.fillStyle = "rgba(255,143,163,.55)"; for (const side of [-1, 1]) { ctx.beginPath(); ctx.ellipse(side * s * .4, s * .1, s * .1, s * .06, 0, 0, 7); ctx.fill(); }
+  if (m.stolen > 0) { // the loot sack grows with what it took
+    const k = Math.min(1, m.stolen / 40); ctx.fillStyle = "#c9a24a"; ctx.strokeStyle = ink;
+    ctx.beginPath(); ctx.arc(s * .55, s * .5, s * (.18 + .12 * k), 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#fff3a0"; ctx.beginPath(); ctx.arc(s * .5, s * .45, s * .05, 0, 7); ctx.fill(); }
+  if (crystalNbrs(m.i) && m.nibbles < PM.max_nibbles) { // warning: it will nibble when the next tray is dealt
+    const pulse = 1 + .15 * Math.sin(now / 120); ctx.font = `700 ${Math.round(s * .9 * pulse)}px Fredoka, sans-serif`; ctx.textAlign = "center";
+    ctx.lineWidth = 3; ctx.strokeStyle = ink; ctx.strokeText("!", 0, -s * 1.3); ctx.fillStyle = "#ff8f8f"; ctx.fillText("!", 0, -s * 1.3); }
+  ctx.restore();
+}
+
 
 // ---------- crystal drawing ----------
 function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, glyph = "", cut = "brilliant") {
@@ -552,6 +681,13 @@ function shatter(idxs, colorAt, stagger = 12) {
   });
 }
 const float = (text, x, y, color = "#f0b543") => floats.push({ text, x, y, color, life: 1 });
+// satisfying extras: star bursts, shockwave rings, screen shake, a brief hit-stop, combo pops, gem twinkles
+let fx = [], shakeAmp = 0, hitStop = 0, pops = [], twinkles = [], lastTwinkle = 0;
+function starBurst(x, y, n = 10, col = "#fff6c8") {
+  for (let k = 0; k < n; k++) { const a = (k / n) * Math.PI * 2 + Math.random() * .4, v = 3 + Math.random() * 4;
+    fx.push({ kind: "star", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: 4 + Math.random() * 5, col, life: 1 }); }
+  fx.push({ kind: "ring", x, y, r: cell * .4, life: 1 });
+}
 function toast(html, ms = 1500) {
   const el = $("toast"); el.innerHTML = html; el.style.opacity = 1;
   clearTimeout(toast.t); toast.t = setTimeout(() => (el.style.opacity = 0), ms);
@@ -582,17 +718,19 @@ function target() {
 // ---------- a placement ----------
 function commit(i, r, c) {
   const { piece, type } = tray[i], id = uid++;
-  meta[id] = { type, r, c, h: piece.h, w: piece.w };
+  meta[id] = { type, r, c, h: piece.h, w: piece.w, at: performance.now() }; // `at` drives the landing squash
   board = place(board, piece, r, c, id);
-  started = true;
+  started = true; placedN++;
   tone(150, .07, "triangle", .12); tone(1250, .05, "sine", .06, .01); tone(1870, .05, "sine", .035, .035); buzz(8);
   const lines = fullLines(board), n = lines.rows.length + lines.cols.length;
   if (n) {
     combo++; miss = 0;
     const { cells, embers } = breakCells(board, lines, isEmber), pure = pureVeinCells(board, lines, typeOf), before = board;
-    let gained = 0;
+    const shooLoot = shooMoths(cells);
+    let gained = shooLoot;
     const inLine = new Set(lineCells(lines)), lens = .5 * save.up.lens, tongs = .25 * save.up.tongs;
     for (const k of cells) {
+      if (isMoth(before[k])) continue;
       const t = typeOf(before[k]), v = CRYSTALS[t].value, m = pure.has(k) ? 2 : 1;
       haul[t] = (haul[t] || 0) + m; gained += v * m;
       const extra = (pure.has(k) ? v * lens : 0) + (!inLine.has(k) ? v * m * tongs : 0); // Gem Lens, Ember Tongs
@@ -600,11 +738,16 @@ function commit(i, r, c) {
     }
     gained = Math.round(gained * valueMult());
     const ctr = cells.reduce((a, k) => [a[0] + (k % N), a[1] + Math.floor(k / N)], [0, 0]).map((v) => v / cells.length);
-    shatter(cells.sort((a, b) => (a % N + Math.floor(a / N)) - (b % N + Math.floor(b / N))), (k) => CRYSTALS[typeOf(before[k])].color);
+    const cx = bx + (ctr[0] + .5) * cell, cy = by + (ctr[1] + .5) * cell;
+    starBurst(cx, cy, 8 + n * 4, pure.size ? "#ffd27a" : "#fff6c8");
+    if (n >= 2 || embers > 3) { shakeAmp = Math.min(10, 3 + n * 2 + (embers > 3 ? 3 : 0)); hitStop = performance.now() + 70; }
+    if (combo >= 2) pops.push({ text: combo >= 5 ? `Combo ×${combo}!!` : `Combo ×${combo}!`, life: 1, col: combo >= 5 ? "#ff9db5" : "#ffd27a" });
+    if (n >= 3) pops.push({ text: n >= 4 ? "Glimmering!" : "Brilliant!", life: 1.15, col: "#9fe6ff" });
+    shatter(cells.sort((a, b) => (a % N + Math.floor(a / N)) - (b % N + Math.floor(b / N))), (k) => CRYSTALS[typeOf(before[k])]?.color || "#c9b6ff");
     board = clearCells(board, cells);
     const add = T.refill_per_line * n * (1 + .1 * save.up.charm) * (1 + T.combo_bonus * (combo - 1));
     let bloom = 0, freeze = 0;
-    for (const k of cells) { const cr = CRYSTALS[typeOf(before[k])]; bloom += cr.bloom || 0; freeze += cr.freeze || 0; }
+    for (const k of cells) { const cr = CRYSTALS[typeOf(before[k])] || {}; bloom += cr.bloom || 0; freeze += cr.freeze || 0; }
     time = Math.min(maxTime, time + add + bloom);
     if (freeze) frozenUntil = Math.max(frozenUntil, performance.now()) + Math.min(T.freeze_max, freeze) * 1000;
     float(`+${gained}g`, bx + (ctr[0] + .5) * cell, by + (ctr[1] + .5) * cell);
@@ -619,7 +762,7 @@ function commit(i, r, c) {
     $("comboTxt").textContent = combo > 1 ? `Combo ×${combo}` : "";
   } else if (combo && ++miss >= T.combo_break) { combo = 0; miss = 0; $("comboTxt").textContent = ""; tone(196, .25, "sine", .06); }
   tray[i] = null;
-  if (tray.every((q) => !q)) tray = dealTray();
+  if (tray.every((q) => !q)) { tray = dealTray(); mothTurn(); }
   if (!tray.some((q) => q && fitsAnywhere(board, q.piece))) endRound("stuck");
 }
 
@@ -638,7 +781,8 @@ function endRound(cause) {
     $("haulList").innerHTML = Object.entries(haul).map(([t, n]) => `<div class="haulTile">${gem(CRYSTALS[t].color, 34, save.opt.glyph ? CRYSTALS[t].glyph : "", CRYSTALS[t].cut)}
       <b>×${n}</b><small>${CRYSTALS[t].name}</small><small>${Math.round(n * CRYSTALS[t].value * valueMult())}g</small></div>`).join("") ||
       `<div class="note" style="grid-column:1/-1">No crystals this time.</div>`;
-    if (bonus) $("haulList").innerHTML += `<div class="haulTile">${icon(save.up.tongs ? "tongs" : "lens", 34)}<b>+${Math.round(bonus * valueMult())}g</b><small>Lens & tongs</small></div>`;
+    if (stolen > 0) $("haulList").innerHTML += `<div class="haulTile"><b style="color:#c0392b">-${Math.round(stolen * valueMult())}g</b><small>Pilfermoths</small><small>clear a line through one to win it back</small></div>`;
+    if (bonus) $("haulList").innerHTML += `<div class="haulTile">${icon(save.up.tongs ? "tongs" : "lens", 34)}<b>+${Math.round(bonus * valueMult())}g</b><small>Bonuses</small><small>lens, tongs, shooed moths</small></div>`;
     $("sell2").innerHTML = `<span class="btnrow">${coin(20)}${coin(20)}Puddock's double deal: ×2</span>`;
     $("sell").innerHTML = `<span class="btnrow">${coin(20)}Sell to Old Puddock</span>`;
     $("haulTotal").textContent = haulValue() + "g";
@@ -654,7 +798,8 @@ $("rescue").onclick = async () => {
   if (endCause === "time") time = Math.min(maxTime, T.rescue_time);
   else {
     const cells = rescueCells(board, 3), before = board;
-    shatter(cells, (k) => CRYSTALS[typeOf(before[k])].color, 5);
+    shooMoths(cells);
+    shatter(cells, (k) => CRYSTALS[typeOf(before[k])]?.color || "#c9b6ff", 5);
     board = clearCells(board, cells); tray = dealTray();
     if (time < T.rescue_time) time = T.rescue_time;
   }
@@ -662,6 +807,19 @@ $("rescue").onclick = async () => {
   if (!tray.some((q) => q && fitsAnywhere(board, q.piece))) endRound("stuck");
 };
 const bestKey = () => biome.id + (calm ? ":calm" : "");
+function coinRain(v, from) {
+  const pill = $("homeGoldPill").getBoundingClientRect(), n = Math.min(14, 4 + Math.floor(v / 120));
+  $("homeGold").textContent = from;
+  for (let k = 0; k < n; k++) {
+    const el = document.createElement("div"); el.className = "flyCoin"; el.innerHTML = coin(26); document.body.appendChild(el);
+    const sx = innerWidth / 2 + (Math.random() - .5) * 160, sy = innerHeight * .55 + (Math.random() - .5) * 80;
+    const a = el.animate([{ transform: `translate(${sx}px, ${sy}px) scale(.4)`, opacity: 0 }, { transform: `translate(${sx}px, ${sy - 50}px) scale(1.15)`, opacity: 1, offset: .25 },
+      { transform: `translate(${pill.left + 14}px, ${pill.top + 4}px) scale(.7)`, opacity: 1 }], { duration: 760 + k * 45, easing: "cubic-bezier(.5,0,.75,1)", delay: k * 40 });
+    a.onfinish = () => { el.remove(); tone(1568 + (k % 4) * 180, .06, "triangle", .05); const done = Math.round(from + v * (k + 1) / n); $("homeGold").textContent = done;
+      $("homeGoldPill").animate([{ transform: "scale(1)" }, { transform: "scale(1.18)" }, { transform: "scale(1)" }], { duration: 180 }); };
+  }
+  setTimeout(() => ($("homeGold").textContent = save.gold), 800 + n * 90);
+}
 function sell(mult) {
   const v = haulValue() * mult;
   save.gold += v;
@@ -672,11 +830,10 @@ function sell(mult) {
     else save.daily.best = Math.max(save.daily.best, haulValue());
   } else save.best[bestKey()] = Math.max(save.best[bestKey()] || 0, haulValue());
   persist();
-  for (let k = 0; k < Math.min(12, 3 + v / 40); k++) tone(1568 + (k % 3) * 200, .08, "square", .03, k * .05);
   state = "home"; renderHome(); show("home");
   track("haul_sold", { mine: biome.id, value: v, doubled: mult > 1 });
   platform.expeditionDone(); // interstitial, only when the pacing caps allow
-  if (v) toast(`+${v} gold`);
+  if (v) coinRain(v, save.gold - v);
   if (!save.metPuddock) setTimeout(() => talk(() => { renderHome(); show("home"); }), 900); // first haul: meet the merchant
 }
 $("sell").onclick = () => sell(1);
@@ -687,7 +844,8 @@ function show(id) {
   document.body.classList.toggle("playing", !id);
   for (const s of ["home", "end", "market", "talk", "campScr"]) $(s).classList.toggle("show", s === id);
   $("hud").style.visibility = id && id !== "end" ? "hidden" : "visible";
-  platform.banner(id === "home" || id === "market" || id === "campScr"); }
+  platform.banner(id === "home" || id === "market" || id === "campScr");
+  if (id === "campScr") soundtrack.play("camp"); else if (id && id !== "end") soundtrack.play("home"); }
 function renderHome() {
   $("homeGold").textContent = save.gold;
   $("mExp").classList.toggle("on", save.mode === "exp"); $("mCalm").classList.toggle("on", save.mode === "calm");
@@ -696,6 +854,8 @@ function renderHome() {
   $("oVib").innerHTML = icon("vibe", 20) + "Vibration";
   $("oGlyph").innerHTML = icon("symbols", 20) + "Symbols";
   $("oPrivacy").innerHTML = icon("lock", 20) + "Privacy";
+  $("oMusic").innerHTML = icon("note", 20) + "Music"; $("oMusic").classList.toggle("on", save.opt.music);
+  $("dibbleArt").innerHTML = dibble(92, save.look);
   const done = save.daily.last === today(), st = save.daily.last === today() || save.daily.last === new Date(Date.now() - 864e5).toISOString().slice(0, 10) ? save.daily.streak : 0;
   $("daily").innerHTML = `<span class="btnrow">${icon("calendar", 22)}${done ? `Daily Dig done · best ${save.daily.best}g` : "Daily Dig: today's crystals"}</span>
     <span class="streak" title="streak: ${st} day(s)">${[...Array(7)].map((_, k) => `<i class="${k < Math.min(st, 7) ? "on" : ""}"></i>`).join("")}</span>
@@ -719,6 +879,15 @@ function renderHome() {
 }
 const mapTile = (id) => { const b = BIOMES.find((x) => x.id === id); return scene(Object.keys(b.types).map((t) => CRYSTALS[t].color), b.pal, 46, 46); };
 let mktTab = "tools";
+function sparkleAt(el) { // a burst of little stars from a button or tile
+  const r = el.getBoundingClientRect();
+  for (let k = 0; k < 10; k++) {
+    const s = document.createElement("i"); s.className = "spark"; document.body.appendChild(s);
+    const a = (k / 10) * Math.PI * 2, d = 30 + Math.random() * 30, x = r.left + r.width / 2, y = r.top + r.height / 2;
+    s.animate([{ transform: `translate(${x}px, ${y}px) scale(.3) rotate(0)`, opacity: 1 }, { transform: `translate(${x + Math.cos(a) * d}px, ${y + Math.sin(a) * d}px) scale(1) rotate(90deg)`, opacity: 0 }],
+      { duration: 520, easing: "cubic-bezier(.2,.8,.3,1)" }).onfinish = () => s.remove();
+  }
+}
 async function renderIap() {
   const row = $("iapRow");
   if (platform.noAds) { row.innerHTML = `<div class="iap">${icon("ad", 22)}<span class="grow"><b>Ads removed</b><small>Thanks for supporting Glimmerwood!</small></span></div>`; return; }
@@ -737,7 +906,7 @@ function renderMarket() {
     const lvl = it.kind === "up" ? save.up[it.id] : 0;
     const done = it.kind === "up" ? lvl >= it.max : it.kind === "biome" ? save.biomes.includes(it.id.split(":")[1]) : save.owned.includes(it.id);
     const cost = price(it);
-    return `<div class="shopItem"><span class="tile" ${it.color ? `style="color:${it.color}"` : ""}>${it.kind === "biome" ? mapTile(it.id.split(":")[1]) : icon(it.icon, 34)}</span><span class="grow"><b>${it.name}</b><small>${it.desc}</small>
+    return `<div class="shopItem"><span class="tile" ${it.color ? `style="color:${it.color}"` : ""}>${it.kind === "biome" ? mapTile(it.id.split(":")[1]) : it.kind === "look" ? dibble(46, { ...save.look, [it.part]: it.val }) : icon(it.icon, 34)}</span><span class="grow"><b>${it.name}</b><small>${it.desc}</small>
       ${it.kind === "up" ? `<span class="pips" title="level ${lvl} of ${it.max}">${[...Array(it.max)].map((_, k) => `<i class="${k < lvl ? "on" : ""}"></i>`).join("")}</span>` : ""}</span>
       <button data-id="${it.id}" ${done || save.gold < cost ? "disabled" : ""}>${done ? (it.kind === "up" ? "Max" : "Owned ✓") : coin(16) + cost}</button></div>`;
   }).join("");
@@ -745,7 +914,9 @@ function renderMarket() {
     const it = SHOP.find((s) => s.id === btn.dataset.id), cost = price(it);
     if (save.gold < cost) return;
     save.gold -= cost;
+    sparkleAt(btn); ui.buy(); buzz(20);
     if (it.kind === "up") save.up[it.id]++;
+    else if (it.kind === "look") { save.owned.push(it.id); save.look[it.part] = it.val; } // put it on straight away
     else if (it.kind === "biome") { const b = it.id.split(":")[1]; save.biomes.push(b); save.sel = b; }
     else {
       save.owned.push(it.id);
@@ -753,7 +924,6 @@ function renderMarket() {
       if (grp === "tent" || grp === "banner" || grp === "fire") save.camp[grp] = val; // wear it straight away
     }
     persist(); renderMarket(); track("market_buy", { item: it.id, cost });
-    [784, 988, 1175].forEach((f, k) => tone(f, .15, "triangle", .08, k * .06));
   };
 }
 $("dig").onclick = () => startDig(false);
@@ -761,9 +931,10 @@ $("daily").onclick = () => startDig(true);
 $("mExp").onclick = () => { save.mode = "exp"; persist(); renderHome(); };
 $("mCalm").onclick = () => { save.mode = "calm"; persist(); renderHome(); };
 for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).onclick = () => { save.opt[k] = !save.opt[k]; persist(); renderHome(); };
+$("oMusic").onclick = () => { save.opt.music = !save.opt.music; persist(); soundtrack.setEnabled(save.opt.music); renderHome(); };
 $("oPrivacy").onclick = () => platform.native ? platform.privacyChoices() : toast("Privacy choices open here in the app");
 $("toMarket").onclick = () => save.metPuddock ? (renderMarket(), show("market")) : talk(() => { renderMarket(); show("market"); });
-for (const b of document.querySelectorAll("#mktTabs button")) b.onclick = () => { mktTab = b.dataset.tab; renderMarket(); };
+for (const b of document.querySelectorAll("#mktTabs button")) b.onclick = () => { mktTab = b.dataset.tab; renderMarket(); $("shop").animate([{ opacity: 0, transform: "translateX(14px)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" }); };
 $("toCamp").onclick = () => { renderCamp(); show("campScr"); };
 $("campBack").onclick = () => { renderHome(); show("home"); };
 
@@ -796,7 +967,7 @@ function campState() {
   return { ...save.up, mines: BIOMES.filter((b) => save.biomes.includes(b.id)).map((b) => b.pal.glow),
     found: Object.keys(CRYSTALS).map((t) => save.found.includes(t) ? { color: CRYSTALS[t].color, cut: CRYSTALS[t].cut } : null),
     tent: save.camp.tent, banner: save.camp.banner, fire: save.camp.fire,
-    decor: { mushrooms: own("decor:mushrooms"), jars: own("decor:jars"), hammock: own("decor:hammock"), cart: own("decor:cart"), flies: save.owned.includes("fireflies") } };
+    puddockSvg: puddock(60), decor: { mushrooms: own("decor:mushrooms"), jars: own("decor:jars"), hammock: own("decor:hammock"), cart: own("decor:cart"), flies: save.owned.includes("fireflies") } };
 }
 function campProgress() {
   const ups = SHOP.filter((i) => i.kind === "up"), extras = SHOP.filter((i) => i.kind !== "up");
@@ -805,7 +976,7 @@ function campProgress() {
   return have / total;
 }
 function renderCamp() {
-  $("campArt").innerHTML = camp(campState(), gem, dibble(100));
+  $("campArt").innerHTML = camp(campState(), gem, dibble(100, save.look));
   const pc = campProgress();
   $("campProg").innerHTML = `<div class="bar"><i style="width:${(pc * 100).toFixed(1)}%"></i></div><small>Camp ${Math.round(pc * 100)}% grown · ${save.found.length}/${Object.keys(CRYSTALS).length} gems on the shelf</small>`;
   const chip = (grp, val, label, swatch) => `<button class="chip ${save.camp[grp] === val ? "on" : ""}" data-grp="${grp}" data-val="${val}">${swatch || ""}${label}</button>`;
@@ -814,16 +985,43 @@ function renderCamp() {
   const fires = [["ring", "Campfire"], ["forge", "Forge"]].filter(([v]) => v === "ring" || save.owned.includes("fire:" + v));
   const decor = SHOP.filter((i) => i.id.startsWith("decor:") && save.owned.includes(i.id));
   $("campCustom").innerHTML = `
+    ${["hat", "scarf", "lantern", "fur"].map((part) => `<div class="custRow"><span>${{ hat: "Hat", scarf: "Scarf", lantern: "Lantern", fur: "Fur" }[part]}</span>${Object.keys(LOOKS[part]).filter((v) => lookOwned(part, v))
+      .map((v) => `<button class="chip ${save.look[part] === v ? "on" : ""}" data-look="${part}" data-val="${v}">${part === "scarf" && v !== "none" ? `<i class="sw" style="background:${v}"></i>` : part === "fur" ? `<i class="sw" style="background:${FUR[v][0]}"></i>` : ""}${v === "none" ? "None" : LOOKS[part][v].replace(/ (fur|scarf|lantern)$/i, "")}</button>`).join("")}</div>`).join("")}
     <div class="custRow"><span>Tent</span>${tents.map(([v, l]) => chip("tent", v, l)).join("")}</div>
     <div class="custRow"><span>Banner</span>${banners.map(([c, l]) => chip("banner", c, "", `<i class="sw" style="background:${c}" title="${l}"></i>`)).join("")}</div>
     <div class="custRow"><span>Fire</span>${fires.map(([v, l]) => chip("fire", v, l)).join("")}</div>
     ${decor.length ? `<div class="custRow"><span>Decor</span>${decor.map((i) => `<button class="chip ${save.camp.hide.includes(i.id) ? "" : "on"}" data-hide="${i.id}">${i.name}</button>`).join("")}</div>` : ""}
     <div class="note">Lanterns = Lantern level · tool rack = Pickaxe · the sapling = Root Charm · signpost = mines opened · shelf = gem types found. More in Old Puddock's Camp tab.</div>`;
+  for (const b of $("campCustom").querySelectorAll("[data-look]")) b.onclick = () => { save.look[b.dataset.look] = b.dataset.val; persist(); renderCamp(); ui.chirp(); };
   for (const b of $("campCustom").querySelectorAll("[data-grp]")) b.onclick = () => { save.camp[b.dataset.grp] = b.dataset.val; persist(); renderCamp(); tone(660, .08, "triangle", .06); };
   for (const b of $("campCustom").querySelectorAll("[data-hide]")) b.onclick = () => {
     const h = save.camp.hide, id = b.dataset.hide; save.camp.hide = h.includes(id) ? h.filter((x) => x !== id) : [...h, id]; persist(); renderCamp(); };
 }
 $("mktBack").onclick = () => { renderHome(); show("home"); };
+
+// camp: taps make things happen, and the layers drift with your finger (parallax)
+const PUDDOCK_CAMP = ["\"Nice fire. Mind my eyebrows.\"", "\"I'm not staying. I'm just... resting my cart.\"", "\"Your shelf's looking richer than my shop.\"", "\"Tea? No? More for me.\""];
+function campFx(x, y, html, cls = "campPop") {
+  const el = document.createElement("div"); el.className = cls; el.innerHTML = html; el.style.left = x + "px"; el.style.top = y + "px"; $("campFx").appendChild(el);
+  el.animate([{ transform: "translate(-50%, 0) scale(.6)", opacity: 0 }, { transform: "translate(-50%, -26px) scale(1)", opacity: 1, offset: .3 }, { transform: "translate(-50%, -48px)", opacity: 0 }],
+    { duration: cls === "campSay" ? 2600 : 900, easing: "ease-out" }).onfinish = () => el.remove();
+}
+$("campStage").addEventListener("pointerdown", (e) => {
+  const t = e.target.closest("[data-tap]"), st = $("campStage").getBoundingClientRect(), x = e.clientX - st.left, y = e.clientY - st.top;
+  if (!t) return;
+  const what = t.dataset.tap;
+  if (what === "dibble") { t.animate([{ transform: "translateY(0)" }, { transform: "translateY(-12px)" }, { transform: "translateY(0)" }, { transform: "translateY(-4px)" }, { transform: "translateY(0)" }], { duration: 520, easing: "ease-out" });
+    ui.chirp(); campFx(x, y - 10, "♪"); buzz(10); }
+  else if (what === "fire") { for (let k = 0; k < 5; k++) setTimeout(() => campFx(x + (Math.random() - .5) * 30, y, "✦", "campSpark"), k * 40); for (let k = 0; k < 4; k++) tone(2000 + Math.random() * 2000, .03, "square", .02, k * .03); buzz(15); }
+  else if (what === "lanterns") { [523, 659, 784].forEach((f, k) => tone(f * 2, .3, "sine", .05, k * .07)); campFx(x, y, "✧"); }
+  else if (what.startsWith("gem-")) { soundtrack.chime(+what.slice(4)); campFx(x, y, "✦", "campSpark"); }
+  else if (what === "tent") { tone(180, .2, "triangle", .04); campFx(x, y, "z z z"); }
+  else if (what === "puddock") { campFx(x, y - 20, PUDDOCK_CAMP[Math.floor(Math.random() * PUDDOCK_CAMP.length)], "campSay"); tone(220, .12, "triangle", .07); }
+});
+$("campStage").addEventListener("pointermove", (e) => {
+  const st = $("campStage").getBoundingClientRect(), dx = (e.clientX - st.left) / st.width - .5, dy = (e.clientY - st.top) / st.height - .5;
+  for (const g of $("campArt").querySelectorAll("[data-depth]")) g.setAttribute("transform", `translate(${(-dx * 18 * g.dataset.depth).toFixed(2)} ${(-dy * 8 * g.dataset.depth).toFixed(2)})`);
+});
 
 // ---------- frame ----------
 let last = performance.now();
@@ -836,14 +1034,23 @@ function frame(now) {
     if (time <= 0) { time = 0; endRound("time"); }
   }
   ctx.clearRect(0, 0, W, H);
+  if (state === "play" && !calm) { const f = time / maxTime, tns = f < T.warn ? (T.warn - f) / T.warn : 0; if (Math.abs(tns - (frame.tns || 0)) > .05) soundtrack.setTension(frame.tns = tns); }
+  else if (frame.tns) soundtrack.setTension(frame.tns = 0);
+  const frozenFx = now < hitStop;
+  ctx.save();
+  if (shakeAmp > .2) { ctx.translate((Math.random() - .5) * shakeAmp, (Math.random() - .5) * shakeAmp); if (!frozenFx) shakeAmp *= .86; }
   if (state !== "home" && board) {
     drawBoard();
     if (!calm) drawRootline(now);
     const groups = {};
     board.forEach((u, i) => { if (u) (groups[u] ??= []).push([Math.floor(i / N), i % N]); });
     for (const u in groups) {
+      if (isMoth(+u)) continue;
       const m = meta[u], cr = CRYSTALS[m.type];
+      const age = now - (m.at || 0), sq = age < 220 ? 1 + .1 * Math.sin((age / 220) * Math.PI) : 1; // land with a little squash
+      if (sq !== 1) { const px = bx + (m.c + m.w / 2) * cell, py = by + (m.r + m.h / 2) * cell; ctx.save(); ctx.translate(px, py); ctx.scale(sq, 2 - sq); ctx.translate(-px, -py); }
       drawCrystal(groups[u], cr.color, m, cell, bx, by, state === "end" ? .45 : 1, cr.ember ? .6 + .3 * Math.sin(now / 120 + +u) : .3, cr.glyph, cr.cut);
+      if (sq !== 1) ctx.restore();
     }
     if (drag) {
       const t = target();
@@ -858,6 +1065,15 @@ function frame(now) {
       }
       drawPiece(drag, cell, t.x, t.y, .95);
     }
+    for (const m of moths) drawMoth(m, now);
+    if (now - lastTwinkle > 420) { // little glints wandering over the crystals
+      lastTwinkle = now; const filled = board.map((u, i) => (u && !isMoth(u) ? i : -1)).filter((i) => i >= 0);
+      if (filled.length) { const i = filled[Math.floor(Math.random() * filled.length)]; twinkles.push({ x: bx + (i % N + .25 + Math.random() * .5) * cell, y: by + (Math.floor(i / N) + .25 + Math.random() * .5) * cell, life: 1 }); }
+    }
+    twinkles = twinkles.filter((t) => (t.life -= .03) > 0);
+    for (const t of twinkles) { const r = cell * .16 * Math.sin(t.life * Math.PI); ctx.fillStyle = `rgba(255,255,255,${.85 * Math.sin(t.life * Math.PI)})`;
+      ctx.beginPath(); ctx.moveTo(t.x, t.y - r); ctx.lineTo(t.x + r * .25, t.y - r * .25); ctx.lineTo(t.x + r, t.y); ctx.lineTo(t.x + r * .25, t.y + r * .25);
+      ctx.lineTo(t.x, t.y + r); ctx.lineTo(t.x - r * .25, t.y + r * .25); ctx.lineTo(t.x - r, t.y); ctx.lineTo(t.x - r * .25, t.y - r * .25); ctx.fill(); }
     tray.forEach((q, i) => { if (q && drag?.i !== i) { const t = trayRect(i); drawPiece(q, t.s, t.x, t.y, fitsAnywhere(board, q.piece) ? 1 : .3); } });
     if (!started && !calm && state === "play") { ctx.fillStyle = "rgba(239,230,207,.7)"; ctx.font = "600 15px Fredoka, sans-serif"; ctx.textAlign = "center";
       ctx.fillText("Place a crystal to start the Rootline", bx + cell * N / 2, by - 30); }
@@ -870,11 +1086,29 @@ function frame(now) {
   parts = parts.filter((p) => p.life > 0);
   for (const p of parts) {
     if (p.delay > 0) { p.delay -= 16; continue; }
+    if (frozenFx) { p.vy -= .35; p.x -= p.vx; p.y -= p.vy; } // hit-stop: hold still for a beat
     p.x += p.vx; p.y += p.vy; p.vy += .35; p.rot += p.vr; p.life -= .022;
     ctx.save(); ctx.globalAlpha = Math.max(p.life, 0); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
     ctx.fillStyle = p.col; ctx.shadowColor = p.col; ctx.shadowBlur = 6;
     ctx.beginPath(); ctx.moveTo(-p.s / 2, p.s / 2); ctx.lineTo(0, -p.s / 2); ctx.lineTo(p.s / 2, p.s / 3); ctx.fill(); ctx.restore();
   }
+  fx = fx.filter((f) => f.life > 0);
+  for (const f of fx) {
+    if (!frozenFx) f.life -= f.kind === "ring" ? .045 : .03;
+    if (f.kind === "ring") { ctx.strokeStyle = `rgba(255,246,200,${f.life * .8})`; ctx.lineWidth = 3 * f.life; ctx.beginPath(); ctx.arc(f.x, f.y, f.r + (1 - f.life) * cell * 2.4, 0, 7); ctx.stroke(); continue; }
+    if (!frozenFx) { f.x += f.vx; f.y += f.vy; f.vx *= .93; f.vy *= .93; }
+    const r = f.s * f.life; ctx.fillStyle = f.col; ctx.globalAlpha = f.life;
+    ctx.beginPath(); ctx.moveTo(f.x, f.y - r); ctx.lineTo(f.x + r * .3, f.y - r * .3); ctx.lineTo(f.x + r, f.y); ctx.lineTo(f.x + r * .3, f.y + r * .3);
+    ctx.lineTo(f.x, f.y + r); ctx.lineTo(f.x - r * .3, f.y + r * .3); ctx.lineTo(f.x - r, f.y); ctx.lineTo(f.x - r * .3, f.y - r * .3); ctx.fill(); ctx.globalAlpha = 1;
+  }
+  ctx.restore(); // end screen shake
+  pops = pops.filter((p) => p.life > 0).slice(-2); // newest two only
+  pops.forEach((p, k) => { // anime-style combo callouts: pop in big, settle, float away
+    p.life -= .016; const t = 1 - p.life, sc = t < .15 ? .4 + t / .15 * .9 : t < .25 ? 1.3 - (t - .15) * 3 : 1, y = by + cell * 1.1 + k * 36 - Math.max(0, t - .6) * 50;
+    ctx.save(); ctx.translate(bx + cell * N / 2, y); ctx.scale(sc, sc); ctx.globalAlpha = Math.min(1, p.life * 2.5);
+    ctx.font = "700 30px Fredoka, sans-serif"; ctx.textAlign = "center"; ctx.lineJoin = "round"; ctx.lineWidth = 7; ctx.strokeStyle = "#3a2418";
+    ctx.strokeText(p.text, 0, 0); ctx.fillStyle = p.col; ctx.fillText(p.text, 0, 0); ctx.restore();
+  });
   floats = floats.filter((f) => f.life > 0);
   ctx.textAlign = "center"; ctx.font = "700 22px Fredoka, sans-serif";
   for (const f of floats) { f.y -= .7; f.life -= .015; ctx.globalAlpha = Math.max(0, f.life); ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y); }
@@ -883,8 +1117,11 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+document.addEventListener("pointerdown", (e) => { if (e.target.closest("button:not(:disabled)")) { ui.tap(); buzz(6); } }, true);
+document.addEventListener("pointerdown", () => soundtrack.setEnabled(save.opt.music), { once: true }); // browsers need a tap before audio
 if (qs.has("debug")) window.gw = { place: (i, r, c) => commit(i, r, c), get tray() { return tray; }, get board() { return board; },
-  get time() { return time; }, set time(v) { time = v; }, canPlace, get state() { return state; } };
+  get time() { return time; }, set time(v) { time = v; }, canPlace, get state() { return state; },
+  get moths() { return moths; }, get stolen() { return stolen; }, get bonus() { return bonus; }, PM };
 
 $("world").innerHTML = forest();
 for (const el of document.querySelectorAll(".vineSlot")) el.outerHTML = vine();

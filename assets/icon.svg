@@ -2,19 +2,33 @@
   <defs><linearGradient id="bg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#0f2219"/><stop offset="1" stop-color="#1d3b2a"/></linearGradient>
   <radialGradient id="glow"><stop offset="0" stop-color="#ffd27a" stop-opacity=".35"/><stop offset=".5" stop-color="#f0b543" stop-opacity=".12"/><stop offset="1" stop-color="#f0b543" stop-opacity="0"/></radialGradient></defs>
   <rect width="108" height="108" fill="url(#bg)"/><circle cx="62" cy="58" r="46" fill="url(#glow)"/><svg x="19.68" y="20.68" width="66" height="66" viewBox="0 0 100 100">
-    <defs><radialGradient id="pg0"><stop offset="0" stop-color="#fff3a0" stop-opacity=".9"/><stop offset="1" stop-color="#f0b543" stop-opacity="0"/></radialGradient></defs>
-    <circle cx="80" cy="62" r="20" fill="url(#pg0)"/>
-    <ellipse cx="48" cy="74" rx="28" ry="22" fill="#6b4a3a"/>
-    <ellipse cx="48" cy="80" rx="16" ry="12" fill="#8a6650"/>
-    <circle cx="48" cy="46" r="23" fill="#7a5644"/>
-    <ellipse cx="48" cy="25" rx="21" ry="8" fill="#5f9a45"/><ellipse cx="44" cy="22" rx="12" ry="5" fill="#7cc46a"/>
-    <path d="M52 18 Q55 8 62 9 Q58 15 52 18 Z" fill="#9be08a"/>
-    <circle cx="39" cy="44" r="2.8" fill="#1a120d"/><circle cx="57" cy="44" r="2.8" fill="#1a120d"/>
-    <circle cx="40" cy="43" r=".9" fill="#fff"/><circle cx="58" cy="43" r=".9" fill="#fff"/>
-    <ellipse cx="48" cy="55" rx="10" ry="7" fill="#e8b4a0"/><circle cx="48" cy="51" r="4" fill="#e0607e"/>
-    <ellipse cx="34" cy="53" rx="4" ry="2.5" fill="#e0607e" opacity=".35"/><ellipse cx="62" cy="53" rx="4" ry="2.5" fill="#e0607e" opacity=".35"/>
-    <path d="M44 60 Q48 63 52 60" stroke="#5a3a2a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-    <ellipse cx="30" cy="80" rx="7" ry="5" fill="#e8b4a0"/>
-    <path d="M66 70 L78 58" stroke="#5a4a3a" stroke-width="2.5"/><ellipse cx="66" cy="72" rx="7" ry="5" fill="#e8b4a0"/>
-    <path d="M76 50 Q80 44 84 50" stroke="#c9b48a" stroke-width="1.5" fill="none"/>
-    <rect x="75" y="51" width="10" height="13" rx="2.5" fill="#f7d77a" stroke="#6b5a3a" stroke-width="1.5"/><circle cx="80" cy="57.5" r="2.5" fill="#fff"/></svg></svg>
+    <defs><radialGradient id="dib0g"><stop offset="0" stop-color="#f0b543" stop-opacity=".75"/><stop offset="1" stop-color="#f0b543" stop-opacity="0"/></radialGradient>
+      <clipPath id="dib0b"><ellipse cx="50" cy="78" rx="21" ry="17"/></clipPath><clipPath id="dib0h"><circle cx="50" cy="44" r="26"/></clipPath></defs>
+    <circle cx="80" cy="63" r="20" fill="url(#dib0g)"><animate attributeName="r" values="18;21;18" dur="2.6s" repeatCount="indefinite"/></circle>
+    <g><animateTransform attributeName="transform" type="translate" values="0 0;0 -1.4;0 0" dur="3.2s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/>
+    <ellipse cx="40" cy="94" rx="7.5" ry="4" fill="#6b4232" stroke="#3a2418" stroke-width="2"/><ellipse cx="60" cy="94" rx="7.5" ry="4" fill="#6b4232" stroke="#3a2418" stroke-width="2"/>
+    <ellipse cx="50" cy="78" rx="21" ry="17" fill="#8a5a44" stroke="#3a2418" stroke-width="2.2"/>
+    <g clip-path="url(#dib0b)"><ellipse cx="62" cy="86" rx="14" ry="14" fill="#6b4232" opacity=".45"/><ellipse cx="50" cy="83" rx="12" ry="10" fill="#c5ada2"/></g>
+    
+    <ellipse cx="26.5" cy="36" rx="3.2" ry="2.6" fill="#6b4232" stroke="#3a2418" stroke-width="1.6"/><ellipse cx="73.5" cy="36" rx="3.2" ry="2.6" fill="#6b4232" stroke="#3a2418" stroke-width="1.6"/>
+    <circle cx="50" cy="44" r="26" fill="#8a5a44" stroke="#3a2418" stroke-width="2.2"/>
+    <g clip-path="url(#dib0h)"><ellipse cx="64" cy="56" rx="20" ry="20" fill="#6b4232" opacity=".35"/></g>
+    <ellipse cx="50" cy="55.5" rx="9.5" ry="8.5" fill="#c5ada2"/>
+    <g transform="translate(40.5 43)"><g>
+  <animateTransform attributeName="transform" type="scale" values="1 1;1 1;1 .08;1 1" keyTimes="0;.93;.96;1" dur="4.8s" begin="0s" repeatCount="indefinite"/>
+  <ellipse rx="4" ry="4.9" fill="#2a1a12"/><ellipse cy="1.9" rx="3.1" ry="2.3" fill="#6b4a32" opacity=".7"/>
+    <circle cx="1.4" cy="-1.9" r="1.7" fill="#fff"/><circle cx="-1.2" cy="2.3" r=".8" fill="#fff" opacity=".9"/></g></g><g transform="translate(59.5 43)"><g>
+  <animateTransform attributeName="transform" type="scale" values="1 1;1 1;1 .08;1 1" keyTimes="0;.93;.96;1" dur="4.8s" begin="0s" repeatCount="indefinite"/>
+  <ellipse rx="4" ry="4.9" fill="#2a1a12"/><ellipse cy="1.9" rx="3.1" ry="2.3" fill="#6b4a32" opacity=".7"/>
+    <circle cx="1.4" cy="-1.9" r="1.7" fill="#fff"/><circle cx="-1.2" cy="2.3" r=".8" fill="#fff" opacity=".9"/></g></g>
+    <ellipse cx="30.5" cy="53" rx="5" ry="2.8" fill="#ff8fa3" opacity=".5"/><ellipse cx="69.5" cy="53" rx="5" ry="2.8" fill="#ff8fa3" opacity=".5"/>
+    <ellipse cx="50" cy="52.6" rx="4.3" ry="3.2" fill="#e8768e" stroke="#3a2418" stroke-width="1.2"/><ellipse cx="48.6" cy="51.6" rx="1.3" ry=".8" fill="#fff" opacity=".85"/>
+    <path d="M47.5 59.5 Q50 61.6 52.5 59.5" stroke="#3a2418" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <g stroke="#3a2418" stroke-width=".8" opacity=".5" stroke-linecap="round"><path d="M40 55 L33 53.5 M40 57.5 L33 58"/><path d="M60 55 L67 53.5 M60 57.5 L67 58"/></g>
+    <g><animateTransform attributeName="transform" type="rotate" values="-2 50 22;2 50 22;-2 50 22" dur="4s" repeatCount="indefinite"/><path d="M27 27 Q50 9 73 27 Q50 22 27 27 Z" fill="#6aa84f" stroke="#3a2418" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M52 15 Q57 3 67 5 Q62 13 52 15 Z" fill="#9be08a" stroke="#3a2418" stroke-width="1.6"/><path d="M53 14 Q58 9 64 7" stroke="#3a2418" stroke-width=".9" fill="none"/></g>
+    <path d="M24 73 Q24 66 32 66 Q40 66 40 73 Q40 80 32 80 Q24 80 24 73 Z" fill="#f3c1b8" stroke="#3a2418" stroke-width="1.8"/><path d="M26.5 79 l-1 3 M30 80 l-.4 3.2 M33.6 80 l.4 3.2 M37 79 l1 3" stroke="#3a2418" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M68 72 Q74 64 79 55" stroke="#6b5a3a" stroke-width="1.8" fill="none"/>
+    <g><animateTransform attributeName="transform" type="rotate" values="-4 79 54;4 79 54;-4 79 54" dur="3.2s" repeatCount="indefinite"/><rect x="74.5" y="56" width="11" height="15" rx="3.5" fill="#f7d77a" stroke="#3a2418" stroke-width="1.6"/><rect x="73.5" y="54" width="13" height="3" rx="1.5" fill="#6b5a3a" stroke="#3a2418" stroke-width="1"/><circle cx="80" cy="63.5" r="2.6" fill="#fff"/></g>
+    <path d="M60 72 Q60 65 67 65 Q74 65 74 72 Q74 79 67 79 Q60 79 60 72 Z" fill="#f3c1b8" stroke="#3a2418" stroke-width="1.8"/><path d="M63 78 l-.6 2.6 M67 79 v2.8 M71 78 l.6 2.6" stroke="#3a2418" stroke-width="1.2" stroke-linecap="round"/></g>
+  </svg></svg>
