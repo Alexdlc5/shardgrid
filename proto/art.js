@@ -184,14 +184,14 @@ function hatArt(kind, id) {
 export function dibble(size = 96, look = {}) {
   const L = { ...DEFAULT_LOOK, ...look }, [f] = FUR[L.fur] || FUR.cocoa, id = "dib" + uid++, ol = line(f), fs = shade(f, .32), cream = mix(f, "#fff1e0", .62);
   const glow = LANTERN_GLOW[L.lantern] || LANTERN_GLOW.amber, rim = mix(glow, "#ffffff", .25), pawC = "#f2bfb2";
-  const eye = `<ellipse rx="4.3" ry="5.2" fill="url(#${id}i)" stroke="#1a0d06" stroke-width=".9"/><ellipse cy=".6" rx="2.2" ry="2.8" fill="#140904"/>
-    <circle cx="1.5" cy="-2.1" r="1.75" fill="#fff"/><circle cx="-1.6" cy="2.5" r=".8" fill="#fff" opacity=".9"/><path d="M-3 3.6 Q0 5 3 3.6" stroke="#ffd9a0" stroke-width=".7" fill="none" opacity=".7"/>
-    <path d="M4.9 -3.4 Q1 -6.4 -4.6 -3.6 L-5.8 -4.4" stroke="#1a0d06" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
+  const eye = `<ellipse rx="4.2" ry="5.4" fill="url(#${id}i)"/><ellipse cy=".9" rx="2.4" ry="3.1" fill="#1c0e07"/>
+    <circle cx="1.4" cy="-2.3" r="1.4" fill="#fff" opacity=".95"/>
+    <path d="M-4 -4.3 Q0 -6.9 4 -4.3" stroke="#1a0d06" stroke-width="1" fill="none" stroke-linecap="round" opacity=".85"/>`;
   return svg(size, "0 0 100 100", `
     <defs>
       <radialGradient id="${id}g"><stop offset="0" stop-color="${glow}" stop-opacity=".7"/><stop offset="1" stop-color="${glow}" stop-opacity="0"/></radialGradient>
       ${radial(id + "h", f)}${radial(id + "b", f, .4, .25)}${radial(id + "c", cream, .45, .3)}${radial(id + "p", pawC, .4, .3)}
-      <linearGradient id="${id}i" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a160c"/><stop offset=".55" stop-color="#5a321a"/><stop offset="1" stop-color="#c07a34"/></linearGradient>
+      <linearGradient id="${id}i" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#24130a"/><stop offset=".7" stop-color="#3e2414"/><stop offset="1" stop-color="#6e4526"/></linearGradient>
       <radialGradient id="${id}n" cx=".38" cy=".32"><stop offset="0" stop-color="#ffb3c4"/><stop offset=".6" stop-color="#e8768e"/><stop offset="1" stop-color="#b8475f"/></radialGradient>
       <radialGradient id="${id}k"><stop offset="0" stop-color="#ff8fa3" stop-opacity=".65"/><stop offset="1" stop-color="#ff8fa3" stop-opacity="0"/></radialGradient>
       <clipPath id="${id}B"><ellipse cx="50" cy="78" rx="21" ry="17"/></clipPath><clipPath id="${id}H"><circle cx="50" cy="44" r="26"/></clipPath>
@@ -204,7 +204,7 @@ export function dibble(size = 96, look = {}) {
     <g clip-path="url(#${id}B)">
       <path d="M27 76 Q30 92 50 95 Q36 90 33 76 Z" fill="${fs}" opacity=".55"/>
       <ellipse cx="50" cy="83" rx="12" ry="10" fill="url(#${id}c)"/>
-      <path d="M68.5 66 Q73 77 67 90" stroke="${rim}" stroke-width="2.4" fill="none" opacity=".75" stroke-linecap="round"/>
+      <path d="M68.5 66 Q73 77 67 90" stroke="${rim}" stroke-width="1.8" fill="none" opacity=".45" stroke-linecap="round"/>
       <g stroke="${ol}" stroke-width=".8" opacity=".35" stroke-linecap="round"><path d="M44 77 l1 2.4 M50 76 v2.6 M56 77 l-1 2.4"/></g>
     </g>
     ${L.scarf !== "none" ? `<defs>${linear(id + "s", L.scarf, 90)}</defs>
@@ -217,24 +217,25 @@ export function dibble(size = 96, look = {}) {
     <circle cx="50" cy="44" r="26" fill="url(#${id}h)" stroke="${ol}" stroke-width="2.4"/>
     <g clip-path="url(#${id}H)">
       <path d="M24 42 Q26 64 50 70 Q32 62 31 44 Z" fill="${fs}" opacity=".45"/>
-      <path d="M71 28 Q78 42 72 58" stroke="${rim}" stroke-width="2.6" fill="none" opacity=".7" stroke-linecap="round"/>
+      <path d="M71 28 Q78 42 72 58" stroke="${rim}" stroke-width="2" fill="none" opacity=".4" stroke-linecap="round"/>
       <path d="M36 23 Q44 18 53 19" stroke="#ffffff" stroke-width="2" opacity=".22" fill="none" stroke-linecap="round"/>
     </g>
     <ellipse cx="50" cy="55.5" rx="9.8" ry="8.4" fill="url(#${id}c)"/>
     <ellipse cx="50" cy="56.8" rx="5.4" ry="2.4" fill="${fs}" opacity=".25"/>
-    ${blink(40.5, 43, 4.8, 0, eye)}${blink(59.5, 43, 4.8, 0, eye.replace("M4.9 -3.4 Q1 -6.4 -4.6 -3.6 L-5.8 -4.4", "M-4.9 -3.4 Q-1 -6.4 4.6 -3.6 L5.8 -4.4"))}
+    ${blink(40.5, 43, 4.8, 0, eye)}${blink(59.5, 43, 4.8, 0, eye)}
     <ellipse cx="30.6" cy="52.4" rx="6" ry="3.6" fill="url(#${id}k)"/><ellipse cx="69.4" cy="52.4" rx="6" ry="3.6" fill="url(#${id}k)"/>
-    <g stroke="#e86a84" stroke-width=".7" opacity=".55" stroke-linecap="round"><path d="M28 53.6 l1.4 -2.2 M30.6 53.8 l1.4 -2.2 M33.2 53.6 l1.4 -2.2 M66.8 53.6 l1.4 -2.2 M69.4 53.8 l1.4 -2.2 M72 53.6 l1.4 -2.2"/></g>
     <ellipse cx="50" cy="52.6" rx="4.4" ry="3.3" fill="url(#${id}n)" stroke="#8a3448" stroke-width="1"/><ellipse cx="48.5" cy="51.5" rx="1.4" ry=".85" fill="#fff" opacity=".9"/>
     <path d="M47.6 59.4 Q50 61.4 52.4 59.4" stroke="${ol}" stroke-width="1.2" fill="none" stroke-linecap="round"/>
     <g stroke="${ol}" stroke-width=".6" opacity=".55" stroke-linecap="round"><path d="M41 55 L33.5 53.6 M41 57.4 L33.5 58"/><path d="M59 55 L66.5 53.6 M59 57.4 L66.5 58"/></g>
     <g><animateTransform attributeName="transform" type="rotate" values="-2 50 22;2 50 22;-2 50 22" dur="4s" repeatCount="indefinite"/>${hatArt(L.hat, id + "t")}</g>
+    <path d="M33.5 64.5 Q25 66 27 74 L36 74 Q36 69 38.5 66.5 Z" fill="url(#${id}b)" stroke="${ol}" stroke-width="1.8" stroke-linejoin="round"/>
     <path d="M24 73 Q24 66 32 66 Q40 66 40 73 Q40 80 32 80 Q24 80 24 73 Z" fill="url(#${id}p)" stroke="${line(pawC)}" stroke-width="1.6"/>
     <g fill="#fff6ea" stroke="${line(pawC)}" stroke-width=".7"><path d="M25.6 78.6 l-1.2 3.4 l2.2 -2.4 Z M29.4 79.8 l-.4 3.6 l1.6 -3 Z M33.4 79.8 l.4 3.6 l1 -3.4 Z M37 78.6 l1.4 3.2 l.2 -3 Z"/></g>
     <path d="M68 72 Q74 64 79 55" stroke="#4a3824" stroke-width="1.7" fill="none"/>
     <g><animateTransform attributeName="transform" type="rotate" values="-4 79 54;4 79 54;-4 79 54" dur="3.2s" repeatCount="indefinite"/>${lanternArt(L.lantern, id + "L")}</g>
+    <path d="M61.5 63.5 Q70 65 70 72 L62 73 Q62 68 59.5 65.5 Z" fill="url(#${id}b)" stroke="${ol}" stroke-width="1.8" stroke-linejoin="round"/>
     <path d="M60 72 Q60 65 67 65 Q74 65 74 72 Q74 79 67 79 Q60 79 60 72 Z" fill="url(#${id}p)" stroke="${line(pawC)}" stroke-width="1.6"/>
-    <path d="M71.4 67 Q73.6 71 71.6 75.6" stroke="${rim}" stroke-width="1.4" fill="none" opacity=".8" stroke-linecap="round"/>
+    <path d="M71.4 67 Q73.6 71 71.6 75.6" stroke="${rim}" stroke-width="1.2" fill="none" opacity=".5" stroke-linecap="round"/>
     <g fill="#fff6ea" stroke="${line(pawC)}" stroke-width=".7"><path d="M62.4 77.6 l-.8 3 l1.8 -2.2 Z M66.4 78.8 l0 3.2 l1.4 -3 Z M70.4 77.8 l1 3 l.4 -2.8 Z"/></g>`)}
   `, "dibble");
 }
