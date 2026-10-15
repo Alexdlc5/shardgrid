@@ -230,48 +230,36 @@ const cfg0 = await (await fetch("../sim/generator.json")).json();
 const $ = (id) => document.getElementById(id);
 
 // ---------- tuning (all Remote Config later) ----------
-const T = { maxTime: 60, drain: 1, refillPerLine: 3.5, comboBonus: 0.25, rescueTime: 20, warn: 0.25 };
+const T = cfg0.rootline; // timer tuning, shared with sim/sim.py
 const CRYSTALS = {
-  moss:      { name: "Moss Quartz", color: "#8fd18b", value: 1,  glyph: "●", cut: "brilliant" },
-  jade:      { name: "Leaf Jade",   color: "#35b38a", value: 2,  glyph: "▲", cut: "step" },
-  amber:     { name: "Sun Amber",   color: "#f0b543", value: 3,  glyph: "◆", cut: "pear" },
-  garnet:    { name: "Garnet",      color: "#d0507a", value: 3,  glyph: "■", cut: "trillion" },
-  ember:     { name: "Ember Shard", color: "#ff6a3d", value: 4,  glyph: "✦", cut: "star", ember: true },
-  moonstone: { name: "Moonstone",   color: "#d7def5", value: 5,  glyph: "◐", cut: "cabochon" },
-  glowcap:   { name: "Glowcap Gem", color: "#9b7cf2", value: 6,  glyph: "✿", cut: "round", bloom: 1 },
-  sapphire:  { name: "Pine Sapphire", color: "#4f7fe8", value: 7, glyph: "◇", cut: "step" },
-  frost:     { name: "Frostspar",   color: "#9fe6ff", value: 8,  glyph: "❄", cut: "prism", freeze: 1.5 },
-  topaz:     { name: "Deep Topaz",  color: "#f29f4c", value: 9,  glyph: "▼", cut: "trillion" },
-  geode:     { name: "Geode",       color: "#b06ad8", value: 25, glyph: "⬢", cut: "geode" },
-  heart:     { name: "Heartstone",  color: "#ff4f7a", value: 40, glyph: "♥", cut: "heart" },
+  moss:      { name: "Moss Quartz", color: "#8fd18b", glyph: "●", cut: "brilliant" },
+  jade:      { name: "Leaf Jade",   color: "#35b38a", glyph: "▲", cut: "step" },
+  amber:     { name: "Sun Amber",   color: "#f0b543", glyph: "◆", cut: "pear" },
+  garnet:    { name: "Garnet",      color: "#d0507a", glyph: "■", cut: "trillion" },
+  ember:     { name: "Ember Shard", color: "#ff6a3d", glyph: "✦", cut: "star" },
+  moonstone: { name: "Moonstone",   color: "#d7def5", glyph: "◐", cut: "cabochon" },
+  glowcap:   { name: "Glowcap Gem", color: "#9b7cf2", glyph: "✿", cut: "round" },
+  sapphire:  { name: "Pine Sapphire", color: "#4f7fe8", glyph: "◇", cut: "step" },
+  frost:     { name: "Frostspar",   color: "#9fe6ff", glyph: "❄", cut: "prism" },
+  topaz:     { name: "Deep Topaz",  color: "#f29f4c", glyph: "▼", cut: "trillion" },
+  geode:     { name: "Geode",       color: "#b06ad8", glyph: "⬢", cut: "geode" },
+  heart:     { name: "Heartstone",  color: "#ff4f7a", glyph: "♥", cut: "heart" },
 };
-// pal = scene colours for the mine's picture on the home screen
-const BIOMES = [
-  { id: "hollow", name: "Mossy Hollow", cost: 0, drain: 1, types: { moss: 5, jade: 3, amber: 2 }, families: {},
-    pal: { bg: "#1f3a28", cave: "#101c14", root: "#5a4a32", ground: "#2f5a2f", glow: "#8fd18b" },
+for (const [k, v] of Object.entries(cfg0.crystals)) Object.assign(CRYSTALS[k], v); // value, ember, bloom, freeze
+const BIOMES = [ // gameplay (cost, drain, gem weights, shapes) lives in sim/generator.json, shared with the sims
+  { id: "hollow", name: "Mossy Hollow", pal: { bg: "#1f3a28", cave: "#101c14", root: "#5a4a32", ground: "#2f5a2f", glow: "#8fd18b" },
     blurb: "Soft moss, easy veins. Match one crystal type in a line for ×2." },
-  { id: "ember", name: "Ember Roots", cost: 1200, drain: 1.15, types: { moss: 2, jade: 2, amber: 2, garnet: 2, ember: 1.3 },
-    families: { flame: { weight: 2, art: [".X.", "XXX", ".X."] } },
-    pal: { bg: "#3a1f17", cave: "#1c0f0b", root: "#6b2f22", ground: "#2a1610", glow: "#ff6a3d" },
+  { id: "ember", name: "Ember Roots", pal: { bg: "#3a1f17", cave: "#1c0f0b", root: "#6b2f22", ground: "#2a1610", glow: "#ff6a3d" },
     blurb: "Embers shatter everything around them, and chain." },
-  { id: "grotto", name: "Glowcap Grotto", cost: 5000, drain: 1.25, types: { moss: 2, jade: 2, moonstone: 2.5, glowcap: 1.6 },
-    families: { cap: { weight: 2, art: ["XXX", "X.X"] } },
-    pal: { bg: "#241a3a", cave: "#100b1c", root: "#4a3a5a", ground: "#1c1630", glow: "#9b7cf2", caps: true },
+  { id: "grotto", name: "Glowcap Grotto", pal: { bg: "#241a3a", cave: "#100b1c", root: "#4a3a5a", ground: "#1c1630", glow: "#9b7cf2", caps: true },
     blurb: "Glowcap gems feed the roots: +1s for every one you break." },
-  { id: "frostpine", name: "Frostpine Deep", cost: 15000, drain: 1.35, types: { jade: 2, moonstone: 1.5, sapphire: 2.5, frost: 1.5 },
-    families: { flake: { weight: 1.5, art: ["X.X", ".X.", "X.X"] } },
-    pal: { bg: "#17283a", cave: "#0a121c", root: "#3a4a5a", ground: "#22364a", glow: "#9fe6ff", snow: true },
+  { id: "frostpine", name: "Frostpine Deep", pal: { bg: "#17283a", cave: "#0a121c", root: "#3a4a5a", ground: "#22364a", glow: "#9fe6ff", snow: true },
     blurb: "Breaking Frostspar freezes the Rootline for a moment." },
-  { id: "gulch", name: "Geode Gulch", cost: 40000, drain: 1.45, types: { amber: 2, garnet: 2, topaz: 2.5, geode: .8 },
-    families: { ring: { weight: 1, art: ["XXX", "X.X", "XXX"] } },
-    pal: { bg: "#33281c", cave: "#160f09", root: "#5a4632", ground: "#3a2e20", glow: "#b06ad8" },
+  { id: "gulch", name: "Geode Gulch", pal: { bg: "#33281c", cave: "#160f09", root: "#5a4632", ground: "#3a2e20", glow: "#b06ad8" },
     blurb: "Rare geodes are worth a fortune. Rings of stone get in the way." },
-  { id: "heartwood", name: "Heartwood", cost: 100000, drain: 1.6,
-    types: { garnet: 1.5, ember: 1, glowcap: 1, sapphire: 1.5, frost: 1, topaz: 1.5, heart: .7 },
-    families: { heartpiece: { weight: 1.5, art: ["X.X", "XXX", ".X."] } },
-    pal: { bg: "#3a1724", cave: "#1a0a10", root: "#7a3a2a", ground: "#2a1018", glow: "#ff4f7a" },
+  { id: "heartwood", name: "Heartwood", pal: { bg: "#3a1724", cave: "#1a0a10", root: "#7a3a2a", ground: "#2a1018", glow: "#ff4f7a" },
     blurb: "The great tree's heart. Every special at once, and Heartstones." },
-];
+].map((b) => ({ families: {}, ...b, ...cfg0.biomes[b.id] }));
 const SHOP = [
   { id: "lantern", icon: "lantern", kind: "up", name: "Lantern", desc: "+5s of Rootline", base: 150, max: 10 },
   { id: "pick", icon: "pickaxe", kind: "up", name: "Pickaxe", desc: "+10% crystal value", base: 200, max: 10 },
@@ -298,7 +286,7 @@ const qs = new URLSearchParams(location.search);
 if (qs.has("gold")) save.gold = +qs.get("gold"); // ?gold=5000 to try the market quickly
 const persist = () => store.set("save", save);
 const price = (it) => it.kind === "up" ? Math.round(it.base * 1.7 ** save.up[it.id]) : it.price;
-const valueMult = () => (1 + 0.1 * save.up.pick) * (calm ? CALM_MULT : 1);
+const valueMult = () => (1 + 0.1 * save.up.pick) * (calm ? CALM_MULT : 1) * (biome?.richness || 1); // deeper veins are purer
 
 // ---------- audio (synth, no assets) ----------
 let ac;
@@ -354,7 +342,7 @@ function startDig(isDaily = false) {
   rng = daily ? mulberry(+today().replaceAll("-", "")) : Math.random; // same crystals for everyone today
   biome = BIOMES.find((b) => b.id === (daily ? "hollow" : save.sel)); cat = daily ? buildCatalog(cfg0) : catalogFor(biome);
   board = Array(64).fill(0); meta = {}; uid = 1; combo = 0; miss = 0; rescueUsed = false;
-  haul = {}; frozenUntil = 0; maxTime = T.maxTime + 5 * save.up.lantern; time = maxTime; started = false;
+  haul = {}; frozenUntil = 0; maxTime = T.max_time + 5 * save.up.lantern; time = maxTime; started = false;
   tray = dealTray(); state = "play"; show(null);
   $("biomeName").textContent = daily ? `Daily Dig · ${today()}` : biome.name + (calm ? " · Calm" : "");
 }
@@ -523,7 +511,7 @@ function commit(i, r, c) {
     const ctr = cells.reduce((a, k) => [a[0] + (k % N), a[1] + Math.floor(k / N)], [0, 0]).map((v) => v / cells.length);
     shatter(cells.sort((a, b) => (a % N + Math.floor(a / N)) - (b % N + Math.floor(b / N))), (k) => CRYSTALS[typeOf(before[k])].color);
     board = clearCells(board, cells);
-    const add = T.refillPerLine * n * (1 + .1 * save.up.charm) * (1 + T.comboBonus * (combo - 1));
+    const add = T.refill_per_line * n * (1 + .1 * save.up.charm) * (1 + T.combo_bonus * (combo - 1));
     let bloom = 0, freeze = 0;
     for (const k of cells) { const cr = CRYSTALS[typeOf(before[k])]; bloom += cr.bloom || 0; freeze += cr.freeze || 0; }
     time = Math.min(maxTime, time + add + bloom);
@@ -538,7 +526,7 @@ function commit(i, r, c) {
     if (embers) { toast(embers > 3 ? `Ember chain ×${embers}!` : "Ember burst!"); tone(70, .5, "triangle", .3); tone(110, .35, "sawtooth", .05); buzz(60); }
     buzz(25);
     $("comboTxt").textContent = combo > 1 ? `Combo ×${combo}` : "";
-  } else if (combo && ++miss >= 3) { combo = 0; miss = 0; $("comboTxt").textContent = ""; tone(196, .25, "sine", .06); }
+  } else if (combo && ++miss >= T.combo_break) { combo = 0; miss = 0; $("comboTxt").textContent = ""; tone(196, .25, "sine", .06); }
   tray[i] = null;
   if (tray.every((q) => !q)) tray = dealTray();
   if (!tray.some((q) => q && fitsAnywhere(board, q.piece))) endRound("stuck");
@@ -553,7 +541,7 @@ function endRound(cause) {
     $("endTitle").textContent = cause === "time" ? "The roots closed the tunnel" : "No room left to dig";
     $("endSub").textContent = "Pip climbs out with the haul. Nothing is lost.";
     $("causeIco").innerHTML = cause === "time" ? icon("vine", 44) : icon("board", 44);
-    $("rescue").innerHTML = `<span class="btnrow">${icon(cause === "time" ? "regrow" : "shatter", 22)}${cause === "time" ? `Roots regrow +${T.rescueTime}s` : "Shatter the 3 fullest veins"}</span>`;
+    $("rescue").innerHTML = `<span class="btnrow">${icon(cause === "time" ? "regrow" : "shatter", 22)}${cause === "time" ? `Roots regrow +${T.rescue_time}s` : "Shatter the 3 fullest veins"}</span>`;
     $("rescue").style.display = rescueUsed ? "none" : "block";
     $("haulList").innerHTML = Object.entries(haul).map(([t, n]) => `<div class="haulTile">${gem(CRYSTALS[t].color, 34, save.opt.glyph ? CRYSTALS[t].glyph : "", CRYSTALS[t].cut)}
       <b>×${n}</b><small>${CRYSTALS[t].name}</small><small>${Math.round(n * CRYSTALS[t].value * valueMult())}g</small></div>`).join("") ||
@@ -569,12 +557,12 @@ function endRound(cause) {
 }
 $("rescue").onclick = () => {
   rescueUsed = true; state = "play"; show(null);
-  if (endCause === "time") time = Math.min(maxTime, T.rescueTime);
+  if (endCause === "time") time = Math.min(maxTime, T.rescue_time);
   else {
     const cells = rescueCells(board, 3), before = board;
     shatter(cells, (k) => CRYSTALS[typeOf(before[k])].color, 5);
     board = clearCells(board, cells); tray = dealTray();
-    if (time < T.rescueTime) time = T.rescueTime;
+    if (time < T.rescue_time) time = T.rescue_time;
   }
   [392, 523, 659].forEach((f, k) => tone(f, .3, "sine", .12, k * .07)); buzz(40);
   if (!tray.some((q) => q && fitsAnywhere(board, q.piece))) endRound("stuck");

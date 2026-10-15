@@ -3,27 +3,311 @@
   "mercy_rerolls": 2,
   "rescue_lines": 3,
   "families": {
-    "dot":     {"weight": 2, "art": ["X"]},
-    "line2":   {"weight": 4, "art": ["XX"]},
-    "line3":   {"weight": 5, "art": ["XXX"]},
-    "line4":   {"weight": 4, "art": ["XXXX"]},
-    "line5":   {"weight": 2, "art": ["XXXXX"]},
-    "sq2":     {"weight": 5, "art": ["XX", "XX"]},
-    "sq3":     {"weight": 2, "art": ["XXX", "XXX", "XXX"]},
-    "rect23":  {"weight": 3, "art": ["XXX", "XXX"]},
-    "corner3": {"weight": 5, "art": ["XX", "X."]},
-    "corner5": {"weight": 2, "art": ["XXX", "X..", "X.."]},
-    "L4":      {"weight": 5, "art": ["X.", "X.", "XX"]},
-    "T4":      {"weight": 3, "art": ["XXX", ".X."]},
-    "S4":      {"weight": 3, "art": [".XX", "XX."]},
-    "diag2":   {"weight": 1, "art": ["X.", ".X"]},
-    "diag3":   {"weight": 1, "art": ["X..", ".X.", "..X"]}
+    "dot": {
+      "weight": 2,
+      "art": [
+        "X"
+      ]
+    },
+    "line2": {
+      "weight": 4,
+      "art": [
+        "XX"
+      ]
+    },
+    "line3": {
+      "weight": 5,
+      "art": [
+        "XXX"
+      ]
+    },
+    "line4": {
+      "weight": 4,
+      "art": [
+        "XXXX"
+      ]
+    },
+    "line5": {
+      "weight": 2,
+      "art": [
+        "XXXXX"
+      ]
+    },
+    "sq2": {
+      "weight": 5,
+      "art": [
+        "XX",
+        "XX"
+      ]
+    },
+    "sq3": {
+      "weight": 2,
+      "art": [
+        "XXX",
+        "XXX",
+        "XXX"
+      ]
+    },
+    "rect23": {
+      "weight": 3,
+      "art": [
+        "XXX",
+        "XXX"
+      ]
+    },
+    "corner3": {
+      "weight": 5,
+      "art": [
+        "XX",
+        "X."
+      ]
+    },
+    "corner5": {
+      "weight": 2,
+      "art": [
+        "XXX",
+        "X..",
+        "X.."
+      ]
+    },
+    "L4": {
+      "weight": 5,
+      "art": [
+        "X.",
+        "X.",
+        "XX"
+      ]
+    },
+    "T4": {
+      "weight": 3,
+      "art": [
+        "XXX",
+        ".X."
+      ]
+    },
+    "S4": {
+      "weight": 3,
+      "art": [
+        ".XX",
+        "XX."
+      ]
+    },
+    "diag2": {
+      "weight": 1,
+      "art": [
+        "X.",
+        ".X"
+      ]
+    },
+    "diag3": {
+      "weight": 1,
+      "art": [
+        "X..",
+        ".X.",
+        "..X"
+      ]
+    }
+  },
+  "rootline": {
+    "max_time": 60,
+    "drain": 1,
+    "refill_per_line": 3.5,
+    "combo_bonus": 0.25,
+    "combo_break": 3,
+    "rescue_time": 20,
+    "warn": 0.25,
+    "bot_seconds": {
+      "random": [
+        2,
+        0.7
+      ],
+      "greedy": [
+        3,
+        1
+      ],
+      "lookahead": [
+        4.5,
+        1.5
+      ]
+    },
+    "target": {
+      "bot": "greedy",
+      "biome": "hollow",
+      "p50_s": [
+        180,
+        300
+      ]
+    }
+  },
+  "biomes": {
+    "hollow": {
+      "drain": 1.005,
+      "types": {
+        "moss": 5,
+        "jade": 3,
+        "amber": 2
+      },
+      "cost": 0,
+      "richness": 1
+    },
+    "ember": {
+      "drain": 0.853,
+      "types": {
+        "moss": 2,
+        "jade": 2,
+        "amber": 2,
+        "garnet": 2,
+        "ember": 1.3
+      },
+      "families": {
+        "flame": {
+          "weight": 2,
+          "art": [
+            ".X.",
+            "XXX",
+            ".X."
+          ]
+        }
+      },
+      "cost": 2500,
+      "richness": 1.33
+    },
+    "grotto": {
+      "cost": 6000,
+      "drain": 1.206,
+      "types": {
+        "moss": 2,
+        "jade": 2,
+        "moonstone": 2.5,
+        "glowcap": 1.6
+      },
+      "families": {
+        "cap": {
+          "weight": 2,
+          "art": [
+            "XXX",
+            "X.X"
+          ]
+        }
+      },
+      "richness": 1.64
+    },
+    "frostpine": {
+      "cost": 15000,
+      "drain": 0.993,
+      "types": {
+        "jade": 2,
+        "moonstone": 1.5,
+        "sapphire": 2.5,
+        "frost": 1.5
+      },
+      "families": {
+        "flake": {
+          "weight": 1.5,
+          "art": [
+            "X.X",
+            ".X.",
+            "X.X"
+          ]
+        }
+      },
+      "richness": 1.89
+    },
+    "gulch": {
+      "cost": 30000,
+      "drain": 1.058,
+      "types": {
+        "amber": 2,
+        "garnet": 2,
+        "topaz": 2.5,
+        "geode": 0.056
+      },
+      "families": {
+        "ring": {
+          "weight": 1,
+          "art": [
+            "XXX",
+            "X.X",
+            "XXX"
+          ]
+        }
+      },
+      "richness": 3.49
+    },
+    "heartwood": {
+      "cost": 55000,
+      "drain": 1.218,
+      "types": {
+        "garnet": 1.5,
+        "ember": 1,
+        "glowcap": 1,
+        "sapphire": 1.5,
+        "frost": 1,
+        "topaz": 1.5,
+        "heart": 0.044
+      },
+      "families": {
+        "heartpiece": {
+          "weight": 1.5,
+          "art": [
+            "X.X",
+            "XXX",
+            ".X."
+          ]
+        }
+      },
+      "richness": 4.72
+    }
   },
   "target": {
     "bot": "greedy",
-    "p50": [60, 120],
+    "p50": [
+      60,
+      120
+    ],
     "p90_max": 350,
     "first_tray_max": 0.02,
     "lookahead_p50_ratio_min": 1.5
+  },
+  "crystals": {
+    "moss": {
+      "value": 1
+    },
+    "jade": {
+      "value": 2
+    },
+    "amber": {
+      "value": 3
+    },
+    "garnet": {
+      "value": 3
+    },
+    "ember": {
+      "value": 4,
+      "ember": true
+    },
+    "moonstone": {
+      "value": 5
+    },
+    "glowcap": {
+      "value": 6,
+      "bloom": 1
+    },
+    "sapphire": {
+      "value": 7
+    },
+    "frost": {
+      "value": 8,
+      "freeze": 0.8
+    },
+    "topaz": {
+      "value": 9
+    },
+    "geode": {
+      "value": 60
+    },
+    "heart": {
+      "value": 120
+    }
   }
 }
