@@ -4,3 +4,4 @@ Original block-placement puzzle for Android and iOS. Unity + AppLovin MAX + Reve
 
 - [SPEC.md](SPEC.md): product, teardown, stack, monetization, compliance, milestones, setup checklists
 - [teardown/](teardown/): competitor observation log (observable behavior only)
+- [sim/](sim/): headless piece-generator simulator (Python stdlib). `python sim/test_sim.py`, then `python sim/sim.py --check`

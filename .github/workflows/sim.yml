@@ -1,0 +1,17 @@
+name: sim band gate
+on:
+  push:
+    paths: ["sim/**", ".github/workflows/sim.yml"]
+  pull_request:
+    paths: ["sim/**"]
+jobs:
+  band:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python sim/test_sim.py
+      - run: python sim/sim.py --check --games 10000

@@ -1,0 +1,29 @@
+{
+  "mercy_fill": 0.55,
+  "mercy_rerolls": 2,
+  "rescue_lines": 3,
+  "families": {
+    "dot":     {"weight": 2, "art": ["X"]},
+    "line2":   {"weight": 4, "art": ["XX"]},
+    "line3":   {"weight": 5, "art": ["XXX"]},
+    "line4":   {"weight": 4, "art": ["XXXX"]},
+    "line5":   {"weight": 2, "art": ["XXXXX"]},
+    "sq2":     {"weight": 5, "art": ["XX", "XX"]},
+    "sq3":     {"weight": 2, "art": ["XXX", "XXX", "XXX"]},
+    "rect23":  {"weight": 3, "art": ["XXX", "XXX"]},
+    "corner3": {"weight": 5, "art": ["XX", "X."]},
+    "corner5": {"weight": 2, "art": ["XXX", "X..", "X.."]},
+    "L4":      {"weight": 5, "art": ["X.", "X.", "XX"]},
+    "T4":      {"weight": 3, "art": ["XXX", ".X."]},
+    "S4":      {"weight": 3, "art": [".XX", "XX."]},
+    "diag2":   {"weight": 1, "art": ["X.", ".X"]},
+    "diag3":   {"weight": 1, "art": ["X..", ".X.", "..X"]}
+  },
+  "target": {
+    "bot": "greedy",
+    "p50": [60, 120],
+    "p90_max": 350,
+    "first_tray_max": 0.02,
+    "lookahead_p50_ratio_min": 1.5
+  }
+}
