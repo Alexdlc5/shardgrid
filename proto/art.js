@@ -11,15 +11,52 @@ function shimmer(clipShape) {
 }
 const svg = (size, vb, body, cls = "") => `<svg class="ico ${cls}" width="${size}" height="${size}" viewBox="${vb}" aria-hidden="true">${body}</svg>`;
 
-export function gem(color, size = 22, glyph = "") {
-  const lt = mix(color, "#ffffff", .5), dk = mix(color, "#000000", .3);
-  return svg(size, "0 0 24 24", `
-    <polygon points="4,9 8,4 16,4 20,9" fill="${lt}"/>
-    <polygon points="4,9 20,9 12,21" fill="${color}"/>
+// Gem cuts. Each: outline (also the shimmer clip) + facet detail drawn from the gem's colour.
+const CUTS = {
+  brilliant: { o: '<polygon points="4,9 8,4 16,4 20,9 12,21"/>', d: (c, lt, dk) => `
+    <polygon points="4,9 8,4 16,4 20,9" fill="${lt}"/><polygon points="4,9 20,9 12,21" fill="${c}"/>
     <polygon points="12,9 20,9 12,21" fill="${dk}" opacity=".55"/>
-    <polyline points="8,4 10,9 12,4 14,9 16,4" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width=".8"/>
-    <polyline points="4,9 12,21 20,9" fill="none" stroke="#000" stroke-opacity=".25" stroke-width=".8"/>
-    ${shimmer('<polygon points="4,9 8,4 16,4 20,9 12,21"/>')}
+    <polyline points="8,4 10,9 12,4 14,9 16,4" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width=".8"/>` },
+  step: { o: '<polygon points="7,3 17,3 21,7 21,17 17,21 7,21 3,17 3,7"/>', d: (c, lt, dk) => `
+    <polygon points="7,3 17,3 21,7 21,17 17,21 7,21 3,17 3,7" fill="${c}"/>
+    <polygon points="9,7 15,7 17,9 17,15 15,17 9,17 7,15 7,9" fill="${lt}" opacity=".7"/>
+    <polygon points="17,3 21,7 21,17 17,21 15,17 17,15 17,9 15,7" fill="${dk}" opacity=".5"/>
+    <path d="M7 3 L9 7 M17 3 L15 7 M3 17 L7 15 M21 17 L17 15" stroke="#fff" stroke-opacity=".4" stroke-width=".8"/>` },
+  pear: { o: '<path d="M12 2 Q20 11 18.5 16 A6.6 6.6 0 0 1 5.5 16 Q4 11 12 2 Z"/>', d: (c, lt, dk) => `
+    <path d="M12 2 Q20 11 18.5 16 A6.6 6.6 0 0 1 5.5 16 Q4 11 12 2 Z" fill="${c}"/>
+    <path d="M12 2 Q20 11 18.5 16 A6.6 6.6 0 0 1 12 22 Z" fill="${dk}" opacity=".45"/>
+    <path d="M12 8 L8 15 L12 19 L16 15 Z" fill="${lt}" opacity=".6"/>` },
+  trillion: { o: '<polygon points="12,3 22,20 2,20"/>', d: (c, lt, dk) => `
+    <polygon points="12,3 22,20 2,20" fill="${c}"/><polygon points="12,3 22,20 12,15" fill="${dk}" opacity=".5"/>
+    <polygon points="12,9 16,16 8,16" fill="${lt}" opacity=".7"/>` },
+  star: { o: '<polygon points="12,1 15,9 23,12 15,15 12,23 9,15 1,12 9,9"/>', d: (c, lt, dk) => `
+    <polygon points="12,1 15,9 23,12 15,15 12,23 9,15 1,12 9,9" fill="${c}"/>
+    <polygon points="12,1 15,9 12,12 9,9" fill="${lt}"/><polygon points="12,12 15,15 12,23 23,12 15,9" fill="${dk}" opacity=".45"/>
+    <circle cx="12" cy="12" r="2.2" fill="#fff" opacity=".8"/>` },
+  cabochon: { o: '<ellipse cx="12" cy="12" rx="8.5" ry="10.5"/>', d: (c, lt, dk) => `
+    <ellipse cx="12" cy="12" rx="8.5" ry="10.5" fill="${c}"/><ellipse cx="13.5" cy="14" rx="6" ry="7.5" fill="${dk}" opacity=".3"/>
+    <ellipse cx="9.5" cy="8" rx="3.5" ry="4.5" fill="${lt}" opacity=".85"/>` },
+  round: { o: '<circle cx="12" cy="12" r="10"/>', d: (c, lt, dk) => `
+    <circle cx="12" cy="12" r="10" fill="${c}"/><polygon points="12,5 17,7 19,12 17,17 12,19 7,17 5,12 7,7" fill="${lt}" opacity=".55"/>
+    <path d="M12 2 V5 M19 5 L17 7 M22 12 H19 M19 19 L17 17 M12 22 V19 M5 19 L7 17 M2 12 H5 M5 5 L7 7" stroke="#fff" stroke-opacity=".45" stroke-width=".8"/>
+    <path d="M12 12 L22 12 A10 10 0 0 1 12 22 Z" fill="${dk}" opacity=".35"/>` },
+  prism: { o: '<polygon points="12,1 21,6 21,18 12,23 3,18 3,6"/>', d: (c, lt, dk) => `
+    <polygon points="12,1 21,6 21,18 12,23 3,18 3,6" fill="${c}"/><polygon points="12,1 21,6 12,11 3,6" fill="${lt}"/>
+    <polygon points="12,11 21,6 21,18 12,23" fill="${dk}" opacity=".45"/><path d="M12 11 V23" stroke="#fff" stroke-opacity=".5" stroke-width=".8"/>` },
+  geode: { o: '<polygon points="3,9 7,3 16,2 22,8 21,17 14,22 5,20 2,14"/>', d: (c, lt, dk) => `
+    <polygon points="3,9 7,3 16,2 22,8 21,17 14,22 5,20 2,14" fill="#8a8277"/>
+    <polygon points="6,10 9,6 15,5 19,9 18,16 13,19 7,17 5,13" fill="${dk}"/>
+    <g fill="${c}"><polygon points="8,15 10,9 12,15"/><polygon points="11,16 14,7 16,16"/><polygon points="14,17 17,11 18,16"/><polygon points="7,12 9,8 10,13"/></g>
+    <g fill="${lt}" opacity=".8"><polygon points="11,16 14,7 13,16"/><polygon points="8,15 10,9 9.5,15"/></g>` },
+  heart: { o: '<path d="M12 21 C3 14 2 9 5 6 C8 3 11 5 12 7 C13 5 16 3 19 6 C22 9 21 14 12 21 Z"/>', d: (c, lt, dk) => `
+    <path d="M12 21 C3 14 2 9 5 6 C8 3 11 5 12 7 C13 5 16 3 19 6 C22 9 21 14 12 21 Z" fill="${c}"/>
+    <path d="M12 7 C13 5 16 3 19 6 C22 9 21 14 12 21 Z" fill="${dk}" opacity=".4"/>
+    <path d="M7 7 Q5 9 6.5 12" stroke="${lt}" stroke-width="2" fill="none" stroke-linecap="round"/>` },
+};
+
+export function gem(color, size = 22, glyph = "", cut = "brilliant") {
+  const k = CUTS[cut] || CUTS.brilliant, lt = mix(color, "#ffffff", .5), dk = mix(color, "#000000", .3);
+  return svg(size, "0 0 24 24", `${k.d(color, lt, dk)}${shimmer(k.o)}
     ${glyph ? `<text x="12" y="15" font-size="6" text-anchor="middle" fill="#1a1a0f" opacity=".6">${glyph}</text>` : ""}`, "gem");
 }
 
@@ -106,16 +143,58 @@ export function bramble(size = 64) {
 }
 
 // little cave scene per mine: arch, hanging roots, crystal clusters in the mine's colours
-export function scene(colors, warm = false, w = 92, h = 60) {
-  const bg = warm ? "#3a1f17" : "#1f3a28", cave = warm ? "#1c0f0b" : "#101c14", root = warm ? "#6b2f22" : "#5a4a32";
-  const xtal = (x, y, s, c) => `<polygon points="${x},${y} ${x - s * .45},${y - s * .55} ${x},${y - s * 1.3} ${x + s * .45},${y - s * .55}" fill="${c}"/>
-    <polygon points="${x},${y} ${x},${y - s * 1.3} ${x + s * .45},${y - s * .55}" fill="#000" opacity=".2"/>`;
-  return `<svg class="scene" width="${w}" height="${h}" viewBox="0 0 92 60" aria-hidden="true">
-    <rect width="92" height="60" rx="10" fill="${bg}"/>
-    ${warm ? `<circle cx="46" cy="44" r="30" fill="#ff6a3d" opacity=".22"/>` : `<circle cx="46" cy="40" r="28" fill="#8fd18b" opacity=".08"/>`}
-    <path d="M10 60 Q10 14 46 12 Q82 14 82 60 Z" fill="${cave}"/>
-    <path d="M22 18 Q24 30 20 38 M34 12 Q36 22 33 28 M60 13 Q58 24 62 32 M72 20 Q70 28 74 34" stroke="${root}" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <ellipse cx="46" cy="60" rx="40" ry="8" fill="${warm ? "#2a1610" : "#2f5a2f"}"/>
+export function scene(colors, pal, w = 92, h = 60) {
+  const xtal = (x, y, sz, c) => `<polygon points="${x},${y} ${x - sz * .45},${y - sz * .55} ${x},${y - sz * 1.3} ${x + sz * .45},${y - sz * .55}" fill="${c}"/>
+    <polygon points="${x},${y} ${x},${y - sz * 1.3} ${x + sz * .45},${y - sz * .55}" fill="#000" opacity=".2"/>`;
+  return `<svg class="scene" width="${w}" height="${h}" viewBox="0 0 92 60" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="92" height="60" rx="10" fill="${pal.bg}"/>
+    <circle cx="46" cy="42" r="30" fill="${pal.glow}" opacity=".22"/>
+    <path d="M10 60 Q10 14 46 12 Q82 14 82 60 Z" fill="${pal.cave}"/>
+    <path d="M22 18 Q24 30 20 38 M34 12 Q36 22 33 28 M60 13 Q58 24 62 32 M72 20 Q70 28 74 34" stroke="${pal.root}" stroke-width="2" fill="none" stroke-linecap="round"/>
+    ${pal.snow ? `<g fill="#e6f6ff" opacity=".8"><circle cx="20" cy="10" r="1.3"/><circle cx="70" cy="8" r="1"/><circle cx="58" cy="20" r="1.2"/><circle cx="30" cy="24" r="1"/></g>` : ""}
+    ${pal.caps ? `<g><path d="M14 54 Q18 46 22 54 Z" fill="${pal.glow}"/><path d="M70 55 Q75 45 80 55 Z" fill="${pal.glow}"/><rect x="17.3" y="54" width="1.4" height="4" fill="#cfc6e8"/><rect x="74.3" y="55" width="1.4" height="4" fill="#cfc6e8"/></g>` : ""}
+    <ellipse cx="46" cy="60" rx="40" ry="8" fill="${pal.ground}"/>
     ${xtal(30, 56, 16, colors[0])}${xtal(40, 56, 24, colors[1 % colors.length])}${xtal(52, 57, 18, colors[2 % colors.length])}${xtal(62, 56, 12, colors[3 % colors.length])}
   </svg>`;
+}
+
+// the world behind the menus: layered forest, the mine entrance Pip works from, ferns in front
+export function forest() {
+  const pines = (y, n, hgt, col, seed) => {
+    let out = "", r = seed;
+    for (let k = 0; k < n; k++) {
+      r = (r * 16807) % 2147483647;
+      const x = (k + .5) * (420 / n) - 10 + (r % 20) - 10, h = hgt * (.75 + (r % 100) / 300);
+      out += `<polygon points="${x},${y - h} ${x - h * .28},${y} ${x + h * .28},${y}" fill="${col}"/>`;
+    }
+    return out;
+  };
+  return `<svg width="100%" height="100%" viewBox="0 0 400 800" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs><radialGradient id="mineGlow"><stop offset="0" stop-color="#f0b543" stop-opacity=".55"/><stop offset="1" stop-color="#f0b543" stop-opacity="0"/></radialGradient></defs>
+    ${pines(560, 14, 190, "#173322", 11)}
+    ${pines(640, 10, 260, "#11281b", 29)}
+    <path d="M0 640 Q100 600 200 620 T400 610 V800 H0 Z" fill="#0d1f15"/>
+    <circle cx="200" cy="720" r="120" fill="url(#mineGlow)"/>
+    <path d="M140 800 V720 Q140 660 200 655 Q260 660 260 720 V800 Z" fill="#070d09"/>
+    <path d="M132 800 V716 Q132 650 200 645 Q268 650 268 716 V800" fill="none" stroke="#5a3b24" stroke-width="12"/>
+    <path d="M126 700 H274" stroke="#4a2f1c" stroke-width="10"/>
+    <path d="M170 800 L188 730 M230 800 L212 730" stroke="#3b2a1a" stroke-width="4"/>
+    <path d="M178 770 H222 M183 750 H217" stroke="#3b2a1a" stroke-width="3"/>
+    <path d="M285 700 L285 660" stroke="#5a4a3a" stroke-width="2"/><rect x="278" y="660" width="14" height="18" rx="3" fill="#f7d77a"/>
+    <circle cx="285" cy="669" r="22" fill="#f0b543" opacity=".18"/>
+    <path d="M0 800 Q20 720 60 700 Q40 740 50 800 Z M0 760 Q40 720 90 730 Q50 750 40 800 Z" fill="#06100a"/>
+    <path d="M400 800 Q380 710 330 695 Q360 740 350 800 Z M400 750 Q350 720 310 735 Q350 755 360 800 Z" fill="#06100a"/>
+  </svg>`;
+}
+
+// a strip of vine with leaves, to trim the top edge of signboards
+export function vine(w = 360) {
+  let leaves = "";
+  for (let x = 10, k = 0; x < w - 6; x += 22, k++) {
+    const y = 8 + Math.sin(x / 30) * 3, up = k % 2;
+    leaves += `<ellipse cx="${x}" cy="${y + (up ? -5 : 5)}" rx="6" ry="2.8" transform="rotate(${up ? -30 : 30} ${x} ${y + (up ? -5 : 5)})" fill="${k % 3 ? "#7cc46a" : "#5fa04e"}"/>`;
+  }
+  let d = `M0 8`; for (let x = 0; x <= w; x += 10) d += ` L${x} ${8 + Math.sin(x / 30) * 3}`;
+  return `<svg class="vineTrim" width="100%" height="20" viewBox="0 0 ${w} 20" preserveAspectRatio="none" aria-hidden="true">
+    <path d="${d}" stroke="#4f7d3a" stroke-width="3" fill="none"/>${leaves}</svg>`;
 }

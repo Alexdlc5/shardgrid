@@ -43,14 +43,16 @@ Dig an expedition → break crystals → sell the haul to Old Bramble for gold
 
 **1. Mines (biomes).** You pay gold once to open each new mine. Each mine adds new crystal types worth more, one new special, its own crystal **shapes**, and a faster Rootline.
 
-| Mine | Open cost | New crystals | Special | Rootline speed |
-|---|---|---|---|---|
-| **Mossy Hollow** | start | Moss Quartz 1g · Leaf Jade 2g · Sun Amber 3g | Pure vein | ×1.0 |
-| **Ember Roots** | 1,200g | + Garnet 3g · Ember 4g | Ember chain | ×1.15 |
-| Glowcap Grotto | 5,000g | + Glowcap 6g | Spores | ×1.25 |
-| Frostpine Deep | 15,000g | + Frost 8g | Freeze | ×1.35 |
-| Geode Gulch | 40,000g | + Geode 25g | Geode | ×1.45 |
-| Heartwood | 100,000g | all | all, plus "Heartwood season" weekly rules | ×1.6 |
+| Mine | Open cost | Gems (cut) | Special (built) | New shape | Rootline |
+|---|---|---|---|---|---|
+| **Mossy Hollow** | start | Moss Quartz 1g (brilliant) · Leaf Jade 2g (step) · Sun Amber 3g (pear) | Pure vein ×2 | — | ×1.0 |
+| **Ember Roots** | 1,200g | + Garnet 3g (trillion) · Ember Shard 4g (star) | Embers shatter their 3×3, chain | plus / flame | ×1.15 |
+| **Glowcap Grotto** | 5,000g | + Moonstone 5g (cabochon) · Glowcap Gem 6g (round) | Each Glowcap broken: +1 s | cap (U) | ×1.25 |
+| **Frostpine Deep** | 15,000g | + Pine Sapphire 7g (step) · Frostspar 8g (prism) | Frostspar freezes the Rootline 1.5 s each (max 8 s) | snowflake (X) | ×1.35 |
+| **Geode Gulch** | 40,000g | + Deep Topaz 9g (trillion) · Geode 25g (rough, rare) | Rare jackpot gem | ring (hollow 3×3) | ×1.45 |
+| **Heartwood** | 100,000g | mix of everything + Heartstone 40g (heart, rare) | All specials at once | heart | ×1.6 |
+
+Built 2026-10-15 in the prototype. Simplified from the brainstorm: Glowcap *spores* became +time, and the two-hit *geode* became a rare jackpot. The spreading and two-hit versions stay on the list for later.
 
 **2. Tools (permanent upgrades, price ×1.7 per level, 10 levels each).** The game gets *easier* as you upgrade, while mines get *harder*. That tug-of-war is what keeps progress feeling earned.
 
