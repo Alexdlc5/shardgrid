@@ -1,163 +1,182 @@
 # Glimmerwood: everything you set up, step by step
 
-*Updated 2026-10-15. Stack: the web game wrapped with Capacitor. Ads = Google AdMob, purchases = RevenueCat,
-stats/crashes/remote tuning = Firebase. Android first; iOS after the fun test.*
+*Updated 2026-10-15. **Launch order: Apple App Store first, Google Play second.** The game is one web codebase
+wrapped with Capacitor: `ios/` and `android/` are both in the repo, so adding Android later is a build away.
+Ads = Google AdMob, purchases = RevenueCat, stats/crashes/remote tuning = Firebase.*
 *Menus on these sites move around; if a label differs slightly, look for the nearest match.*
 
 ## Status
 
-| | Step | Status |
-|---|---|---|
-| ✅ | Contact email | **pubshiftsupport@gmail.com** |
-| ✅ | Public website | **https://alexdlc5.github.io** (privacy, terms, app-ads.txt) |
-| ⬜ | 1. Google Play Console account | start today (takes days) |
-| ⬜ | 2. Testers (12+, for 14 days) | start today (takes 2+ weeks) |
-| ⬜ | 3. AdMob | start today (review takes 1–3 days) |
-| ⬜ | 4. Firebase | 10 minutes |
-| ⬜ | 5. Play Console: create the app + listing forms | after 1 |
-| ⬜ | 6. Closed test + first upload | after 5 (Claude builds the upload) |
-| ⬜ | 7. "Remove ads" product | after 6 |
-| ⬜ | 8. RevenueCat | after 7 |
-| ⬜ | 9. Trademark check | 5 minutes |
-| ⬜ | 10. *(later)* Apple, extra ad networks | after the fun test |
+| | Step | Wait | Status |
+|---|---|---|---|
+| ✅ | Contact email | — | **pubshiftsupport@gmail.com** |
+| ✅ | Public website | — | **https://alexdlc5.github.io** (privacy, terms, app-ads.txt) |
+| ⬜ | A1. Apple Developer Program | 1–2 days | start today |
+| ⬜ | A2. Agreements, tax, banking | ~1 day | after A1 |
+| ⬜ | A3. Bundle ID + app record | minutes | after A1 |
+| ⬜ | A4–A6. CI key + GitHub secrets | minutes | after A1 |
+| ⬜ | A7. First TestFlight build on your iPhone | ~30 min | after A6 |
+| ⬜ | A8. AdMob (iOS app) | 1–3 days review | start today |
+| ⬜ | A9. Firebase (iOS app) | minutes | any time |
+| ⬜ | A10. "Remove ads" product + sandbox tester | ~1 day | after A2 |
+| ⬜ | A11. RevenueCat (iOS) | minutes | after A10 |
+| ⬜ | A12. App Store listing, privacy labels, review | 1–2 days review | at launch |
+| ⬜ | A13. Trademark check | 5 min | any time |
+| ⬜ | B. Google Play (later) | 14+ days of testing | after iOS launch |
 
-**What to send Claude** is in bold at the end of each part. None of these IDs are secret: they ship inside the app.
-The one secret is the app **upload key** (part 6), and Claude makes that for you.
+You need **an iPhone** (iOS 15 or newer) to play the TestFlight builds. You **don't** need a Mac: GitHub's Macs build and upload the app.
 
----
-
-## 1. Google Play Console account ($25 once)
-
-1. Go to **play.google.com/console/signup** and sign in with the Google account you want to own the game.
-2. Choose **"Yourself"** (a personal account).
-3. Fill in the developer name. This shows on the store; it can be your name or a studio name, e.g. "Glimmerwood Games". The contact email is **pubshiftsupport@gmail.com**, and the website is **https://alexdlc5.github.io**.
-4. Pay the **$25** fee.
-5. Do the **identity verification** (government ID). Google may also ask you to verify a phone number and to prove you have an Android device by signing in to the **Play Console app** on your phone.
-6. Wait for the "account verified" email. That usually takes a few days.
-
-**Send Claude:** "Play account approved."
-
-## 2. Testers (start now, it's the slowest step)
-
-New personal accounts must run a **closed test with at least 12 testers opted in for 14 days in a row** before the game can go public.
-
-1. Go to **groups.google.com** → **Create group** → name it `glimmerwood-testers`. Set "Who can join" to *Invited users only*.
-2. Add **15–20** people (more than 12, so dropouts don't reset the clock). They need a **Gmail / Google account** and an **Android phone**.
-3. Tell them what you'll ask: install from the Play link you'll send, keep it installed for 14 days, and open it every few days. Google looks at engagement when you apply for production.
-
-**Send Claude:** the group's email address (`glimmerwood-testers@googlegroups.com`).
-
-## 3. AdMob (ads)
-
-1. Go to **admob.google.com** → **Get started**, using the same Google account as Play.
-2. Pick your **country**, **time zone** (Pacific) and **billing currency** (USD), then accept the terms.
-3. **Payments:** left menu → **Payments** → add your name and address. Later, under **Payments → Settings**, add **US tax info** (a W-9 for an individual). Nothing is paid out until you pass $100.
-4. **Add the app:** **Apps** → **Add app** → platform **Android** → "Is the app listed on a supported app store?" **No** → name **Glimmerwood** → leave *User metrics* **on** → **Add app**.
-   - Copy the **App ID**. It looks like `ca-app-pub-1234567890123456~1234567890`.
-5. **Create 3 ad units** in the app → **Ad units** → **Add ad unit**:
-   - **Rewarded** → name `Rewarded` → reward amount **1**, reward item **reward** → leave the rest as default → **Create ad unit**. Copy the ID (`ca-app-pub-…/…`).
-   - **Interstitial** → name `Interstitial haul` → create, copy the ID.
-   - **Banner** → name `Banner menus` → create, copy the ID.
-6. **Privacy & messaging** (left menu). These are the consent pop-ups the law requires; the game already shows them:
-   - **European regulations (GDPR)** → **Create message** → select the app **Glimmerwood** → language **English** → user choices: **Consent**, **Do not consent**, **Manage options** → privacy policy URL **https://alexdlc5.github.io/privacy.html** → **Publish**.
-   - **US state regulations** → **Create message** → select the app → **Publish**.
-   - Skip the "IDFA explainer" until iOS.
-7. **Blocking controls** (left menu) → **Content** → **Sensitive categories**: block **Gambling and betting**, **Dating** and other adult categories. That keeps the game's age rating friendly; the competitor's rating picked up "simulated gambling" from its ads.
-8. **Your test phone:** **Settings** → **Test devices** → **Add test device**. Name it, and enter your phone's **advertising ID**, found on Android under *Settings → Google → Ads*.
-9. **Publisher ID:** **Settings** → **Account information** → copy **Publisher ID** (`pub-1234567890123456`).
-10. Later, once the game is on Play: **Apps** → Glimmerwood → **App settings** → **link to the Play listing**. AdMob then reviews the app (1–3 days) and checks `app-ads.txt` on your website.
-
-**Important:** never tap real ads on your own phone; Google can close accounts for it. That's why step 8 matters.
-
-**Send Claude:** the **App ID**, the 3 **ad unit IDs** (Rewarded, Interstitial, Banner) and your **Publisher ID**.
-Claude then puts them in the game, adds your line to app-ads.txt, and keeps test ads on until release.
-
-## 4. Firebase (stats, crash reports, remote tuning)
-
-1. Go to **console.firebase.google.com** → **Create a project** → name **Glimmerwood** → leave **Google Analytics on** → pick *Default Account for Firebase* → **Create project**.
-2. On the project page → **Add app** → the **Android** icon:
-   - Package name **`io.github.alexdlc5.glimmerwood`** (exactly this)
-   - Nickname `Glimmerwood Android`, and leave SHA-1 empty
-   - **Register app** → **Download google-services.json** → skip the remaining steps (Claude does them).
-3. Left menu → **Crashlytics** → **Get started**. That's all it needs.
-4. Left menu → **Remote Config** → **Create configuration**, then leave it empty. Claude uploads the game's tuning values.
-5. *Optional, nice:* in AdMob → **Apps** → Glimmerwood → **App settings** → **Link to Firebase**, which gives better ad revenue reports.
-
-**Send Claude:** the **google-services.json** file. Drag it into the chat, or save it as `shardgrid/android/app/google-services.json`.
-
-## 5. Play Console: create the app and fill the forms (after part 1)
-
-1. **Home** → **Create app** → name **Glimmerwood** → language **English (US)** → **Game** → **Free** → tick the declarations → **Create app**.
-2. The dashboard lists **"Set up your app"** tasks. Answers:
-   - **Privacy policy:** https://alexdlc5.github.io/privacy.html
-   - **App access:** "All functionality is available without special access"
-   - **Ads:** **Yes**, my app contains ads
-   - **Content rating:** start the questionnaire → email pubshiftsupport@gmail.com → category **Game**. Answer honestly: no violence, no gambling, no user chat, no sharing location. It contains ads and digital purchases (the "Remove ads" purchase). The result should be around **Everyone / PEGI 3**.
-   - **Target audience:** **13–15, 16–17, 18+**. *Don't* tick under-13 ages, or Google's Families rules restrict which ad networks you can use.
-   - **News app:** No. **Government app:** No. **Financial features:** None. **Health:** None.
-   - **Advertising ID:** **Yes**, used for **Advertising or marketing** and **Analytics**
-   - **Data safety:** Claude will write the exact answers from the SDKs in the build when you get here (it takes a few minutes). The short version: device IDs, app interactions, crash and diagnostics data and purchase history are collected, partly shared with ad partners, encrypted in transit. Deletion URL: **https://alexdlc5.github.io/privacy.html#delete**
-3. **Store listing:** Claude prepares the short and full descriptions, the 512×512 icon, the 1024×500 feature graphic and phone screenshots. You paste them in.
-4. **Settings → Payments profile** (or *Monetize → set up a merchant account*): add tax and bank details. This is needed before you can sell "Remove ads".
-
-**Send Claude:** "app created."
-
-## 6. Closed test and first upload (after part 5)
-
-1. Claude makes your **upload key** (the file that proves updates come from you), keeps it in the repo's private GitHub secrets, and gives you a backup copy. **Store the backup somewhere safe** (e.g. a password manager). Google's *Play App Signing* is on by default, so if the upload key is lost Google can reset it, but it's slow.
-2. Claude's GitHub workflow builds a signed **release bundle (.aab)** and gives it to you.
-3. Play Console → **Test and release** → **Testing** → **Closed testing** → **Create track** (or use "Alpha") → **Testers** → add your Google Group from part 2 → **Create new release** → upload the .aab → release name `0.1.0` → **Review** → **Start rollout**.
-4. Copy the **opt-in link** from the Testers tab and send it to the group. The 14-day clock starts once 12 have opted in.
-
-**Send Claude:** "closed test live" and the date 12 testers joined.
-
-## 7. "Remove ads" product (after the first upload)
-
-Play only lets you create products after a build with billing is uploaded, which part 6 does.
-
-1. Play Console → **Monetize** → **Products** → **In-app products** → **Create product**.
-2. Product ID **`no_ads`** (exactly this; it can never change) → name **Remove ads** → description "Removes interstitial and banner ads. Rewarded ads stay optional." → price **$4.99** → **Save** → **Activate**.
-
-**Send Claude:** "product created."
-
-## 8. RevenueCat (purchase checking and restores)
-
-1. Go to **app.revenuecat.com** → sign up → **Create project** → **Glimmerwood**.
-2. **Apps** → **+ New** → **Google Play Store** → name `Glimmerwood Android` → package **`io.github.alexdlc5.glimmerwood`**.
-3. **Service account credentials:** RevenueCat shows a guide link ("Creating Play Service Credentials"). Follow it. You'll:
-   - create a service account in **Google Cloud Console** and download its **JSON key**,
-   - in Play Console → **Users and permissions** → **Invite new users**, add that service account email with **View app information**, **View financial data** and **Manage orders and subscriptions**,
-   - upload the JSON to RevenueCat. *It can take up to a day before RevenueCat shows "valid".*
-4. **Product catalog** → **Products** → **+ New** → identifier **`no_ads`**.
-5. **Entitlements** → **+ New** → identifier **`no_ads`** → attach the `no_ads` product.
-6. **Offerings** → open **default** (make sure it's *Current*) → **+ Package** → type **Lifetime** → attach `no_ads`.
-7. **API keys** → copy the **Google Play public SDK key** (starts with `goog_`).
-
-**Send Claude:** the **`goog_…` key**. The "Remove ads" button and "Restore purchases" then go live.
-
-## 9. Trademark check (5 minutes)
-
-1. Go to **tmsearch.uspto.gov** → search **GLIMMERWOOD** (and **GLIMMER WOOD**).
-2. Look for live marks in **class 9** (software, games) and **class 41** (entertainment).
-
-**Send Claude:** "clear", or what you found.
-
-## 10. Later (after the fun test passes)
-
-- **Apple:** **developer.apple.com/programs/enroll** ($99/yr, individual) → in **App Store Connect**, accept the *Paid Apps* agreement and add tax and banking → Claude walks you through the iOS app, the `no_ads` product, a sandbox tester, and the iOS pieces in AdMob, Firebase and RevenueCat.
-- **More ad money:** AppLovin and Unity Ads accounts, added as **AdMob mediation** partners (AdMob → *Mediation*). Worth it once you have real players.
+**Never paste these into chat:** the App Store Connect `.p8` key files. They go straight into GitHub secrets (A6) or RevenueCat (A11).
+Everything else Claude asks for (ad IDs, SDK keys, the Firebase file) ships inside the app anyway and is fine to send.
 
 ---
 
-## What Claude does after each answer
+# Part A: Apple App Store (first)
 
-| You send | Claude does |
+## A1. Apple Developer Program ($99/year)
+
+1. Make sure your Apple Account has **two-factor authentication** on (iPhone: Settings → your name → Sign-In & Security).
+2. Go to **developer.apple.com/programs/enroll** → **Start your enrollment** → sign in.
+3. Enroll as an **Individual / Sole Proprietor**. The App Store then shows your legal name as the seller. (An organization needs an LLC and a D-U-N-S number; it can switch later.)
+4. Pay **$99**. Approval usually comes by email within 48 hours.
+
+**Send Claude:** "Apple approved."
+
+## A2. Agreements, tax and banking (needed to sell "Remove ads")
+
+1. **appstoreconnect.apple.com** → **Business** (or *Agreements, Tax, and Banking*).
+2. Accept the **Paid Apps** agreement → add a **bank account** → fill in the **US tax form** (W-9).
+3. Wait until the Paid Apps agreement shows **Active** (often same day, sometimes a few days).
+
+## A3. Bundle ID and app record
+
+1. **developer.apple.com/account** → **Certificates, IDs & Profiles** → **Identifiers** → **+** → **App IDs** → **App** → Continue.
+   - Description: `Glimmerwood`
+   - Bundle ID: **Explicit** → **`io.github.alexdlc5.glimmerwood`** (exactly this)
+   - Capabilities: leave the defaults (In-App Purchase is included) → **Register**.
+2. **App Store Connect** → **Apps** → **+** → **New App**:
+   - Platform **iOS** · Name **Glimmerwood** · Language **English (U.S.)**
+   - Bundle ID: pick `io.github.alexdlc5.glimmerwood` · SKU `glimmerwood-ios` · User access **Full Access** → **Create**.
+   - If "Glimmerwood" is taken on the App Store, use **Glimmerwood: Crystal Puzzle** and tell Claude.
+
+**Send Claude:** the exact app name you got.
+
+## A4. App Store Connect API key (lets GitHub upload builds for you)
+
+1. **App Store Connect** → **Users and Access** → **Integrations** → **App Store Connect API** → **Team Keys** → **+**.
+2. Name `GitHub CI`, access **Admin** (needed so it can create signing certificates automatically) → **Generate**.
+3. **Download** the `.p8` file. *Apple lets you download it only once.* Keep a copy in a password manager.
+4. Note the **Key ID** (next to the key) and the **Issuer ID** (top of that page).
+
+## A5. Team ID
+
+**developer.apple.com/account** → **Membership details** → copy **Team ID** (10 characters).
+
+## A6. Put the four values in GitHub (secrets: only GitHub's build machines can read them)
+
+**github.com/Alexdlc5/shardgrid** → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**, four times:
+
+| Name | Value |
 |---|---|
-| AdMob IDs | puts them in `proto/platform.js` and the Android manifest, adds your app-ads.txt line, keeps test ads until release |
-| google-services.json | adds the Firebase Analytics, Crashlytics and Remote Config plugins; moves timer and ad caps into Remote Config |
-| "app created" | writes the Data safety answers, the store listing text and the graphics |
-| "ready for upload" | makes the upload key, signed .aab build workflow, and backup for you |
-| `goog_…` key | turns on Remove ads and Restore purchases, then tests a purchase with a license tester |
-| tester group | adds it to the closed test, and drafts the message to testers |
+| `APPLE_TEAM_ID` | Team ID from A5 |
+| `ASC_KEY_ID` | Key ID from A4 |
+| `ASC_ISSUER_ID` | Issuer ID from A4 |
+| `ASC_KEY_P8` | open the `.p8` file in Notepad, copy **everything** (including the BEGIN/END lines), paste |
 
-You never need Android Studio, Unity or a Mac. GitHub builds the app; you need a phone.
+**Send Claude:** "secrets added."
+
+## A7. First TestFlight build on your iPhone
+
+1. **github.com/Alexdlc5/shardgrid** → **Actions** → **ios** → **Run workflow** → tick **Sign and upload to TestFlight** → **Run**. (Claude can start this for you.)
+2. After ~20 minutes, **App Store Connect** → your app → **TestFlight** → the build shows *Processing*, then *Ready to Test*.
+3. **TestFlight → Internal Testing → +** → group `Me` → add yourself.
+4. On your iPhone install **TestFlight** from the App Store → accept the invite → **Install Glimmerwood**.
+
+Apple has **no 12-testers-for-14-days rule**. Internal testers (up to 100 people on your App Store Connect team) get builds right away. External testers (up to 10,000, by email or a public link) need a ~1-day beta review the first time.
+
+**Send Claude:** feel feedback from the real phone.
+
+## A8. AdMob (iOS app)
+
+1. **admob.google.com** → **Get started** with your Google account → country, time zone (Pacific), currency USD → accept terms.
+2. **Payments** → add name and address. Later add **US tax info** (W-9). Payouts start above $100.
+3. **Apps** → **Add app** → **iOS** → "listed on a supported app store?" **No** → name **Glimmerwood** → *User metrics* **on** → **Add app**. Copy the **App ID** (`ca-app-pub-…~…`).
+4. **Ad units** → **Add ad unit**, three times (copy each `ca-app-pub-…/…`):
+   - **Rewarded** (reward amount 1, item "reward") · **Interstitial** · **Banner**
+5. **Privacy & messaging:**
+   - **European regulations (GDPR)** → Create message → app Glimmerwood (iOS) → English → choices **Consent / Do not consent / Manage options** → privacy policy https://alexdlc5.github.io/privacy.html → **Publish**.
+   - **US state regulations** → Create message → **Publish**.
+   - **IDFA explainer:** skip. The game asks for tracking permission with its own friendly sentence.
+6. **Blocking controls → Content → Sensitive categories:** block **Gambling and betting**, **Dating** and other adult categories (keeps the age rating low).
+7. **Settings → Test devices → Add test device:** your iPhone's ID. AdMob prints it in the app log on first run; Claude will read it out of a TestFlight session for you. **Never tap real ads on your own phone.**
+8. **Settings → Account information:** copy your **Publisher ID** (`pub-…`).
+9. Once the game is live: **Apps → Glimmerwood → App settings → link to the App Store listing**. AdMob reviews it and checks `app-ads.txt` on your site.
+
+**Send Claude:** iOS **App ID**, the 3 **ad unit IDs**, your **Publisher ID**.
+
+## A9. Firebase (iOS app)
+
+1. **console.firebase.google.com** → **Create a project** → `Glimmerwood` → keep **Google Analytics on** → Create.
+2. **Add app** → **iOS** → Apple bundle ID **`io.github.alexdlc5.glimmerwood`** → nickname `Glimmerwood iOS` → App Store ID: leave blank → **Register** → **Download GoogleService-Info.plist** → skip the rest.
+3. **Crashlytics → Get started.** **Remote Config → Create configuration** (leave empty).
+
+**Send Claude:** the **GoogleService-Info.plist** file.
+
+## A10. "Remove ads" product and a sandbox tester (after A2 is Active)
+
+1. **App Store Connect** → your app → **Monetization** → **In-App Purchases** → **+** → **Non-Consumable**.
+   - Reference name `Remove ads` · Product ID **`no_ads`** (exactly; it can never change) → Create.
+   - **Price:** $4.99 · **Localization (English):** display name *Remove ads*, description *Removes interstitial and banner ads. Rewarded ads stay optional.* · Review screenshot: Claude makes one.
+2. **Users and Access** → **Sandbox** → **Test Accounts** → **+**. Use an email that is *not* an Apple Account already (e.g. `pubshiftsupport+sandbox@gmail.com`). On your iPhone, sign into it under Settings → App Store → Sandbox Account.
+
+## A11. RevenueCat (iOS)
+
+1. **App Store Connect** → **Users and Access** → **Integrations** → **In-App Purchase** → **Generate In-App Purchase Key** → download the `.p8` (once!) → note the Key ID.
+2. **app.revenuecat.com** → sign up → **Create project** `Glimmerwood` → **Apps** → **+ New** → **App Store** → name `Glimmerwood iOS` → bundle ID `io.github.alexdlc5.glimmerwood` → upload the **In-App Purchase Key** `.p8`, with its Key ID and your Issuer ID → Save.
+3. **Product catalog → Products → + New** → `no_ads` · **Entitlements → + New** → `no_ads` → attach the product · **Offerings → default** (*Current*) → **+ Package** → **Lifetime** → `no_ads`.
+4. **API keys** → copy the **Apple public SDK key** (starts with `appl_`).
+
+**Send Claude:** the **`appl_…` key**.
+
+## A12. App Store listing, privacy labels and review (at launch)
+
+Claude prepares the text and pictures; you paste them in and press submit.
+- **Screenshots:** 6.9" iPhone (1320×2868). Claude renders them from the game.
+- **Description, subtitle** ("Cozy crystal block puzzle"), **keywords**, **support URL** https://alexdlc5.github.io, **privacy policy URL** https://alexdlc5.github.io/privacy.html.
+- **App Privacy** ("nutrition labels"): Claude writes the answers from the SDKs (identifiers, usage data, diagnostics, purchases; tracking = yes when the player allows it).
+- **Age rating questionnaire:** no violence, no gambling, no user content. It contains ads. Expect **4+ or 9+**.
+- **Attach the `no_ads` purchase** to the version (first-time purchases must ship with a version).
+- **Review notes** (Claude drafts): the game asks for tracking permission, rewarded ads are optional, and no account is needed.
+- **Submit for Review:** usually 24–48 hours.
+
+## A13. Trademark check (5 minutes)
+
+**tmsearch.uspto.gov** → search **GLIMMERWOOD** and **GLIMMER WOOD** → look for live marks in class **9** (software/games) and **41** (entertainment). **Send Claude:** "clear", or what you found.
+
+---
+
+# Part B: Google Play (later, after the iOS launch)
+
+Already built: `android/` in the repo, and the **android apk** workflow builds a test APK (Releases → *Glimmerwood test build*).
+When you're ready:
+
+1. **Play Console account:** play.google.com/console/signup → **Yourself** → $25 → identity verification (days).
+2. **Testers:** a personal account needs a **closed test with 12+ testers for 14 days in a row** before going public. Make a Google Group `glimmerwood-testers` with 15–20 Android users.
+3. **AdMob:** add the **Android** app to the same AdMob account (same 3 ad units, same privacy messages).
+4. **Firebase:** add the **Android** app (package `io.github.alexdlc5.glimmerwood`) → send Claude **google-services.json**.
+5. **Play Console → Create app** → Game, Free → privacy policy URL, ads = yes, content rating, target audience **13+** (not under-13), advertising ID = yes. Claude writes the Data safety answers.
+6. **Closed test:** Claude makes the Android upload key and a signed .aab → you upload it → add the tester group → send the opt-in link.
+7. **In-app product** `no_ads` $4.99 (after the first upload) → **RevenueCat:** add a Play Store app with a Google service account → send Claude the `goog_…` key.
+8. After 14 days with 12+ testers: **apply for production access**, then publish.
+
+---
+
+## What Claude does with each answer
+
+| You send / do | Claude does |
+|---|---|
+| "secrets added" | runs the TestFlight upload; fixes anything Apple rejects in processing |
+| AdMob iOS IDs + publisher ID | puts them in `proto/platform.js` and `ios/App/App/Info.plist`, adds your `app-ads.txt` line; test ads stay on in TestFlight |
+| GoogleService-Info.plist | adds Firebase Analytics, Crashlytics, Remote Config; moves timer and ad pacing into Remote Config |
+| `appl_…` key | turns on Remove ads + Restore purchases; tests with your sandbox account |
+| "ready to submit" | screenshots, listing text, privacy-label answers, review notes, IAP review screenshot |
