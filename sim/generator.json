@@ -137,7 +137,8 @@
         180,
         300
       ]
-    }
+    },
+    "freeze_max": 8
   },
   "biomes": {
     "hollow": {

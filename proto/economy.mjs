@@ -56,7 +56,7 @@ function expedition(biomeId, seed) {
       for (const k of cells) { const t = meta[board[k]]; haul[t] = (haul[t] || 0) + (pure.has(k) ? 2 : 1); bloom += C[t].bloom || 0; freeze += C[t].freeze || 0; }
       board = clearCells(board, cells);
       time = Math.min(T.max_time, time + T.refill_per_line * n * (1 + T.combo_bonus * (combo - 1)) + bloom);
-      frozen = Math.min(8, frozen + freeze);
+      frozen = Math.min(T.freeze_max, frozen + freeze);
     } else if (combo && ++miss >= T.combo_break) { combo = 0; miss = 0; }
     tray[best.i] = null;
     if (tray.every((x) => !x)) tray = deal(rng, board, cat, cfg).map((piece) => ({ piece, type: pickType() }));

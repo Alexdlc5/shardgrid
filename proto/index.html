@@ -515,7 +515,7 @@ function commit(i, r, c) {
     let bloom = 0, freeze = 0;
     for (const k of cells) { const cr = CRYSTALS[typeOf(before[k])]; bloom += cr.bloom || 0; freeze += cr.freeze || 0; }
     time = Math.min(maxTime, time + add + bloom);
-    if (freeze) frozenUntil = Math.max(frozenUntil, performance.now()) + Math.min(8, freeze) * 1000;
+    if (freeze) frozenUntil = Math.max(frozenUntil, performance.now()) + Math.min(T.freeze_max, freeze) * 1000;
     float(`+${gained}g`, bx + (ctr[0] + .5) * cell, by + (ctr[1] + .5) * cell);
     float(`+${add.toFixed(1)}s`, bx + cell * N / 2, by - 30, "#9be08a");
     const base = 523 * 2 ** ((Math.min(combo, 12) * 2) / 12);
