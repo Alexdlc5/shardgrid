@@ -248,6 +248,25 @@ export function dibble(size = 96, look = {}) {
   `, "dibble");
 }
 
+// A wardrobe item on its own (shop tiles): the hat, scarf, lantern, or a jar of fur dye.
+export function lookItem(part, val, size = 40) {
+  const id = "li" + uid++;
+  if (part === "hat") return svg(size, val === "miner" || val === "beanie" ? "16 0 68 40" : "18 -2 64 40", hatArt(val, id) || "", "lookItem");
+  if (part === "lantern") return svg(size, "66 48 28 30", `<path d="M80 49 Q76 52 79 55" stroke="#4a3824" stroke-width="1.4" fill="none"/>${lanternArt(val, id)}`, "lookItem");
+  if (part === "scarf") return svg(size, "0 0 40 40", `<defs>${linear(id, val, 90)}</defs>
+    <path d="M6 14 Q20 24 34 14" stroke="${line(val)}" stroke-width="9.6" fill="none" stroke-linecap="round"/><path d="M6 14 Q20 24 34 14" stroke="url(#${id})" stroke-width="7.2" fill="none" stroke-linecap="round"/>
+    <path d="M10 17 Q20 22.6 30 17" stroke="#fff" stroke-width=".8" stroke-dasharray="1.2 2.2" fill="none" opacity=".45"/>
+    <path d="M24 19 L27.5 33 L33 31 L29 18 Z" fill="url(#${id})" stroke="${line(val)}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M27.5 33 l-.6 2.6 M29.4 32.4 l-.2 2.8 M31.2 31.6 l.3 2.7" stroke="${val}" stroke-width="1.2" stroke-linecap="round"/>`, "lookItem");
+  const [f] = FUR[val] || FUR.cocoa; // fur dye: a little stoppered jar
+  return svg(size, "0 0 40 40", `<defs>${radial(id, f, .35, .35)}</defs>
+    <rect x="11" y="13" width="18" height="21" rx="6" fill="#d9f0ec" fill-opacity=".35" stroke="#5a7a70" stroke-width="1.4"/>
+    <rect x="12.4" y="19" width="15.2" height="13.6" rx="5" fill="url(#${id})" stroke="${line(f)}" stroke-width=".8"/>
+    <rect x="14" y="8" width="12" height="6" rx="2" fill="#a0703f" stroke="#5a3b24" stroke-width="1.2"/>
+    <path d="M14 16 Q13 24 15 31" stroke="#fff" stroke-width="1.2" opacity=".6" fill="none" stroke-linecap="round"/>
+    <circle cx="23" cy="24" r="1.3" fill="#fff" opacity=".5"/>`, "lookItem");
+}
+
 // Old Puddock: a wise travelling toad merchant. Straw hat, round spectacles, droopy white brows, patched indigo coat.
 export function puddock(size = 64) {
   const g = "#86a64e", gs = shade(g, .3), gl = line(g), coat = "#3e4f7c", cl = line(coat), straw = "#e2bf74", sl = line(straw), id = "pud" + uid++;
