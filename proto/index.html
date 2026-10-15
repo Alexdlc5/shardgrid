@@ -3,298 +3,546 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Shardgrid Prototype</title>
+<title>Glimmerwood Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root { --paper: #efe9dd; --ink: #1f2430; --muted: #6b6457; --accent: #c8553d; }
-  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink);
-    font: 16px/1.3 system-ui, sans-serif; overflow: hidden; touch-action: none; user-select: none; }
-  canvas { display: block; }
-  #hud { position: absolute; top: 10px; left: 0; right: 0; display: flex; justify-content: space-between;
-    align-items: flex-start; padding: 0 16px; pointer-events: none; }
-  #score { font-size: 34px; font-weight: 800; letter-spacing: -1px; }
-  #best { font-size: 13px; color: var(--muted); }
-  #best.near { color: var(--accent); animation: pulse .6s ease-in-out infinite alternate; }
-  @keyframes pulse { to { transform: scale(1.12); } }
-  #lvl { text-align: right; font-size: 13px; color: var(--muted); }
-  #bar { width: 120px; height: 6px; background: #d8d0c0; border-radius: 3px; margin-top: 4px; overflow: hidden; }
-  #fill { height: 100%; width: 0; background: var(--ink); transition: width .4s; }
-  #combo { position: absolute; left: 0; right: 0; text-align: center; font-weight: 800; font-size: 22px;
-    color: var(--accent); opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
-  #toast { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); background: var(--ink);
-    color: var(--paper); padding: 12px 18px; border-radius: 10px; font-weight: 700; opacity: 0;
-    transition: opacity .3s; pointer-events: none; text-align: center; }
-  #over { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
-    background: rgba(31, 36, 48, .55); }
-  #over .card { background: var(--paper); border-radius: 14px; padding: 22px 26px; text-align: center; min-width: 240px; }
-  #over h2 { margin: 0 0 4px; font-size: 15px; color: var(--muted); font-weight: 600; }
-  #final { font-size: 44px; font-weight: 800; }
-  #over button { display: block; width: 100%; margin-top: 10px; padding: 12px; border: 0; border-radius: 10px;
-    font: inherit; font-weight: 700; cursor: pointer; }
-  #rescue { background: var(--accent); color: #fff; }
-  #again { background: var(--ink); color: var(--paper); }
-  #note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  :root { --forest: #0f2219; --forest2: #1d3b2a; --text: #efe6cf; --muted: #a9b79a; --amber: #f0b543;
+    --red: #d6453d; --card: rgba(16, 32, 23, .92); --line: rgba(239, 230, 207, .14); }
+  html, body { margin: 0; height: 100%; overflow: hidden; touch-action: none; user-select: none; color: var(--text);
+    font: 16px/1.3 Fredoka, system-ui, sans-serif;
+    background: radial-gradient(120% 70% at 50% 0%, #2b5a3c 0%, var(--forest2) 45%, var(--forest) 100%); }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5;
+    background: repeating-linear-gradient(105deg, transparent 0 90px, rgba(255, 240, 190, .035) 90px 150px, transparent 150px 260px); }
+  canvas { display: block; position: relative; }
+  .hud { position: absolute; top: 12px; left: 0; right: 0; display: flex; justify-content: space-between;
+    padding: 0 18px; pointer-events: none; }
+  .hud b { font-size: 30px; font-weight: 700; color: var(--amber); }
+  .hud small { display: block; color: var(--muted); font-size: 13px; }
+  .hud .right { text-align: right; }
+  #toast { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); background: var(--card);
+    border: 1px solid var(--line); padding: 12px 20px; border-radius: 14px; font-weight: 700; font-size: 20px;
+    opacity: 0; transition: opacity .25s; pointer-events: none; text-align: center; }
+  .screen { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+    background: rgba(8, 18, 12, .62); backdrop-filter: blur(2px); }
+  .screen.show { display: flex; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px 22px 18px;
+    width: min(360px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow-y: auto; box-sizing: border-box; }
+  h1 { margin: 0; font-size: 40px; line-height: 1; color: var(--amber); letter-spacing: .5px; }
+  h2 { margin: 0 0 6px; font-size: 22px; }
+  .tag { color: var(--muted); margin: 6px 0 14px; }
+  .gold { font-weight: 700; color: var(--amber); }
+  button { display: block; width: 100%; margin-top: 10px; padding: 12px; border: 0; border-radius: 12px; cursor: pointer;
+    font: inherit; font-weight: 700; font-size: 17px; background: var(--amber); color: #2a1d06; }
+  button.alt { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  button.ad { background: #7cc46a; color: #10240f; }
+  button:disabled { opacity: .4; cursor: default; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row .grow { flex: 1; }
+  .row small { display: block; color: var(--muted); font-size: 13px; }
+  .row button { width: auto; margin: 0; padding: 8px 12px; font-size: 15px; white-space: nowrap; }
+  .gem { width: 16px; height: 16px; transform: rotate(45deg); border-radius: 3px; flex: none; }
+  .mine { border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; margin-top: 8px; cursor: pointer; }
+  .mine.sel { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
+  .mine.locked { opacity: .5; cursor: default; }
+  .note { font-size: 12px; color: var(--muted); margin-top: 10px; text-align: center; }
+  .seg { display: flex; gap: 6px; margin-top: 12px; }
+  .seg button { margin: 0; padding: 9px 6px; font-size: 14px; background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .seg button.on { background: var(--amber); color: #2a1d06; border-color: var(--amber); }
+  .seg small { display: block; font-weight: 400; font-size: 11px; opacity: .8; }
+  .opts { display: flex; gap: 6px; margin-top: 10px; }
+  .opts button { margin: 0; padding: 7px; font-size: 13px; font-weight: 600; background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .opts button.on { color: var(--text); border-color: var(--muted); }
+  .bramble { font-style: italic; color: var(--muted); margin: 8px 0 2px; }
+  .total { display: flex; justify-content: space-between; font-size: 20px; font-weight: 700; margin-top: 10px; }
 </style>
 </head>
 <body>
 <canvas id="cv"></canvas>
-<div id="hud">
-  <div><div id="score">0</div><div id="best">Best 0</div></div>
-  <div id="lvl"><span id="lvlText">Level 1 · Glass</span><div id="bar"><div id="fill"></div></div></div>
+<div class="hud" id="hud">
+  <div><small>Haul</small><b id="haul">0g</b></div>
+  <div class="right"><small id="biomeName">Mossy Hollow</small><small id="comboTxt"></small></div>
 </div>
-<div id="combo"></div>
 <div id="toast"></div>
-<div id="over"><div class="card">
-  <h2>Round over</h2>
-  <div id="final">0</div>
-  <div id="overBest"></div>
-  <button id="rescue">Rescue: shatter 3 lines</button>
-  <button id="again">Play again</button>
-  <div id="note">In the real game, Rescue is a rewarded ad (once per round).</div>
-</div></div>
+
+<section id="home" class="screen"><div class="card">
+  <h1>Glimmerwood</h1>
+  <div class="tag">Mine glowing crystals before the roots close in.</div>
+  <div>Gold: <span class="gold" id="homeGold">0</span></div>
+  <div class="seg"><button id="mExp">Expedition<small>beat the Rootline</small></button><button id="mCalm">Calm Grove<small>no timer, ×0.6 gold</small></button></div>
+  <div id="mines"></div>
+  <button id="dig">Dig</button>
+  <button id="daily" class="alt">Daily Dig</button>
+  <button id="toMarket" class="alt">Old Bramble's Market</button>
+  <div class="opts"><button id="oSound">Sound</button><button id="oVib">Vibration</button><button id="oGlyph">Crystal symbols</button></div>
+  <div class="note">Fair dealing: crystals are dealt at random. Never by ads, purchases or how close you are to your best.</div>
+</div></section>
+
+<section id="end" class="screen"><div class="card">
+  <h2 id="endTitle">The roots closed the tunnel</h2>
+  <div class="tag" id="endSub">Pip climbs out with the haul.</div>
+  <div id="newBest" class="gold" style="font-size:20px;display:none">New best haul!</div>
+  <button id="rescue" class="ad">Roots regrow +20s</button>
+  <div id="haulList"></div>
+  <div class="bramble" id="brambleLine"></div>
+  <div class="total"><span>Haul value</span><span class="gold" id="haulTotal">0g</span></div>
+  <button id="sell2" class="ad">Bramble's double deal: sell ×2</button>
+  <button id="sell">Sell to Old Bramble</button>
+  <div class="note">Green buttons are rewarded ads in the real game; free here.</div>
+</div></section>
+
+<section id="market" class="screen"><div class="card">
+  <h2>Old Bramble's Market</h2>
+  <div class="tag">"Shiny rocks, shiny coins. Fair trade, little mole."</div>
+  <div>Gold: <span class="gold" id="mktGold">0</span></div>
+  <div id="shop"></div>
+  <button id="mktBack" class="alt">Back</button>
+</div></section>
+
 <script type="module">
 import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, fitsAnywhere, deal,
-  rescueCells, xpToNext } from "./game.js";
+  rescueCells, breakCells, pureVeinCells } from "./game.js";
 
-const cfg = await (await fetch("../sim/generator.json")).json();
-const cat = buildCatalog(cfg);
-const THEMES = [
-  ["Glass", ["#7fd1c7", "#5fb3c9", "#9ad0e8", "#4f9fa8"]],
-  ["Paper", ["#f2c5a0", "#e8a87c", "#f6dcb8", "#d98f6b"]],
-  ["Slate", ["#a4adbc", "#8693a8", "#c3c9d4", "#6f7d94"]],
-  ["Copper", ["#d9895b", "#b86b45", "#e8a77e", "#a35a3a"]],
-  ["Gold", ["#f2c94c", "#e0b23a", "#f7dc85", "#c9982b"]],
-];
-
-// --- persistent progress (per-browser convenience only) ---
-const store = { get(k, d) { try { return JSON.parse(localStorage.getItem("sg." + k)) ?? d; } catch { return d; } },
-                set(k, v) { try { localStorage.setItem("sg." + k, JSON.stringify(v)); } catch {} } };
-let best = store.get("best", 0), level = store.get("level", 1), xp = store.get("xp", 0);
-
-// --- round state ---
-let board, tray, colors, uid, score, shown, combo, miss, rescueUsed, over;
-const theme = () => THEMES[Math.min(level, THEMES.length) - 1];
-function newRound() {
-  board = Array(64).fill(0); colors = {}; uid = 1; score = 0; shown = 0; combo = 0; miss = 0;
-  rescueUsed = false; over = false; bestFlagged = false;
-  tray = deal(Math.random, board, cat, cfg);
-  $("over").style.display = "none";
-}
-let bestFlagged = false;
+const cfg0 = await (await fetch("../sim/generator.json")).json();
 const $ = (id) => document.getElementById(id);
 
-// --- audio (synth, no assets) ---
-let ac;
-function tone(freq, dur = 0.12, type = "sine", vol = 0.15, when = 0) {
-  ac ??= new AudioContext();
-  const t = ac.currentTime + when, o = ac.createOscillator(), g = ac.createGain();
-  o.type = type; o.frequency.value = freq;
-  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-  o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur);
-}
-const buzz = (ms) => navigator.vibrate?.(ms);
+// ---------- tuning (all Remote Config later) ----------
+const T = { maxTime: 60, drain: 1, refillPerLine: 3.5, comboBonus: 0.25, rescueTime: 20, warn: 0.25 };
+const CRYSTALS = {
+  moss:   { name: "Moss Quartz", color: "#8fd18b", value: 1, glyph: "●" },
+  jade:   { name: "Leaf Jade",   color: "#35b38a", value: 2, glyph: "▲" },
+  amber:  { name: "Sun Amber",   color: "#f0b543", value: 3, glyph: "◆" },
+  garnet: { name: "Garnet",      color: "#d0507a", value: 3, glyph: "■" },
+  ember:  { name: "Ember Shard", color: "#ff6a3d", value: 4, ember: true, glyph: "✦" },
+};
+const BIOMES = [
+  { id: "hollow", name: "Mossy Hollow", cost: 0, drain: 1, types: { moss: 5, jade: 3, amber: 2 }, families: {},
+    blurb: "Soft moss, easy veins. Match one crystal type in a line for ×2." },
+  { id: "ember", name: "Ember Roots", cost: 1200, drain: 1.15, types: { moss: 2, jade: 2, amber: 2, garnet: 2, ember: 1.3 },
+    families: { flame: { weight: 2, art: [".X.", "XXX", ".X."] } },
+    blurb: "Embers shatter everything around them, and chain." },
+];
+const SHOP = [
+  { id: "lantern", kind: "up", name: "Lantern", desc: "+5s of Rootline", base: 150, max: 10 },
+  { id: "pick", kind: "up", name: "Pickaxe", desc: "+10% crystal value", base: 200, max: 10 },
+  { id: "charm", kind: "up", name: "Root Charm", desc: "+10% time from every vein", base: 180, max: 10 },
+  { id: "biome:ember", kind: "biome", name: "Map to Ember Roots", desc: "New mine: embers, garnets, flame crystals", price: 1200 },
+  { id: "fireflies", kind: "once", name: "Firefly roots", desc: "Fireflies drift along your Rootline", price: 600 },
+  { id: "dewdrop", kind: "once", name: "Dewdrop pouch", desc: "More tiny 1-cell crystals in your trays", price: 900 },
+];
 
-// --- layout ---
+// ---------- save (per-browser) ----------
+const store = { get(k, d) { try { return JSON.parse(localStorage.getItem("gw." + k)) ?? d; } catch { return d; } },
+                set(k, v) { try { localStorage.setItem("gw." + k, JSON.stringify(v)); } catch {} } };
+const save = { gold: 0, up: { lantern: 0, pick: 0, charm: 0 }, owned: [], biomes: ["hollow"], best: {}, sel: "hollow",
+  mode: "exp", opt: { sound: true, vib: true, glyph: false }, daily: { last: "", streak: 0, best: 0 }, ...store.get("save", {}) };
+const CALM_MULT = 0.6;
+const BRAMBLE = ["\"Fine rocks. Finer than my cousin's, anyway.\"", "\"Every vein you break, the roots grow kinder.\"",
+  "\"Slow digging is still digging, little mole.\"", "\"Hmph. I've seen worse hauls. Mine, mostly.\"",
+  "\"The Glimmerwood remembers good miners.\"", "\"Pure veins! Now that's a mole with an eye.\"",
+  "\"Rest your paws. The crystals will wait.\"", "\"Coins for crystals. Fair as rain.\""];
+const today = () => new Date().toISOString().slice(0, 10);
+const mulberry = (a) => () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+const qs = new URLSearchParams(location.search);
+if (qs.has("gold")) save.gold = +qs.get("gold"); // ?gold=5000 to try the market quickly
+const persist = () => store.set("save", save);
+const price = (it) => it.kind === "up" ? Math.round(it.base * 1.7 ** save.up[it.id]) : it.price;
+const valueMult = () => (1 + 0.1 * save.up.pick) * (calm ? CALM_MULT : 1);
+
+// ---------- audio (synth, no assets) ----------
+let ac;
+function tone(freq, dur = .12, type = "sine", vol = .14, when = 0) {
+  if (!save.opt.sound) return;
+  try {
+    ac ??= new AudioContext();
+    const t = ac.currentTime + when, o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur);
+  } catch {}
+}
+const buzz = (ms) => save.opt.vib && navigator.vibrate?.(ms);
+
+// ---------- layout ----------
 const cv = $("cv"), ctx = cv.getContext("2d");
-let W, H, cell, bx, by, trayY, dpr;
+let W, H, cell, bx, by, trayY;
 function layout() {
-  dpr = devicePixelRatio || 1; W = innerWidth; H = innerHeight;
+  const dpr = devicePixelRatio || 1; W = innerWidth; H = innerHeight;
   cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px";
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  cell = Math.floor(Math.min((W - 32) / N, (H - 90 - 30) / (N + 3.4)));
-  bx = Math.round((W - cell * N) / 2); by = 80; trayY = by + cell * N + 24;
-  $("combo").style.top = (by - 34) + "px";
+  cell = Math.floor(Math.min((W - 52) / N, (H - 96 - 40) / (N + 3.4)));
+  bx = Math.round((W - cell * N) / 2); by = 96; trayY = by + cell * N + 30;
 }
 addEventListener("resize", layout); layout();
 
-// --- drawing ---
-function drawShard(cellsAt, colorOf, idOf, size, ox, oy, alpha = 1) {
-  // fused piece: fill each cell, bevel only on edges between different pieces
-  ctx.globalAlpha = alpha;
-  for (const [r, c] of cellsAt) { ctx.fillStyle = colorOf(r, c); ctx.fillRect(ox + c * size, oy + r * size, size + 0.5, size + 0.5); }
-  const lw = Math.max(1.5, size * 0.07);
-  ctx.lineWidth = lw;
-  for (const [r, c] of cellsAt) {
-    const id = idOf(r, c), x = ox + c * size, y = oy + r * size;
-    const edge = (dr, dc) => idOf(r + dr, c + dc) !== id;
-    ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.beginPath();
-    if (edge(-1, 0)) { ctx.moveTo(x, y + lw / 2); ctx.lineTo(x + size, y + lw / 2); }
-    if (edge(0, -1)) { ctx.moveTo(x + lw / 2, y); ctx.lineTo(x + lw / 2, y + size); }
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(0,0,0,.28)"; ctx.beginPath();
-    if (edge(1, 0)) { ctx.moveTo(x, y + size - lw / 2); ctx.lineTo(x + size, y + size - lw / 2); }
-    if (edge(0, 1)) { ctx.moveTo(x + size - lw / 2, y); ctx.lineTo(x + size - lw / 2, y + size); }
+// ---------- color helpers ----------
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, t) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t))})`; };
+const lerpHex = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * t).toString(16).padStart(2, "0")).join("");
+
+// ---------- round state ----------
+let biome, cat, board, meta, tray, uid, combo, miss, rescueUsed, state = "home", endCause, calm = false, daily = false, rng = Math.random;
+let time, maxTime, started, haul, floats = [], parts = [];
+function catalogFor(b) {
+  const fam = { ...structuredClone(cfg0.families), ...b.families };
+  if (save.owned.includes("dewdrop")) fam.dot.weight += 4;
+  return buildCatalog({ ...cfg0, families: fam });
+}
+function pickType() {
+  const e = Object.entries(biome.types), total = e.reduce((s, [, w]) => s + w, 0);
+  let x = rng() * total;
+  for (const [t, w] of e) if ((x -= w) < 0) return t;
+  return e[0][0];
+}
+const dealTray = () => deal(rng, board, cat, cfg0).map((piece) => ({ piece, type: pickType() }));
+const typeOf = (u) => (u === -1 ? drag?.type : meta[u]?.type);
+const isEmber = (u) => !!CRYSTALS[typeOf(u)]?.ember;
+
+function startDig(isDaily = false) {
+  daily = isDaily; calm = !daily && save.mode === "calm";
+  rng = daily ? mulberry(+today().replaceAll("-", "")) : Math.random; // same crystals for everyone today
+  biome = BIOMES.find((b) => b.id === (daily ? "hollow" : save.sel)); cat = daily ? buildCatalog(cfg0) : catalogFor(biome);
+  board = Array(64).fill(0); meta = {}; uid = 1; combo = 0; miss = 0; rescueUsed = false;
+  haul = {}; maxTime = T.maxTime + 5 * save.up.lantern; time = maxTime; started = false;
+  tray = dealTray(); state = "play"; show(null);
+  $("biomeName").textContent = daily ? `Daily Dig · ${today()}` : biome.name + (calm ? " · Calm" : "");
+}
+const haulValue = () => Math.round(Object.entries(haul).reduce((s, [t, n]) => s + n * CRYSTALS[t].value, 0) * valueMult());
+
+// ---------- crystal drawing ----------
+function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, glyph = "") {
+  if (!cells.length) return;
+  const x0 = ox + box.c * size, y0 = oy + box.r * size, bw = box.w * size, bh = box.h * size;
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.beginPath();
+  for (const [r, c] of cells) ctx.rect(ox + c * size, oy + r * size, size + .5, size + .5);
+  const g = ctx.createLinearGradient(x0, y0, x0 + bw, y0 + bh);
+  g.addColorStop(0, mix(color, "#ffffff", .45)); g.addColorStop(.5, color); g.addColorStop(1, mix(color, "#000000", .35));
+  ctx.fillStyle = g; ctx.shadowColor = color; ctx.shadowBlur = size * glow; ctx.fill(); ctx.shadowBlur = 0;
+  ctx.clip();
+  // facets across the whole crystal (not per cell): lines from its heart to its corners
+  const cx = x0 + bw * .42, cy = y0 + bh * .4;
+  ctx.strokeStyle = "rgba(255,255,255,.22)"; ctx.lineWidth = Math.max(1, size * .04); ctx.beginPath();
+  for (const [px, py] of [[x0, y0], [x0 + bw, y0], [x0 + bw, y0 + bh], [x0, y0 + bh]]) { ctx.moveTo(cx, cy); ctx.lineTo(px, py); }
+  ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,.2)"; ctx.beginPath();
+  ctx.moveTo(x0, y0 + bh * .5); ctx.lineTo(x0 + bw * .5, y0); ctx.lineTo(x0 + bw * .68, y0); ctx.lineTo(x0, y0 + bh * .68); ctx.fill();
+  ctx.restore();
+  // outline only where the crystal meets something else
+  const own = new Set(cells.map(([r, c]) => r * 100 + c));
+  ctx.save(); ctx.globalAlpha = alpha; ctx.lineWidth = Math.max(1.5, size * .06);
+  for (const [r, c] of cells) {
+    const x = ox + c * size, y = oy + r * size, edge = (dr, dc) => !own.has((r + dr) * 100 + c + dc);
+    ctx.strokeStyle = "rgba(255,255,255,.5)"; ctx.beginPath();
+    if (edge(-1, 0)) { ctx.moveTo(x, y + 1); ctx.lineTo(x + size, y + 1); }
+    if (edge(0, -1)) { ctx.moveTo(x + 1, y); ctx.lineTo(x + 1, y + size); }
+    ctx.stroke(); ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.beginPath();
+    if (edge(1, 0)) { ctx.moveTo(x, y + size - 1); ctx.lineTo(x + size, y + size - 1); }
+    if (edge(0, 1)) { ctx.moveTo(x + size - 1, y); ctx.lineTo(x + size - 1, y + size); }
     ctx.stroke();
   }
-  ctx.globalAlpha = 1;
+  if (glyph && save.opt.glyph) {
+    ctx.fillStyle = "rgba(20,20,10,.5)"; ctx.font = `${Math.round(size * .38)}px sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    for (const [r, c] of cells) ctx.fillText(glyph, ox + (c + .5) * size, oy + (r + .52) * size);
+    ctx.textBaseline = "alphabetic";
+  }
+  ctx.restore();
 }
-const pieceColor = (p) => theme()[1][p.family % 4];
-function drawPiece(p, size, ox, oy, alpha) {
-  const set = new Set(p.cells.map(([r, c]) => r + "," + c));
-  drawShard(p.cells, () => pieceColor(p), (r, c) => set.has(r + "," + c) ? 1 : 0, size, ox, oy, alpha);
-}
-function trayRect(i) {
-  const slot = (cell * N) / 3, s = cell * 0.55, p = tray[i];
-  return { s, x: bx + slot * i + (slot - p.w * s) / 2, y: trayY + (cell * 2.9 - p.h * s) / 2, slot };
+function drawPiece({ piece, type }, size, ox, oy, alpha) {
+  const em = CRYSTALS[type].ember ? .6 + .3 * Math.sin(performance.now() / 120) : .35;
+  drawCrystal(piece.cells, CRYSTALS[type].color, { r: 0, c: 0, h: piece.h, w: piece.w }, size, ox, oy, alpha, em, CRYSTALS[type].glyph);
 }
 
-// --- particles ---
-let parts = [];
-function shatter(idxs, colorAt, stagger = 14) {
+// ---------- board, moss and the Rootline ----------
+const seeded = (s) => () => ((s = (s * 16807) % 2147483647) / 2147483647);
+const mossRnd = seeded(7), moss = [...Array(26)].map(() => ({ t: mossRnd(), r: .5 + mossRnd(), side: mossRnd() < .7 ? 0 : 1 }));
+function drawBoard() {
+  const pad = 8, x = bx - pad, y = by - pad, s = cell * N + pad * 2;
+  ctx.fillStyle = "#2b2a24"; ctx.beginPath(); ctx.roundRect(x, y, s, s, 14); ctx.fill();
+  ctx.fillStyle = "#34322a";
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) { ctx.beginPath(); ctx.roundRect(bx + c * cell + 2, by + r * cell + 2, cell - 4, cell - 4, 5); ctx.fill(); }
+  for (const m of moss) { // tufts on the top and left of the frame
+    const px = m.side ? x : x + m.t * s, py = m.side ? y + m.t * s * .6 : y;
+    for (let k = 0; k < 3; k++) { ctx.fillStyle = k % 2 ? "#4f7d3a" : "#6a9a45";
+      ctx.beginPath(); ctx.arc(px + (k - 1) * 4 * m.r, py + (k % 2) * 2, 4 * m.r, 0, 7); ctx.fill(); }
+  }
+}
+function rootPath() { // frame rectangle, starting top-centre, clockwise
+  const m = 18, x = bx - m, y = by - m, w = cell * N + 2 * m, h = w;
+  const segs = [[x + w / 2, y, x + w, y], [x + w, y, x + w, y + h], [x + w, y + h, x, y + h], [x, y + h, x, y], [x, y, x + w / 2, y]];
+  const lens = segs.map(([a, b, c, d]) => Math.hypot(c - a, d - b));
+  return { segs, lens, L: lens.reduce((s, v) => s + v, 0) };
+}
+function pointAt(p, d) {
+  for (let i = 0; i < p.segs.length; i++) {
+    if (d <= p.lens[i] || i === p.segs.length - 1) { const [a, b, c, e] = p.segs[i], t = Math.min(1, d / p.lens[i]);
+      return { x: a + (c - a) * t, y: b + (e - b) * t, ang: Math.atan2(e - b, c - a) }; }
+    d -= p.lens[i];
+  }
+}
+function rootColor(f) {
+  return f > .5 ? "#7cc46a" : f > T.warn ? lerpHex("#e0a33a", "#7cc46a", (f - T.warn) / (.5 - T.warn)) : lerpHex(T.warn > 0 ? "#d6453d" : "#d6453d", "#e0a33a", f / T.warn);
+}
+function drawRootline(now) {
+  const f = Math.max(0, time / maxTime), p = rootPath(), len = p.L * f, col = rootColor(f);
+  // dead bramble track underneath
+  ctx.strokeStyle = "rgba(80,40,30,.35)"; ctx.lineWidth = 3; ctx.setLineDash([3, 7]); ctx.beginPath();
+  p.segs.forEach(([a, b, c, d]) => { ctx.moveTo(a, b); ctx.lineTo(c, d); }); ctx.stroke(); ctx.setLineDash([]);
+  if (len <= 0) return;
+  ctx.strokeStyle = col; ctx.lineWidth = 7; ctx.lineCap = "round"; ctx.beginPath();
+  const st = pointAt(p, 0); ctx.moveTo(st.x, st.y);
+  for (let d = 6; d < len; d += 6) { const q = pointAt(p, d); ctx.lineTo(q.x, q.y); }
+  const tip = pointAt(p, len); ctx.lineTo(tip.x, tip.y); ctx.stroke();
+  // leaves (thorns when low)
+  for (let d = 14, k = 0; d < len - 6; d += 26, k++) {
+    const q = pointAt(p, d), side = k % 2 ? 1 : -1;
+    ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.ang + side * .9);
+    ctx.fillStyle = f > T.warn ? mix(col, "#1d3b2a", .25) : "#8c2f22";
+    ctx.beginPath(); f > T.warn ? ctx.ellipse(8, 0, 8, 3.5, 0, 0, 7) : (ctx.moveTo(0, -3), ctx.lineTo(10, 0), ctx.lineTo(0, 3)); ctx.fill(); ctx.restore();
+  }
+  // glowing growing tip
+  const pulse = 1 + .25 * Math.sin(now / (f > T.warn ? 300 : 110));
+  ctx.save(); ctx.shadowColor = col; ctx.shadowBlur = 16; ctx.fillStyle = mix(col, "#ffffff", .4);
+  ctx.beginPath(); ctx.arc(tip.x, tip.y, 6 * pulse, 0, 7); ctx.fill(); ctx.restore();
+  if (save.owned.includes("fireflies")) for (let i = 0; i < 9; i++) {
+    const q = pointAt(p, (len * (i + .5)) / 9 + Math.sin(now / 900 + i) * 10);
+    ctx.save(); ctx.globalAlpha = .5 + .5 * Math.sin(now / 250 + i * 2); ctx.fillStyle = "#fff3a0"; ctx.shadowColor = "#fff3a0"; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(q.x + Math.cos(now / 700 + i) * 9, q.y + Math.sin(now / 600 + i) * 9, 2.2, 0, 7); ctx.fill(); ctx.restore();
+  }
+}
+
+// ---------- effects ----------
+function shatter(idxs, colorAt, stagger = 12) {
   idxs.forEach((i, k) => {
     const r = Math.floor(i / N), c = i % N, col = colorAt(i);
-    for (let j = 0; j < 5; j++) parts.push({
-      x: bx + (c + Math.random()) * cell, y: by + (r + Math.random()) * cell,
-      vx: (Math.random() - .5) * 6, vy: -Math.random() * 6 - 1, rot: Math.random() * 6, vr: (Math.random() - .5) * .4,
-      s: cell * (.18 + Math.random() * .22), col, life: 1, delay: k * stagger,
-    });
+    for (let j = 0; j < 5; j++) parts.push({ x: bx + (c + Math.random()) * cell, y: by + (r + Math.random()) * cell,
+      vx: (Math.random() - .5) * 7, vy: -Math.random() * 7 - 1, rot: Math.random() * 6, vr: (Math.random() - .5) * .4,
+      s: cell * (.16 + Math.random() * .24), col, life: 1, delay: k * stagger });
   });
 }
+const float = (text, x, y, color = "#f0b543") => floats.push({ text, x, y, color, life: 1 });
+function toast(html, ms = 1500) {
+  const el = $("toast"); el.innerHTML = html; el.style.opacity = 1;
+  clearTimeout(toast.t); toast.t = setTimeout(() => (el.style.opacity = 0), ms);
+}
 
-// --- input ---
-let drag = null; // {i, piece, x, y, touch}
+// ---------- input ----------
+let drag = null;
+function trayRect(i) {
+  const slot = (cell * N) / 3, s = cell * .55, p = tray[i].piece;
+  return { s, slot, x: bx + slot * i + (slot - p.w * s) / 2, y: trayY + (cell * 2.9 - p.h * s) / 2 };
+}
 cv.addEventListener("pointerdown", (e) => {
-  if (over) return;
-  for (let i = 0; i < tray.length; i++) {
-    if (!tray[i]) continue;
-    const t = trayRect(i);
-    if (e.clientX >= bx + t.slot * i && e.clientX < bx + t.slot * (i + 1) && e.clientY >= trayY - 10 && e.clientY < trayY + cell * 3) {
-      drag = { i, piece: tray[i], x: e.clientX, y: e.clientY, touch: e.pointerType === "touch" };
-      cv.setPointerCapture(e.pointerId); tone(330, .05, "triangle", .06); return;
-    }
-  }
+  if (state !== "play") return;
+  const slot = (cell * N) / 3, i = Math.floor((e.clientX - bx) / slot);
+  if (i < 0 || i > 2 || !tray[i] || e.clientY < trayY - 14 || e.clientY > trayY + cell * 3.2) return;
+  drag = { i, ...tray[i], x: e.clientX, y: e.clientY, touch: e.pointerType === "touch" };
+  cv.setPointerCapture(e.pointerId); tone(880, .04, "sine", .05);
 });
 cv.addEventListener("pointermove", (e) => { if (drag) { drag.x = e.clientX; drag.y = e.clientY; } });
-cv.addEventListener("pointerup", () => {
-  if (!drag) return;
-  const t = target();
-  if (t) commit(drag.i, t.r, t.c);
-  drag = null;
-});
+cv.addEventListener("pointerup", () => { if (!drag) return; const t = target(); if (!t.bad && state === "play") commit(drag.i, t.r, t.c); drag = null; });
 function target() {
-  const p = drag.piece, lift = drag.touch ? cell * 1.6 : cell * 0.4;
+  const p = drag.piece, lift = drag.touch ? cell * 1.6 : cell * .4;
   const x = drag.x - (p.w * cell) / 2, y = drag.y - lift - (p.h * cell) / 2;
   const r = Math.round((y - by) / cell), c = Math.round((x - bx) / cell);
   return canPlace(board, p, r, c) ? { r, c, x, y } : { x, y, bad: true };
 }
 
-// --- turn ---
+// ---------- a placement ----------
 function commit(i, r, c) {
-  const p = tray[i], id = uid++;
-  colors[id] = pieceColor(p);
-  board = place(board, p, r, c, id);
-  score += p.cells.length;
-  tone(220, .06, "triangle", .12); buzz(8);
+  const { piece, type } = tray[i], id = uid++;
+  meta[id] = { type, r, c, h: piece.h, w: piece.w };
+  board = place(board, piece, r, c, id);
+  started = true;
+  tone(150, .07, "triangle", .12); tone(1250, .05, "sine", .06, .01); tone(1870, .05, "sine", .035, .035); buzz(8);
   const lines = fullLines(board), n = lines.rows.length + lines.cols.length;
   if (n) {
     combo++; miss = 0;
-    const cells = lineCells(lines), before = board;
-    shatter(cells.sort((a, b) => (a % N + Math.floor(a / N)) - (b % N + Math.floor(b / N))), (k) => colors[before[k]]);
+    const { cells, embers } = breakCells(board, lines, isEmber), pure = pureVeinCells(board, lines, typeOf), before = board;
+    let gained = 0;
+    for (const k of cells) { const t = typeOf(before[k]), m = pure.has(k) ? 2 : 1; haul[t] = (haul[t] || 0) + m; gained += CRYSTALS[t].value * m; }
+    gained = Math.round(gained * valueMult());
+    const ctr = cells.reduce((a, k) => [a[0] + (k % N), a[1] + Math.floor(k / N)], [0, 0]).map((v) => v / cells.length);
+    shatter(cells.sort((a, b) => (a % N + Math.floor(a / N)) - (b % N + Math.floor(b / N))), (k) => CRYSTALS[typeOf(before[k])].color);
     board = clearCells(board, cells);
-    score += 10 * n * n * combo;
-    const base = 440 * 2 ** ((Math.min(combo, 12) * 2) / 12);
-    for (let k = 0; k < n; k++) tone(base * 2 ** ((k * 4) / 12), .35, "sine", .14, k * .06);
-    buzz(25); flashCombo(n);
-    gainXp(n);
-  } else if (combo && ++miss >= 3) {
-    combo = 0; miss = 0; tone(196, .25, "sine", .07);
-  }
-  tray = tray.map((q, k) => (k === i ? null : q)); // pieces keep their slots
-  if (tray.every((q) => !q)) tray = deal(Math.random, board, cat, cfg);
-  if (!tray.some((q) => q && fitsAnywhere(board, q))) endRound();
+    const add = T.refillPerLine * n * (1 + .1 * save.up.charm) * (1 + T.comboBonus * (combo - 1));
+    time = Math.min(maxTime, time + add);
+    float(`+${gained}g`, bx + (ctr[0] + .5) * cell, by + (ctr[1] + .5) * cell);
+    float(`+${add.toFixed(1)}s`, bx + cell * N / 2, by - 30, "#9be08a");
+    const base = 523 * 2 ** ((Math.min(combo, 12) * 2) / 12);
+    for (let k = 0; k < n; k++) tone(base * 2 ** ((k * 4) / 12), .4, "sine", .13, k * .06);
+    if (pure.size) { toast("Pure vein ×2!"); [1047, 1319, 1568].forEach((f, k) => tone(f, .3, "triangle", .07, .15 + k * .05)); }
+    if (embers) { toast(embers > 3 ? `Ember chain ×${embers}!` : "Ember burst!"); tone(70, .5, "triangle", .3); tone(110, .35, "sawtooth", .05); buzz(60); }
+    buzz(25);
+    $("comboTxt").textContent = combo > 1 ? `Combo ×${combo}` : "";
+  } else if (combo && ++miss >= 3) { combo = 0; miss = 0; $("comboTxt").textContent = ""; tone(196, .25, "sine", .06); }
+  tray[i] = null;
+  if (tray.every((q) => !q)) tray = dealTray();
+  if (!tray.some((q) => q && fitsAnywhere(board, q.piece))) endRound("stuck");
 }
-function flashCombo(n) {
-  const el = $("combo");
-  el.textContent = (n > 1 ? `${n} lines! ` : "") + (combo > 1 ? `Combo ×${combo}` : "");
-  el.style.opacity = el.textContent ? 1 : 0; el.style.transform = "scale(1.15)";
-  setTimeout(() => (el.style.transform = "scale(1)"), 120);
-  clearTimeout(flashCombo.t); flashCombo.t = setTimeout(() => (el.style.opacity = 0), 1100);
-}
-function gainXp(lines) {
-  xp += lines;
-  while (xp >= xpToNext(level)) {
-    xp -= xpToNext(level); level++;
-    const t = THEMES[level - 1];
-    toast(`Level ${level}` + (t ? `<br><small>Unlocked: ${t[0]} shards</small>` : "<br><small>More unlocks in the full game</small>"));
-    [523, 659, 784, 1047].forEach((f, k) => tone(f, .2, "triangle", .1, k * .08));
-  }
-  store.set("xp", xp); store.set("level", level);
-}
-function toast(html) {
-  const el = $("toast"); el.innerHTML = html; el.style.opacity = 1;
-  clearTimeout(toast.t); toast.t = setTimeout(() => (el.style.opacity = 0), 1800);
-}
-function endRound() {
-  over = true;
-  if (score > best) { best = score; store.set("best", best); }
+
+// ---------- round end, selling ----------
+function endRound(cause) {
+  if (state !== "play") return;
+  state = "end"; endCause = cause; drag = null;
+  tone(262, .5, "sine", .08); tone(196, .7, "sine", .06, .15);
   setTimeout(() => {
-    $("final").textContent = score;
-    $("overBest").textContent = score >= best ? "New best!" : `Best ${best}`;
+    $("endTitle").textContent = cause === "time" ? "The roots closed the tunnel" : "No room left to dig";
+    $("endSub").textContent = "Pip climbs out with the haul. Nothing is lost.";
+    $("rescue").textContent = cause === "time" ? `Roots regrow +${T.rescueTime}s` : "Shatter the 3 fullest veins";
     $("rescue").style.display = rescueUsed ? "none" : "block";
-    $("over").style.display = "flex";
-    tone(262, .5, "sine", .08); tone(196, .7, "sine", .06, .15);
-  }, 700);
+    $("haulList").innerHTML = Object.entries(haul).map(([t, n]) => `<div class="row"><span class="gem" style="background:${CRYSTALS[t].color}"></span>
+      <span class="grow">${CRYSTALS[t].name}<small>${n} × ${CRYSTALS[t].value}g</small></span><span>${Math.round(n * CRYSTALS[t].value * valueMult())}g</span></div>`).join("") ||
+      `<div class="note">No crystals this time.</div>`;
+    $("haulTotal").textContent = haulValue() + "g";
+    $("sell2").style.display = haulValue() ? "block" : "none";
+    $("newBest").style.display = haulValue() > (daily ? save.daily.best : save.best[bestKey()] || 0) && haulValue() ? "block" : "none";
+    $("brambleLine").textContent = "Old Bramble: " + BRAMBLE[Math.floor(Math.random() * BRAMBLE.length)];
+    show("end");
+  }, 650);
 }
-$("again").onclick = newRound;
 $("rescue").onclick = () => {
-  rescueUsed = true; over = false; $("over").style.display = "none";
-  const cells = rescueCells(board, cfg.rescue_lines), before = board;
-  shatter(cells, (k) => colors[before[k]], 6);
-  board = clearCells(board, cells);
-  tray = deal(Math.random, board, cat, cfg);
+  rescueUsed = true; state = "play"; show(null);
+  if (endCause === "time") time = Math.min(maxTime, T.rescueTime);
+  else {
+    const cells = rescueCells(board, 3), before = board;
+    shatter(cells, (k) => CRYSTALS[typeOf(before[k])].color, 5);
+    board = clearCells(board, cells); tray = dealTray();
+    if (time < T.rescueTime) time = T.rescueTime;
+  }
   [392, 523, 659].forEach((f, k) => tone(f, .3, "sine", .12, k * .07)); buzz(40);
-  if (!tray.some((q) => fitsAnywhere(board, q))) endRound();
+  if (!tray.some((q) => q && fitsAnywhere(board, q.piece))) endRound("stuck");
 };
+const bestKey = () => biome.id + (calm ? ":calm" : "");
+function sell(mult) {
+  const v = haulValue() * mult;
+  save.gold += v;
+  if (daily) {
+    const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+    if (save.daily.last !== today()) save.daily = { last: today(), streak: save.daily.last === y ? save.daily.streak + 1 : 1, best: haulValue() };
+    else save.daily.best = Math.max(save.daily.best, haulValue());
+  } else save.best[bestKey()] = Math.max(save.best[bestKey()] || 0, haulValue());
+  persist();
+  for (let k = 0; k < Math.min(12, 3 + v / 40); k++) tone(1568 + (k % 3) * 200, .08, "square", .03, k * .05);
+  state = "home"; renderHome(); show("home");
+  if (v) toast(`+${v} gold`);
+}
+$("sell").onclick = () => sell(1);
+$("sell2").onclick = () => sell(2);
 
-// --- frame ---
-function frame() {
+// ---------- home and market ----------
+function show(id) { for (const s of ["home", "end", "market"]) $(s).classList.toggle("show", s === id); $("hud").style.visibility = id === "home" || id === "market" ? "hidden" : "visible"; }
+function renderHome() {
+  $("homeGold").textContent = save.gold;
+  $("mExp").classList.toggle("on", save.mode === "exp"); $("mCalm").classList.toggle("on", save.mode === "calm");
+  for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).classList.toggle("on", save.opt[k]);
+  const done = save.daily.last === today();
+  $("daily").textContent = done ? `Daily Dig done ✓ · streak ${save.daily.streak} · best ${save.daily.best}g` : `Daily Dig${save.daily.streak ? ` · streak ${save.daily.streak}` : ""}`;
+  $("daily").disabled = done;
+  $("mines").innerHTML = BIOMES.map((b) => {
+    const open = save.biomes.includes(b.id);
+    return `<div class="mine ${open ? "" : "locked"} ${save.sel === b.id ? "sel" : ""}" data-id="${b.id}">
+      <b>${b.name}</b>${open ? (save.best[b.id + (save.mode === "calm" ? ":calm" : "")] ? ` <small class="gold">best ${save.best[b.id + (save.mode === "calm" ? ":calm" : "")]}g</small>` : "") : ` <small>🔒 ${b.cost}g at the market</small>`}
+      <small style="display:block;color:var(--muted)">${b.blurb}</small></div>`;
+  }).join("");
+  for (const el of document.querySelectorAll(".mine")) el.onclick = () => {
+    if (!save.biomes.includes(el.dataset.id)) return;
+    save.sel = el.dataset.id; persist(); renderHome();
+  };
+}
+function renderMarket() {
+  $("mktGold").textContent = save.gold;
+  $("shop").innerHTML = SHOP.map((it) => {
+    const lvl = it.kind === "up" ? save.up[it.id] : 0;
+    const done = it.kind === "up" ? lvl >= it.max : it.kind === "biome" ? save.biomes.includes(it.id.split(":")[1]) : save.owned.includes(it.id);
+    const cost = price(it);
+    return `<div class="row"><span class="grow">${it.name}${it.kind === "up" ? ` <small style="display:inline">Lv ${lvl}</small>` : ""}<small>${it.desc}</small></span>
+      <button data-id="${it.id}" ${done || save.gold < cost ? "disabled" : ""}>${done ? (it.kind === "up" ? "Max" : "Owned") : cost + "g"}</button></div>`;
+  }).join("");
+  for (const btn of $("shop").querySelectorAll("button")) btn.onclick = () => {
+    const it = SHOP.find((s) => s.id === btn.dataset.id), cost = price(it);
+    if (save.gold < cost) return;
+    save.gold -= cost;
+    if (it.kind === "up") save.up[it.id]++;
+    else if (it.kind === "biome") { const b = it.id.split(":")[1]; save.biomes.push(b); save.sel = b; }
+    else save.owned.push(it.id);
+    persist(); renderMarket();
+    [784, 988, 1175].forEach((f, k) => tone(f, .15, "triangle", .08, k * .06));
+  };
+}
+$("dig").onclick = () => startDig(false);
+$("daily").onclick = () => startDig(true);
+$("mExp").onclick = () => { save.mode = "exp"; persist(); renderHome(); };
+$("mCalm").onclick = () => { save.mode = "calm"; persist(); renderHome(); };
+for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).onclick = () => { save.opt[k] = !save.opt[k]; persist(); renderHome(); };
+$("toMarket").onclick = () => { renderMarket(); show("market"); };
+$("mktBack").onclick = () => { renderHome(); show("home"); };
+
+// ---------- frame ----------
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(.1, (now - last) / 1000); last = now;
+  if (state === "play" && started && !calm && !document.hidden) {
+    time -= dt * T.drain * biome.drain;
+    const f = time / maxTime;
+    if (f < T.warn && Math.floor(time) !== Math.floor(time + dt * T.drain * biome.drain)) { tone(98, .12, "sine", .12); buzz(15); }
+    if (time <= 0) { time = 0; endRound("time"); }
+  }
   ctx.clearRect(0, 0, W, H);
-  // board
-  ctx.fillStyle = "#1f2430"; roundRect(bx - 8, by - 8, cell * N + 16, cell * N + 16, 14); ctx.fill();
-  ctx.fillStyle = "#2a3040";
-  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
-    roundRect(bx + c * cell + 2, by + r * cell + 2, cell - 4, cell - 4, 4); ctx.fill();
-  }
-  const filled = []; for (let i = 0; i < 64; i++) if (board[i]) filled.push([Math.floor(i / N), i % N]);
-  const idAt = (r, c) => (r < 0 || r >= N || c < 0 || c >= N) ? 0 : board[r * N + c];
-  drawShard(filled, (r, c) => colors[board[r * N + c]], idAt, cell, bx, by, over ? .5 : 1);
-
-  // drag ghost + glow of lines that would clear
-  if (drag) {
-    const t = target();
-    if (!t.bad) {
-      drawPiece(drag.piece, cell, bx + t.c * cell, by + t.r * cell, .35);
-      const after = place(board, drag.piece, t.r, t.c, -1), glow = lineCells(fullLines(after));
-      ctx.fillStyle = `rgba(255,255,255,${.25 + .15 * Math.sin(performance.now() / 90)})`;
-      for (const i of glow) ctx.fillRect(bx + (i % N) * cell, by + Math.floor(i / N) * cell, cell, cell);
+  if (state !== "home" && board) {
+    drawBoard();
+    if (!calm) drawRootline(now);
+    const groups = {};
+    board.forEach((u, i) => { if (u) (groups[u] ??= []).push([Math.floor(i / N), i % N]); });
+    for (const u in groups) {
+      const m = meta[u], cr = CRYSTALS[m.type];
+      drawCrystal(groups[u], cr.color, m, cell, bx, by, state === "end" ? .45 : 1, cr.ember ? .6 + .3 * Math.sin(now / 120 + +u) : .3, cr.glyph);
     }
-    drawPiece(drag.piece, cell, t.x, t.y, .95);
+    if (drag) {
+      const t = target();
+      if (!t.bad) {
+        drawPiece(drag, cell, bx + t.c * cell, by + t.r * cell, .35);
+        const after = place(board, drag.piece, t.r, t.c, -1), lines = fullLines(after);
+        const pure = pureVeinCells(after, lines, typeOf), pulse = .28 + .14 * Math.sin(now / 90);
+        for (const i of lineCells(lines)) {
+          ctx.fillStyle = pure.has(i) ? `rgba(240,181,67,${pulse + .1})` : `rgba(255,255,255,${pulse})`;
+          ctx.fillRect(bx + (i % N) * cell, by + Math.floor(i / N) * cell, cell, cell);
+        }
+      }
+      drawPiece(drag, cell, t.x, t.y, .95);
+    }
+    tray.forEach((q, i) => { if (q && drag?.i !== i) { const t = trayRect(i); drawPiece(q, t.s, t.x, t.y, fitsAnywhere(board, q.piece) ? 1 : .3); } });
+    if (!started && !calm && state === "play") { ctx.fillStyle = "rgba(239,230,207,.7)"; ctx.font = "600 15px Fredoka, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("Place a crystal to start the Rootline", bx + cell * N / 2, by - 30); }
+    if (!calm && time / maxTime < T.warn && state === "play") { // red vignette when the roots close in
+      const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .3, W / 2, H / 2, Math.max(W, H) * .7);
+      g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, `rgba(150,30,20,${.25 + .12 * Math.sin(now / 150)})`);
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    }
   }
-  // tray
-  tray.forEach((p, i) => { if (p && drag?.i !== i) { const t = trayRect(i);
-    drawPiece(p, t.s, t.x, t.y, fitsAnywhere(board, p) ? 1 : .3); } });
-  // particles
   parts = parts.filter((p) => p.life > 0);
   for (const p of parts) {
     if (p.delay > 0) { p.delay -= 16; continue; }
     p.x += p.vx; p.y += p.vy; p.vy += .35; p.rot += p.vr; p.life -= .022;
     ctx.save(); ctx.globalAlpha = Math.max(p.life, 0); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-    ctx.fillStyle = p.col; ctx.beginPath(); ctx.moveTo(-p.s / 2, p.s / 2); ctx.lineTo(0, -p.s / 2); ctx.lineTo(p.s / 2, p.s / 3);
-    ctx.fill(); ctx.restore();
+    ctx.fillStyle = p.col; ctx.shadowColor = p.col; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.moveTo(-p.s / 2, p.s / 2); ctx.lineTo(0, -p.s / 2); ctx.lineTo(p.s / 2, p.s / 3); ctx.fill(); ctx.restore();
   }
-  // HUD
-  shown += (score - shown) * .15; if (Math.abs(score - shown) < .5) shown = score;
-  $("score").textContent = Math.round(shown);
-  $("best").textContent = `Best ${Math.max(best, score)}`;
-  $("best").className = best > 0 && score >= best * .9 && score < best ? "near" : "";
-  if (best > 0 && score > best && !bestFlagged) { bestFlagged = true; toast("New best!"); }
-  $("lvlText").textContent = `Level ${level} · ${theme()[0]}`;
-  $("fill").style.width = (100 * xp / xpToNext(level)) + "%";
+  floats = floats.filter((f) => f.life > 0);
+  ctx.textAlign = "center"; ctx.font = "700 22px Fredoka, sans-serif";
+  for (const f of floats) { f.y -= .7; f.life -= .015; ctx.globalAlpha = Math.max(0, f.life); ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y); }
+  ctx.globalAlpha = 1;
+  if (haul) $("haul").textContent = haulValue() + "g";
   requestAnimationFrame(frame);
 }
-function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
 
-newRound();
-frame();
+if (qs.has("debug")) window.gw = { place: (i, r, c) => commit(i, r, c), get tray() { return tray; }, get board() { return board; },
+  get time() { return time; }, set time(v) { time = v; }, canPlace, get state() { return state; } };
+
+renderHome(); show("home");
+requestAnimationFrame(frame);
 </script>
 </body>
 </html>

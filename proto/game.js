@@ -112,4 +112,34 @@ export function rescueCells(board, n) {
   return [...new Set(lines.slice(0, n).flat())].filter((i) => board[i]);
 }
 
-export const xpToNext = (level) => 40 + 25 * level;
+// Cells broken by clearing `lines`, plus ember chains: a broken ember shatters its 8 neighbours,
+// and embers among those shatter theirs. isEmber(uid) says which pieces are embers.
+export function breakCells(board, lines, isEmber) {
+  const broken = new Set(lineCells(lines));
+  const queue = [...broken];
+  let embers = 0;
+  while (queue.length) {
+    const i = queue.pop();
+    if (!isEmber(board[i])) continue;
+    embers++;
+    const r = Math.floor(i / N), c = i % N;
+    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+      const rr = r + dr, cc = c + dc, j = rr * N + cc;
+      if (rr < 0 || rr >= N || cc < 0 || cc >= N || !board[j] || broken.has(j)) continue;
+      broken.add(j); queue.push(j);
+    }
+  }
+  return { cells: [...broken], embers };
+}
+
+// Cleared lines whose 8 crystals are all one type ("pure veins") -> their cell indexes.
+export function pureVeinCells(board, lines, typeOf) {
+  const pure = new Set();
+  const check = (idxs) => {
+    const t = typeOf(board[idxs[0]]);
+    if (idxs.every((i) => typeOf(board[i]) === t)) idxs.forEach((i) => pure.add(i));
+  };
+  for (const r of lines.rows) check([...Array(N)].map((_, c) => r * N + c));
+  for (const c of lines.cols) check([...Array(N)].map((_, r) => r * N + c));
+  return pure;
+}

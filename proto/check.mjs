@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, deal, rescueCells } from "./game.js";
+import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, deal, rescueCells, breakCells, pureVeinCells } from "./game.js";
 
 const root = new URL("..", import.meta.url);
 const cfg = JSON.parse(readFileSync(new URL("sim/generator.json", root)));
@@ -39,4 +39,18 @@ assert.equal(rescueCells(b, 3).length, 24);
 assert.equal(deal.length, 4);
 assert.equal(deal(Math.random, Array(64).fill(0), cat, cfg).length, 3);
 assert.ok(place(Array(64).fill(0), dot, 3, 3, 9)[27] === 9);
+// ember chain: row 0 cleared; ember at (0,0) breaks (1,0),(1,1); ember at (1,1) chains to (2,2)
+b = Array(64).fill(0);
+for (let c = 0; c < N; c++) b[c] = 1;        // row 0, uid 1 (ember)
+b[8] = 2; b[9] = 3; b[18] = 4; b[30] = 5;   // (1,0) plain, (1,1) ember, (2,2) plain, (3,6) untouched
+const isEmber = (u) => u === 1 || u === 3;
+const br = breakCells(b, { rows: [0], cols: [] }, isEmber);
+assert.deepEqual(new Set(br.cells), new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 18]));
+assert.equal(br.embers, 9); // 8 ember cells in row 0 + the chained one
+
+// pure vein: row of one type counts, mixed row doesn't
+b = Array(64).fill(0);
+for (let c = 0; c < N; c++) { b[c] = 1; b[8 + c] = c < 4 ? 1 : 2; }
+const typeOf = (u) => (u === 1 ? "moss" : "jade");
+assert.equal(pureVeinCells(b, { rows: [0, 1], cols: [] }, typeOf).size, 8);
 console.log("ok");
