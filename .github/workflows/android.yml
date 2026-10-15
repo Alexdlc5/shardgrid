@@ -3,6 +3,8 @@ on:
   workflow_dispatch:
   push:
     paths: ["proto/**", "android/**", "sim/generator.json", "scripts/**", "package*.json", "capacitor.config.json", ".github/workflows/android.yml"]
+permissions:
+  contents: write # publish the APK as a release asset (artifact storage is full on this account)
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -21,8 +23,10 @@ jobs:
       - run: node proto/check.mjs
       - run: npm run build && npx cap sync android
       - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
-        with:
-          name: glimmerwood-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 14
+      - name: Publish test build (rolling pre-release, private like the repo)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk glimmerwood-test.apk
+          gh release delete test-build --yes --cleanup-tag || true
+          gh release create test-build glimmerwood-test.apk --prerelease --target "$GITHUB_SHA"             --title "Glimmerwood test build" --notes "Debug build from ${GITHUB_SHA::7} (${GITHUB_REF_NAME}). Test ads only."

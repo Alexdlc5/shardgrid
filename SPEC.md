@@ -30,6 +30,7 @@
 | Soft-launch installs | $0 | Organic: Play **open testing** track, devlog posts, your testers' friends. First ad revenue funds any paid installs later (§8 M5). |
 | Test devices | $0 | Your own Android phone. An iPhone is needed only from M3. |
 
+7. **Decision (2026-10-15): the app is the web game wrapped with Capacitor, not a Unity rewrite.** The prototype grew into the full game (Glimmerwood, see DESIGN.md), so rewriting it in C# would cost weeks for no player-visible gain. Ads move from AppLovin MAX to **AdMob with mediation** (AppLovin and Unity Ads can join as AdMob mediation partners; MAX has no supported Capacitor SDK). RevenueCat and Firebase stay, through their Capacitor plugins. Builds run in GitHub Actions, so no local Android Studio or Mac is needed. Your setup steps: `docs/SETUP.md`. Where §3, §5 and §9 below say Unity / MAX / fastlane, read Capacitor / AdMob / GitHub Actions.
 6. **The piece generator is ad-blind, by construction.** Ads should feel voluntary *because the offer is worth it*, never because the game secretly got harder. `deal()` receives only the board and its own RNG; no ad, IAP or rescue state can reach it, and a self-check asserts its signature. Rigging deals to push ads would break Play's Deceptive Behavior policy, and players notice and churn.
 
 ---

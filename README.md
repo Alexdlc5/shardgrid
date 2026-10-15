@@ -10,3 +10,5 @@ Original block-placement puzzle for Android and iOS. Unity + AppLovin MAX + Reve
   - [sim/generator.json](sim/generator.json) holds the shared tuning: `rootline` (timer constants plus the sim-only `bot_seconds` per placement, mean and s.d.), `biomes` (each mine's drain, crystal types, extra shapes) and `crystals` (specials: ember chain, bloom seconds, freeze seconds). The prototype reads both, so edit them there, not in `proto/index.html`.
 - [DESIGN.md](DESIGN.md): Glimmerwood theme, story, progression, rival research
 - [proto/](proto/): playable browser prototype. From the parent folder: `python -m http.server 8123 --directory shardgrid`, then open http://localhost:8123/proto/ (`?gold=5000` to try the market, `&debug` exposes `window.gw`). Self-check: `node proto/check.mjs`
+- **App (Capacitor):** `npm ci && npm run build && npx cap sync android` builds `www/` from `proto/` and syncs it into `android/`. CI ("android apk") produces an installable debug APK. Ads/IAP/analytics live in `proto/platform.js`.
+- [docs/SETUP.md](docs/SETUP.md): the accounts and steps you set up, in order. [site/](site/): privacy policy, terms, app-ads.txt (not yet published).
