@@ -42,7 +42,6 @@
   .row .grow { flex: 1; }
   .row small { display: block; color: var(--muted); font-size: 13px; }
   .row button { width: auto; margin: 0; padding: 8px 12px; font-size: 15px; white-space: nowrap; }
-  .gem { width: 16px; height: 16px; transform: rotate(45deg); border-radius: 3px; flex: none; }
   .mine { border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; margin-top: 8px; cursor: pointer; }
   .mine.sel { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
   .mine.locked { opacity: .5; cursor: default; }
@@ -55,55 +54,103 @@
   .opts button { margin: 0; padding: 7px; font-size: 13px; font-weight: 600; background: transparent; color: var(--muted); border: 1px solid var(--line); }
   .opts button.on { color: var(--text); border-color: var(--muted); }
   .bramble { font-style: italic; color: var(--muted); margin: 8px 0 2px; }
+  .ico { display: inline-block; vertical-align: middle; flex: none; }
+  .shimmer { animation: shimmer 3.2s ease-in-out infinite; }
+  @keyframes shimmer { 0% { transform: translateX(-6px); } 45%, 100% { transform: translateX(34px); } }
+  @media (prefers-reduced-motion: reduce) { .shimmer { animation: none; opacity: 0; } }
+  .hero { display: flex; align-items: center; gap: 10px; margin: -6px 0 4px; }
+  .hero > div { min-width: 0; } .hero h1 { font-size: 34px; }
+  .card { overflow-x: hidden; }
+  .hero .pip { animation: bob 3s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-4px) rotate(-2deg); } }
+  .pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(240,181,67,.12); border: 1px solid rgba(240,181,67,.35);
+    border-radius: 999px; padding: 4px 12px 4px 6px; font-weight: 700; color: var(--amber); font-size: 18px; }
+  .seg button { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .mine { display: flex; gap: 10px; align-items: center; position: relative; }
+  .mine .scene { flex: none; border-radius: 10px; }
+  .mine .info { flex: 1; min-width: 0; }
+  .mine .gems { display: flex; gap: 2px; margin-top: 4px; }
+  .mine .lockTag { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column;
+    align-items: center; gap: 2px; font-size: 12px; font-weight: 700; color: var(--text); text-shadow: 0 1px 3px #000; }
+  .mine.locked { opacity: .75; } .mine.locked .scene { filter: grayscale(.8) brightness(.6); }
+  button .ico { margin: -4px 6px -4px 0; }
+  .btnrow { display: flex; align-items: center; justify-content: center; }
+  .streak { display: flex; gap: 4px; justify-content: center; margin-top: 6px; }
+  .streak i { width: 10px; height: 10px; border-radius: 50%; background: rgba(239,230,207,.15); }
+  .streak i.on { background: #7cc46a; box-shadow: 0 0 6px #7cc46a; }
+  .opts button { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; }
+  .shopItem { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .shopItem:last-child { border-bottom: 0; }
+  .tile { width: 48px; height: 48px; border-radius: 12px; background: rgba(239,230,207,.07); display: grid; place-items: center; flex: none; }
+  .shopItem .grow { flex: 1; min-width: 0; }
+  .shopItem small { display: block; color: var(--muted); font-size: 12.5px; }
+  .pips { display: flex; gap: 3px; margin-top: 5px; }
+  .pips i { width: 9px; height: 5px; border-radius: 3px; background: rgba(239,230,207,.15); }
+  .pips i.on { background: var(--amber); }
+  .shopItem button { width: auto; margin: 0; padding: 7px 10px; font-size: 15px; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+  .shopItem button .ico { margin: 0; }
+  .speech { display: flex; gap: 8px; align-items: center; margin: 4px 0 8px; }
+  .bubble { position: relative; background: rgba(239,230,207,.1); border-radius: 12px; padding: 8px 10px; font-style: italic;
+    color: var(--text); font-size: 14px; }
+  .bubble::before { content: ""; position: absolute; left: -6px; top: 50%; margin-top: -6px; border: 6px solid transparent;
+    border-right-color: rgba(239,230,207,.1); border-left: 0; }
+  .causeIco { display: flex; justify-content: center; margin-bottom: 4px; }
+  .haulGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin: 10px 0 4px; }
+  .haulTile { background: rgba(239,230,207,.06); border-radius: 12px; padding: 8px 6px; text-align: center; }
+  .haulTile b { display: block; font-size: 18px; } .haulTile small { display: block; color: var(--muted); font-size: 11.5px; }
+  .total .gold { display: flex; align-items: center; gap: 6px; }
+  .hud b { display: flex; align-items: center; gap: 6px; }
   .total { display: flex; justify-content: space-between; font-size: 20px; font-weight: 700; margin-top: 10px; }
 </style>
 </head>
 <body>
 <canvas id="cv"></canvas>
 <div class="hud" id="hud">
-  <div><small>Haul</small><b id="haul">0g</b></div>
+  <div><small>Haul</small><b><span id="coinHud"></span><span id="haul">0g</span></b></div>
   <div class="right"><small id="biomeName">Mossy Hollow</small><small id="comboTxt"></small></div>
 </div>
 <div id="toast"></div>
 
 <section id="home" class="screen"><div class="card">
-  <h1>Glimmerwood</h1>
-  <div class="tag">Mine glowing crystals before the roots close in.</div>
-  <div>Gold: <span class="gold" id="homeGold">0</span></div>
-  <div class="seg"><button id="mExp">Expedition<small>beat the Rootline</small></button><button id="mCalm">Calm Grove<small>no timer, ×0.6 gold</small></button></div>
+  <div class="hero"><span id="pipArt"></span><div><h1>Glimmerwood</h1><div class="tag" style="margin:4px 0 0">Mine glowing crystals before the roots close in.</div></div></div>
+  <div class="pill" id="homeGoldPill"><span id="coinA"></span><span id="homeGold">0</span></div>
+  <div class="seg"><button id="mExp"><span id="icoExp"></span>Expedition<small>beat the Rootline</small></button>
+    <button id="mCalm"><span id="icoCalm"></span>Calm Grove<small>no timer, ×0.6 gold</small></button></div>
   <div id="mines"></div>
-  <button id="dig">Dig</button>
-  <button id="daily" class="alt">Daily Dig</button>
-  <button id="toMarket" class="alt">Old Bramble's Market</button>
-  <div class="opts"><button id="oSound">Sound</button><button id="oVib">Vibration</button><button id="oGlyph">Crystal symbols</button></div>
+  <button id="dig"><span class="btnrow"><span id="icoDig"></span>Dig</span></button>
+  <button id="daily" class="alt"></button>
+  <button id="toMarket" class="alt"><span class="btnrow"><span id="icoStall"></span>Old Bramble's Market</span></button>
+  <div class="opts"><button id="oSound"></button><button id="oVib"></button><button id="oGlyph"></button></div>
   <div class="note">Fair dealing: crystals are dealt at random. Never by ads, purchases or how close you are to your best.</div>
 </div></section>
 
 <section id="end" class="screen"><div class="card">
-  <h2 id="endTitle">The roots closed the tunnel</h2>
-  <div class="tag" id="endSub">Pip climbs out with the haul.</div>
-  <div id="newBest" class="gold" style="font-size:20px;display:none">New best haul!</div>
-  <button id="rescue" class="ad">Roots regrow +20s</button>
-  <div id="haulList"></div>
-  <div class="bramble" id="brambleLine"></div>
-  <div class="total"><span>Haul value</span><span class="gold" id="haulTotal">0g</span></div>
-  <button id="sell2" class="ad">Bramble's double deal: sell ×2</button>
-  <button id="sell">Sell to Old Bramble</button>
+  <div class="causeIco" id="causeIco"></div>
+  <h2 id="endTitle" style="text-align:center">The roots closed the tunnel</h2>
+  <div class="tag" id="endSub" style="text-align:center;margin-bottom:6px">Pip climbs out with the haul.</div>
+  <div id="newBest" class="gold" style="font-size:20px;display:none;text-align:center">New best haul!</div>
+  <button id="rescue" class="ad"></button>
+  <div class="haulGrid" id="haulList"></div>
+  <div class="speech"><span id="brambleArtEnd"></span><div class="bubble" id="brambleLine"></div></div>
+  <div class="total"><span>Haul value</span><span class="gold" id="haulTotalWrap"><span id="coinB"></span><span id="haulTotal">0g</span></span></div>
+  <button id="sell2" class="ad"></button>
+  <button id="sell"></button>
   <div class="note">Green buttons are rewarded ads in the real game; free here.</div>
 </div></section>
 
 <section id="market" class="screen"><div class="card">
   <h2>Old Bramble's Market</h2>
-  <div class="tag">"Shiny rocks, shiny coins. Fair trade, little mole."</div>
-  <div>Gold: <span class="gold" id="mktGold">0</span></div>
+  <div class="speech"><span id="brambleArtMkt"></span><div class="bubble">"Shiny rocks, shiny coins. Fair trade, little mole."</div></div>
+  <div class="pill"><span id="coinC"></span><span id="mktGold">0</span></div>
   <div id="shop"></div>
-  <button id="mktBack" class="alt">Back</button>
+  <button id="mktBack" class="alt"><span class="btnrow"><span id="icoBack"></span>Back to the mines</span></button>
 </div></section>
 
 <script type="module">
 import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, fitsAnywhere, deal,
   rescueCells, breakCells, pureVeinCells } from "./game.js";
 
+import { gem, coin, icon, pip, bramble, scene } from "./art.js";
 const cfg0 = await (await fetch("../sim/generator.json")).json();
 const $ = (id) => document.getElementById(id);
 
@@ -123,12 +170,12 @@ const BIOMES = [
     blurb: "Embers shatter everything around them, and chain." },
 ];
 const SHOP = [
-  { id: "lantern", kind: "up", name: "Lantern", desc: "+5s of Rootline", base: 150, max: 10 },
-  { id: "pick", kind: "up", name: "Pickaxe", desc: "+10% crystal value", base: 200, max: 10 },
-  { id: "charm", kind: "up", name: "Root Charm", desc: "+10% time from every vein", base: 180, max: 10 },
-  { id: "biome:ember", kind: "biome", name: "Map to Ember Roots", desc: "New mine: embers, garnets, flame crystals", price: 1200 },
-  { id: "fireflies", kind: "once", name: "Firefly roots", desc: "Fireflies drift along your Rootline", price: 600 },
-  { id: "dewdrop", kind: "once", name: "Dewdrop pouch", desc: "More tiny 1-cell crystals in your trays", price: 900 },
+  { id: "lantern", icon: "lantern", kind: "up", name: "Lantern", desc: "+5s of Rootline", base: 150, max: 10 },
+  { id: "pick", icon: "pickaxe", kind: "up", name: "Pickaxe", desc: "+10% crystal value", base: 200, max: 10 },
+  { id: "charm", icon: "charm", kind: "up", name: "Root Charm", desc: "+10% time from every vein", base: 180, max: 10 },
+  { id: "biome:ember", icon: "map", kind: "biome", name: "Map to Ember Roots", desc: "New mine: embers, garnets, flame crystals", price: 1200 },
+  { id: "fireflies", icon: "fireflies", kind: "once", name: "Firefly roots", desc: "Fireflies drift along your Rootline", price: 600 },
+  { id: "dewdrop", icon: "dewdrop", kind: "once", name: "Dewdrop pouch", desc: "More tiny 1-cell crystals in your trays", price: 900 },
 ];
 
 // ---------- save (per-browser) ----------
@@ -390,15 +437,18 @@ function endRound(cause) {
   setTimeout(() => {
     $("endTitle").textContent = cause === "time" ? "The roots closed the tunnel" : "No room left to dig";
     $("endSub").textContent = "Pip climbs out with the haul. Nothing is lost.";
-    $("rescue").textContent = cause === "time" ? `Roots regrow +${T.rescue_time}s` : "Shatter the 3 fullest veins";
+    $("causeIco").innerHTML = cause === "time" ? icon("vine", 44) : icon("board", 44);
+    $("rescue").innerHTML = `<span class="btnrow">${icon(cause === "time" ? "regrow" : "shatter", 22)}${cause === "time" ? `Roots regrow +${T.rescue_time}s` : "Shatter the 3 fullest veins"}</span>`;
     $("rescue").style.display = rescueUsed ? "none" : "block";
-    $("haulList").innerHTML = Object.entries(haul).map(([t, n]) => `<div class="row"><span class="gem" style="background:${CRYSTALS[t].color}"></span>
-      <span class="grow">${CRYSTALS[t].name}<small>${n} × ${CRYSTALS[t].value}g</small></span><span>${Math.round(n * CRYSTALS[t].value * valueMult())}g</span></div>`).join("") ||
-      `<div class="note">No crystals this time.</div>`;
+    $("haulList").innerHTML = Object.entries(haul).map(([t, n]) => `<div class="haulTile">${gem(CRYSTALS[t].color, 34, save.opt.glyph ? CRYSTALS[t].glyph : "")}
+      <b>×${n}</b><small>${CRYSTALS[t].name}</small><small>${Math.round(n * CRYSTALS[t].value * valueMult())}g</small></div>`).join("") ||
+      `<div class="note" style="grid-column:1/-1">No crystals this time.</div>`;
+    $("sell2").innerHTML = `<span class="btnrow">${coin(20)}${coin(20)}Bramble's double deal: ×2</span>`;
+    $("sell").innerHTML = `<span class="btnrow">${coin(20)}Sell to Old Bramble</span>`;
     $("haulTotal").textContent = haulValue() + "g";
     $("sell2").style.display = haulValue() ? "block" : "none";
     $("newBest").style.display = haulValue() > (daily ? save.daily.best : save.best[bestKey()] || 0) && haulValue() ? "block" : "none";
-    $("brambleLine").textContent = "Old Bramble: " + BRAMBLE[Math.floor(Math.random() * BRAMBLE.length)];
+    $("brambleLine").textContent = BRAMBLE[Math.floor(Math.random() * BRAMBLE.length)];
     show("end");
   }, 650);
 }
@@ -437,14 +487,23 @@ function renderHome() {
   $("homeGold").textContent = save.gold;
   $("mExp").classList.toggle("on", save.mode === "exp"); $("mCalm").classList.toggle("on", save.mode === "calm");
   for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).classList.toggle("on", save.opt[k]);
-  const done = save.daily.last === today();
-  $("daily").textContent = done ? `Daily Dig done ✓ · streak ${save.daily.streak} · best ${save.daily.best}g` : `Daily Dig${save.daily.streak ? ` · streak ${save.daily.streak}` : ""}`;
+  $("oSound").innerHTML = icon(save.opt.sound ? "soundOn" : "soundOff", 20) + "Sound";
+  $("oVib").innerHTML = icon("vibe", 20) + "Vibration";
+  $("oGlyph").innerHTML = icon("symbols", 20) + "Symbols";
+  const done = save.daily.last === today(), st = save.daily.last === today() || save.daily.last === new Date(Date.now() - 864e5).toISOString().slice(0, 10) ? save.daily.streak : 0;
+  $("daily").innerHTML = `<span class="btnrow">${icon("calendar", 22)}${done ? `Daily Dig done · best ${save.daily.best}g` : "Daily Dig: today's crystals"}</span>
+    <span class="streak" title="streak: ${st} day(s)">${[...Array(7)].map((_, k) => `<i class="${k < Math.min(st, 7) ? "on" : ""}"></i>`).join("")}</span>
+    <small style="display:block;font-weight:400;font-size:12px;color:var(--muted);margin-top:3px">${st ? `${st}-day streak` : "Same crystals for everyone, once a day"}</small>`;
   $("daily").disabled = done;
   $("mines").innerHTML = BIOMES.map((b) => {
     const open = save.biomes.includes(b.id);
+    const best = save.best[b.id + (save.mode === "calm" ? ":calm" : "")], cols = Object.keys(b.types).map((t) => CRYSTALS[t].color);
     return `<div class="mine ${open ? "" : "locked"} ${save.sel === b.id ? "sel" : ""}" data-id="${b.id}">
-      <b>${b.name}</b>${open ? (save.best[b.id + (save.mode === "calm" ? ":calm" : "")] ? ` <small class="gold">best ${save.best[b.id + (save.mode === "calm" ? ":calm" : "")]}g</small>` : "") : ` <small>🔒 ${b.cost}g at the market</small>`}
-      <small style="display:block;color:var(--muted)">${b.blurb}</small></div>`;
+      ${scene(cols, b.id === "ember", 84, 56)}
+      ${open ? "" : `<span class="lockTag">${icon("lock", 22)}${b.cost}g</span>`}
+      <div class="info"><b>${b.name}</b>${open && best ? ` <small class="gold">· best ${best}g</small>` : ""}
+        <div class="gems">${Object.keys(b.types).map((t) => gem(CRYSTALS[t].color, 18)).join("")}</div>
+        <small style="display:block;color:var(--muted);font-size:12.5px;margin-top:2px">${open ? b.blurb : "Buy the map at Old Bramble's Market."}</small></div></div>`;
   }).join("");
   for (const el of document.querySelectorAll(".mine")) el.onclick = () => {
     if (!save.biomes.includes(el.dataset.id)) return;
@@ -457,8 +516,9 @@ function renderMarket() {
     const lvl = it.kind === "up" ? save.up[it.id] : 0;
     const done = it.kind === "up" ? lvl >= it.max : it.kind === "biome" ? save.biomes.includes(it.id.split(":")[1]) : save.owned.includes(it.id);
     const cost = price(it);
-    return `<div class="row"><span class="grow">${it.name}${it.kind === "up" ? ` <small style="display:inline">Lv ${lvl}</small>` : ""}<small>${it.desc}</small></span>
-      <button data-id="${it.id}" ${done || save.gold < cost ? "disabled" : ""}>${done ? (it.kind === "up" ? "Max" : "Owned") : cost + "g"}</button></div>`;
+    return `<div class="shopItem"><span class="tile">${icon(it.icon, 34)}</span><span class="grow"><b>${it.name}</b><small>${it.desc}</small>
+      ${it.kind === "up" ? `<span class="pips" title="level ${lvl} of ${it.max}">${[...Array(it.max)].map((_, k) => `<i class="${k < lvl ? "on" : ""}"></i>`).join("")}</span>` : ""}</span>
+      <button data-id="${it.id}" ${done || save.gold < cost ? "disabled" : ""}>${done ? (it.kind === "up" ? "Max" : "Owned ✓") : coin(16) + cost}</button></div>`;
   }).join("");
   for (const btn of $("shop").querySelectorAll("button")) btn.onclick = () => {
     const it = SHOP.find((s) => s.id === btn.dataset.id), cost = price(it);
@@ -539,6 +599,12 @@ function frame(now) {
 
 if (qs.has("debug")) window.gw = { place: (i, r, c) => commit(i, r, c), get tray() { return tray; }, get board() { return board; },
   get time() { return time; }, set time(v) { time = v; }, canPlace, get state() { return state; } };
+
+$("pipArt").innerHTML = pip(92); $("brambleArtEnd").innerHTML = bramble(52); $("brambleArtMkt").innerHTML = bramble(60);
+for (const id of ["coinA", "coinB", "coinC"]) $(id).innerHTML = coin(22);
+$("coinHud").innerHTML = coin(26);
+$("icoExp").innerHTML = icon("vine", 26); $("icoCalm").innerHTML = icon("leaf", 26);
+$("icoDig").innerHTML = icon("pickaxe", 24); $("icoStall").innerHTML = icon("stall", 24); $("icoBack").innerHTML = icon("back", 20);
 
 renderHome(); show("home");
 requestAnimationFrame(frame);
