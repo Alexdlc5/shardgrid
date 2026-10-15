@@ -205,6 +205,12 @@
     border: 2px solid #2b1a0e; box-shadow: 0 2px 0 #2b1a0e; display: inline-flex; align-items: center; gap: 4px; }
   .chip.on { background: linear-gradient(180deg, #ffd98a, #e8a52f); color: #3a2208; border-color: #8a5a1a; }
   .chip .sw { width: 16px; height: 16px; border-radius: 4px; display: inline-block; border: 1px solid rgba(0,0,0,.4); }
+  .iap { display: flex; gap: 10px; align-items: center; margin-top: 10px; padding: 8px 10px; border-radius: 12px; color: #f6ead0;
+    background: rgba(124,196,106,.16); border: 1px solid rgba(124,196,106,.45); }
+  .iap .grow { flex: 1; } .iap small { display: block; }
+  .iap button { width: auto; margin: 0; padding: 7px 12px; font-size: 15px; }
+  .linkBtn { background: none !important; border: 0 !important; box-shadow: none !important; color: #d9c49c !important; font-size: 13px;
+    text-decoration: underline; padding: 4px; margin: 4px 0 0; text-shadow: none; }
 </style>
 </head>
 <body>
@@ -226,7 +232,7 @@
   <button id="daily" class="alt"></button>
   <div class="twoBtn"><button id="toMarket" class="alt"><span class="btnrow"><span id="icoStall"></span>Market</span></button>
     <button id="toCamp" class="alt"><span class="btnrow"><span id="icoCamp"></span>Dibble's Camp</span></button></div>
-  <div class="opts"><button id="oSound"></button><button id="oVib"></button><button id="oGlyph"></button></div>
+  <div class="opts"><button id="oSound"></button><button id="oVib"></button><button id="oGlyph"></button><button id="oPrivacy"></button></div>
   <div class="note">Fair dealing: crystals are dealt at random. Never by ads, purchases or how close you are to your best.</div>
 </div></div></section>
 
@@ -242,13 +248,14 @@
     <div class="total"><span>Haul value</span><span class="gold" id="haulTotalWrap"><span id="coinB"></span><span id="haulTotal">0g</span></span></div></div>
   <button id="sell2" class="ad"></button>
   <button id="sell"></button>
-  <div class="note">Green buttons are rewarded ads in the real game; free here.</div>
+  <div class="note" id="adNote">Green buttons are rewarded ads in the real game; free here.</div>
 </div></div></section>
 
 <section id="market" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><div class="awning"></div><div class="card">
   <h2>Old Puddock's Market</h2>
   <div class="speech"><span id="puddockArtMkt"></span><div class="bubble">"Shiny rocks, shiny coins. Fair trade, little mole."</div></div>
   <div class="pill"><span id="coinC"></span><span id="mktGold">0</span></div>
+  <div id="iapRow"></div>
   <div class="tabs" id="mktTabs"><button data-tab="tools">Tools</button><button data-tab="camp">Camp</button><button data-tab="maps">Maps</button></div>
   <div id="shop"></div>
   <button id="mktBack" class="alt"><span class="btnrow"><span id="icoBack"></span>Back to the mines</span></button>
@@ -275,6 +282,7 @@ import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, fit
   rescueCells, breakCells, pureVeinCells } from "./game.js";
 
 import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp } from "./art.js";
+import { platform, track } from "./platform.js";
 const cfg0 = await (await fetch("../sim/generator.json")).json();
 const $ = (id) => document.getElementById(id);
 
@@ -421,6 +429,7 @@ function startDig(isDaily = false) {
   haul = {}; frozenUntil = 0; maxTime = T.max_time + 5 * save.up.lantern; time = maxTime; started = false;
   tray = dealTray(); state = "play"; show(null);
   $("biomeName").textContent = daily ? `Daily Dig · ${today()}` : biome.name + (calm ? " · Calm" : "");
+  track("round_start", { mine: biome.id, mode: daily ? "daily" : calm ? "calm" : "expedition" });
 }
 const haulValue = () => Math.round((Object.entries(haul).reduce((s, [t, n]) => s + n * CRYSTALS[t].value, 0) + bonus) * valueMult());
 
@@ -616,6 +625,7 @@ function commit(i, r, c) {
 
 // ---------- round end, selling ----------
 function endRound(cause) {
+  if (state === "play") track("round_end", { mine: biome.id, cause, value: haulValue(), seconds: Math.round(maxTime - time) });
   if (state !== "play") return;
   state = "end"; endCause = cause; drag = null;
   tone(262, .5, "sine", .08); tone(196, .7, "sine", .06, .15);
@@ -638,7 +648,8 @@ function endRound(cause) {
     show("end");
   }, 650);
 }
-$("rescue").onclick = () => {
+$("rescue").onclick = async () => {
+  if (!(await platform.rewarded(endCause === "time" ? "rescue_time" : "rescue_stuck"))) return toast("No ad ready, try again in a moment");
   rescueUsed = true; state = "play"; show(null);
   if (endCause === "time") time = Math.min(maxTime, T.rescue_time);
   else {
@@ -663,17 +674,20 @@ function sell(mult) {
   persist();
   for (let k = 0; k < Math.min(12, 3 + v / 40); k++) tone(1568 + (k % 3) * 200, .08, "square", .03, k * .05);
   state = "home"; renderHome(); show("home");
+  track("haul_sold", { mine: biome.id, value: v, doubled: mult > 1 });
+  platform.expeditionDone(); // interstitial, only when the pacing caps allow
   if (v) toast(`+${v} gold`);
   if (!save.metPuddock) setTimeout(() => talk(() => { renderHome(); show("home"); }), 900); // first haul: meet the merchant
 }
 $("sell").onclick = () => sell(1);
-$("sell2").onclick = () => sell(2);
+$("sell2").onclick = async () => (await platform.rewarded("double_deal")) ? sell(2) : toast("No ad ready, try again in a moment");
 
 // ---------- home and market ----------
 function show(id) {
   document.body.classList.toggle("playing", !id);
   for (const s of ["home", "end", "market", "talk", "campScr"]) $(s).classList.toggle("show", s === id);
-  $("hud").style.visibility = id && id !== "end" ? "hidden" : "visible"; }
+  $("hud").style.visibility = id && id !== "end" ? "hidden" : "visible";
+  platform.banner(id === "home" || id === "market" || id === "campScr"); }
 function renderHome() {
   $("homeGold").textContent = save.gold;
   $("mExp").classList.toggle("on", save.mode === "exp"); $("mCalm").classList.toggle("on", save.mode === "calm");
@@ -681,6 +695,7 @@ function renderHome() {
   $("oSound").innerHTML = icon(save.opt.sound ? "soundOn" : "soundOff", 20) + "Sound";
   $("oVib").innerHTML = icon("vibe", 20) + "Vibration";
   $("oGlyph").innerHTML = icon("symbols", 20) + "Symbols";
+  $("oPrivacy").innerHTML = icon("lock", 20) + "Privacy";
   const done = save.daily.last === today(), st = save.daily.last === today() || save.daily.last === new Date(Date.now() - 864e5).toISOString().slice(0, 10) ? save.daily.streak : 0;
   $("daily").innerHTML = `<span class="btnrow">${icon("calendar", 22)}${done ? `Daily Dig done · best ${save.daily.best}g` : "Daily Dig: today's crystals"}</span>
     <span class="streak" title="streak: ${st} day(s)">${[...Array(7)].map((_, k) => `<i class="${k < Math.min(st, 7) ? "on" : ""}"></i>`).join("")}</span>
@@ -704,7 +719,18 @@ function renderHome() {
 }
 const mapTile = (id) => { const b = BIOMES.find((x) => x.id === id); return scene(Object.keys(b.types).map((t) => CRYSTALS[t].color), b.pal, 46, 46); };
 let mktTab = "tools";
+async function renderIap() {
+  const row = $("iapRow");
+  if (platform.noAds) { row.innerHTML = `<div class="iap">${icon("ad", 22)}<span class="grow"><b>Ads removed</b><small>Thanks for supporting Glimmerwood!</small></span></div>`; return; }
+  if (!platform.canBuy) { row.innerHTML = `<div class="iap">${icon("ad", 22)}<span class="grow"><b>Remove ads</b><small>A one-time purchase in the app. Rewarded offers stay, by choice.</small></span></div>`; return; }
+  const price = (await platform.removeAdsPrice()) || "";
+  row.innerHTML = `<div class="iap">${icon("ad", 22)}<span class="grow"><b>Remove ads</b><small>One-time. Rewarded offers stay, by choice.</small></span>
+    <button id="buyNoAds">${price || "Buy"}</button></div><button id="restoreBtn" class="linkBtn">Restore purchases</button>`;
+  $("buyNoAds").onclick = async () => { if (await platform.buyRemoveAds()) { toast("Ads removed. Thank you!"); renderIap(); } };
+  $("restoreBtn").onclick = async () => { toast((await platform.restore()) ? "Purchase restored" : "Nothing to restore"); renderIap(); };
+}
 function renderMarket() {
+  renderIap();
   $("mktGold").textContent = save.gold;
   for (const b of document.querySelectorAll("#mktTabs button")) b.classList.toggle("on", b.dataset.tab === mktTab);
   $("shop").innerHTML = SHOP.filter((it) => it.tab === mktTab).map((it) => {
@@ -726,7 +752,7 @@ function renderMarket() {
       const [grp, val] = it.id.split(":");
       if (grp === "tent" || grp === "banner" || grp === "fire") save.camp[grp] = val; // wear it straight away
     }
-    persist(); renderMarket();
+    persist(); renderMarket(); track("market_buy", { item: it.id, cost });
     [784, 988, 1175].forEach((f, k) => tone(f, .15, "triangle", .08, k * .06));
   };
 }
@@ -735,6 +761,7 @@ $("daily").onclick = () => startDig(true);
 $("mExp").onclick = () => { save.mode = "exp"; persist(); renderHome(); };
 $("mCalm").onclick = () => { save.mode = "calm"; persist(); renderHome(); };
 for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).onclick = () => { save.opt[k] = !save.opt[k]; persist(); renderHome(); };
+$("oPrivacy").onclick = () => platform.native ? platform.privacyChoices() : toast("Privacy choices open here in the app");
 $("toMarket").onclick = () => save.metPuddock ? (renderMarket(), show("market")) : talk(() => { renderMarket(); show("market"); });
 for (const b of document.querySelectorAll("#mktTabs button")) b.onclick = () => { mktTab = b.dataset.tab; renderMarket(); };
 $("toCamp").onclick = () => { renderCamp(); show("campScr"); };
@@ -757,7 +784,7 @@ function talk(then) {
   };
   $("talkNext").onclick = () => {
     if (++k < INTRO.length) return step();
-    save.metPuddock = true; if (!save.biomes.includes("ember") && !save.trial.includes("ember")) save.trial.push("ember");
+    save.metPuddock = true; track("met_puddock"); if (!save.biomes.includes("ember") && !save.trial.includes("ember")) save.trial.push("ember");
     persist(); [784, 988, 1175, 1568].forEach((f, j) => tone(f, .18, "triangle", .08, j * .07)); then();
   };
   step(); show("talk");
@@ -868,6 +895,8 @@ $("coinHud").innerHTML = coin(26);
 $("icoExp").innerHTML = icon("vine", 26); $("icoCalm").innerHTML = icon("leaf", 26);
 $("icoDig").innerHTML = icon("pickaxe", 24); $("icoStall").innerHTML = icon("stall", 24); $("icoBack").innerHTML = icon("back", 20);
 
+if (platform.native) $("adNote").textContent = "Green buttons play a short video ad.";
+platform.init().then(() => renderHome());
 renderHome(); show("home");
 requestAnimationFrame(frame);
 </script>
