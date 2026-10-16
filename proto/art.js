@@ -221,7 +221,8 @@ export function dibble(size = 96, look = {}) {
   const L = { ...DEFAULT_LOOK, ...look }, [f] = FUR[L.fur] || FUR.cocoa, id = "dib" + uid++, fs = shade(f, .32), cream = mix(f, "#fff1e0", .62);
   const glow = LANTERN_GLOW[L.lantern] || LANTERN_GLOW.amber, rim = mix(glow, "#ffffff", .25), pawC = "#f2bfb2";
   const head = fluff(50, 44, 26, 24, 17, 3.4, 5), body = fluff(50, 78, 19, 15, 11, 2.8, 9);
-  const claws = (pts) => `<g fill="#fff6ea" stroke="${INK2}" stroke-width=".8">${pts.map(([x, y, dx]) => `<path d="M${x} ${y} l${dx - 1} 3.2 l2 -2.4 Z"/>`).join("")}</g>`;
+  // tidy claw tips: small rounded drops, evenly spaced, drawn under the paw so only the tips peek out
+  const claws = (xs, y) => `<g fill="#fff6ea" stroke="${INK2}" stroke-width=".75" stroke-linejoin="round">${xs.map((x) => `<path d="M${x - 1.1} ${y} Q${x - .9} ${y + 2.6} ${x} ${y + 3.1} Q${x + .9} ${y + 2.6} ${x + 1.1} ${y} Z"/>`).join("")}</g>`;
   return svg(size, "0 0 100 100", `
     <defs>
       <radialGradient id="${id}g"><stop offset="0" stop-color="${glow}" stop-opacity=".7"/><stop offset="1" stop-color="${glow}" stop-opacity="0"/></radialGradient>
@@ -265,11 +266,12 @@ export function dibble(size = 96, look = {}) {
     <g stroke="${INK2}" stroke-width=".7" opacity=".45" stroke-linecap="round"><path d="M42.4 56 L35 54.8 M42.4 58 L35 58.8"/><path d="M57.6 56 L65 54.8 M57.6 58 L65 58.8"/></g>
     <g><animateTransform attributeName="transform" type="rotate" values="-2 50 22;2 50 22;-2 50 22" dur="4s" repeatCount="indefinite"/>${hatArt(L.hat, id + "t")}</g>
     ${noodle("M33 69 Q24 72 27 79", f)}
+    ${claws([24.6, 27.5, 30.4], 83.4)}
     <path d="M22 79 Q22 74 27.5 74 Q33 74 33 79 Q33 85 27.5 85 Q22 85 22 79 Z" fill="url(#${id}p)" stroke="${INK2}" stroke-width="1.9"/>
-    ${claws([[23.6, 83.6, 0], [26.6, 84.8, 0], [30, 84.6, 1], [32.6, 83, 1.4]])}
     ${noodle("M67 69 Q78 68 78 57", f)}
     <g><animateTransform attributeName="transform" type="rotate" values="-4 78 54;4 78 54;-4 78 54" dur="3.2s" repeatCount="indefinite"/>
       <g transform="translate(-2 0)">${lanternArt(L.lantern, id + "L")}</g></g>
+    ${claws([75.4, 78, 80.6], 58.4)}
     <path d="M72.6 55 Q72.6 50 78 50 Q83.4 50 83.4 55 Q83.4 60 78 60 Q72.6 60 72.6 55 Z" fill="url(#${id}p)" stroke="${INK2}" stroke-width="1.9"/>
     <path d="M81.4 52 Q83.2 55 81.6 58.4" stroke="${rim}" stroke-width="1.2" fill="none" opacity=".55" stroke-linecap="round"/>`)}
   `, "dibble");
