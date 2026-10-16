@@ -57,8 +57,8 @@ const scaleNote = (t, step) => t.root + 12 + Math.floor(step / 5) * 12 + t.scale
 // and reused: each has its own bus with a fade gain on all three paths, so a deck fades out with its reverb tail.
 // Everything musical then goes through `music` (+ its reverb/echo sends), which is the volume and the on/off switch.
 function init() {
-  if (ctx) return;
-  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if (master) return;
+  ctx ??= new (window.AudioContext || window.webkitAudioContext)();
   master = ctx.createGain(); master.gain.value = .55; master.connect(ctx.destination);
   // generated reverb: decaying stereo noise
   reverb = ctx.createConvolver();
@@ -216,6 +216,8 @@ export const soundtrack = {
   resume() { if (ctx && enabled) ctx.resume(); },
 };
 document.addEventListener("visibilitychange", () => (document.hidden ? soundtrack.pause() : soundtrack.resume()));
+// the trailer (scripts/ad) renders this same synth offline: use() an OfflineAudioContext, then pump() at each suspend
+export const offline = { use(c) { ctx = c; init(); }, pump() { for (const d of decks) if (d.timer) schedule(d); } };
 
 // ---------- sound effects: one soft set of woody knocks and crystal tines, in the same room (reverb) as the music ----------
 // Everything goes through a compressor under the music's level, so no effect is louder than the soundtrack.
