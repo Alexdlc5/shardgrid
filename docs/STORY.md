@@ -151,6 +151,12 @@ Each Ring follows the same shape: **move camp (all items preserved) → three mi
 
 ## Where the story lives in the game (build checklist)
 
+**Phase 1 built 2026-10-15** (items 1, 2, 4, 5, 6, 7, 9, 10-confession): text in `proto/story.js`, pictures in `proto/art.js` (`memoryArt`, `stumpArt`).
+Notes: the stump sits in a panel on the home card (the forest backdrop is hidden behind the card on phones); tapping it replays memories, as does a button at camp.
+Each mine has 3 memories; captions and the Geode Gulch / Heartroot Deep Puddock lines and Gulch chalk not listed above were written to fill the set and are in `story.js` for review.
+The first green shoot appears once Heartroot Deep's last memory is found; the cart-packing line waits for phase 2 (camp moves).
+
+
 1. Prologue panels (first launch).
 2. Home screen: stump + growing sapling tied to lifetime light released.
 3. New-mine entry card: torn map, one Puddock line, "Gran's marks: 2 of 4 found".

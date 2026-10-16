@@ -143,7 +143,7 @@ const bob = (body, dur = 3.2, amt = 1.4) => `<g><animateTransform attributeName=
 
 // Dibble's wardrobe. Every part is swappable; the Market's Wardrobe tab sells the rest.
 export const FUR = { cocoa: ["#8a5a44", "#6b4232"], sand: ["#c49a6c", "#a07a50"], slate: ["#7a7584", "#5c5866"], snow: ["#eee6dc", "#cbbfb1"], rosewood: ["#a86a5e", "#87504a"] };
-export const LANTERN_GLOW = { amber: "#f0b543", crystal: "#9fe6ff", jar: "#fff3a0", paper: "#ff9a7a" };
+export const LANTERN_GLOW = { amber: "#f0b543", granny: "#e8f0a0", crystal: "#9fe6ff", jar: "#fff3a0", paper: "#ff9a7a" };
 export const DEFAULT_LOOK = { fur: "cocoa", hat: "leaf", scarf: "none", lantern: "amber" };
 
 function lanternArt(kind, id) {
@@ -160,6 +160,9 @@ function lanternArt(kind, id) {
   if (kind === "paper") return `<defs>${defs}<radialGradient id="${id}p" cx=".45" cy=".45"><stop offset="0" stop-color="#ffd2b8"/><stop offset=".6" stop-color="#f08a6a"/><stop offset="1" stop-color="#b8503a"/></radialGradient></defs>
     <ellipse cx="80" cy="63.5" rx="7.2" ry="8.6" fill="url(#${id}p)" stroke="#8a3424" stroke-width="1.2"/><path d="M73.4 60.6 Q80 59 86.6 60.6 M73 64.6 Q80 63.4 87 64.6 M73.6 68.4 Q80 67.4 86.4 68.4" stroke="#a8432f" stroke-width=".7" fill="none" opacity=".7"/>
     ${frame(76.8, 53.6, 6.4, 2.6)}${frame(76.8, 71.4, 6.4, 2.6)}<ellipse cx="77.6" cy="60.6" rx="1.8" ry="2.6" fill="#fff" opacity=".35"/>`;
+  if (kind === "granny") return `<defs>${defs}<radialGradient id="${id}g"><stop offset="0" stop-color="#fbffe6"/><stop offset=".55" stop-color="#e2ea9a"/><stop offset="1" stop-color="#9aa84a"/></radialGradient></defs>
+    <path d="M74.6 57.5 Q80 54.5 85.4 57.5 V70 H74.6 Z" fill="url(#${id}g)" stroke="${ml}" stroke-width="1.2"/>${frame(73.2, 53.6, 13.6, 3.2)}${frame(73.8, 70, 12.4, 2.6)}
+    <path d="M77.2 57 V70 M80 56 V70 M82.8 57 V70" stroke="${ml}" stroke-width=".7" opacity=".6"/><circle cx="80" cy="63.4" r="2" fill="#fff"/><path d="M84 66 l-1.2 1.6 M83.4 64.6 q1 .8 0 1.6" stroke="#fff" stroke-width=".5" opacity=".6"/>`;
   return `<defs>${defs}<radialGradient id="${id}a"><stop offset="0" stop-color="#fffbe6"/><stop offset=".5" stop-color="#f7d77a"/><stop offset="1" stop-color="#d99a2b"/></radialGradient></defs>
     <rect x="75" y="56.5" width="10" height="14.5" rx="3" fill="url(#${id}a)" stroke="${ml}" stroke-width="1.2"/>${frame(73.6, 54, 12.8, 3)}${frame(74.2, 70.4, 11.6, 2.4)}
     <path d="M77.6 57 V70.4 M82.4 57 V70.4" stroke="${ml}" stroke-width=".8" opacity=".7"/><circle cx="80" cy="63.6" r="2.2" fill="#fff"/><path d="M76.4 59 V64" stroke="#fff" stroke-width=".9" opacity=".7" stroke-linecap="round"/>`;
@@ -570,4 +573,84 @@ export function vine(w = 360) {
   let d = `M0 8`; for (let x = 0; x <= w; x += 10) d += ` L${x} ${8 + Math.sin(x / 30) * 3}`;
   return `<svg class="vineTrim" width="100%" height="20" viewBox="0 0 ${w} 20" preserveAspectRatio="none" aria-hidden="true">
     <path d="${d}" stroke="#4f7d3a" stroke-width="3" fill="none"/>${leaves}</svg>`;
+}
+
+// ---------- story pictures (docs/STORY.md) ----------
+// Amber Memories and the prologue: small scenes seen through old amber (warm, sepia, one glowing thing).
+const AM = { ink: "#2a1606", mid: "#5a3410", glow: "#ffe6a0", hot: "#ff7a3a", ice: "#cfefff" };
+const lan = (x, y, s = 1, o = 1) => `<g opacity="${o}"><circle cx="${x}" cy="${y}" r="${7 * s}" fill="${AM.glow}" opacity=".25"/><rect x="${x - 2 * s}" y="${y - 3 * s}" width="${4 * s}" height="${6 * s}" rx="${s}" fill="${AM.glow}" stroke="${AM.ink}" stroke-width="${.8 * s}"/></g>`;
+const oakSil = (x, y, s = 1, glow = 0) => `${glow ? `<circle cx="${x}" cy="${y - 34 * s}" r="${40 * s}" fill="${AM.glow}" opacity="${glow}"/>` : ""}
+  <path d="M${x - 5 * s} ${y} L${x - 3 * s} ${y - 24 * s} L${x + 3 * s} ${y - 24 * s} L${x + 5 * s} ${y} Z" fill="${AM.ink}"/>
+  ${[[0, -38, 20], [-16, -30, 14], [16, -30, 14], [-8, -46, 13], [10, -46, 12]].map(([dx, dy, r]) => `<circle cx="${x + dx * s}" cy="${y + dy * s}" r="${r * s}" fill="${AM.ink}"/>`).join("")}`;
+const toadSil = (x, y, s = 1, flip = 1) => `<g transform="translate(${x} ${y}) scale(${flip * s} ${s})"><ellipse cx="0" cy="-6" rx="10" ry="7" fill="${AM.ink}"/><circle cx="-5" cy="-13" r="3.2" fill="${AM.ink}"/><circle cx="4" cy="-13" r="3.2" fill="${AM.ink}"/><path d="M-9 -2 L-13 1 M8 -2 L12 1" stroke="${AM.ink}" stroke-width="2.4" stroke-linecap="round"/></g>`;
+const moleSil = (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="-8" rx="9" ry="9" fill="${AM.ink}"/><circle cx="0" cy="-19" r="6.5" fill="${AM.ink}"/><ellipse cx="0" cy="-24" rx="7" ry="2.4" fill="${AM.mid}"/></g>`;
+const ground = (y = 78) => `<path d="M0 ${y} Q40 ${y - 3} 80 ${y} T160 ${y} V100 H0 Z" fill="${AM.ink}"/>`;
+const MEM = {
+  oak: () => `${ground()}${oakSil(80, 78, 1.05, .35)}${[[60, 30], [98, 26], [88, 44], [66, 48]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.4" fill="${AM.glow}"/>`).join("")}`,
+  leaf: () => `<path d="M0 0 Q60 14 110 6 M30 0 Q50 12 46 22" stroke="${AM.ink}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <circle cx="86" cy="52" r="26" fill="${AM.glow}" opacity=".3"/><g transform="translate(86 52) rotate(-25)"><path d="M0 -14 Q10 -4 0 14 Q-10 -4 0 -14 Z" fill="${AM.glow}"/><path d="M0 -12 V12" stroke="${AM.mid}" stroke-width="1"/></g>
+    <path d="M70 34 q4 6 0 10" stroke="${AM.glow}" stroke-width="1" fill="none" opacity=".6"/>${ground(86)}`,
+  dawn: () => `<rect y="56" width="160" height="22" fill="${AM.glow}" opacity=".35"/>${ground()}
+    <path d="M58 78 L60 60 L64 64 L68 57 L72 63 L76 58 L78 78 Z" fill="${AM.ink}"/><ellipse cx="68" cy="60" rx="9" ry="2.6" fill="${AM.mid}"/>
+    <rect x="100" y="62" width="24" height="12" rx="2" fill="${AM.ink}"/><circle cx="106" cy="76" r="4" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="1.5"/><circle cx="120" cy="76" r="4" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="1.5"/>${toadSil(134, 78, .9)}`,
+  smoke: () => `${ground(72)}${oakSil(122, 72, .5)}${[40, 64, 88].map((x, k) => `<path d="M${x} 72 q-6 -10 2 -18 q8 -8 0 -18 q-6 -8 2 -16" stroke="${AM.glow}" stroke-width="${4 - k}" fill="none" opacity=".45" stroke-linecap="round"/>`).join("")}
+    <path d="M30 72 l6 6 M60 72 l-4 8 M90 72 l5 7" stroke="${AM.hot}" stroke-width="1.2" opacity=".7"/>`,
+  thaw: () => `<path d="M0 70 Q80 64 160 70 V100 H0 Z" fill="${AM.ink}"/><path d="M0 70 Q80 64 160 70 V74 Q80 68 0 74 Z" fill="#fff6e6" opacity=".9"/>
+    <ellipse cx="80" cy="69" rx="24" ry="4" fill="${AM.mid}"/><circle cx="80" cy="86" r="16" fill="${AM.hot}" opacity=".25"/>
+    <path d="M80 80 Q70 88 52 92 M80 80 Q92 90 112 94 M80 80 Q78 92 74 100" stroke="${AM.hot}" stroke-width="2.4" fill="none" opacity=".7" stroke-linecap="round"/>
+    ${[[20, 20], [50, 34], [120, 24], [140, 44], [96, 40]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="#fff6e6"/>`).join("")}`,
+  rootglow: () => `${ground(60)}${oakSil(80, 60, .8)}<circle cx="80" cy="84" r="30" fill="${AM.hot}" opacity=".35"/>
+    <path d="M80 60 Q66 74 40 82 M80 60 Q96 76 124 84 M80 60 Q80 80 76 98 M58 74 Q44 86 26 90" stroke="${AM.hot}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`,
+  lanterns: () => `${ground(40)}<path d="M64 40 Q80 36 96 40 L92 100 H68 Z" fill="#160b03"/>${[[80, 46, 1.2, 1], [78, 58, 1, .9], [82, 70, .85, .7], [79, 81, .7, .5], [81, 91, .55, .3]].map((a) => lan(...a)).join("")}
+    ${moleSil(52, 40, .8)}${lan(60, 30, .8)}`,
+  count: () => `${ground()}${moleSil(30, 78, 1.1)}${[52, 70, 88, 106, 124, 142].map((x, k) => lan(x, 70, .9, k < 4 ? 1 : .35)).join("")}
+    <path d="M38 62 Q46 58 50 64" stroke="${AM.glow}" stroke-width="1" fill="none" opacity=".7"/>`,
+  caps: () => `${ground()}<path d="M40 78 L44 60 L52 62 L54 78 Z M104 78 L108 56 L118 58 L118 78 Z" fill="#1a0d04"/>
+    ${[[50, 64, 8], [62, 70, 6], [100, 66, 7], [120, 60, 9], [88, 72, 5]].map(([x, y, r]) => `<circle cx="${x}" cy="${y - r * .3}" r="${r * 1.8}" fill="${AM.glow}" opacity=".18"/><path d="M${x} 78 V${y}" stroke="${AM.mid}" stroke-width="2"/><path d="M${x - r} ${y} Q${x} ${y - r * 1.4} ${x + r} ${y} Z" fill="${AM.glow}"/>`).join("")}`,
+  toad: () => `${ground()}<path d="M20 78 V40 Q20 14 60 14 Q100 14 100 40 V78 Z" fill="#160b03"/><circle cx="96" cy="58" r="16" fill="${AM.glow}" opacity=".3"/>
+    ${toadSil(102, 72, 1.2, -1)}<circle cx="94" cy="60" r="4" fill="${AM.glow}"/><path d="M118 58 h14 M120 66 h18 M116 50 h10" stroke="${AM.glow}" stroke-width="1.2" opacity=".6" stroke-linecap="round"/>`,
+  frost: () => `<rect width="160" height="100" fill="${AM.ink}" opacity=".35"/><path d="M0 60 Q40 50 80 62 T160 58" stroke="${AM.ink}" stroke-width="10" fill="none"/>
+    <path d="M0 60 Q40 50 80 62 T160 58" stroke="${AM.hot}" stroke-width="2" fill="none" opacity=".5"/>
+    ${[[30, 52], [58, 54], [86, 60], [114, 58], [140, 54]].map(([x, y], k) => `<polygon points="${x},${y - 12} ${x + 5},${y} ${x},${y + 6} ${x - 5},${y}" fill="${AM.ice}" opacity="${1 - k * .12}"/>`).join("")}${moleSil(72, 92, .7)}${lan(84, 82, .7)}`,
+  deeper: () => `<rect width="160" height="100" fill="#160b03"/><path d="M64 0 Q60 50 70 100 H92 Q100 50 96 0 Z" fill="${AM.mid}" opacity=".5"/>
+    <path d="M80 0 Q76 30 82 60 Q86 80 80 100" stroke="${AM.glow}" stroke-width="9" fill="none" opacity=".15"/>
+    <path d="M80 0 Q76 30 82 60 Q86 80 80 100" stroke="${AM.glow}" stroke-width="2.2" fill="none" opacity=".85"/>${lan(70, 40, .6, .5)}${lan(90, 70, .5, .35)}`,
+  receipt: () => `<g transform="rotate(-6 80 50)"><rect x="40" y="16" width="80" height="66" rx="3" fill="#f3e6c4" stroke="${AM.ink}" stroke-width="1.5"/>
+    ${[28, 36, 44, 52].map((y, k) => `<path d="M48 ${y} H${112 - k * 9}" stroke="${AM.mid}" stroke-width="1.6" stroke-linecap="round"/>`).join("")}
+    <path d="M86 66 q6 -8 10 0 q4 6 10 -2" stroke="${AM.ink}" stroke-width="1.4" fill="none"/><text x="52" y="72" font-size="9" font-style="italic" fill="${AM.ink}">P.B.</text></g>`,
+  coin: () => `<path d="M10 100 Q30 70 70 66 Q96 64 104 74 Q90 80 70 82 Q40 86 30 100 Z" fill="${AM.ink}"/><circle cx="86" cy="52" r="20" fill="#f6f1ff" opacity=".25"/>
+    <circle cx="86" cy="52" r="12" fill="#efe8f7" stroke="${AM.ink}" stroke-width="1.4"/><path d="M86 52 Q78 44 76 50 Q78 56 86 52 Q94 44 96 50 Q94 56 86 52" stroke="#a89ac0" stroke-width="1" fill="none"/>`,
+  heart: () => `<rect width="160" height="100" fill="#160b03"/><circle cx="80" cy="54" r="38" fill="${AM.hot}" opacity=".22"/>
+    <path d="M80 82 L54 54 Q44 40 56 32 Q68 26 80 40 Q92 26 104 32 Q116 40 106 54 Z" fill="${AM.hot}" stroke="${AM.ink}" stroke-width="2"/>
+    <path d="M93 36 L101 44 L93 50 L88 42 Z" fill="#160b03"/><path d="M62 40 Q66 34 72 38" stroke="#ffd2b0" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+};
+export function memoryArt(kind, w = 160) {
+  const id = "am" + uid++;
+  return `<svg class="memArt" width="${w}" height="${w * .625}" viewBox="0 0 160 100" aria-hidden="true">
+    <defs><radialGradient id="${id}" cx=".5" cy=".45" r=".75"><stop offset="0" stop-color="#c98a2c"/><stop offset=".7" stop-color="#7a4a14"/><stop offset="1" stop-color="#3a2208"/></radialGradient>
+      <clipPath id="${id}c"><ellipse cx="80" cy="50" rx="78" ry="48"/></clipPath></defs>
+    <g clip-path="url(#${id}c)"><rect width="160" height="100" fill="url(#${id})"/>${(MEM[kind] || MEM.leaf)()}
+      <ellipse cx="54" cy="24" rx="38" ry="10" fill="#fff" opacity=".08" transform="rotate(-12 54 24)"/></g>
+    <ellipse cx="80" cy="50" rx="78" ry="48" fill="none" stroke="#3a2208" stroke-width="3"/><ellipse cx="80" cy="50" rx="74" ry="44.5" fill="none" stroke="#ffd27a" stroke-width=".8" opacity=".35"/></svg>`;
+}
+
+// The old stump on the home screen. growth 0..1 (lifetime light released) brings moss, glowing roots and caps;
+// sprout = the first green shoot (all of Heartroot Deep's memories found).
+export function stumpArt(growth = 0, sprout = false, w = 300) {
+  const g = Math.max(0, Math.min(1, growth)), id = "st" + uid++;
+  let s = 5; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  const moss = [...Array(Math.round(g * 9))].map((_, k) => `<ellipse cx="${(118 + r() * 64).toFixed(1)}" cy="${(54 + r() * 20).toFixed(1)}" rx="${(4 + r() * 4).toFixed(1)}" ry="${(2 + r() * 2).toFixed(1)}" fill="${k % 2 ? "#4f7a3a" : "#5f9a45"}"/>`).join("");
+  const caps = [[96, 80], [206, 82], [194, 78]].slice(0, g > .35 ? Math.ceil((g - .35) * 5) : 0).map(([x, y]) =>
+    `<circle cx="${x}" cy="${y - 8}" r="8" fill="#9b7cf2" opacity=".18"/><path d="M${x} ${y} v-6" stroke="#d8cbb0" stroke-width="2"/><path d="M${x - 5} ${y - 6} Q${x} ${y - 13} ${x + 5} ${y - 6} Z" fill="#9b7cf2"/>`).join("");
+  const t = 8 + g * 10, shoot = sprout ? `<circle cx="150" cy="${40 - t}" r="${12 + g * 8}" fill="#9be08a" opacity=".16"><animate attributeName="opacity" values=".1;.24;.1" dur="3s" repeatCount="indefinite"/></circle>
+    <path d="M150 47 Q148 ${44 - t * .6} 151 ${44 - t * 1.4}" stroke="#5f9a45" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M150 ${44 - t * .8} Q140 ${40 - t * .8} 138 ${44 - t * .8} Q144 ${48 - t * .8} 150 ${44 - t * .8} Z M151 ${44 - t * 1.3} Q162 ${38 - t * 1.3} 164 ${42 - t * 1.3} Q158 ${47 - t * 1.3} 151 ${44 - t * 1.3} Z" fill="#9be08a"/>` : "";
+  return `<svg class="stumpArt" width="${w}" height="${w * .3}" viewBox="0 0 300 90" aria-hidden="true">
+    <defs><linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="#4a3422"/><stop offset=".5" stop-color="#6b4a32"/><stop offset="1" stop-color="#3a2618"/></linearGradient></defs>
+    <path d="M0 80 Q150 70 300 80 V90 H0 Z" fill="#14241a"/>
+    <path d="M150 74 Q120 80 80 86 M150 74 Q180 82 226 86 M150 74 Q140 84 128 90 M150 74 Q166 84 176 90" stroke="#3a2618" stroke-width="5" fill="none" stroke-linecap="round"/>
+    ${g ? `<path d="M150 74 Q120 80 80 86 M150 74 Q180 82 226 86" stroke="#f0b543" stroke-width="1.4" fill="none" opacity="${(.15 + g * .5).toFixed(2)}"/>` : ""}
+    <path d="M112 80 L116 50 L124 54 L130 44 L138 52 L146 42 L154 50 L162 41 L170 52 L178 46 L184 54 L188 80 Z" fill="url(#${id})" stroke="#1d120c" stroke-width="2" stroke-linejoin="round"/>
+    <ellipse cx="150" cy="47" rx="30" ry="5" fill="#8a6650" opacity=".5"/><path d="M134 47 Q150 43 166 47 M140 47 Q150 45 160 47" stroke="#5a3a2a" stroke-width="1" fill="none"/>
+    <path d="M128 60 L132 72 M170 58 L166 70" stroke="#2a1a10" stroke-width="1.4"/>${moss}${caps}${shoot}</svg>`;
 }

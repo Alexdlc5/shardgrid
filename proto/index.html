@@ -194,6 +194,16 @@
   .talkBubble::before { left: 50%; top: -6px; margin: 0 0 0 -6px; border: 6px solid transparent; border-bottom-color: #f3e6c4; border-top: 0; }
   .gift { display: flex; gap: 10px; align-items: center; background: rgba(30,16,6,.38); border-radius: 12px; padding: 8px; margin-top: 10px; animation: pop .5s ease-out; }
   .gift div { flex: 1; } .gift small { display: block; }
+  /* story: the stump, Amber Memories, Granny's chalk */
+  .stumpCard { display: block; width: 100%; padding: 4px 8px 8px; margin: 8px 0 4px; background: rgba(20,12,6,.32); border-radius: 14px; text-align: center; }
+  .stumpCard svg { display: block; width: 100%; height: auto; }
+  .stumpCard small { display: block; font-weight: 400; font-size: 12.5px; color: var(--muted); font-style: italic; }
+  .memCard { text-align: center; margin: 4px 0 8px; animation: pop .5s ease-out; }
+  .memCard .memArt, .talkArt .memArt { display: block; margin: 0 auto; max-width: 100%; height: auto; filter: drop-shadow(0 4px 10px rgba(240,181,67,.35)); }
+  .memCap { font-style: italic; font-size: 15px; line-height: 1.35; margin: 6px 4px 2px; color: #f3e1b0; }
+  .memCard small, .memTag { display: block; font-size: 12px; color: var(--muted); }
+  .talkBubble:empty { display: none; }
+  .letter { font-style: italic; background: #f3e6c4; color: #3a2418; border-radius: 6px; padding: 10px 12px; transform: rotate(-1deg); box-shadow: 0 3px 10px rgba(0,0,0,.35); }
   @keyframes pop { from { transform: scale(.85); opacity: 0; } }
   .campWrap { border-radius: 14px; overflow: hidden; border: 2px solid #2b1a0e; box-shadow: inset 0 0 18px rgba(0,0,0,.5); line-height: 0; }
   .campProg { margin: 10px 0 4px; } .campProg small { display: block; margin-top: 4px; text-align: center; }
@@ -277,6 +287,7 @@
 
 <section id="home" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
   <div class="hero"><span id="dibbleArt"></span><div><h1>Glimmerwood</h1><div class="tag" style="margin:4px 0 0">Mine glowing crystals before the roots close in.</div></div></div>
+  <button id="stump" class="stumpCard alt"></button>
   <div class="pill" id="homeGoldPill"><span id="coinA"></span><span id="homeGold">0</span></div>
   <div class="seg"><button id="mExp"><span id="icoExp"></span>Expedition<small>beat the Rootline</small></button>
     <button id="mCalm"><span id="icoCalm"></span>Calm Grove<small>no timer, ×0.6 gold</small></button></div>
@@ -295,6 +306,7 @@
   <div class="tag" id="endSub" style="text-align:center;margin-bottom:6px">Dibble climbs out with the haul.</div>
   <div id="newBest" class="gold" style="font-size:20px;display:none;text-align:center">New best haul!</div>
   <button id="rescue" class="ad"></button>
+  <div id="memCard"></div>
   <div class="speech"><span id="puddockArtEnd"></span><div class="bubble" id="puddockLine"></div></div>
   <div class="ledger"><h3>OLD PUDDOCK'S LEDGER</h3>
     <div class="haulGrid" id="haulList"></div>
@@ -319,6 +331,7 @@
   <div class="bubble talkBubble" id="talkLine"></div>
   <div id="talkGift"></div>
   <button id="talkNext">Go on…</button>
+  <button id="talkSkip" class="linkBtn" style="display:none">Skip</button>
 </div></div></section>
 
 <section id="campScr" class="screen campScreen">
@@ -329,6 +342,7 @@
   <div class="tag" style="margin:0 0 8px">Everything you buy from Old Puddock ends up here.</div>
   <div id="campProg" class="campProg"></div>
   <div id="campCustom"></div>
+  <button id="campMem" class="alt"></button>
   <button id="campBack" class="alt"><span class="btnrow"><span id="icoBack2"></span>Back to the mines</span></button>
 </div></div></section>
 
@@ -336,7 +350,9 @@
 import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, fitsAnywhere, deal,
   rescueCells, breakCells, pureVeinCells } from "./game.js";
 
-import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, lookItem, DEFAULT_LOOK, FUR } from "./art.js";
+import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, lookItem, DEFAULT_LOOK, FUR, memoryArt, stumpArt } from "./art.js";
+import { PROLOGUE, MEMORIES, MEMORY_COUNT, nextMemory, memoryById, mineOfMemory, CHALK, PUDDOCK_BY_MINE, PUDDOCK_AFTER, SPROUT_LINE,
+  CONFESSION, LETTER, MURMURS } from "./story.js";
 import { soundtrack } from "./music.js";
 import { platform, track } from "./platform.js";
 const cfg0 = await (await fetch("../sim/generator.json", { cache: "no-cache" })).json();
@@ -377,7 +393,7 @@ const BANNERS = { "#5fa04e": "Moss green", "#c8553d": "Ember red", "#9b7cf2": "G
 const LOOKS = {
   hat: { none: "No hat", leaf: "Leaf cap", mushroom: "Toadstool cap", beanie: "Knit beanie", flowers: "Flower crown", miner: "Miner's helmet" },
   scarf: { none: "No scarf", "#c8553d": "Ember scarf", "#35b38a": "Jade scarf", "#4f7fe8": "Frost scarf", "#9b7cf2": "Gloam scarf", "#f0c75a": "Gold scarf" },
-  lantern: { amber: "Amber lantern", paper: "Paper lantern", jar: "Firefly jar", crystal: "Crystal lantern" },
+  lantern: { amber: "Amber lantern", paper: "Paper lantern", jar: "Firefly jar", crystal: "Crystal lantern", granny: "Granny's lantern" },
   fur: { cocoa: "Cocoa fur", sand: "Sand fur", slate: "Slate fur", snow: "Snow fur", rosewood: "Rosewood fur" },
 };
 const LOOK_FREE = { hat: ["none", "leaf"], scarf: ["none"], lantern: ["amber"], fur: ["cocoa"] };
@@ -421,14 +437,23 @@ const store = { get(k, d) { try { return JSON.parse(localStorage.getItem("gw." +
                 set(k, v) { try { localStorage.setItem("gw." + k, JSON.stringify(v)); } catch {} } };
 const DEFAULTS = { look: { ...DEFAULT_LOOK }, gold: 0, up: { lantern: 0, pick: 0, charm: 0, lens: 0, tongs: 0, sieve: 0 }, owned: [], biomes: ["hollow"], best: {}, sel: "hollow",
   mode: "exp", opt: { music: true, sound: true, vib: true, glyph: false }, daily: { last: "", streak: 0, best: 0 },
-  metPuddock: false, trial: [], found: [], camp: { tent: "canvas", banner: "#5fa04e", fire: "ring", hide: [] } };
+  metPuddock: false, trial: [], found: [], camp: { tent: "canvas", banner: "#5fa04e", fire: "ring", hide: [] },
+  story: { prologue: false, mem: [], confessed: false } };
 const stored = store.get("save", {}); if (stored.opt && stored.opt.music === undefined) stored.opt.music = true;
-const save = { ...DEFAULTS, ...stored, up: { ...DEFAULTS.up, ...stored.up }, look: { ...DEFAULTS.look, ...stored.look }, camp: { ...DEFAULTS.camp, ...stored.camp } };
+const save = { ...DEFAULTS, ...stored, up: { ...DEFAULTS.up, ...stored.up }, look: { ...DEFAULTS.look, ...stored.look }, camp: { ...DEFAULTS.camp, ...stored.camp }, story: { ...DEFAULTS.story, ...stored.story } };
+save.light ??= save.gold; // lifetime gold sold: the light Dibble has given back to the roots (grows the stump)
 const CALM_MULT = 0.6;
 const PUDDOCK = ["\"Fine rocks. Finer than my cousin's, anyway.\"", "\"Every vein you break, the roots grow kinder.\"",
   "\"Slow digging is still digging, little mole.\"", "\"Hmph. I've seen worse hauls. Mine, mostly.\"",
   "\"The Glimmerwood remembers good miners.\"", "\"Pure veins! Now that's a mole with an eye.\"",
   "\"Rest your paws. The crystals will wait.\"", "\"Coins for crystals. Fair as rain.\""];
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const quote = (t) => `"${t}"`;
+function puddockLine() { // half the time a line from this mine's chapter; after the confession his tone changes
+  const mine = daily ? [] : PUDDOCK_BY_MINE[biome.id] || [];
+  if (Math.random() < .5 && mine.length) return quote(pick(mine));
+  return save.story.confessed && Math.random() < .6 ? quote(pick(PUDDOCK_AFTER)) : pick(PUDDOCK);
+}
 const today = () => new Date().toISOString().slice(0, 10);
 const mulberry = (a) => () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a);
   t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -475,6 +500,7 @@ const lerpHex = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i
 
 // ---------- round state ----------
 let biome, cat, board, meta, tray, uid, combo, miss, rescueUsed, state = "home", endCause, calm = false, daily = false, rng = Math.random;
+let newMem = [];
 let stolen = 0, moths = [], placedN = 0, mothRng = Math.random, bonus = 0, frozenUntil = 0, time, maxTime, started, haul, floats = [], parts = [];
 function catalogFor(b) {
   const fam = { ...structuredClone(cfg0.families), ...b.families };
@@ -488,7 +514,13 @@ function pickType() {
   for (const [t, w] of e) if ((x -= w) < 0) return t;
   return e[0][0];
 }
-const dealTray = () => deal(rng, board, cat, cfg0).map((piece) => ({ piece, type: pickType() }));
+const dealTray = () => {
+  const t = deal(rng, board, cat, cfg0).map((piece) => ({ piece, type: pickType() }));
+  // ponytail: one memory in play at a time, ~1 in 7 trays after a few placements; separate RNG so dealing stays untouched
+  const next = !daily && biome && nextMemory(biome.id, save.story.mem), inPlay = Object.values(meta || {}).some((m) => m.memory) || tray?.some((q) => q?.memory);
+  if (next && !inPlay && placedN >= 3 && Math.random() < .15) Object.assign(t[Math.floor(Math.random() * 3)], { type: "amber", memory: next.id });
+  return t;
+};
 const typeOf = (u) => (u === -1 ? drag?.type : meta[u]?.type);
 const isEmber = (u) => !!CRYSTALS[typeOf(u)]?.ember;
 
@@ -501,7 +533,7 @@ function startDig(isDaily = false) {
     save.trial = save.trial.filter((x) => x !== biome.id); persist();
     setTimeout(() => toast("Puddock's old map crumbles as you step inside.<br><small>One dig, make it count!</small>", 2600), 300);
   }
-  bonus = 0; stolen = 0; moths = []; placedN = 0;
+  bonus = 0; stolen = 0; moths = []; placedN = 0; newMem = []; meta = {}; tray = null;
   mothRng = daily ? mulberry(+today().replaceAll("-", "") + 777) : Math.random; // daily: same moths for everyone
   board = Array(64).fill(0); meta = {}; uid = 1; combo = 0; miss = 0; rescueUsed = false;
   haul = {}; frozenUntil = 0; maxTime = T.max_time + 5 * save.up.lantern; time = maxTime; started = false;
@@ -669,9 +701,33 @@ function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, gly
   }
   ctx.restore();
 }
-function drawPiece({ piece, type }, size, ox, oy, alpha) {
+function drawPiece({ piece, type, memory }, size, ox, oy, alpha) {
   const em = CRYSTALS[type].ember ? .6 + .3 * Math.sin(performance.now() / 120) : .35;
+  if (memory) memoryHalo(ox + piece.w * size / 2, oy + piece.h * size / 2, Math.max(piece.w, piece.h) * size);
   drawCrystal(piece.cells, CRYSTALS[type].color, { r: 0, c: 0, h: piece.h, w: piece.w }, size, ox, oy, alpha, em, CRYSTALS[type].glyph, CRYSTALS[type].cut);
+  if (memory) fossil(piece.cells.map(([r, c]) => [r, c]), size, ox, oy);
+}
+function memoryHalo(x, y, r) { // flickers like a firefly that has noticed something
+  const now = performance.now(), a = .25 + .2 * Math.sin(now / 160) * Math.sin(now / 410);
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(255,214,122,${a})`); g.addColorStop(1, "rgba(255,214,122,0)");
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+}
+function fossil(cells, size, ox, oy) { // a tiny leaf caught in the amber, in each cell
+  ctx.save(); ctx.strokeStyle = "rgba(90,52,16,.75)"; ctx.fillStyle = "rgba(90,52,16,.45)"; ctx.lineWidth = Math.max(1, size * .04);
+  for (const [r, c] of cells) { const x = ox + (c + .5) * size, y = oy + (r + .52) * size, l = size * .26;
+    ctx.beginPath(); ctx.moveTo(x - l * .6, y + l * .6); ctx.quadraticCurveTo(x - l, y - l * .5, x + l * .6, y - l * .6); ctx.quadraticCurveTo(x + l * .3, y + l * .4, x - l * .6, y + l * .6); ctx.fill(); ctx.stroke(); }
+  ctx.restore();
+}
+function drawChalk() { // Granny's marks, scratched faintly into the tunnel floor under the crystals
+  const txt = CHALK[biome?.id]; if (!txt || daily) return;
+  const w = cell * N, words = txt.split(" "), lines = [];
+  ctx.save(); ctx.font = `600 ${Math.round(cell * .42)}px Fredoka, sans-serif`;
+  for (const wd of words) { const l = lines.length ? lines[lines.length - 1] + " " + wd : wd;
+    if (lines.length && ctx.measureText(l).width < w * .86) lines[lines.length - 1] = l; else lines.push(wd); }
+  ctx.translate(bx + w / 2, by + w / 2); ctx.rotate(-.06); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "rgba(239,230,207,.2)"; ctx.shadowColor = "rgba(239,230,207,.25)"; ctx.shadowBlur = 3;
+  lines.forEach((l, k) => ctx.fillText(l, 0, (k - (lines.length - 1) / 2) * cell * .62));
+  ctx.restore();
 }
 
 // ---------- board, moss and the Rootline ----------
@@ -790,7 +846,7 @@ function target() {
 // ---------- a placement ----------
 function commit(i, r, c) {
   const { piece, type } = tray[i], id = uid++;
-  meta[id] = { type, r, c, h: piece.h, w: piece.w, at: performance.now() }; // `at` drives the landing squash
+  meta[id] = { type, r, c, h: piece.h, w: piece.w, at: performance.now(), memory: tray[i].memory }; // `at` drives the landing squash
   board = place(board, piece, r, c, id);
   started = true; placedN++;
   tone(150, .07, "triangle", .12); tone(1250, .05, "sine", .06, .01); tone(1870, .05, "sine", .035, .035); buzz(8);
@@ -799,6 +855,9 @@ function commit(i, r, c) {
     combo++; miss = 0;
     const { cells, embers } = breakCells(board, lines, isEmber), pure = pureVeinCells(board, lines, typeOf), before = board;
     const shooLoot = shooMoths(cells);
+    for (const k of cells) { const mem = meta[before[k]]?.memory; if (mem && !save.story.mem.includes(mem)) { // an Amber Memory breaks open
+      save.story.mem.push(mem); newMem.push(mem); persist(); meta[before[k]].memory = null; track("memory_found", { id: mem });
+      pops.push({ text: "An Amber Memory!", life: 1.2, col: "#ffd27a" }); [659, 880, 1047, 1319].forEach((f, j) => tone(f, .5, "sine", .07, j * .09)); } }
     let gained = shooLoot;
     const inLine = new Set(lineCells(lines)), lens = .5 * save.up.lens, tongs = .25 * save.up.tongs;
     for (const k of cells) {
@@ -846,7 +905,9 @@ function endRound(cause) {
   tone(262, .5, "sine", .08); tone(196, .7, "sine", .06, .15);
   setTimeout(() => {
     $("endTitle").textContent = cause === "time" ? "The roots closed the tunnel" : "No room left to dig";
-    $("endSub").textContent = "Dibble climbs out with the haul. Nothing is lost.";
+    $("endSub").innerHTML = (cause === "time" && !daily ? `<i>${pick(MURMURS)}</i><br>` : "") + "Dibble climbs out with the haul. Nothing is lost.";
+    $("memCard").innerHTML = newMem.map((id) => { const m = memoryById(id), mine = mineOfMemory(id), k = MEMORIES[mine].indexOf(m) + 1;
+      return `<div class="memCard">${memoryArt(m.art, 200)}<div class="memCap">${m.text}</div><small>Amber Memory · ${BIOMES.find((b) => b.id === mine).name} ${k}/${MEMORIES[mine].length}</small></div>`; }).join("");
     $("causeIco").innerHTML = cause === "time" ? icon("vine", 44) : icon("board", 44);
     $("rescue").innerHTML = `<span class="btnrow">${icon(cause === "time" ? "regrow" : "shatter", 22)}${cause === "time" ? `Roots regrow +${T.rescue_time}s` : "Shatter the 3 fullest veins"}</span>`;
     $("rescue").style.display = rescueUsed ? "none" : "block";
@@ -860,7 +921,7 @@ function endRound(cause) {
     $("haulTotal").textContent = haulValue() + "g";
     $("sell2").style.display = haulValue() ? "block" : "none";
     $("newBest").style.display = haulValue() > (daily ? save.daily.best : save.best[bestKey()] || 0) && haulValue() ? "block" : "none";
-    $("puddockLine").textContent = PUDDOCK[Math.floor(Math.random() * PUDDOCK.length)];
+    $("puddockLine").textContent = puddockLine();
     show("end");
   }, 650);
 }
@@ -894,7 +955,8 @@ function coinRain(v, from) {
 }
 function sell(mult) {
   const v = haulValue() * mult;
-  save.gold += v;
+  save.gold += v; save.light += v;
+  const sprouted = newMem.includes(MEMORIES.heartwood.at(-1).id);
   for (const t of Object.keys(haul)) if (!save.found.includes(t)) save.found.push(t);
   if (daily) {
     const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
@@ -907,6 +969,8 @@ function sell(mult) {
   platform.expeditionDone(); // interstitial, only when the pacing caps allow
   if (v) coinRain(v, save.gold - v);
   if (!save.metPuddock) setTimeout(() => talk(() => { renderHome(); show("home"); }), 900); // first haul: meet the merchant
+  else if (save.story.mem.includes("receipt") && !save.story.confessed) setTimeout(confess, 900); // Geode Gulch: the truth
+  else if (sprouted) setTimeout(() => dialog([{ html: stumpArt(Math.log10(save.light + 1) / 5.3, true, 260), say: SPROUT_LINE, btn: "…" }], home), 900);
 }
 $("sell").onclick = () => sell(1);
 $("sell2").onclick = async () => (await platform.rewarded("double_deal")) ? sell(2) : toast("No ad ready, try again in a moment");
@@ -928,6 +992,9 @@ function renderHome() {
   $("oPrivacy").innerHTML = icon("lock", 20) + "Privacy";
   $("oMusic").innerHTML = icon("note", 20) + "Music"; $("oMusic").classList.toggle("on", save.opt.music);
   $("dibbleArt").innerHTML = dibble(116, save.look);
+  const n = save.story.mem.length, sprout = save.story.mem.includes(MEMORIES.heartwood.at(-1).id), growth = Math.log10(save.light + 1) / 5.3;
+  $("stump").innerHTML = stumpArt(growth, sprout) + `<small>${sprout ? "Green, after all these years." : growth > .45 ? "Moss creeps back where your light reaches." : "The old stump. Puddock won't sit on it."}
+    ${n ? ` · ${n}/${MEMORY_COUNT} memories` : ""}</small>`;
   const done = save.daily.last === today(), st = save.daily.last === today() || save.daily.last === new Date(Date.now() - 864e5).toISOString().slice(0, 10) ? save.daily.streak : 0;
   $("daily").innerHTML = `<span class="btnrow">${icon("calendar", 22)}${done ? `Daily Dig done · best ${save.daily.best}g` : "Daily Dig: today's crystals"}</span>
     <span class="streak" title="streak: ${st} day(s)">${[...Array(7)].map((_, k) => `<i class="${k < Math.min(st, 7) ? "on" : ""}"></i>`).join("")}</span>
@@ -974,7 +1041,8 @@ function renderMarket() {
   renderIap();
   $("mktGold").textContent = save.gold;
   for (const b of document.querySelectorAll("#mktTabs button")) b.classList.toggle("on", b.dataset.tab === mktTab);
-  $("shop").innerHTML = SHOP.filter((it) => it.tab === mktTab).map((it) => {
+  $("shop").innerHTML = (mktTab === "tools" && !save.story.confessed ? `<div class="shopItem"><span class="tile">${lookItem("lantern", "granny", 40)}</span>
+    <span class="grow"><b>An old lantern</b><small>"Not for sale. Not that one."</small></span><button disabled>Not for sale</button></div>` : "") + SHOP.filter((it) => it.tab === mktTab).map((it) => {
     const lvl = it.kind === "up" ? save.up[it.id] : 0;
     const done = it.kind === "up" ? lvl >= it.max : it.kind === "biome" ? save.biomes.includes(it.id.split(":")[1]) : save.owned.includes(it.id);
     const cost = price(it);
@@ -999,6 +1067,7 @@ function renderMarket() {
   };
 }
 $("dig").onclick = () => startDig(false);
+$("stump").onclick = () => replayMemories(home);
 $("daily").onclick = () => startDig(true);
 $("mExp").onclick = () => { save.mode = "exp"; persist(); renderHome(); };
 $("mCalm").onclick = () => { save.mode = "calm"; persist(); renderHome(); };
@@ -1009,6 +1078,7 @@ $("toMarket").onclick = () => save.metPuddock ? (renderMarket(), show("market"))
 for (const b of document.querySelectorAll("#mktTabs button")) b.onclick = () => { mktTab = b.dataset.tab; renderMarket(); $("shop").animate([{ opacity: 0, transform: "translateX(14px)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" }); };
 $("toCamp").onclick = () => { renderCamp(); show("campScr"); $("campScr").scrollTop = 0; };
 $("campBack").onclick = () => { renderHome(); show("home"); };
+$("campMem").onclick = () => replayMemories(() => { renderCamp(); show("campScr"); });
 
 // ---------- meeting Old Puddock ----------
 const INTRO = [
@@ -1016,21 +1086,48 @@ const INTRO = [
   "I trade coins for crystals, and crystals for… well, more coins. Bring me what you dig and I'll keep that lantern burning.",
   "Here, take this. An old map to <b>Cinderroot Caverns</b>, worn thin as a leaf. It'll get you in <b>once</b>. Bring back something warm, eh?",
 ];
-function talk(then) {
+const home = () => { renderHome(); show("home"); };
+// steps: [{ say, html (picture, default Puddock), gift, btn }]; skip shows a Skip link (prologue, replays)
+function dialog(steps, then, skip = false) {
   let k = 0;
   const step = () => {
-    $("talkLine").innerHTML = INTRO[k];
-    const lastStep = k === INTRO.length - 1;
-    $("talkGift").innerHTML = lastStep ? `<div class="gift">${mapTile("ember")}<div><b>Puddock's old map</b><small>Cinderroot Caverns · good for one dig</small></div>${icon("ticket", 28)}</div>` : "";
-    $("talkNext").innerHTML = lastStep ? `<span class="btnrow">${icon("map", 22)}Take the map</span>` : "Go on…";
+    const st = steps[k], lastStep = k === steps.length - 1;
+    $("talkArt").innerHTML = st.html || puddock(120);
+    $("talkLine").innerHTML = st.say || "";
+    $("talkGift").innerHTML = st.gift || "";
+    $("talkNext").innerHTML = st.btn || (lastStep ? "Back" : "Go on…");
+    $("talkSkip").style.display = skip && !lastStep ? "block" : "none";
     tone(220 + k * 40, .12, "triangle", .07); tone(180 + k * 30, .1, "triangle", .05, .1);
   };
-  $("talkNext").onclick = () => {
-    if (++k < INTRO.length) return step();
+  $("talkNext").onclick = () => { if (++k < steps.length) return step(); then(); };
+  $("talkSkip").onclick = then;
+  step(); show("talk");
+}
+function talk(then) {
+  dialog(INTRO.map((say, k) => k < INTRO.length - 1 ? { say } : { say, btn: `<span class="btnrow">${icon("map", 22)}Take the map</span>`,
+    gift: `<div class="gift">${mapTile("ember")}<div><b>Puddock's old map</b><small>Cinderroot Caverns · good for one dig</small></div>${icon("ticket", 28)}</div>` }), () => {
     save.metPuddock = true; track("met_puddock"); if (!save.biomes.includes("ember") && !save.trial.includes("ember")) save.trial.push("ember");
     persist(); [784, 988, 1175, 1568].forEach((f, j) => tone(f, .18, "triangle", .08, j * .07)); then();
-  };
-  step(); show("talk");
+  });
+}
+const PANEL_W = Math.min(300, innerWidth - 80);
+function prologue() {
+  dialog(PROLOGUE.map((art, k) => ({ html: memoryArt(art, PANEL_W), btn: k < PROLOGUE.length - 1 ? "…" : "Begin" })),
+    () => { save.story.prologue = true; persist(); home(); }, true);
+}
+function confess() { // the one long scene in Ring One (docs/STORY.md, Geode Gulch)
+  dialog([...CONFESSION.map((say) => ({ say })),
+    { html: memoryArt("lanterns", PANEL_W), say: `<div class="letter">${LETTER}</div>` },
+    { say: "It's yours. It always was.", btn: `<span class="btnrow">${icon("lantern", 22)}Take Granny's lantern</span>`,
+      gift: `<div class="gift">${lookItem("lantern", "granny", 46)}<div><b>Granny Burr's lantern</b><small>It still knows the way down.</small></div></div>` }], () => {
+    save.story.confessed = true; if (!save.owned.includes("look:lantern:granny")) save.owned.push("look:lantern:granny"); save.look.lantern = "granny";
+    persist(); track("confession"); [523, 659, 784, 1047].forEach((f, j) => tone(f, .4, "sine", .07, j * .12)); home();
+  });
+}
+function replayMemories(back) {
+  const found = Object.values(MEMORIES).flat().filter((m) => save.story.mem.includes(m.id));
+  if (!found.length) return toast("No Amber Memories yet. They turn up in the mines, glowing.", 2200);
+  dialog(found.map((m) => ({ html: memoryArt(m.art, PANEL_W), say: `<i>${m.text}</i>` })), back, true);
 }
 
 // ---------- Dibble's Camp: every purchase shows up here ----------
@@ -1049,6 +1146,7 @@ function campProgress() {
 }
 function renderCamp() {
   $("campArt").innerHTML = camp(campState(), gem, dibble(100, save.look));
+  $("campMem").innerHTML = `<span class="btnrow">${icon("lantern", 22)}Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}</span>`;
   const pc = campProgress();
   $("campProg").innerHTML = `<div class="bar"><i style="width:${(pc * 100).toFixed(1)}%"></i></div><small>Camp ${Math.round(pc * 100)}% grown · ${save.found.length}/${Object.keys(CRYSTALS).length} gems on the shelf</small>`;
   const chip = (grp, val, label, swatch) => `<button class="chip ${save.camp[grp] === val ? "on" : ""}" data-grp="${grp}" data-val="${val}">${swatch || ""}${label}</button>`;
@@ -1112,7 +1210,7 @@ function frame(now) {
   ctx.save();
   if (shakeAmp > .2) { ctx.translate((Math.random() - .5) * shakeAmp, (Math.random() - .5) * shakeAmp); if (!frozenFx) shakeAmp *= .86; }
   if (state !== "home" && board) {
-    drawBoard();
+    drawBoard(); drawChalk();
     if (!calm) drawRootline(now);
     const groups = {};
     board.forEach((u, i) => { if (u) (groups[u] ??= []).push([Math.floor(i / N), i % N]); });
@@ -1121,7 +1219,9 @@ function frame(now) {
       const m = meta[u], cr = CRYSTALS[m.type];
       const age = now - (m.at || 0), sq = age < 220 ? 1 + .1 * Math.sin((age / 220) * Math.PI) : 1; // land with a little squash
       if (sq !== 1) { const px = bx + (m.c + m.w / 2) * cell, py = by + (m.r + m.h / 2) * cell; ctx.save(); ctx.translate(px, py); ctx.scale(sq, 2 - sq); ctx.translate(-px, -py); }
+      if (m.memory) memoryHalo(bx + (m.c + m.w / 2) * cell, by + (m.r + m.h / 2) * cell, Math.max(m.w, m.h) * cell);
       drawCrystal(groups[u], cr.color, m, cell, bx, by, state === "end" ? .45 : 1, cr.ember ? .6 + .3 * Math.sin(now / 120 + +u) : .3, cr.glyph, cr.cut);
+      if (m.memory) fossil(groups[u], cell, bx, by);
       if (sq !== 1) ctx.restore();
     }
     if (drag) {
@@ -1217,6 +1317,7 @@ $("icoDig").innerHTML = icon("pickaxe", 24); $("icoStall").innerHTML = icon("sta
 if (platform.native) $("adNote").textContent = "Green buttons play a short video ad.";
 platform.init().then(() => renderHome());
 renderHome(); show("home");
+if (!save.story.prologue) prologue();
 requestAnimationFrame(frame);
 </script>
 </body>

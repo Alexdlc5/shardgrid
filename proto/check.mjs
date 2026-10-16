@@ -54,3 +54,14 @@ for (let c = 0; c < N; c++) { b[c] = 1; b[8 + c] = c < 4 ? 1 : 2; }
 const typeOf = (u) => (u === 1 ? "moss" : "jade");
 assert.equal(pureVeinCells(b, { rows: [0, 1], cols: [] }, typeOf).size, 8);
 console.log("ok");
+
+// story (docs/STORY.md): every mine has memories, chalk and lines; memories come in order and ids are unique
+const story = await import("./story.js");
+for (const m of Object.keys(cfg.biomes)) assert.ok(story.MEMORIES[m]?.length && story.CHALK[m] && story.PUDDOCK_BY_MINE[m]?.length, m);
+const ids = Object.values(story.MEMORIES).flat().map((m) => m.id);
+assert.equal(new Set(ids).size, ids.length);
+assert.equal(story.nextMemory("hollow", []).id, "hollow1");
+assert.equal(story.nextMemory("hollow", ["hollow1"]).id, "hollow2");
+assert.equal(story.nextMemory("hollow", ["hollow1", "hollow2", "hollow3"]), null);
+assert.ok(story.MEMORIES.gulch.some((m) => m.id === "receipt")); // the confession trigger
+console.log("story ok");
