@@ -1,2 +1,2 @@
-# Replace pub-0000000000000000 with your AdMob publisher ID (AdMob → Settings → Account information).
-google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+# Authorized sellers for Glimmerwood ads (AdMob publisher ID).
+google.com, pub-2020120570370273, DIRECT, f08c47fec0942fa0
