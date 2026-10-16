@@ -231,7 +231,15 @@
   .memCard small, .memTag { display: block; font-size: var(--fs-small); color: var(--muted); }
   .talkBubble:empty { display: none; }
   .talkArt .granny, .talkArt .bidder { animation: bob 2.6s ease-in-out infinite; }
-  .talkBubble .who { display: block; font-style: normal; font-size: var(--fs-small); letter-spacing: .6px; text-transform: uppercase; color: #8a5a32; margin-bottom: 2px; }
+  .talkBubble .who { display: block; font-family: var(--font-display); font-style: normal; font-size: var(--fs-small); letter-spacing: .6px; text-transform: uppercase; color: #8a5a32; margin-bottom: 2px; }
+  /* talking: letters wait invisible in place; the portrait bobs while it talks; a little arrow nudges once the line is done */
+  .tw { opacity: 0; }
+  #talkNext { transition: opacity .2s; } #talkNext.wait { opacity: 0; pointer-events: none; }
+  .talkArt.talking > svg:is(.puddock, .granny, .bidder) { animation: chat .32s ease-in-out infinite; }
+  @keyframes chat { 50% { transform: translateY(-3px) scaleY(1.015); } }
+  .talkBubble.done::after { content: ""; position: absolute; right: 8px; bottom: 3px; border: 5px solid transparent; border-top: 6px solid #8a5a32; border-bottom: 0;
+    animation: nudge .9s ease-in-out infinite; }
+  @keyframes nudge { 50% { transform: translateY(3px); } }
   .chalkNote { font-family: var(--font-display); font-size: 22px; text-align: center; color: #3a2418; letter-spacing: .5px; transform: rotate(-3deg); }
   .wickHead { display: flex; align-items: center; gap: 6px; font-weight: 600; color: #ffd27a; margin: 4px 2px 6px; }
   .wickLamp { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
@@ -1615,22 +1623,64 @@ const INTRO = [
 ];
 const home = () => { renderHome(); show("home"); };
 // steps: [{ say, html (picture, default Puddock), gift, btn }]; skip shows a Skip link (prologue, replays)
+// voice: who is talking (see say()); the line types out, and Go on… shows once it's all there
 function dialog(steps, then, skip = false, k = 0) {
-  const step = () => {
+  const next = $("talkNext"), line = $("talkLine"), art = $("talkArt"), step = () => {
     const st = steps[k], lastStep = k === steps.length - 1;
-    $("talkArt").innerHTML = st.html || puddock(120);
-    $("talkLine").innerHTML = (st.name && st.say ? `<b class="who">${st.name}</b>` : "") + (st.say || "");
+    art.innerHTML = st.html || puddock(120);
+    line.innerHTML = st.say ? (st.name ? `<b class="who">${st.name}</b>` : "") + `<div id="talkText"></div>` : "";
     $("talkGift").innerHTML = st.gift || "";
-    $("talkNext").innerHTML = st.btn || (lastStep ? "Back" : "Go on…");
+    next.innerHTML = st.btn || (lastStep ? "Back" : "Go on…");
     $("talkSkip").style.display = skip ? "block" : "none";
     tone(220 + k * 40, .12, "triangle", .07); tone(180 + k * 30, .1, "triangle", .05, .1);
+    const text = $("talkText"), shown = () => { next.classList.remove("wait"); line.classList.add("done"); art.classList.remove("talking"); };
+    next.classList.add("wait"); line.classList.remove("done"); art.classList.add("talking");
+    text ? say(text, st.say, st.voice).then(() => text.isConnected && shown()) : shown();
   };
-  $("talkNext").onclick = () => { if (++k < steps.length) return step(); then(); };
-  $("talkSkip").onclick = then;
+  next.onclick = () => { if (typing) return typing.finish(); if (++k < steps.length) return step(); then(); };
+  $("talkSkip").onclick = () => { typing?.finish(); then(); };
   step(); show("talk");
 }
+// tap anywhere while a line types: show it all; tap again: go on. Only taps that start here count: the camp stall opens a talk
+// on pointerdown, and that tap's click must not skip the first line.
+let talkPress = false;
+$("talk").addEventListener("pointerdown", () => { talkPress = true; });
+$("talk").addEventListener("click", (e) => { if (talkPress && !e.target.closest("button")) typing ? typing.finish() : $("talkNext").click(); talkPress = false; });
+
+// ---------- talking: lines type out a letter at a time, with a little voice blip (music.js VOICES) ----------
+// say(el, html, voice) types html into el (tags stay whole, only the text types) and resolves once it's all shown.
+// voice: "dibble" | "puddock" | "granny" | "bidder" | null (narration: a soft chime). Also on window, for scripted sequences.
+// Reduced motion and the fit check (?scene=) get the whole line at once.
+const PAUSE = { ",": 120, ";": 120, ":": 120, "—": 160, ".": 280, "!": 280, "?": 300, "…": 350 };
+const CPS = { dibble: 40, puddock: 28, granny: 32, bidder: 30 }; // letters a second; narration 36
+let typing = null; // the line typing now: { finish }
+function say(el, html, voice = null) {
+  typing?.finish();
+  el.innerHTML = html;
+  const blip = () => { try { if (sfx.voice(voice)) buzz(4); } catch {} };
+  if (calmMotion || qs.has("scene")) { blip(); return Promise.resolve(); }
+  const chars = [], wrap = (n) => [...n.childNodes].forEach((c) => {
+    if (c.nodeType !== 3) return wrap(c);
+    const f = document.createDocumentFragment();
+    for (const ch of c.data) { const s = f.appendChild(document.createElement("span")); s.className = "tw"; s.textContent = ch; chars.push(s); }
+    c.replaceWith(f);
+  });
+  wrap(el); // every letter in place but invisible, so the line never reflows as it types
+  return new Promise((done) => {
+    let i = 0, n = 0, timer;
+    const finish = () => { clearTimeout(timer); el.innerHTML = html; if (typing === me) typing = null; done(); }, me = { finish };
+    const tick = () => {
+      const s = chars[i++]; if (!s) return finish();
+      const ch = s.textContent, after = chars[i]?.textContent; s.className = "";
+      if (/[\p{L}\p{N}]/u.test(ch) && n++ % (voice ? 2 : 3) === 0) blip(); // spaces and stops are silent
+      timer = setTimeout(tick, 1000 / (CPS[voice] || 36) + (PAUSE[ch] && (ch === "…" || !after || /\s/.test(after)) ? PAUSE[ch] : 0));
+    };
+    typing = me; tick();
+  });
+}
+window.say = say;
 function talk(then) {
-  dialog(INTRO.map((say, k) => k < INTRO.length - 1 ? { say } : { say, btn: `<span class="btnrow">${icon("map", 22)}Take the map</span>`,
+  dialog(INTRO.map((say, k) => k < INTRO.length - 1 ? { say, voice: "puddock" } : { say, voice: "puddock", btn: `<span class="btnrow">${icon("map", 22)}Take the map</span>`,
     gift: `<div class="gift">${mapTile("ember")}<div><b>Puddock's old map</b><small>Cinderroot Caverns · good for one dig</small></div>${icon("ticket", 28)}</div>` }), () => {
     save.metPuddock = true; track("met_puddock"); if (!save.biomes.includes("ember") && !save.trial.includes("ember")) save.trial.push("ember");
     persist(); [784, 988, 1175, 1568].forEach((f, j) => tone(f, .18, "triangle", .08, j * .07)); then();
@@ -1667,7 +1717,8 @@ function playScene(name, start = 0) {
     const [gift, btn = k === all.length - 1 ? "Continue" : null] = st.gift ? GIFTS[st.gift]() : [];
     const html = st.who ? SPEAKER[st.who]() : memoryArt(st.art, PANEL_W);
     const say = st.letter ? `<div class="letter">${st.letter}</div>` : st.chalk ? `<div class="chalkNote">${st.chalk}</div>` : st.say;
-    return { html, say, gift, name: NAMES[st.who], btn: btn && `<span class="btnrow">${btn}</span>` };
+    const voice = st.who || (st.chalk ? "dibble" : st.letter ? "granny" : null); // the chalk is Dibble's, the letter Granny's
+    return { html, say, gift, voice, name: NAMES[st.who], btn: btn && `<span class="btnrow">${btn}</span>` };
   }), () => {
     AFTER[name]?.(save.story); persist(); track("story_" + name);
     [523, 659, 784, 1047].forEach((f, j) => tone(f, .4, "sine", .07, j * .12));
