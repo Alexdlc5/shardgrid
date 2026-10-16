@@ -2,7 +2,7 @@
 import inspect
 import json
 
-from sim import (BOTS, CFG_PATH, ROWS, COLS, catalog, clear, deal, ember_break, isolated, load,
+from sim import (BOTS, CFG_PATH, ROWS, COLS, catalog, clear, deal, ember_break, stone_break, isolated, load,
                  orientations, play, play_timed, rescue)
 
 cfg = json.loads(CFG_PATH.read_text())
@@ -46,6 +46,16 @@ assert play(3, BOTS["greedy"], cat, cum, cfg, rescues=1)[0] >= play(3, BOTS["gre
 b = ROWS[0] | 1 << 8 | 1 << 9 | 1 << 18 | 1 << 30
 assert ember_break(b, ROWS[0] | 1 << 9, ROWS[0]) == ROWS[0] | 1 << 8 | 1 << 9 | 1 << 18
 assert ember_break(b, 0, ROWS[0]) == ROWS[0]
+
+# rubble stone, same case as proto/check.mjs: row 0 clears; stone (0,3) and (1,5) next to it crack, (2,5) doesn't;
+# a second clear breaks both cracked stones
+stone = 1 << 3 | 1 << 13 | 1 << 21
+br, ck = stone_break(ROWS[0], stone, 0)
+assert (br, ck) == (ROWS[0] & ~(1 << 3), 1 << 3 | 1 << 13)
+br, ck = stone_break(ROWS[0], stone, ck)
+assert (br, ck) == (ROWS[0] | 1 << 13, 0)
+assert "rubble" in cfg["biomes"]["skywell"]["types"]
+assert all("rubble" not in b["types"] for k, b in cfg["biomes"].items() if k != "skywell")
 
 # timed: deterministic, ends on a known cause, a rescue never shortens an expedition
 for biome in cfg["biomes"]:

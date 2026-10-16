@@ -349,7 +349,7 @@
     },
     "skywell": {
       "cost": 0,
-      "drain": 1.24,
+      "drain": 1.1,
       "types": {
         "garnet": 1.5,
         "moonstone": 1.5,
@@ -357,11 +357,12 @@
         "frost": 1,
         "topaz": 1.5,
         "geode": 0.06,
-        "heart": 0.05
+        "heart": 0.05,
+        "rubble": 0.6
       },
       "families": {
         "rubble": {
-          "weight": 1.2,
+          "weight": 0.6,
           "art": [
             "XX.",
             "XXX",
@@ -421,6 +422,10 @@
     },
     "heart": {
       "value": 120
+    },
+    "rubble": {
+      "value": 4,
+      "stone": 2
     }
   },
   "pilfermoths": {

@@ -122,6 +122,15 @@ def ember_break(b, e, broken):
     return broken
 
 
+def stone_break(broken, stone, cracked):
+    """Rubble stone (stoneBreak in proto/game.js): stone survives its line; a clear through it or
+    beside it (4 sides) cracks it, the second crack breaks it. Returns (broken, cracked)."""
+    x = broken & ~stone
+    near = ((x << 1) & ~COL0) | ((x >> 1) & ~COL7) | (x << 8) | (x >> 8)
+    hit = stone & (broken | near)
+    return x | (hit & cracked), cracked ^ hit
+
+
 # --- bots -------------------------------------------------------------------
 
 def isolated(b):
@@ -212,6 +221,7 @@ def play_timed(seed, bot, cat, cum, cfg, biome, rescues=0):
     kinds, kw = list(bm["types"]), list(bm["types"].values())
     gen, brng, trng = random.Random(seed), random.Random(seed ^ 0x5EED), random.Random(seed ^ 0x7173)
     sp = {t: 0 for t in kinds if t in cr}  # special type -> its cells
+    cracked = 0  # rubble stone with one crack
     b = placed = used = combo = miss = 0
     clock, left, frozen, started, cause = 0.0, top, 0.0, False, "capped"
     tray = deal(gen, b, cat, cum, cfg)
@@ -238,6 +248,7 @@ def play_timed(seed, bot, cat, cum, cfg, biome, rescues=0):
             else:
                 b = rescue(b, cfg["rescue_lines"])
                 sp = {t: c & b for t, c in sp.items()}
+                cracked &= b
                 tray = deal(gen, b, cat, cum, cfg)
                 kind = trng.choices(kinds, kw, k=len(tray))
                 left = max(left, rl["rescue_time"])
@@ -250,6 +261,9 @@ def play_timed(seed, bot, cat, cum, cfg, biome, rescues=0):
         if n:
             embers = sum(c for t, c in sp.items() if cr[t].get("ember"))  # disjoint, so sum == or
             broken = ember_break(b, embers, b & ~nb)
+            stone = sum(c for t, c in sp.items() if cr[t].get("stone"))
+            if stone:  # ponytail: bots plan with plain clear(), blind to stone; fine for a drain estimate
+                broken, cracked = stone_break(broken, stone, cracked)
             hit = {t: (c & broken).bit_count() for t, c in sp.items()}
             bloom = sum(k * cr[t].get("bloom", 0) for t, k in hit.items())
             freeze = sum(k * cr[t].get("freeze", 0) for t, k in hit.items())

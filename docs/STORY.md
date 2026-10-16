@@ -156,7 +156,7 @@ How it plays: every mine has 3 Amber Memories (33 in all), dealt rarely and in s
 Notes:
 - The stump sits in a panel on the home card (the forest backdrop is hidden behind the card on phones); tap it, or the camp button, to replay memories.
 - Ring Two mines reuse the existing 12 gem types (the camp shelf holds 12) with new shapes, mixes and richer veins; each has its own chalk, Puddock lines and music key.
-- Not built: the Skywell's "rubble stone" special and digging visibly upward; the Skywell plays like the other mines with a rubble shape.
+- The Skywell's special is rubble stone (Skystone, DESIGN.md's "Puddock stone"): whole pieces of grey rock that don't break with their line. A clear through or beside a stone cracks it; the second crack breaks it (`stoneBreak` in game.js, `stone_break` in sim.py). Only the Skywell deals it. The board is lit from the top and Granny's chalk sits up there too, so you dig toward the light. Skystone isn't a gem, so it stays off the camp shelf.
 - Ring Two map prices (80k / 120k / 170k gold) and timers were set with `python sim/sim.py --timed`; they have not been playtested by people.
 - Lines written beyond this document are all in `story.js` for review: the extra memory captions, the Geode Gulch, Heartroot, Wickhold and Skywell Puddock lines, the Gulch, Wickhold and Skywell chalk, Granny's camp lines, and the post-game lines.
 

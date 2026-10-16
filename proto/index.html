@@ -355,7 +355,7 @@
 
 <script type="module">
 import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, fitsAnywhere, deal,
-  rescueCells, breakCells, pureVeinCells } from "./game.js";
+  rescueCells, breakCells, pureVeinCells, stoneBreak } from "./game.js";
 
 import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, lookItem, DEFAULT_LOOK, FUR, memoryArt, stumpArt, granny, bidder, darkLantern } from "./art.js";
 import { PROLOGUE, MEMORIES, MEMORY_COUNT, nextMemory, memoryById, mineOfMemory, mineDone, CHALK, PUDDOCK_BY_MINE, PUDDOCK_AFTER, PUDDOCK_POSTGAME,
@@ -380,8 +380,10 @@ const CRYSTALS = {
   topaz:     { name: "Deep Topaz",  color: "#f29f4c", glyph: "▼", cut: "trillion" },
   geode:     { name: "Geode",       color: "#b06ad8", glyph: "⬢", cut: "geode" },
   heart:     { name: "Rootheart",  color: "#ff4f7a", glyph: "♥", cut: "heart" },
+  rubble:    { name: "Skystone",    color: "#8a8a99", glyph: "", cut: "stone" },
 };
-for (const [k, v] of Object.entries(cfg0.crystals)) Object.assign(CRYSTALS[k], v); // value, ember, bloom, freeze
+for (const [k, v] of Object.entries(cfg0.crystals)) Object.assign(CRYSTALS[k], v); // value, ember, bloom, freeze, stone
+const GEMS = Object.keys(CRYSTALS).filter((t) => !CRYSTALS[t].stone); // the camp shelf's 12; Skystone is rock
 const BIOMES = [ // gameplay (cost, drain, gem weights, shapes) lives in sim/generator.json, shared with the sims
   { id: "hollow", name: "Mossy Hollow", pal: { bg: "#1f3a28", cave: "#101c14", root: "#5a4a32", ground: "#2f5a2f", glow: "#8fd18b", feature: "moss" },
     blurb: "Soft moss, easy veins. Match one crystal type in a line for ×2." },
@@ -521,6 +523,7 @@ const lerpHex = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i
 // ---------- round state ----------
 let biome, cat, board, meta, tray, uid, combo, miss, rescueUsed, state = "home", endCause, calm = false, daily = false, rng = Math.random;
 let newMem = [];
+let cracked = new Set(); // rubble stone cells with one crack
 let stolen = 0, moths = [], placedN = 0, mothRng = Math.random, bonus = 0, frozenUntil = 0, time, maxTime, started, haul, floats = [], parts = [];
 function catalogFor(b) {
   const fam = { ...structuredClone(cfg0.families), ...b.families };
@@ -543,6 +546,7 @@ const dealTray = () => {
 };
 const typeOf = (u) => (u === -1 ? drag?.type : meta[u]?.type);
 const isEmber = (u) => !!CRYSTALS[typeOf(u)]?.ember;
+const isStone = (u) => !!CRYSTALS[typeOf(u)]?.stone;
 
 function startDig(isDaily = false) {
   daily = isDaily; calm = !daily && save.mode === "calm";
@@ -555,7 +559,7 @@ function startDig(isDaily = false) {
   }
   bonus = 0; stolen = 0; moths = []; placedN = 0; newMem = []; meta = {}; tray = null;
   mothRng = daily ? mulberry(+today().replaceAll("-", "") + 777) : Math.random; // daily: same moths for everyone
-  board = Array(64).fill(0); meta = {}; uid = 1; combo = 0; miss = 0; rescueUsed = false;
+  board = Array(64).fill(0); cracked = new Set(); meta = {}; uid = 1; combo = 0; miss = 0; rescueUsed = false;
   haul = {}; frozenUntil = 0; maxTime = T.max_time + 5 * save.up.lantern; time = maxTime; started = false;
   tray = dealTray(); state = "play"; show(null);
   soundtrack.play(daily ? "hollow" : biome.id);
@@ -722,7 +726,23 @@ function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, gly
   }
   ctx.restore();
 }
+function drawStone(cells, size, ox, oy, alpha, isCracked = () => false) { // fallen rock: matte lumps, cracks after a clear
+  ctx.save(); ctx.globalAlpha = alpha;
+  for (const [r, c] of cells) {
+    const x = ox + c * size, y = oy + r * size, s = size, h = (r * 7 + c * 13) % 5;
+    const g = ctx.createLinearGradient(x, y, x, y + s); g.addColorStop(0, "#a9a9b6"); g.addColorStop(1, "#55555f"); // lit from the sky above
+    ctx.fillStyle = g; ctx.beginPath(); ctx.roundRect(x + s * .05, y + s * .05, s * .9, s * .9, s * (.18 + h * .03)); ctx.fill();
+    ctx.strokeStyle = "#2c2c34"; ctx.lineWidth = Math.max(1.4, s * .05); ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.18)"; ctx.beginPath(); ctx.ellipse(x + s * .38, y + s * .28, s * .2, s * .08, -.3, 0, 7); ctx.fill();
+    ctx.fillStyle = "rgba(30,30,40,.35)"; for (const [px, py] of [[.3, .62], [.66, .45], [.55, .75]]) { ctx.beginPath(); ctx.arc(x + s * px, y + s * py, s * .04, 0, 7); ctx.fill(); }
+    if (isCracked(r, c)) { ctx.strokeStyle = "#1a1a20"; ctx.lineWidth = Math.max(1.2, s * .05); ctx.beginPath();
+      ctx.moveTo(x + s * .5, y + s * .1); ctx.lineTo(x + s * .42, y + s * .38); ctx.lineTo(x + s * .6, y + s * .55); ctx.lineTo(x + s * .48, y + s * .9);
+      ctx.moveTo(x + s * .6, y + s * .55); ctx.lineTo(x + s * .85, y + s * .62); ctx.stroke(); }
+  }
+  ctx.restore();
+}
 function drawPiece({ piece, type, memory }, size, ox, oy, alpha) {
+  if (CRYSTALS[type].stone) return drawStone(piece.cells, size, ox, oy, alpha);
   const em = CRYSTALS[type].ember ? .6 + .3 * Math.sin(performance.now() / 120) : .35;
   if (memory) memoryHalo(ox + piece.w * size / 2, oy + piece.h * size / 2, Math.max(piece.w, piece.h) * size);
   drawCrystal(piece.cells, CRYSTALS[type].color, { r: 0, c: 0, h: piece.h, w: piece.w }, size, ox, oy, alpha, em, CRYSTALS[type].glyph, CRYSTALS[type].cut);
@@ -745,7 +765,7 @@ function drawChalk() { // Granny's marks, scratched faintly into the tunnel floo
   ctx.save(); ctx.font = `600 ${Math.round(cell * .42)}px Fredoka, sans-serif`;
   for (const wd of words) { const l = lines.length ? lines[lines.length - 1] + " " + wd : wd;
     if (lines.length && ctx.measureText(l).width < w * .86) lines[lines.length - 1] = l; else lines.push(wd); }
-  ctx.translate(bx + w / 2, by + w / 2); ctx.rotate(-.06); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.translate(bx + w / 2, by + w * (biome.id === "skywell" ? .22 : .5)); ctx.rotate(-.06); // Skywell: scratched up toward the light ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.fillStyle = "rgba(239,230,207,.2)"; ctx.shadowColor = "rgba(239,230,207,.25)"; ctx.shadowBlur = 3;
   lines.forEach((l, k) => ctx.fillText(l, 0, (k - (lines.length - 1) / 2) * cell * .62));
   ctx.restore();
@@ -764,7 +784,8 @@ function drawBoard() {
   // recessed cells: darker top edge, faint lit bottom edge
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     const cx = bx + c * cell + 2, cy = by + r * cell + 2, w = cell - 4;
-    const cg = ctx.createLinearGradient(cx, cy, cx, cy + w); cg.addColorStop(0, "#26221b"); cg.addColorStop(1, "#38342b");
+    const up = biome?.id === "skywell" && !daily, cg = ctx.createLinearGradient(cx, cy, cx, cy + w); // Skywell: you dig up, toward the light
+    cg.addColorStop(0, up ? "#3a3a44" : "#26221b"); cg.addColorStop(1, up ? "#1e1e26" : "#38342b");
     ctx.fillStyle = cg; ctx.beginPath(); ctx.roundRect(cx, cy, w, w, 5); ctx.fill();
     ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx + 4, cy + .5); ctx.lineTo(cx + w - 4, cy + .5); ctx.stroke();
     ctx.strokeStyle = "rgba(255,240,210,.05)"; ctx.beginPath(); ctx.moveTo(cx + 4, cy + w - .5); ctx.lineTo(cx + w - 4, cy + w - .5); ctx.stroke();
@@ -774,6 +795,10 @@ function drawBoard() {
     for (let k = 0; k < 3; k++) { ctx.fillStyle = k % 2 ? "#3a5f2c" : "#4f7a3a";
       ctx.beginPath(); ctx.arc(px + (k - 1) * 3 * m.r, py + (k % 2) * 1.6, 3 * m.r, 0, 7); ctx.fill();
       ctx.fillStyle = "rgba(190,240,150,.22)"; ctx.beginPath(); ctx.arc(px + (k - 1) * 4 * m.r - 1, py + (k % 2) * 2 - 1.2, 1.6 * m.r, 0, 7); ctx.fill(); }
+  }
+  if (biome?.id === "skywell" && !daily) { // a thin shaft of sky through the rubble, brightest at the top
+    const lg = ctx.createLinearGradient(0, by, 0, by + cell * N); lg.addColorStop(0, "rgba(244,240,255,.22)"); lg.addColorStop(.6, "rgba(244,240,255,0)");
+    ctx.fillStyle = lg; ctx.fillRect(bx, by, cell * N, cell * N);
   }
 }
 function rootPath() { // frame rectangle, starting top-centre, clockwise
@@ -874,7 +899,7 @@ function commit(i, r, c) {
   const lines = fullLines(board), n = lines.rows.length + lines.cols.length;
   if (n) {
     combo++; miss = 0;
-    const { cells, embers } = breakCells(board, lines, isEmber), pure = pureVeinCells(board, lines, typeOf), before = board;
+    const br = breakCells(board, lines, isEmber), embers = br.embers, sb = stoneBreak(board, br.cells, isStone, cracked), cells = sb.cells, pure = pureVeinCells(board, lines, typeOf), before = board;
     const shooLoot = shooMoths(cells);
     for (const k of cells) { const mem = meta[before[k]]?.memory; if (mem && !save.story.mem.includes(mem)) { // an Amber Memory breaks open
       save.story.mem.push(mem); newMem.push(mem); persist(); meta[before[k]].memory = null; track("memory_found", { id: mem });
@@ -896,7 +921,8 @@ function commit(i, r, c) {
     if (combo >= 2) pops.push({ text: combo >= 5 ? `Combo ×${combo}!!` : `Combo ×${combo}!`, life: 1, col: combo >= 5 ? "#ff9db5" : "#ffd27a" });
     if (n >= 3) pops.push({ text: n >= 4 ? "Glimmering!" : "Brilliant!", life: 1.15, col: "#9fe6ff" });
     shatter(cells.sort((a, b) => (a % N + Math.floor(a / N)) - (b % N + Math.floor(b / N))), (k) => CRYSTALS[typeOf(before[k])]?.color || "#c9b6ff");
-    board = clearCells(board, cells);
+    board = clearCells(board, cells); cracked = sb.cracked;
+    if (sb.hits) { tone(90, .18, "square", .06); buzz(20); }
     const add = T.refill_per_line * n * (1 + .1 * save.up.charm) * (1 + T.combo_bonus * (combo - 1));
     let bloom = 0, freeze = 0;
     for (const k of cells) { const cr = CRYSTALS[typeOf(before[k])] || {}; bloom += cr.bloom || 0; freeze += cr.freeze || 0; }
@@ -954,7 +980,7 @@ $("rescue").onclick = async () => {
     const cells = rescueCells(board, 3), before = board;
     shooMoths(cells);
     shatter(cells, (k) => CRYSTALS[typeOf(before[k])]?.color || "#c9b6ff", 5);
-    board = clearCells(board, cells); tray = dealTray();
+    board = clearCells(board, cells); cells.forEach((k) => cracked.delete(k)); tray = dealTray();
     if (time < T.rescue_time) time = T.rescue_time;
   }
   [392, 523, 659].forEach((f, k) => tone(f, .3, "sine", .12, k * .07)); buzz(40);
@@ -977,7 +1003,7 @@ function coinRain(v, from) {
 function sell(mult) {
   const v = haulValue() * mult;
   save.gold += v; save.light += v;
-  for (const t of Object.keys(haul)) if (!save.found.includes(t)) save.found.push(t);
+  for (const t of Object.keys(haul)) if (GEMS.includes(t) && !save.found.includes(t)) save.found.push(t);
   if (daily) {
     const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
     if (save.daily.last !== today()) save.daily = { last: today(), streak: save.daily.last === y ? save.daily.streak + 1 : 1, best: haulValue() };
@@ -1186,7 +1212,7 @@ function replayMemories(back) {
 function campState() {
   const own = (id) => save.owned.includes(id) && !save.camp.hide.includes(id);
   return { ...save.up, mines: BIOMES.filter((b) => save.biomes.includes(b.id)).map((b) => b.pal.glow),
-    found: Object.keys(CRYSTALS).map((t) => save.found.includes(t) ? { color: CRYSTALS[t].color, cut: CRYSTALS[t].cut } : null),
+    found: GEMS.map((t) => save.found.includes(t) ? { color: CRYSTALS[t].color, cut: CRYSTALS[t].cut } : null),
     tent: save.camp.tent, banner: save.camp.banner, fire: save.camp.fire,
     site: save.story.site, sky: save.story.finale, packed: save.story.finale, puddockHere: save.story.site !== "stump",
     grannySvg: save.story.site === "skywell" ? granny(60) : "", puddockSvg: puddock(60), decor: { mushrooms: own("decor:mushrooms"), jars: own("decor:jars"), hammock: own("decor:hammock"), cart: own("decor:cart"), flies: save.owned.includes("fireflies") } };
@@ -1194,7 +1220,7 @@ function campState() {
 function campProgress() {
   const ups = SHOP.filter((i) => i.kind === "up"), extras = SHOP.filter((i) => i.kind !== "up");
   const have = ups.reduce((s, i) => s + save.up[i.id], 0) + extras.filter((i) => i.kind === "biome" ? save.biomes.includes(i.id.split(":")[1]) : save.owned.includes(i.id)).length + save.found.length;
-  const total = ups.reduce((s, i) => s + i.max, 0) + extras.length + Object.keys(CRYSTALS).length;
+  const total = ups.reduce((s, i) => s + i.max, 0) + extras.length + GEMS.length;
   return have / total;
 }
 function renderCamp() {
@@ -1202,7 +1228,7 @@ function renderCamp() {
   $("campTitle").textContent = `Dibble's Camp · ${SITES[save.story.site]}`;
   $("campMem").innerHTML = `<span class="btnrow">${icon("lantern", 22)}Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}</span>`;
   const pc = campProgress();
-  $("campProg").innerHTML = `<div class="bar"><i style="width:${(pc * 100).toFixed(1)}%"></i></div><small>Camp ${Math.round(pc * 100)}% grown · ${save.found.length}/${Object.keys(CRYSTALS).length} gems on the shelf</small>`;
+  $("campProg").innerHTML = `<div class="bar"><i style="width:${(pc * 100).toFixed(1)}%"></i></div><small>Camp ${Math.round(pc * 100)}% grown · ${save.found.length}/${GEMS.length} gems on the shelf</small>`;
   const chip = (grp, val, label, swatch) => `<button class="chip ${save.camp[grp] === val ? "on" : ""}" data-grp="${grp}" data-val="${val}">${swatch || ""}${label}</button>`;
   const tents = [["canvas", "Canvas"], ["patchwork", "Patchwork"], ["treehouse", "Treehouse"], ["pavilion", "Pavilion"]].filter(([v]) => v === "canvas" || save.owned.includes("tent:" + v));
   const banners = Object.entries(BANNERS).filter(([c], k) => !k || save.owned.includes("banner:" + c));
@@ -1274,7 +1300,8 @@ function frame(now) {
       const age = now - (m.at || 0), sq = age < 220 ? 1 + .1 * Math.sin((age / 220) * Math.PI) : 1; // land with a little squash
       if (sq !== 1) { const px = bx + (m.c + m.w / 2) * cell, py = by + (m.r + m.h / 2) * cell; ctx.save(); ctx.translate(px, py); ctx.scale(sq, 2 - sq); ctx.translate(-px, -py); }
       if (m.memory) memoryHalo(bx + (m.c + m.w / 2) * cell, by + (m.r + m.h / 2) * cell, Math.max(m.w, m.h) * cell);
-      drawCrystal(groups[u], cr.color, m, cell, bx, by, state === "end" ? .45 : 1, cr.ember ? .6 + .3 * Math.sin(now / 120 + +u) : .3, cr.glyph, cr.cut);
+      if (cr.stone) drawStone(groups[u], cell, bx, by, state === "end" ? .45 : 1, (r, c) => cracked.has(r * N + c));
+      else drawCrystal(groups[u], cr.color, m, cell, bx, by, state === "end" ? .45 : 1, cr.ember ? .6 + .3 * Math.sin(now / 120 + +u) : .3, cr.glyph, cr.cut);
       if (m.memory) fossil(groups[u], cell, bx, by);
       if (sq !== 1) ctx.restore();
     }
