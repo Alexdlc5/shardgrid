@@ -811,7 +811,7 @@ function startDig(isDaily = false) {
   tray = dealTray(); state = "play"; show(null);
   soundtrack.play(daily ? "hollow" : biome.id);
   $("biomeName").textContent = daily ? `Daily Dig · ${today()}` : biome.name + (calm ? " · Calm" : "");
-  $("comboTxt").textContent = ""; ending = null; tip = null; coins = []; pops = []; floats = []; parts = []; fx = []; shownHaul = 0; layout();
+  $("comboTxt").textContent = ""; ending = null; tip = null; coins = []; pops = []; floats = []; parts = []; fx = []; fxR = mulberry(7); shownHaul = 0; layout();
   track("round_start", { mine: biome.id, mode: daily ? "daily" : calm ? "calm" : "expedition" });
   pawPrints = false; lifeDig(["fur", "hat", "scarf", "lantern"].map((p) => [p, Object.keys(LOOKS[p]).filter((v) => v !== "granny")]), !daily && Object.keys(save.best).length > 0);
 }
@@ -1023,10 +1023,13 @@ function drawFrees(now) { // the crystal cracks, then the pet pops out and bounc
   frees = frees.filter((f) => now - f.at < 2000);
   for (const f of frees) {
     const t = (now - f.at) / 2000;
-    if (t < .1) { const k = t / .1; ctx.save(); ctx.strokeStyle = "#fffaf0"; ctx.lineWidth = 2.4; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.globalAlpha = 1 - k * .4; ctx.beginPath();
+    if (t < .1) { const k = t / .1, g = cell * (1 + 1.6 * k); ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .8 * k; ctx.drawImage(glowSpr("#ffe2ec"), f.x - g / 2, f.y - g / 2, g, g); ctx.restore();
+      ctx.save(); ctx.strokeStyle = "#fffaf0"; ctx.lineWidth = 2.4; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.globalAlpha = 1 - k * .4; ctx.beginPath();
       for (let j = 0; j < 6; j++) { const a = j * 1.05 + .3, l = cell * .62 * k; ctx.moveTo(f.x, f.y); ctx.lineTo(f.x + Math.cos(a + .3) * l * .5, f.y + Math.sin(a + .3) * l * .5); ctx.lineTo(f.x + Math.cos(a) * l, f.y + Math.sin(a) * l); }
       ctx.stroke(); ctx.restore(); continue; }
     const u = (t - .1) / .9, im = petImg(f.kind); if (!im.complete) continue;
+    { const g = cell * (2.4 + .8 * Math.sin(Math.min(1, u * 4) * Math.PI / 2)); ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .65 * (1 - u) ** 1.5; // a warm halo as it wakes
+      ctx.drawImage(glowSpr("#ffc8da"), f.x - g / 2, f.y - g / 2, g, g); ctx.restore(); }
     const hop = calmMotion ? 0 : Math.abs(Math.sin(u * Math.PI * 3)) * cell * 1.4 * (1 - u) ** 1.2, land = calmMotion ? 0 : Math.max(0, 1 - hop / (cell * .2)) * (1 - u);
     const s = cell * 1.35 * (u < .12 ? .25 + .75 * easeBack(u / .12) : 1);
     ctx.save(); ctx.globalAlpha = Math.min(1, (1 - u) * 6); ctx.translate(f.x, f.y + cell * .45 - hop); ctx.scale(1 + .2 * land, 1 - .18 * land); ctx.drawImage(im, -s / 2, -s * .92, s, s); ctx.restore();
@@ -1294,15 +1297,53 @@ function drawRootline(now) {
 }
 
 // ---------- effects ----------
-// a clear: each cell flashes, then bursts into two-tone shards; more and faster shards the bigger the clear (power 1–6)
-function shatter(idxs, colorAt, stagger = 12, power = 1) {
-  const n = 3 + Math.round(Math.min(4, power));
+// Glow is baked once per colour into a small sprite and drawn with "lighter" blending: no shadowBlur on particles.
+// Effects roll their own seeded stream (reset each dig), so a seeded run (the trailer) replays the same bursts,
+// and the game's Math.random (memories, pets) doesn't shift when an effect changes.
+let fxR = mulberry(7);
+const glows = new Map(), pals = new Map();
+function glowSpr(col, pure = false) { // white-hot core, the colour, then nothing; pure: all colour, no white (the burst)
+  let c = glows.get(col + pure); if (c) return c;
+  c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"), r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  r.addColorStop(0, pure ? hexA(col, 1) : "rgba(255,255,250,.95)"); r.addColorStop(pure ? .35 : .2, hexA(col, pure ? .7 : .8)); r.addColorStop(.6, hexA(col, .2)); r.addColorStop(1, hexA(col, 0));
+  g.fillStyle = r; g.fillRect(0, 0, 64, 64); glows.set(col + pure, c); return c;
+}
+const vivid = (h) => { const c = hex(h), l = (c[0] + c[1] + c[2]) / 3; // half again as saturated: still paint, not neon
+  return "#" + c.map((v) => Math.max(0, Math.min(255, Math.round(l + (v - l) * 1.45))).toString(16).padStart(2, "0")).join(""); };
+const palOf = (h) => { let p = pals.get(h); if (!p) { const col = vivid(h); pals.set(h, p = { col, lt: lerpHex(col, "#ffffff", .55), dk: lerpHex(col, "#1a1426", .45), glow: lerpHex(col, "#fff4dc", .25) }); } return p; };
+const FLAVOUR = { // how the specials break: shard shape, gravity, fade per frame, extra motes, their colour
+  frost: { k: "flake", pal: "#cdf3ff", g: .1, fade: .02, motes: 1, mote: "#e6fbff" },
+  ember: { k: "spark", pal: "#ff8a3d", g: .2, fade: .034, motes: 2, mote: "#ffb35c" },
+  geode: { rock: "#6b5a70", sparkle: 4, mote: "#f0dcff" },
+  heart: { pulse: true, motes: 2, mote: "#ffc2d2" },
+  glowcap: { motes: 3, mote: "#d9c9ff", slow: true },
+  rubble: { matte: true },
+};
+// a clear: each cell blooms with light and bursts into faceted shards in its own colour, a light sweeps the line, motes drift up.
+// power 1–6 (lines, combo, embers, pure veins) scales the bloom, the motes and a soft glow over the board; reduced motion keeps the glow only
+function shatter(idxs, typeAt, stagger = 12, power = 1, lines = null) {
+  const big = Math.min(1, (power - 1) / 4), per = Math.max(2, Math.min(3 + Math.round(Math.min(3, power)), Math.floor(170 / idxs.length)));
+  let motes = 0; const maxMotes = 6 + Math.round(26 * big), ba = Math.min(.9, 3 / Math.sqrt(idxs.length)); // many blooms overlap in a big clear: each one softer
+  const p0 = palOf(CRYSTALS[typeAt(idxs[0])]?.color || "#c9b6ff");
+  if (!calmMotion && lines) for (const [list, row] of [[lines.rows, true], [lines.cols, false]]) for (const v of list) fx.push({ kind: "sweep", row, v, life: 1, dur: .34, delay: 20 });
+  if (!calmMotion && power >= 2) fx.push({ kind: "screen", col: p0.glow, a: .08 + .1 * big, life: 1, dur: .6 + .25 * big, delay: 0 });
   idxs.forEach((i, k) => {
-    const r = Math.floor(i / N), c = i % N, col = colorAt(i), dk = mix(col, "#0e1c1a", .45), lt = mix(col, "#ffffff", .5);
-    fx.push({ kind: "flash", x: bx + c * cell, y: by + r * cell, life: 1, delay: k * stagger });
-    for (let j = 0; j < n; j++) { const a = Math.random() * Math.PI * 2, v = 1.5 + Math.random() * (2.5 + power);
-      parts.push({ x: bx + (c + .5) * cell, y: by + (r + .5) * cell, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2.5, rot: Math.random() * 6, vr: (Math.random() - .5) * .35,
-        s: cell * (.14 + Math.random() * .22), col, dk, lt, life: 1, delay: k * stagger + 40 }); }
+    const t = typeAt(i), F = FLAVOUR[t] || {}, P = palOf(F.pal || CRYSTALS[t]?.color || "#c9b6ff"), d = k * stagger;
+    const x = bx + (i % N + .5) * cell, y = by + (Math.floor(i / N) + .5) * cell;
+    fx.push({ kind: "flash", x: x - cell / 2, y: y - cell / 2, col: P.lt, a: ba * .8, life: 1, dur: .24, delay: d });
+    if (!F.matte) fx.push({ kind: "burst", x, y, col: P.col, s: cell * (1.7 + .5 * big), rays: idxs.length > 16 ? 4 : 7, rot: fxR() * 6, a: Math.min(.85, 4.5 / Math.sqrt(idxs.length)), life: 1, dur: calmMotion ? .3 : .4 + .1 * big, delay: d });
+    if (!F.matte) fx.push({ kind: "bloom", x, y, col: P.glow, s: cell * (2.3 + .7 * big), a: ba * (1 - .35 * big), life: 1, dur: calmMotion ? .35 : .32 + .14 * big, delay: d });
+    if (calmMotion || parts.length > 240) return;
+    const rock = F.rock && palOf(F.rock);
+    for (let j = 0; j < per; j++) { const a = fxR() * Math.PI * 2, v = 1.5 + fxR() * (2.5 + power), q = rock && j % 2 ? rock : P;
+      parts.push({ k: F.k && j % 3 !== 2 ? F.k : "shard", x, y, vx: Math.cos(a) * v * (F.k === "spark" ? 1.6 : 1), vy: Math.sin(a) * v - 2.5, rot: fxR() * 6, vr: (fxR() - .5) * .35,
+        s: cell * (.15 + fxR() * .24), w: .65 + fxR() * .55, ph: fxR() * 6, g: F.g || .35, fade: F.fade || .024, col: q.col, dk: q.dk, lt: q.lt, life: 1, delay: d + 40 }); }
+    for (let j = (k % 2 ? 0 : 1) + (F.motes || 0) + Math.round(big * 1.5); j > 0 && motes < maxMotes + (F.motes || 0) * 2; j--, motes++) // sparkle motes drift up and twinkle out
+      fx.push({ kind: "mote", x: x + (fxR() - .5) * cell * .8, y: y + (fxR() - .5) * cell * .5, vx: (fxR() - .5) * .8, vy: -(F.slow ? .7 : 1.1) - fxR() * 1.4 - big,
+        s: cell * (.45 + fxR() * .35), col: F.mote || P.glow, ph: fxR() * 6, life: 1, dur: .75 + fxR() * .3, delay: d + 60 });
+    for (let j = 0; j < (F.sparkle || 0); j++) { const a = (j / F.sparkle) * Math.PI * 2 + fxR(), v = 2 + fxR() * 2.5; // the geode's cavity bursts into glints
+      fx.push({ kind: "star", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: 3 + fxR() * 4, col: "#f6e8ff", life: 1, dur: .5, delay: d + 30 }); }
+    if (F.pulse) for (const pd of [0, 170]) fx.push({ kind: "pulse", x, y, col: "#ff8fae", life: 1, dur: .6, delay: d + pd }); // the heartstone's warm beat
   });
 }
 // coins pop out of the clear, arc up, and fly into the Haul badge (count grows with the gold)
@@ -1310,10 +1351,17 @@ const coinImg = new Image(); coinImg.src = "data:image/svg+xml;charset=utf-8," +
 let coins = [], lastBump = 0;
 function coinPop(idxs, gold) {
   const n = Math.max(2, Math.min(14, Math.round(1 + Math.log2(1 + gold) * 1.3))), now = performance.now();
-  for (let k = 0; k < n; k++) { const i = idxs[Math.floor(Math.random() * idxs.length)], x = bx + (i % N + .5) * cell, y = by + (Math.floor(i / N) + .5) * cell;
-    coins.push({ x, y, cx: x + (Math.random() - .5) * cell * 3, cy: y - cell * (1.5 + Math.random() * 1.5), at: now + 60 + k * 45, dur: 620 + Math.random() * 160, k }); }
+  for (let k = 0; k < n; k++) { const i = idxs[Math.floor(fxR() * idxs.length)], x = bx + (i % N + .5) * cell, y = by + (Math.floor(i / N) + .5) * cell;
+    coins.push({ x, y, cx: x + (fxR() - .5) * cell * 3, cy: y - cell * (1.5 + fxR() * 1.5), at: now + 60 + k * 45, dur: 620 + fxR() * 160, k }); }
 }
 function drawCoins(now) {
+  ctx.globalCompositeOperation = "lighter"; // first a warm glow under each coin, and a glint as it leaves the clear
+  for (const q of coins) { const t = (now - q.at) / q.dur; if (t < 0 || t >= 1) continue;
+    const e = t < .5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2, u = 1 - e, [hx, hy] = haulAt, s = cell * .5 * (t < .15 ? easeBack(t / .15) : 1 - .4 * t);
+    const x = u * u * q.x + 2 * u * e * q.cx + e * e * hx, y = u * u * q.y + 2 * u * e * q.cy + e * e * hy, gl = Math.sin(Math.PI * Math.min(1, t / .4));
+    ctx.globalAlpha = .5 * (1 - .5 * t); ctx.drawImage(glowSpr("#ffc24a"), x - s, y - s, s * 2, s * 2);
+    if (gl > 0) { ctx.globalAlpha = gl; ctx.drawImage(glowSpr("#fff1c0"), x - s * .55, y - s * .6, s * .7 * gl, s * .7 * gl); } }
+  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
   coins = coins.filter((q) => {
     const t = (now - q.at) / q.dur; if (t < 0) return true;
     if (t >= 1) { if (now - lastBump > 70) { lastBump = now; $("coinHud").animate([{ transform: "scale(1)" }, { transform: "scale(1.35)" }, { transform: "scale(1)" }], { duration: 180, easing: "ease-out" }); }
@@ -1327,9 +1375,10 @@ const float = (text, x, y, color = "#f0b543") => floats.push({ text, x, y, color
 // satisfying extras: star bursts, shockwave rings, screen shake, a brief hit-stop, combo pops, gem twinkles
 let fx = [], shakeAmp = 0, hitStop = 0, pops = [], twinkles = [], lastTwinkle = 0;
 function starBurst(x, y, n = 10, col = "#fff6c8") {
-  for (let k = 0; k < n; k++) { const a = (k / n) * Math.PI * 2 + Math.random() * .4, v = 3 + Math.random() * 4;
-    fx.push({ kind: "star", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: 4 + Math.random() * 5, col, life: 1 }); }
-  fx.push({ kind: "ring", x, y, r: cell * .4, life: 1 });
+  if (calmMotion) return; // reduced motion: the cells' glow says it
+  for (let k = 0; k < n; k++) { const a = (k / n) * Math.PI * 2 + fxR() * .4, v = 3 + fxR() * 4;
+    fx.push({ kind: "star", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: 4 + fxR() * 5, col, life: 1, dur: .55 }); }
+  fx.push({ kind: "ring", x, y, r: cell * .4, life: 1, dur: .37 });
 }
 function toast(html, ms = 1500) {
   const el = $("toast"); el.innerHTML = html; el.style.opacity = 1;
@@ -1402,7 +1451,7 @@ function commit(i, r, c, from) {
     if (power >= 2 && !calmMotion) { shakeAmp = Math.min(12, 2 + power * 1.7); hitStop = performance.now() + 30 + 20 * power; }
     if (combo >= 2) pops.push({ text: combo >= 5 ? `Combo ×${combo}!!` : `Combo ×${combo}!`, life: 1, col: combo >= 5 ? "#ff9db5" : "#ffd27a" });
     if (n >= 3) pops.push({ text: n >= 4 ? "Glimmering!" : "Brilliant!", life: 1.15, col: "#9fe6ff" });
-    shatter(cells.sort((a, b) => (a % N + Math.floor(a / N)) - (b % N + Math.floor(b / N))), (k) => CRYSTALS[typeOf(before[k])]?.color || "#c9b6ff", 12, power);
+    shatter(cells.sort((a, b) => (a % N + Math.floor(a / N)) - (b % N + Math.floor(b / N))), (k) => typeOf(before[k]), 12, power, lines);
     coinPop(cells, gained);
     board = clearCells(board, cells); cracked = sb.cracked;
     if (sb.hits) { sfx.crack(); buzz(20); }
@@ -1515,7 +1564,7 @@ $("rescueGo").onclick = async () => {
   else {
     const cells = rescueCells(board, 3), before = board;
     shooMoths(cells); freePets(cells, before);
-    shatter(cells, (k) => CRYSTALS[typeOf(before[k])]?.color || "#c9b6ff", 5);
+    shatter(cells, (k) => typeOf(before[k]), 5);
     board = clearCells(board, cells); cells.forEach((k) => cracked.delete(k)); tray = dealTray();
     if (time < T.rescue_time) time = T.rescue_time;
   }
@@ -1994,7 +2043,7 @@ function frame(now) {
   const frozenFx = now < hitStop, onBoard = state !== "home" && board, endT = ending ? easeOut(Math.min(1, (now - ending.at) / 900)) : 1;
   if (onBoard) drawMine(now);
   ctx.save();
-  if (shakeAmp > .2) { ctx.translate((Math.random() - .5) * shakeAmp, (Math.random() - .5) * shakeAmp); if (!frozenFx) shakeAmp *= .86; }
+  if (shakeAmp > .2) { ctx.translate((fxR() - .5) * shakeAmp, (fxR() - .5) * shakeAmp); if (!frozenFx) shakeAmp *= .86; }
   if (onBoard) {
     ctx.drawImage(bgCache.board, bgCache.x, bgCache.y, bgCache.w, bgCache.w);
     if (!calm) drawRootline(now);
@@ -2067,25 +2116,61 @@ function frame(now) {
     if (t) { const k = Math.min(1, (now - drag.at) / 160), e = easeOut(k), sz = ts + (cell - ts) * easeBack(k); // lift out of the tray: grow and rise to the finger
       drawPiece(drag, sz, drag.from.x + (t.x - drag.from.x) * e, drag.from.y + (t.y - drag.from.y) * e, .95); }
   }
-  parts = parts.filter((p) => p.life > 0);
-  for (const p of parts) { // two-tone shards: lit face, shadow face, darker edge
-    if (p.delay > 0) { p.delay -= 16; continue; }
-    if (!frozenFx) { p.x += p.vx; p.y += p.vy; p.vy += .35; p.vx *= .98; p.rot += p.vr; p.life -= .022; } // hit-stop: hold still for a beat
-    ctx.save(); ctx.globalAlpha = Math.min(1, p.life * 2); ctx.translate(p.x, p.y); ctx.rotate(p.rot); const h = p.s / 2;
-    ctx.fillStyle = p.dk; ctx.beginPath(); ctx.moveTo(-h - 1, h + 1); ctx.lineTo(-1, -h + 1); ctx.lineTo(h - 1, h * .66 + 1); ctx.fill();
-    ctx.fillStyle = p.col; ctx.beginPath(); ctx.moveTo(-h, h); ctx.lineTo(0, -h); ctx.lineTo(h, h * .66); ctx.fill();
-    ctx.fillStyle = p.lt; ctx.beginPath(); ctx.moveTo(-h, h); ctx.lineTo(0, -h); ctx.lineTo(0, h * .8); ctx.fill(); ctx.restore();
-  }
+  // glow first (additive, from the cached sprites), then the shards on top of it; everything steps on dt, so 120Hz plays at the same speed
+  const fk = dt * 60, run = !frozenFx; // hit-stop: hold still for a beat
   fx = fx.filter((f) => f.life > 0);
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
   for (const f of fx) {
-    if (f.kind === "flash") { if (f.delay > 0) { f.delay -= 16; continue; } f.life -= .08; ctx.fillStyle = `rgba(255,248,225,${f.life * .8})`; ctx.beginPath(); ctx.roundRect(f.x + 2, f.y + 2, cell - 4, cell - 4, 6); ctx.fill(); continue; }
-    if (!frozenFx) f.life -= f.kind === "ring" ? .045 : .03;
-    if (f.kind === "ring") { const e = easeOut(1 - f.life); ctx.strokeStyle = `rgba(255,246,200,${f.life * .8})`; ctx.lineWidth = 3 * f.life; ctx.beginPath(); ctx.arc(f.x, f.y, f.r + e * cell * 2.6, 0, 7); ctx.stroke(); continue; }
-    if (!frozenFx) { f.x += f.vx; f.y += f.vy; f.vx *= .93; f.vy *= .93; }
-    const r = f.s * f.life; ctx.fillStyle = f.col; ctx.globalAlpha = f.life;
-    ctx.beginPath(); ctx.moveTo(f.x, f.y - r); ctx.lineTo(f.x + r * .3, f.y - r * .3); ctx.lineTo(f.x + r, f.y); ctx.lineTo(f.x + r * .3, f.y + r * .3);
-    ctx.lineTo(f.x, f.y + r); ctx.lineTo(f.x - r * .3, f.y + r * .3); ctx.lineTo(f.x - r, f.y); ctx.lineTo(f.x - r * .3, f.y - r * .3); ctx.fill(); ctx.globalAlpha = 1;
+    if (f.delay > 0) { f.delay -= dt * 1000; continue; }
+    if (run || f.kind === "flash") f.life -= dt / f.dur;
+    const L = Math.max(0, f.life), e = 1 - L;
+    if (f.kind === "flash") { ctx.globalAlpha = L * L * f.a; ctx.fillStyle = f.col; ctx.beginPath(); ctx.roundRect(f.x + 2, f.y + 2, cell - 4, cell - 4, 6); ctx.fill(); }
+    else if (f.kind === "bloom") { const s = f.s * (calmMotion ? 1 : .55 + .55 * easeOut(e)); ctx.globalAlpha = Math.min(1, e * 8) * L ** 1.4 * f.a; ctx.drawImage(glowSpr(f.col), f.x - s / 2, f.y - s / 2, s, s); }
+    else if (f.kind === "burst") { // the crystal's own colour bursts out: a full-colour glow and short tapered rays, painted (not added) so overlaps keep their hue
+      const s = f.s * (calmMotion ? .9 : .5 + .7 * easeOut(e)), a = Math.min(1, e * 10) * L * f.a; ctx.globalAlpha = a; ctx.globalCompositeOperation = "source-over"; ctx.drawImage(glowSpr(f.col, true), f.x - s / 2, f.y - s / 2, s, s);
+      if (!calmMotion) { const r0 = cell * (.2 + .5 * easeOut(e)), r1 = cell * (.45 + 1.05 * easeOut(e)); ctx.strokeStyle = f.col; ctx.lineCap = "round"; ctx.lineWidth = cell * .11 * L; ctx.beginPath();
+        for (let j = 0; j < f.rays; j++) { const an = f.rot + j * Math.PI * 2 / f.rays, c = Math.cos(an), sn = Math.sin(an), r = j % 2 ? r1 * .75 : r1; ctx.moveTo(f.x + c * r0, f.y + sn * r0); ctx.lineTo(f.x + c * r, f.y + sn * r); }
+        ctx.stroke(); } ctx.globalCompositeOperation = "lighter"; }
+    else if (f.kind === "sweep") { // a streak of light runs along the cleared line, leaving a faint shine behind it
+      const p = easeOut(e) * (cell * N + cell * 2) - cell, mid = (f.v + .5) * cell, a = Math.sin(Math.PI * e), im = glowSpr("#fff0c4");
+      ctx.globalAlpha = a * .12; ctx.fillStyle = "#fff0c4"; if (f.row) ctx.fillRect(bx, by + f.v * cell, Math.max(0, Math.min(cell * N, p)), cell); else ctx.fillRect(bx + f.v * cell, by, cell, Math.max(0, Math.min(cell * N, p)));
+      ctx.globalAlpha = a * .85; if (f.row) ctx.drawImage(im, bx + p - cell * 1.6, by + mid - cell * .6, cell * 3.2, cell * 1.2); else ctx.drawImage(im, bx + mid - cell * .6, by + p - cell * 1.6, cell * 1.2, cell * 3.2); }
+    else if (f.kind === "screen") { const w = cell * (N + 5); ctx.globalAlpha = f.a * Math.min(1, e * 6) * L; ctx.drawImage(glowSpr(f.col), bx + cell * N / 2 - w / 2, by + cell * N / 2 - w / 2, w, w); }
+    else if (f.kind === "mote") { // drifts up, sways, twinkles out
+      if (run) { f.x += (f.vx + Math.sin(f.ph + e * 9) * .35) * fk; f.y += f.vy * fk; f.vy *= .985 ** fk; }
+      const s = f.s * (.6 + .4 * Math.sin(f.ph * 3 + e * 20) ** 2); ctx.globalAlpha = Math.min(1, e * 6) * L; ctx.drawImage(glowSpr(f.col), f.x - s / 2, f.y - s / 2, s, s); }
+    else if (f.kind === "pulse") { const s = cell * (1.4 + 3.2 * easeOut(e)); ctx.globalAlpha = .9 * Math.min(1, e * 8) * L; ctx.drawImage(glowSpr(f.col), f.x - s / 2, f.y - s / 2, s, s); }
+    else if (f.kind === "ring") { ctx.globalAlpha = 1; ctx.strokeStyle = `rgba(255,246,200,${L * .8})`; ctx.lineWidth = 3 * L; ctx.beginPath(); ctx.arc(f.x, f.y, f.r + easeOut(e) * cell * 2.6, 0, 7); ctx.stroke(); }
+    else { // star
+      if (run) { f.x += f.vx * fk; f.y += f.vy * fk; f.vx *= .93 ** fk; f.vy *= .93 ** fk; }
+      const r = f.s * L; ctx.fillStyle = f.col; ctx.globalAlpha = L;
+      ctx.beginPath(); ctx.moveTo(f.x, f.y - r); ctx.lineTo(f.x + r * .3, f.y - r * .3); ctx.lineTo(f.x + r, f.y); ctx.lineTo(f.x + r * .3, f.y + r * .3);
+      ctx.lineTo(f.x, f.y + r); ctx.lineTo(f.x - r * .3, f.y + r * .3); ctx.lineTo(f.x - r, f.y); ctx.lineTo(f.x - r * .3, f.y - r * .3); ctx.fill(); }
   }
+  ctx.restore();
+  parts = parts.filter((p) => p.life > 0);
+  for (const p of parts) { // faceted shards: shadow face, body, lit face with a light edge; a glint when a face turns to the light
+    if (p.delay > 0) { p.delay -= dt * 1000; continue; }
+    if (run) { p.x += p.vx * fk; p.y += p.vy * fk; p.vy += p.g * fk; p.vx *= (p.k === "flake" ? .96 : .98) ** fk; p.rot += p.vr * fk * (p.k === "flake" ? .5 : 1); p.life -= p.fade * fk; }
+    const a = Math.min(1, p.life * 2.5), h = p.s / 2, w = h * p.w;
+    if (p.k === "spark") { // ember sparks: a hot streak and a glowing head
+      ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = a; ctx.strokeStyle = p.lt; ctx.lineWidth = Math.max(1.2, h * .5); ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * 2.4, p.y - p.vy * 2.4); ctx.stroke(); ctx.drawImage(glowSpr(p.col), p.x - h * 2, p.y - h * 2, h * 4, h * 4);
+      ctx.globalCompositeOperation = "source-over"; continue; }
+    ctx.save(); ctx.globalAlpha = a; ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+    if (p.k === "flake") { // frost: a six-armed ice flake with a bright core
+      ctx.strokeStyle = p.lt; ctx.lineWidth = Math.max(1.3, h * .3); ctx.lineCap = "round"; ctx.beginPath();
+      for (let j = 0; j < 3; j++) { const c = Math.cos(j * 1.047) * h * 1.1, s = Math.sin(j * 1.047) * h * 1.1; ctx.moveTo(-c, -s); ctx.lineTo(c, s); }
+      ctx.stroke(); ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(0, 0, h * .28, 0, 7); ctx.fill(); ctx.restore(); continue; }
+    ctx.fillStyle = p.dk; ctx.beginPath(); ctx.moveTo(-w - 1, h + 1); ctx.lineTo(-1, -h + 1); ctx.lineTo(w - 1, h * .66 + 1); ctx.fill();
+    ctx.fillStyle = p.col; ctx.beginPath(); ctx.moveTo(-w, h); ctx.lineTo(0, -h); ctx.lineTo(w, h * .66); ctx.fill();
+    ctx.fillStyle = p.lt; ctx.beginPath(); ctx.moveTo(-w, h); ctx.lineTo(0, -h); ctx.lineTo(0, h * .8); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-w, h); ctx.lineTo(0, -h); ctx.stroke();
+    const gl = Math.max(0, Math.sin(p.rot * 1.6 + p.ph)) ** 10;
+    if (gl > .05) { ctx.globalAlpha = a * gl; ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.moveTo(-w, h); ctx.lineTo(0, -h); ctx.lineTo(0, h * .8); ctx.fill(); }
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
   if (onBoard) drawFrees(now);
   ctx.restore(); // end screen shake
   if (onBoard) drawHint(now);
