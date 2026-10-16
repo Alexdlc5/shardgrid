@@ -3,5 +3,8 @@
   "appName": "Glimmerwood",
   "webDir": "www",
   "android": { "backgroundColor": "#0f2219" },
-  "ios": { "backgroundColor": "#0f2219" }
+  "ios": { "backgroundColor": "#0f2219" },
+  "plugins": {
+    "SplashScreen": { "launchAutoHide": false, "launchFadeOutDuration": 250, "backgroundColor": "#0f2219", "showSpinner": false }
+  }
 }

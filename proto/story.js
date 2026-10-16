@@ -1,8 +1,13 @@
 // Glimmerwood story (docs/STORY.md). Text and story rules only; pictures are in art.js
 // (memoryArt kinds, stumpArt, granny, bidder). index.html plays the scenes.
 
-// First launch: four wordless panels.
-export const PROLOGUE = ["oak", "rootglow", "lanterns", "dawn"];
+// First launch: four amber panels, one line each (memoryArt kind + caption).
+export const PROLOGUE = [
+  { art: "oak", text: "Every autumn, the Glimmeroak glowed." },
+  { art: "rootglow", text: "One autumn, something under its roots glowed back." },
+  { art: "lanterns", text: "The Lantern Moles lit their lanterns and went down to see." },
+  { art: "dawn", text: "By morning there was a stump, a toad with a cart, and one small mole with a lantern." },
+];
 
 // Amber Memories, in the order each mine gives them up. art = memoryArt kind.
 export const MEMORIES = {
