@@ -157,3 +157,71 @@ export const soundtrack = {
   resume() { if (ctx && enabled) ctx.resume(); },
 };
 document.addEventListener("visibilitychange", () => (document.hidden ? soundtrack.pause() : soundtrack.resume()));
+
+// ---------- sound effects: one soft set of woody knocks and crystal tines, in the same room (reverb) as the music ----------
+// Everything goes through a compressor under the music's level, so no effect is louder than the soundtrack.
+let sfxBus;
+const PENT = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51, 1567.98, 1760, 2093, 2349.32, 2637.02]; // C major pentatonic
+function bus() {
+  init(); if (ctx.state === "suspended") ctx.resume();
+  if (!sfxBus) {
+    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -22; comp.knee.value = 8; comp.ratio.value = 8; comp.attack.value = .002; comp.release.value = .15;
+    sfxBus = ctx.createGain(); sfxBus.gain.value = .9; sfxBus.connect(comp).connect(master);
+  }
+  return ctx.currentTime;
+}
+function knock(freq, when, vol, dec = .09) { // wood: a sine that drops in pitch, plus a short filtered click
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.frequency.setValueAtTime(freq * 1.6, when); o.frequency.exponentialRampToValueAtTime(freq, when + .018);
+  g.gain.setValueAtTime(.0001, when); g.gain.exponentialRampToValueAtTime(vol, when + .003); g.gain.exponentialRampToValueAtTime(.0001, when + dec);
+  o.connect(g).connect(sfxBus); o.start(when); o.stop(when + dec + .02);
+  noise(when, .018, vol * .35, freq * 5, 1.4, sfxBus);
+}
+function tine(freq, when, vol, dec = .5, wet = .5) { // crystal: a sine with a bell-like inharmonic partial, ringing into the reverb
+  const o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), g2 = ctx.createGain(), send = ctx.createGain();
+  o.frequency.value = freq; o2.frequency.value = freq * 2.76;
+  g.gain.setValueAtTime(.0001, when); g.gain.exponentialRampToValueAtTime(vol, when + .004); g.gain.exponentialRampToValueAtTime(.0001, when + dec);
+  g2.gain.setValueAtTime(vol * .3, when); g2.gain.exponentialRampToValueAtTime(.0001, when + dec * .3);
+  send.gain.value = wet; o.connect(g); o2.connect(g2).connect(g); g.connect(sfxBus); g.connect(send).connect(reverb);
+  o.start(when); o2.start(when); o.stop(when + dec + .05); o2.stop(when + dec + .05);
+}
+function air(when, dur, vol, from, to) { // a soft breath of filtered noise (sheets, shatter dust)
+  noise(when, dur, vol, from, .8, sfxBus);
+  if (to) noise(when + dur * .3, dur * .7, vol * .7, to, .8, sfxBus);
+}
+const on = () => sfx.isOn();
+export const sfx = {
+  isOn: () => true, // index.html points this at the Sound option
+  // the old one-line synth calls, softened into the same set: square/saw become a woody knock, the rest a tine
+  tone(freq, dur = .12, type = "sine", vol = .14, when = 0) {
+    if (!on()) return; const t = bus() + when, v = Math.min(.12, vol * .8);
+    type === "square" || type === "sawtooth" || freq < 300 ? knock(Math.max(70, freq), t, v, Math.max(.06, Math.min(.3, dur))) : tine(freq, t, v, Math.max(.08, dur * 1.4), .35);
+  },
+  tap() { if (!on()) return; const t = bus(); knock(540, t, .07, .05); tine(1760, t + .01, .018, .08, .2); },
+  pick() { if (!on()) return; const t = bus(); knock(420, t, .06, .05); tine(1318.5, t, .025, .12, .2); },
+  place() { if (!on()) return; const t = bus(); knock(170, t, .13, .12); knock(330, t + .012, .05, .05); tine(1568, t + .015, .035, .18, .3); },
+  drop() { if (!on()) return; const t = bus(); knock(240, t, .06, .07); }, // a piece that didn't fit slides home
+  // a clear: one rising tine per line, higher with the combo; bigger clears add a low wooden thump and a shimmer
+  clear(lines, combo, power) {
+    if (!on()) return; const t = bus(), up = Math.min(6, Math.max(0, combo - 1));
+    for (let k = 0; k <= lines; k++) tine(PENT[Math.min(PENT.length - 1, up + k * 2)], t + k * .055, .085, .7 + power * .08);
+    air(t, .35 + power * .05, .02 + power * .006, 5200, 8000);
+    if (power >= 2) knock(95, t, .14, .22);
+    if (power >= 3) for (let k = 0; k < 4; k++) tine(PENT[8 + k] * 1.0, t + .16 + k * .04, .03, .5, .7);
+  },
+  coin(k = 0) { if (!on()) return; const t = bus(); tine(PENT[9 + (k % 4)], t, .04, .14, .25); },
+  ember() { if (!on()) return; const t = bus(); knock(70, t, .16, .35); for (let k = 0; k < 6; k++) noise(t + k * .03 + Math.random() * .02, .03, .05, 1800 + Math.random() * 2400, 2, sfxBus); },
+  freeze() { if (!on()) return; const t = bus(); [2093, 2637, 3136].forEach((f, k) => tine(f, t + k * .06, .035, 1.1, .8)); },
+  bloom() { if (!on()) return; const t = bus(); [880, 1174.66].forEach((f, k) => tine(f, t + k * .06, .04, .5)); },
+  pure() { if (!on()) return; const t = bus() + .14; [1046.5, 1318.51, 1567.98].forEach((f, k) => tine(f, t + k * .05, .05, .6, .6)); },
+  crack() { if (!on()) return; const t = bus(); knock(110, t, .12, .16); noise(t, .06, .06, 2400, 1.5, sfxBus); },
+  tick() { if (!on()) return; const t = bus(); knock(98, t, .1, .14); }, // the Rootline running low: a soft heartbeat knock
+  thud() { if (!on()) return; const t = bus(); knock(130, t, .12, .2); knock(98, t + .14, .1, .26); }, // no room / roots closed
+  rescue() { if (!on()) return; const t = bus(); [783.99, 1046.5, 1318.51, 1567.98].forEach((f, k) => tine(f, t + k * .07, .05, .6)); },
+  moth() { if (!on()) return; const t = bus(); for (let k = 0; k < 3; k++) noise(t + k * .05, .04, .03, 1300 + k * 200, 1.2, sfxBus); tine(1567.98, t + .1, .025, .2); },
+  nibble() { if (!on()) return; const t = bus(); knock(260, t, .05, .05); knock(210, t + .07, .05, .05); },
+  buy() { if (!on()) return; const t = bus(); [1318.51, 1760, 2093].forEach((f, k) => tine(f, t + k * .05, .045, .3, .35)); knock(300, t, .05, .05); },
+  whoosh() { if (!on()) return; air(bus(), .22, .025, 900, 1600); },
+  chirp() { if (!on()) return; const t = bus(); tine(1567.98, t, .04, .12, .2); tine(2093, t + .08, .035, .16, .2); },
+  chime() { if (!on()) return; const t = bus(); [1046.5, 1318.51, 1567.98, 2093].forEach((f, k) => tine(f, t + k * .12, .045, .9, .7)); },
+};
