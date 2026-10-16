@@ -248,7 +248,7 @@
   .campFx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
   .campPop, .campSpark, .campSay { position: absolute; color: #fff6c8; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,.5); font-size: 20px; }
   .campSpark { color: #ffd27a; font-size: 18px; }
-  .campSay { background: #f3e6c4; color: #3a2410; padding: 6px 10px; border-radius: 12px; font-size: 14px; font-style: italic; text-shadow: none; white-space: nowrap; }
+  .campSay { background: #f3e6c4; color: #3a2410; padding: 6px 10px; border-radius: 12px; font-size: 15px; font-style: italic; text-shadow: none; white-space: nowrap; }
   .campHint { position: absolute; right: 10px; bottom: 8px; font-size: 12px; color: rgba(246,234,208,.7); pointer-events: none; }
   /* ===== texture: film grain over everything, real wood grain on signboards ===== */
   body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 45; opacity: .07; mix-blend-mode: overlay;
@@ -288,15 +288,20 @@
   .hub .campArt { overflow: visible; }
   .campStage [data-tap] { cursor: pointer; transition: filter .15s; }
   .campStage [data-tap]:hover { filter: brightness(1.18) drop-shadow(0 0 4px rgba(255,214,122,.5)); }
+  .campArt [data-tap] { transform-box: fill-box; transform-origin: 50% 100%; } /* presses squash from the ground up */
+  .campArt .pud { transform-box: fill-box; transform-origin: 50% 90%; transition: transform .45s cubic-bezier(.34,1.56,.64,1); }
+  .campArt .pud.near { transform: translateY(-3px) rotate(-5deg); } /* Puddock looks up when you come near his stall */
+  .campSay.campTip { white-space: normal; width: 220px; text-align: center; font-style: normal; z-index: 2; }
   .hubBar { position: absolute; z-index: 5; top: calc(10px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
     width: min(calc(100vw - 20px), 460px); display: flex; align-items: center; gap: 8px; pointer-events: none; }
   .hubBar > * { pointer-events: auto; }
-  .siteName { flex: 1; text-align: center; color: #f3e1b0; font-weight: 600; font-size: 14px; text-shadow: 0 1px 3px #000; pointer-events: none; }
+  .siteName { flex: 1; text-align: center; color: #f3e1b0; font-weight: 600; font-size: 15px; text-shadow: 0 1px 3px #000; pointer-events: none; }
   .iconBtn { width: 46px; height: 46px; margin: 0; padding: 0; display: grid; place-items: center; border-radius: 12px; }
   .iconBtn .ico { margin: 0; }
   .hub .campHint { position: absolute; left: 0; right: 0; bottom: max(14px, env(safe-area-inset-bottom)); text-align: center; font-size: 13px;
     color: rgba(246,234,208,.8); text-shadow: 0 1px 3px #000; pointer-events: none; animation: hintPulse 3s ease-in-out infinite; }
   @keyframes hintPulse { 50% { opacity: .45; } }
+  @media (prefers-reduced-motion: reduce) { .hub .campHint { animation: none; } .campArt .pud { transition: none; } }
   /* a banner ad at the bottom (platform.js sets --ad): the camp and sheets end above it */
   .hasAd .hub .campStage { height: calc(100dvh - var(--ad) - env(safe-area-inset-bottom, 0px)); }
   .hasAd .hub .campHint { bottom: calc(var(--ad) + env(safe-area-inset-bottom, 0px) + 10px); }
@@ -1125,7 +1130,7 @@ function renderHome() {
   $("daily").disabled = done;
   $("campHint").textContent = !Object.keys(save.best).length ? "Tap the signpost to go mining ✦" : !save.metPuddock ? "Puddock's waving you over to his stall ✦" : "Tap things around camp ✦";
   renderMines(); renderCamp();
-  $("campArt").innerHTML = camp({ ...campState(), daily: { done, streak: st, best: save.daily.best } }, gem, dibble(100, save.look));
+  campDaily = { done, streak: st, best: save.daily.best }; drawCamp();
 }
 function renderMines() {
   $("mExp").classList.toggle("on", save.mode === "exp"); $("mCalm").classList.toggle("on", save.mode === "calm");
@@ -1288,7 +1293,7 @@ function replayMemories(back) {
 function campState() {
   const own = (id) => save.owned.includes(id) && !save.camp.hide.includes(id), S = save.story;
   const spare = (part) => Object.keys(LOOKS[part]).find((v) => v !== "none" && v !== save.look[part] && lookOwned(part, v));
-  const hub = { hub: true, stall: true, metPuddock: save.metPuddock, firstRun: !Object.keys(save.best).length, memories: S.mem.length || null, rackHat: spare("hat"), rackScarf: spare("scarf"),
+  const hub = { metPuddock: save.metPuddock, firstRun: !Object.keys(save.best).length, memories: S.mem.length || null, rackHat: spare("hat"), rackScarf: spare("scarf"),
     stumpSvg: S.site === "stump" ? stumpArt(Math.log10(save.light + 1) / 5.3, S.sprout, 340, S.finale) : "" };
   return { ...hub, ...save.up, mines: BIOMES.filter((b) => save.biomes.includes(b.id)).map((b) => b.pal.glow),
     found: GEMS.map((t) => save.found.includes(t) ? { color: CRYSTALS[t].color, cut: CRYSTALS[t].cut } : null),
@@ -1326,16 +1331,41 @@ function renderCamp() {
     const h = save.camp.hide, id = b.dataset.hide; save.camp.hide = h.includes(id) ? h.filter((x) => x !== id) : [...h, id]; persist(); renderHome(); };
 }
 
+// the camp is drawn to the stage size (so it fills the phone and labels stay one size), and again when that changes
+let campDaily = {};
+function drawCamp() {
+  const stage = $("campStage"); if (!stage.clientHeight) return; // hidden: the ResizeObserver draws it once it shows
+  const barBottom = document.querySelector(".hubBar").getBoundingClientRect().bottom - stage.getBoundingClientRect().top;
+  $("campArt").innerHTML = camp({ ...campState(), daily: campDaily, view: [stage.clientWidth, stage.clientHeight, barBottom] }, gem, dibble(100, save.look));
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) $("campArt").firstElementChild.pauseAnimations();
+  setTimeout(campTips, 900);
+}
+new ResizeObserver(drawCamp).observe($("campStage"));
+// the first time the lanterns, shelf, sapling or stump grow, they say what they mean (once each, after Puddock is met)
+const CAMP_TIPS = { lanterns: "Another lantern lit! One for every Lantern upgrade.", shelf: "A new gem for the shelf. Find all twelve kinds.",
+  sapling: "The sapling grew. It grows with your Root Charm.", memories: "The old stump is healing. Every coin you sell gives light back to its roots." };
+function campTips() {
+  if (!save.metPuddock || !$("home").classList.contains("show") || ["talk", ...SHEETS].some((id) => $(id).classList.contains("show"))) return;
+  const now = { lanterns: save.up.lantern, shelf: save.found.length, sapling: save.up.charm, memories: save.story.site === "stump" ? Math.floor(Math.log10(save.light + 1) / 5.3 * 9) : 0 };
+  const seen = save.campSeen ??= { ...now, told: [] }, tip = Object.keys(now).find((k) => now[k] > seen[k] && !seen.told.includes(k));
+  Object.assign(seen, now); if (tip) seen.told.push(tip); persist();
+  const el = tip && $("campArt").querySelector(`[data-tip="${tip}"]`); if (!el) return;
+  const b = el.getBoundingClientRect(), st = $("campStage").getBoundingClientRect();
+  campFx(Math.max(120, Math.min(st.width - 120, b.left + b.width / 2 - st.left)), Math.max(190, b.top - st.top + b.height / 2 + 40), CAMP_TIPS[tip], "campSay campTip");
+}
+
 // camp: taps make things happen, and the layers drift with your finger (parallax)
 function campFx(x, y, html, cls = "campPop") {
   const el = document.createElement("div"); el.className = cls; el.innerHTML = html; el.style.left = x + "px"; el.style.top = y + "px"; $("campFx").appendChild(el);
   el.animate([{ transform: "translate(-50%, 0) scale(.6)", opacity: 0 }, { transform: "translate(-50%, -26px) scale(1)", opacity: 1, offset: .3 }, { transform: "translate(-50%, -48px)", opacity: 0 }],
-    { duration: cls === "campSay" ? 2600 : 900, easing: "ease-out" }).onfinish = () => el.remove();
+    { duration: cls === "campSay" ? 2600 : cls.includes("campTip") ? 4600 : 900, easing: "ease-out" }).onfinish = () => el.remove();
 }
 $("campStage").addEventListener("pointerdown", (e) => {
   const t = e.target.closest("[data-tap]"), st = $("campStage").getBoundingClientRect(), x = e.clientX - st.left, y = e.clientY - st.top;
   if (!t) return;
   const what = t.dataset.tap;
+  if (what !== "dibble") for (const g of $("campArt").querySelectorAll(`[data-tap="${what}"]`)) // every prop answers a press: a little squash and glow
+    g.animate([{ transform: "scale(1)" }, { transform: "scale(1.06, .93)", filter: "brightness(1.35)", offset: .35 }, { transform: "scale(.98, 1.03)", offset: .7 }, { transform: "scale(1)" }], { duration: 300, easing: "ease-out" });
   if (what === "dibble") { t.animate([{ transform: "translateY(0)" }, { transform: "translateY(-12px)" }, { transform: "translateY(0)" }, { transform: "translateY(-4px)" }, { transform: "translateY(0)" }], { duration: 520, easing: "ease-out" });
     ui.chirp(); campFx(x, y - 10, "♪"); buzz(10); }
   else if (what === "fire") { for (let k = 0; k < 5; k++) setTimeout(() => campFx(x + (Math.random() - .5) * 30, y, "✦", "campSpark"), k * 40); for (let k = 0; k < 4; k++) tone(2000 + Math.random() * 2000, .03, "square", .02, k * .03); buzz(15); }
@@ -1345,12 +1375,17 @@ $("campStage").addEventListener("pointerdown", (e) => {
   else if (what === "mines") { tone(392, .1, "triangle", .06); renderMines(); show("mineSheet"); }
   else if (what === "daily") { tone(660, .08, "triangle", .05); show("dailySheet"); }
   else if (what === "market") { tone(330, .1, "triangle", .06); openMarket(); }
-  else if (what === "memories") replayMemories(home);
+  else if (what === "memories") { tone(440, .14, "sine", .05); replayMemories(home); }
+  else if (what === "sapling") { tone(880, .12, "sine", .04); tone(1320, .1, "sine", .03, .06); campFx(x, y - 10, "✦", "campSpark"); buzz(8); }
+  else if (what === "tools") { tone(1800, .05, "square", .025); tone(2400, .05, "square", .02, .07); buzz(8); }
+  else if (what === "flag") { tone(300, .1, "triangle", .04); buzz(6); }
   else if (what === "granny") { campFx(x, y - 20, quote(pick(CAMP_LINES.granny)), "campSay"); tone(330, .12, "triangle", .06); }
   else if (what === "puddock") { campFx(x, y - 20, quote(pick(CAMP_LINES[save.story.finale ? "puddockPost" : save.story.site === "stump" ? "puddock" : "puddockUnder"])), "campSay"); tone(220, .12, "triangle", .07); }
 });
 $("campStage").addEventListener("pointermove", (e) => {
   const st = $("campStage").getBoundingClientRect(), dx = (e.clientX - st.left) / st.width - .5, dy = (e.clientY - st.top) / st.height - .5;
+  const pud = $("campArt").querySelector(".pud"), m = pud && $("campArt").querySelector("[data-tap=market]").getBoundingClientRect(); // Puddock looks up when you come near
+  if (pud) pud.classList.toggle("near", Math.hypot(e.clientX - (m.left + m.width / 2), e.clientY - (m.top + m.height / 2)) < m.width * 1.1);
   for (const g of $("campArt").querySelectorAll("[data-depth]")) g.setAttribute("transform", `translate(${(-dx * 18 * g.dataset.depth).toFixed(2)} ${(-dy * 8 * g.dataset.depth).toFixed(2)})`);
 });
 
