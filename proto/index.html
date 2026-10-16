@@ -387,6 +387,23 @@
   .wardHead { display: flex; align-items: center; gap: 10px; }
   .wardHead .dibble { flex: none; }
   .wardPet { display: inline-block; margin-left: -18px; vertical-align: bottom; }
+  /* camp pets (campPets()): position + depth on .cpet, facing on .pf, hops and breathing on .pb; .shut is the blink */
+  .campPets { position: absolute; inset: 0; pointer-events: none; isolation: isolate; } /* their depth order stays under the sheets */
+  .cpet { position: absolute; left: 0; top: 0; pointer-events: auto; transform-origin: 50% 93%; will-change: transform; cursor: pointer; }
+  .cpet::before { content: ""; position: absolute; left: 50%; top: 58%; width: max(100%, 52px); height: max(100%, 52px); transform: translate(-50%, -50%); } /* 44pt+ to tap */
+  .cpet .psh { position: absolute; left: 24%; right: 24%; top: 88%; height: 9%; border-radius: 50%; background: radial-gradient(closest-side, rgba(15,14,11,.55), rgba(15,14,11,0)); }
+  .cpet .pf, .cpet .pb, .cpet img { position: absolute; inset: 0; width: 100%; height: 100%; transform-origin: 50% 93%; pointer-events: none; }
+  .cpet .pf { transition: transform .16s ease-in-out; }
+  .cpet .pb { animation: petBreathe var(--breathe) ease-in-out var(--off) infinite; }
+  .cpet .shut { opacity: 0; animation: petBlink var(--blink) step-end var(--off) infinite; }
+  .cpet.doze .shut { animation: none; opacity: 1; } .cpet.doze .pb { animation-duration: 4.2s; }
+  .cpet .pz { position: absolute; right: 6%; top: 14%; font: 700 13px Grandstander, Fredoka, sans-serif; color: #dfe8ff; opacity: 0; }
+  .cpet.doze .pz { animation: petZ 2.6s ease-out infinite; }
+  @keyframes petBreathe { 50% { transform: scale(1.025, .975); } }
+  @keyframes petBlink { 0% { opacity: 0; } 94% { opacity: 1; } 97% { opacity: 0; } }
+  @keyframes petZ { 0% { opacity: 0; transform: translate(0, 4px) scale(.7); } 30% { opacity: .9; } 100% { opacity: 0; transform: translate(8px, -16px) scale(1.1); } }
+  @media (prefers-reduced-motion: reduce) { .cpet .pb, .cpet.doze .pz { animation: none; } .cpet .pf { transition: none; } /* still: only the blink stays (past K1's rule) */
+    .cpet .shut { animation-duration: var(--blink) !important; animation-iteration-count: infinite !important; } }
   .petChip { padding-left: 4px; } .petChip svg { margin: -6px -2px; }
   #newPet .ico { margin: -8px 4px -6px -6px; }
   .subHead { margin: 12px 0 0; font-size: var(--fs-small); letter-spacing: .6px; text-transform: uppercase; color: #ffd27a; }
@@ -430,7 +447,7 @@
 </div></section>
 
 <section id="home" class="screen hub">
-  <div class="campStage" id="campStage"><div id="campArt"></div><div id="campFx" class="campFx"></div></div>
+  <div class="campStage" id="campStage"><div id="campArt"></div><div id="campPets" class="campPets"></div><div id="campFx" class="campFx"></div></div>
   <div class="hubBar"><div class="pill" id="homeGoldPill"><span id="coinA"></span><span id="homeGold">0</span></div>
     <span class="siteName" id="campTitle"></span><button id="hubMenu" class="alt iconBtn" aria-label="Menu"></button></div>
   <div class="campHint" id="campHint"></div>
@@ -452,6 +469,7 @@
   <div class="sheetBody">
     <div class="tag">Today's crystals are the same for everyone. One dig a day; keep the streak going.</div>
     <div id="dailyInfo"></div>
+    <button id="dLb" class="alt" style="display:none">Leaderboards</button>
   </div>
   <div class="sheetFoot"><button id="daily"></button></div>
 </div></div></section>
@@ -470,7 +488,7 @@
   <div class="sheetBody">
     <div class="optList">
       <button id="oMusic" class="optRow"></button><button id="oSound" class="optRow"></button><button id="oVib" class="optRow"></button>
-      <button id="oGlyph" class="optRow"></button><button id="oPrivacy" class="optRow"></button>
+      <button id="oGlyph" class="optRow"></button><button id="oPrivacy" class="optRow"></button><button id="oLb" class="optRow" style="display:none"></button>
       <details class="optRow" id="oCredits"><summary><span class="icoCredits"></span><span class="lbl">Credits</span></summary>
         <p>Glimmerwood is made by Alex de la Chica.<br>Grandstander typeface by Tyler Finck; Fredoka typeface by Milena Brandão and Hafontia (both SIL Open Font License).<br>Music and sounds are synthesised in the game.</p></details>
       <div id="optsPlatform"></div>
@@ -540,6 +558,7 @@ import { PROLOGUE, MEMORIES, MEMORY_COUNT, nextMemory, memoryById, mineOfMemory,
   CAMP_LINES, SCALE_NOTE, SCENES, nextScene, SITES, GIVEN, MAP_GATE, MURMURS, MURMURS_DEEP, MURMURS_AFTER, PETS, PET_HINT, PET_SHOP } from "./story.js";
 import { soundtrack, sfx } from "./music.js";
 import { platform, track } from "./platform.js";
+import { drawLife, lifeDig, lifeStop, lifeTap, campLife, campPrints } from "./ambient.js";
 import { curve, ring, limb, shape, stroke, rng as prng } from "./paint.js";
 
 // ---------- painted UI skins: plank, parchment and carved-recess shapes from paint.js, as 9-slice SVGs for CSS border-image (--p-*) ----------
@@ -681,9 +700,10 @@ const DEFAULTS = { look: { ...DEFAULT_LOOK, trinket: "none", cloak: "none" }, go
   mode: "exp", opt: { music: true, sound: true, vib: true, glyph: false }, daily: { last: "", streak: 0, best: 0 },
   metPuddock: false, trial: [], found: [], camp: { tent: "canvas", banner: "#5fa04e", fire: "ring", hide: [] },
   story: { prologue: false, mem: [], confessed: false, sprout: false, site: "stump", ledge: false, finale: false, scale: false },
-  pets: { owned: [], active: "none", wear: {} } }; // wear: { [pet]: { head, neck } }
+  pets: { owned: [], active: [], wear: {} } }; // active: the pets out at camp; wear: { [pet]: { head, neck } }
 const stored = store.get("save", {}); if (stored.opt && stored.opt.music === undefined) stored.opt.music = true;
 const save = { ...DEFAULTS, ...stored, up: { ...DEFAULTS.up, ...stored.up }, look: { ...DEFAULTS.look, ...stored.look }, camp: { ...DEFAULTS.camp, ...stored.camp }, story: { ...DEFAULTS.story, ...stored.story }, pets: { ...DEFAULTS.pets, ...stored.pets } };
+if (!Array.isArray(save.pets.active)) save.pets.active = save.pets.active && save.pets.active !== "none" ? [save.pets.active] : []; // older saves had one pet out (or "none")
 save.light ??= save.gold; // lifetime gold sold: the light Dibble has given back to the roots (grows the stump)
 const CALM_MULT = 0.6;
 const PUDDOCK = ["\"Fine rocks. Finer than my cousin's, anyway.\"", "\"Every vein you break, the roots grow kinder.\"",
@@ -733,6 +753,7 @@ function layout() {
   const sb = parseFloat(getComputedStyle($("safeProbe")).paddingBottom) || 0;
   cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px";
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  hudTop = $("hud").getBoundingClientRect().top;
   const top = $("hud").getBoundingClientRect().bottom + 30, bottom = H - sb - 8, GAP = 54, TR = 3.1; // 30: Rootline + leaves; GAP: Rootline + hint line
   cell = Math.floor(Math.min((W - 64) / N, (bottom - top - GAP) / (N + TR)));
   const spare = Math.max(0, bottom - top - GAP - cell * (N + TR));
@@ -742,6 +763,7 @@ function layout() {
   const hc = $("coinHud").getBoundingClientRect(); haulAt = [hc.left + hc.width / 2, hc.top + hc.height / 2];
   bgCache = null;
 }
+let hudTop = 0; // where ambient life may fly: from the HUD's top down to the board
 addEventListener("resize", layout);
 
 // ---------- color helpers ----------
@@ -753,7 +775,7 @@ const lerpHex = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i
 
 // ---------- round state ----------
 let biome, cat, board, meta, tray, uid, combo, miss, rescueUsed, state = "home", endCause, calm = false, daily = false, rng = Math.random;
-let newMem = [], newPets = [], frees = [], petHop = 0; // pets freed this dig, their release animations, the peeking pet's last hop
+let newMem = [], newPets = [], frees = [], petHop = 0, petDress = null; // pets freed this dig, their release animations, the peeking pet's last hop
 let cracked = new Set(); // rubble stone cells with one crack
 let stolen = 0, moths = [], placedN = 0, mothRng = Math.random, bonus = 0, frozenUntil = 0, time, maxTime, started, haul, floats = [], parts = [];
 function catalogFor(b) {
@@ -807,8 +829,9 @@ function startDig(isDaily = false) {
   tray = dealTray(); state = "play"; show(null);
   soundtrack.play(daily ? "hollow" : biome.id);
   $("biomeName").textContent = daily ? `Daily Dig · ${today()}` : biome.name + (calm ? " · Calm" : "");
-  $("comboTxt").textContent = ""; ending = null; tip = null; coins = []; pops = []; floats = []; parts = []; fx = []; shownHaul = 0; layout();
+  $("comboTxt").textContent = ""; ending = null; tip = null; coins = []; pops = []; floats = []; parts = []; fx = []; fxR = mulberry(7); shownHaul = 0; layout();
   track("round_start", { mine: biome.id, mode: daily ? "daily" : calm ? "calm" : "expedition" });
+  pawPrints = false; lifeDig(["fur", "hat", "scarf", "lantern"].map((p) => [p, Object.keys(LOOKS[p]).filter((v) => v !== "granny")]), !daily && Object.keys(save.best).length > 0);
 }
 const rawHaul = () => Object.entries(haul).reduce((s, [t, n]) => s + n * CRYSTALS[t].value, 0) + bonus;
 const haulValue = () => Math.max(0, Math.round((rawHaul() - stolen) * valueMult()));
@@ -1009,7 +1032,7 @@ const aName = (k) => (/^[AEIOU]/.test(PETS[k].name) ? "an " : "a ") + PETS[k].na
 function freePets(cells, before) { // a clear through a pet's cell wakes it: it's yours, and it pops out
   for (const k of cells) { const m = meta[before[k]]; if (!m?.pet || m.petAt !== k) continue;
     const kind = m.pet, P = save.pets; m.pet = null;
-    if (!P.owned.includes(kind)) { P.owned.push(kind); if (P.active === "none") P.active = kind; persist(); }
+    if (!P.owned.includes(kind)) { P.owned.push(kind); P.active.push(kind); persist(); }
     newPets.push(kind); track("pet_found", { pet: kind, mine: biome.id });
     const x = bx + (k % N + .5) * cell, y = by + (Math.floor(k / N) + .5) * cell; frees.push({ kind, x, y, at: performance.now() }); starBurst(x, y, 12, "#ffd2e2");
     pops.push({ text: `${PETS[kind].name}!`, life: 1.4, col: "#ffd2e2" }); [784, 988, 1175, 1568, 1976].forEach((f, j) => tone(f, .3, "sine", .06, j * .07)); buzz(25); }
@@ -1018,17 +1041,20 @@ function drawFrees(now) { // the crystal cracks, then the pet pops out and bounc
   frees = frees.filter((f) => now - f.at < 2000);
   for (const f of frees) {
     const t = (now - f.at) / 2000;
-    if (t < .1) { const k = t / .1; ctx.save(); ctx.strokeStyle = "#fffaf0"; ctx.lineWidth = 2.4; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.globalAlpha = 1 - k * .4; ctx.beginPath();
+    if (t < .1) { const k = t / .1, g = cell * (1 + 1.6 * k); ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .8 * k; ctx.drawImage(glowSpr("#ffe2ec"), f.x - g / 2, f.y - g / 2, g, g); ctx.restore();
+      ctx.save(); ctx.strokeStyle = "#fffaf0"; ctx.lineWidth = 2.4; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.globalAlpha = 1 - k * .4; ctx.beginPath();
       for (let j = 0; j < 6; j++) { const a = j * 1.05 + .3, l = cell * .62 * k; ctx.moveTo(f.x, f.y); ctx.lineTo(f.x + Math.cos(a + .3) * l * .5, f.y + Math.sin(a + .3) * l * .5); ctx.lineTo(f.x + Math.cos(a) * l, f.y + Math.sin(a) * l); }
       ctx.stroke(); ctx.restore(); continue; }
     const u = (t - .1) / .9, im = petImg(f.kind); if (!im.complete) continue;
+    { const g = cell * (2.4 + .8 * Math.sin(Math.min(1, u * 4) * Math.PI / 2)); ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .65 * (1 - u) ** 1.5; // a warm halo as it wakes
+      ctx.drawImage(glowSpr("#ffc8da"), f.x - g / 2, f.y - g / 2, g, g); ctx.restore(); }
     const hop = calmMotion ? 0 : Math.abs(Math.sin(u * Math.PI * 3)) * cell * 1.4 * (1 - u) ** 1.2, land = calmMotion ? 0 : Math.max(0, 1 - hop / (cell * .2)) * (1 - u);
     const s = cell * 1.35 * (u < .12 ? .25 + .75 * easeBack(u / .12) : 1);
     ctx.save(); ctx.globalAlpha = Math.min(1, (1 - u) * 6); ctx.translate(f.x, f.y + cell * .45 - hop); ctx.scale(1 + .2 * land, 1 - .18 * land); ctx.drawImage(im, -s / 2, -s * .92, s, s); ctx.restore();
   }
 }
 function drawPeek(now) { // your pet sits on the Rootline's bottom-right corner, watching, and hops when a line clears
-  const k = save.pets.active; if (k === "none" || frees.length) return;
+  const k = save.pets.active[0]; if (!k || frees.length) return;
   const im = petImg(k); if (!im.complete) return;
   const s = cell * 1.15, h = calmMotion ? 0 : Math.max(0, Math.sin(Math.min(1, (now - petHop) / 420) * Math.PI)) * cell * .55;
   ctx.drawImage(im, bx + cell * N + 12 - s / 2, by + cell * N + 21 - s * .92 - h, s, s); // centred on the frame's edge, clear of the cells
@@ -1209,6 +1235,7 @@ function paintMine() {
 }
 function drawMine(now) { // the painted cave, plus motes drifting through it
   bgCache ??= paintMine(); ctx.drawImage(bgCache.mine, 0, 0, W, H);
+  if (state === "play") drawLife(ctx, now, { W, bx, by, bw: cell * N, top: hudTop, low: trayY, feature: look().feature, busy: !!drag }); // ambient.js: what passes, and the other lantern
   const [col, dir, n] = MOTES[look().feature] || MOTES.moss;
   if (calmMotion) return; ctx.fillStyle = col;
   for (let k = 0; k < n; k++) { const sp = 18 + (k * 7) % 23, y = (((k * 137) % 100) / 100 * H + dir * now / 1000 * sp) % H, yy = y < 0 ? y + H : y;
@@ -1288,15 +1315,53 @@ function drawRootline(now) {
 }
 
 // ---------- effects ----------
-// a clear: each cell flashes, then bursts into two-tone shards; more and faster shards the bigger the clear (power 1–6)
-function shatter(idxs, colorAt, stagger = 12, power = 1) {
-  const n = 3 + Math.round(Math.min(4, power));
+// Glow is baked once per colour into a small sprite and drawn with "lighter" blending: no shadowBlur on particles.
+// Effects roll their own seeded stream (reset each dig), so a seeded run (the trailer) replays the same bursts,
+// and the game's Math.random (memories, pets) doesn't shift when an effect changes.
+let fxR = mulberry(7);
+const glows = new Map(), pals = new Map();
+function glowSpr(col, pure = false) { // white-hot core, the colour, then nothing; pure: all colour, no white (the burst)
+  let c = glows.get(col + pure); if (c) return c;
+  c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"), r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  r.addColorStop(0, pure ? hexA(col, 1) : "rgba(255,255,250,.95)"); r.addColorStop(pure ? .35 : .2, hexA(col, pure ? .7 : .8)); r.addColorStop(.6, hexA(col, .2)); r.addColorStop(1, hexA(col, 0));
+  g.fillStyle = r; g.fillRect(0, 0, 64, 64); glows.set(col + pure, c); return c;
+}
+const vivid = (h) => { const c = hex(h), l = (c[0] + c[1] + c[2]) / 3; // half again as saturated: still paint, not neon
+  return "#" + c.map((v) => Math.max(0, Math.min(255, Math.round(l + (v - l) * 1.45))).toString(16).padStart(2, "0")).join(""); };
+const palOf = (h) => { let p = pals.get(h); if (!p) { const col = vivid(h); pals.set(h, p = { col, lt: lerpHex(col, "#ffffff", .55), dk: lerpHex(col, "#1a1426", .45), glow: lerpHex(col, "#fff4dc", .25) }); } return p; };
+const FLAVOUR = { // how the specials break: shard shape, gravity, fade per frame, extra motes, their colour
+  frost: { k: "flake", pal: "#cdf3ff", g: .1, fade: .02, motes: 1, mote: "#e6fbff" },
+  ember: { k: "spark", pal: "#ff8a3d", g: .2, fade: .034, motes: 2, mote: "#ffb35c" },
+  geode: { rock: "#6b5a70", sparkle: 4, mote: "#f0dcff" },
+  heart: { pulse: true, motes: 2, mote: "#ffc2d2" },
+  glowcap: { motes: 3, mote: "#d9c9ff", slow: true },
+  rubble: { matte: true },
+};
+// a clear: each cell blooms with light and bursts into faceted shards in its own colour, a light sweeps the line, motes drift up.
+// power 1–6 (lines, combo, embers, pure veins) scales the bloom, the motes and a soft glow over the board; reduced motion keeps the glow only
+function shatter(idxs, typeAt, stagger = 12, power = 1, lines = null) {
+  const big = Math.min(1, (power - 1) / 4), per = Math.max(2, Math.min(3 + Math.round(Math.min(3, power)), Math.floor(170 / idxs.length)));
+  let motes = 0; const maxMotes = 6 + Math.round(26 * big), ba = Math.min(.9, 3 / Math.sqrt(idxs.length)); // many blooms overlap in a big clear: each one softer
+  const p0 = palOf(CRYSTALS[typeAt(idxs[0])]?.color || "#c9b6ff");
+  if (!calmMotion && lines) for (const [list, row] of [[lines.rows, true], [lines.cols, false]]) for (const v of list) fx.push({ kind: "sweep", row, v, life: 1, dur: .34, delay: 20 });
+  if (!calmMotion && power >= 2) fx.push({ kind: "screen", col: p0.glow, a: .08 + .1 * big, life: 1, dur: .6 + .25 * big, delay: 0 });
   idxs.forEach((i, k) => {
-    const r = Math.floor(i / N), c = i % N, col = colorAt(i), dk = mix(col, "#0e1c1a", .45), lt = mix(col, "#ffffff", .5);
-    fx.push({ kind: "flash", x: bx + c * cell, y: by + r * cell, life: 1, delay: k * stagger });
-    for (let j = 0; j < n; j++) { const a = Math.random() * Math.PI * 2, v = 1.5 + Math.random() * (2.5 + power);
-      parts.push({ x: bx + (c + .5) * cell, y: by + (r + .5) * cell, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2.5, rot: Math.random() * 6, vr: (Math.random() - .5) * .35,
-        s: cell * (.14 + Math.random() * .22), col, dk, lt, life: 1, delay: k * stagger + 40 }); }
+    const t = typeAt(i), F = FLAVOUR[t] || {}, P = palOf(F.pal || CRYSTALS[t]?.color || "#c9b6ff"), d = k * stagger;
+    const x = bx + (i % N + .5) * cell, y = by + (Math.floor(i / N) + .5) * cell;
+    fx.push({ kind: "flash", x: x - cell / 2, y: y - cell / 2, col: P.lt, a: ba * .8, life: 1, dur: .24, delay: d });
+    if (!F.matte) fx.push({ kind: "burst", x, y, col: P.col, s: cell * (1.7 + .5 * big), rays: idxs.length > 16 ? 4 : 7, rot: fxR() * 6, a: Math.min(.85, 4.5 / Math.sqrt(idxs.length)), life: 1, dur: calmMotion ? .3 : .4 + .1 * big, delay: d });
+    if (!F.matte) fx.push({ kind: "bloom", x, y, col: P.glow, s: cell * (2.3 + .7 * big), a: ba * (1 - .35 * big), life: 1, dur: calmMotion ? .35 : .32 + .14 * big, delay: d });
+    if (calmMotion || parts.length > 240) return;
+    const rock = F.rock && palOf(F.rock);
+    for (let j = 0; j < per; j++) { const a = fxR() * Math.PI * 2, v = 1.5 + fxR() * (2.5 + power), q = rock && j % 2 ? rock : P;
+      parts.push({ k: F.k && j % 3 !== 2 ? F.k : "shard", x, y, vx: Math.cos(a) * v * (F.k === "spark" ? 1.6 : 1), vy: Math.sin(a) * v - 2.5, rot: fxR() * 6, vr: (fxR() - .5) * .35,
+        s: cell * (.15 + fxR() * .24), w: .65 + fxR() * .55, ph: fxR() * 6, g: F.g || .35, fade: F.fade || .024, col: q.col, dk: q.dk, lt: q.lt, life: 1, delay: d + 40 }); }
+    for (let j = (k % 2 ? 0 : 1) + (F.motes || 0) + Math.round(big * 1.5); j > 0 && motes < maxMotes + (F.motes || 0) * 2; j--, motes++) // sparkle motes drift up and twinkle out
+      fx.push({ kind: "mote", x: x + (fxR() - .5) * cell * .8, y: y + (fxR() - .5) * cell * .5, vx: (fxR() - .5) * .8, vy: -(F.slow ? .7 : 1.1) - fxR() * 1.4 - big,
+        s: cell * (.45 + fxR() * .35), col: F.mote || P.glow, ph: fxR() * 6, life: 1, dur: .75 + fxR() * .3, delay: d + 60 });
+    for (let j = 0; j < (F.sparkle || 0); j++) { const a = (j / F.sparkle) * Math.PI * 2 + fxR(), v = 2 + fxR() * 2.5; // the geode's cavity bursts into glints
+      fx.push({ kind: "star", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: 3 + fxR() * 4, col: "#f6e8ff", life: 1, dur: .5, delay: d + 30 }); }
+    if (F.pulse) for (const pd of [0, 170]) fx.push({ kind: "pulse", x, y, col: "#ff8fae", life: 1, dur: .6, delay: d + pd }); // the heartstone's warm beat
   });
 }
 // coins pop out of the clear, arc up, and fly into the Haul badge (count grows with the gold)
@@ -1304,10 +1369,17 @@ const coinImg = new Image(); coinImg.src = "data:image/svg+xml;charset=utf-8," +
 let coins = [], lastBump = 0;
 function coinPop(idxs, gold) {
   const n = Math.max(2, Math.min(14, Math.round(1 + Math.log2(1 + gold) * 1.3))), now = performance.now();
-  for (let k = 0; k < n; k++) { const i = idxs[Math.floor(Math.random() * idxs.length)], x = bx + (i % N + .5) * cell, y = by + (Math.floor(i / N) + .5) * cell;
-    coins.push({ x, y, cx: x + (Math.random() - .5) * cell * 3, cy: y - cell * (1.5 + Math.random() * 1.5), at: now + 60 + k * 45, dur: 620 + Math.random() * 160, k }); }
+  for (let k = 0; k < n; k++) { const i = idxs[Math.floor(fxR() * idxs.length)], x = bx + (i % N + .5) * cell, y = by + (Math.floor(i / N) + .5) * cell;
+    coins.push({ x, y, cx: x + (fxR() - .5) * cell * 3, cy: y - cell * (1.5 + fxR() * 1.5), at: now + 60 + k * 45, dur: 620 + fxR() * 160, k }); }
 }
 function drawCoins(now) {
+  ctx.globalCompositeOperation = "lighter"; // first a warm glow under each coin, and a glint as it leaves the clear
+  for (const q of coins) { const t = (now - q.at) / q.dur; if (t < 0 || t >= 1) continue;
+    const e = t < .5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2, u = 1 - e, [hx, hy] = haulAt, s = cell * .5 * (t < .15 ? easeBack(t / .15) : 1 - .4 * t);
+    const x = u * u * q.x + 2 * u * e * q.cx + e * e * hx, y = u * u * q.y + 2 * u * e * q.cy + e * e * hy, gl = Math.sin(Math.PI * Math.min(1, t / .4));
+    ctx.globalAlpha = .5 * (1 - .5 * t); ctx.drawImage(glowSpr("#ffc24a"), x - s, y - s, s * 2, s * 2);
+    if (gl > 0) { ctx.globalAlpha = gl; ctx.drawImage(glowSpr("#fff1c0"), x - s * .55, y - s * .6, s * .7 * gl, s * .7 * gl); } }
+  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
   coins = coins.filter((q) => {
     const t = (now - q.at) / q.dur; if (t < 0) return true;
     if (t >= 1) { if (now - lastBump > 70) { lastBump = now; $("coinHud").animate([{ transform: "scale(1)" }, { transform: "scale(1.35)" }, { transform: "scale(1)" }], { duration: 180, easing: "ease-out" }); }
@@ -1321,9 +1393,10 @@ const float = (text, x, y, color = "#f0b543") => floats.push({ text, x, y, color
 // satisfying extras: star bursts, shockwave rings, screen shake, a brief hit-stop, combo pops, gem twinkles
 let fx = [], shakeAmp = 0, hitStop = 0, pops = [], twinkles = [], lastTwinkle = 0;
 function starBurst(x, y, n = 10, col = "#fff6c8") {
-  for (let k = 0; k < n; k++) { const a = (k / n) * Math.PI * 2 + Math.random() * .4, v = 3 + Math.random() * 4;
-    fx.push({ kind: "star", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: 4 + Math.random() * 5, col, life: 1 }); }
-  fx.push({ kind: "ring", x, y, r: cell * .4, life: 1 });
+  if (calmMotion) return; // reduced motion: the cells' glow says it
+  for (let k = 0; k < n; k++) { const a = (k / n) * Math.PI * 2 + fxR() * .4, v = 3 + fxR() * 4;
+    fx.push({ kind: "star", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: 4 + fxR() * 5, col, life: 1, dur: .55 }); }
+  fx.push({ kind: "ring", x, y, r: cell * .4, life: 1, dur: .37 });
 }
 function toast(html, ms = 1500) {
   const el = $("toast"); el.innerHTML = html; el.style.opacity = 1;
@@ -1339,6 +1412,8 @@ function trayRect(i) {
 // drag starts anywhere in a piece's third of the tray (the whole slot, down to the bottom of the screen)
 cv.addEventListener("pointerdown", (e) => {
   if (state !== "play" || !tray) return;
+  const said = lifeTap(e.clientX, e.clientY); // tapped the other lantern in time: a line, and a tally nobody shows you (yet)
+  if (said) { toast("", 2800); say($("toast"), said, "dibble"); save.lanterns = (save.lanterns || 0) + 1; persist(); return; }
   const i = Math.floor((e.clientX - trayX) / slotW);
   if (i < 0 || i > 2 || !tray[i] || e.clientY < trayY - 18) return;
   drag = { i, ...tray[i], x: e.clientX, y: e.clientY, touch: e.pointerType !== "mouse", at: performance.now(), from: trayRect(i) };
@@ -1375,7 +1450,7 @@ function commit(i, r, c, from) {
     const br = breakCells(board, lines, isEmber), embers = br.embers, sb = stoneBreak(board, br.cells, isStone, cracked), cells = sb.cells, pure = pureVeinCells(board, lines, typeOf), before = board;
     const shooLoot = shooMoths(cells); freePets(cells, before); petHop = performance.now();
     for (const k of cells) { const mem = meta[before[k]]?.memory; if (mem && !save.story.mem.includes(mem)) { // an Amber Memory breaks open
-      save.story.mem.push(mem); newMem.push(mem); persist(); meta[before[k]].memory = null; track("memory_found", { id: mem });
+      save.story.mem.push(mem); newMem.push(mem); persist(); meta[before[k]].memory = null; track("memory_found", { id: mem }); platform.submitScore("memories_found", save.story.mem.length);
       pops.push({ text: "An Amber Memory!", life: 1.2, col: "#ffd27a" }); [659, 880, 1047, 1319].forEach((f, j) => tone(f, .5, "sine", .07, j * .09)); } }
     let gained = shooLoot;
     const inLine = new Set(lineCells(lines)), lens = .5 * save.up.lens, tongs = .25 * save.up.tongs;
@@ -1394,7 +1469,7 @@ function commit(i, r, c, from) {
     if (power >= 2 && !calmMotion) { shakeAmp = Math.min(12, 2 + power * 1.7); hitStop = performance.now() + 30 + 20 * power; }
     if (combo >= 2) pops.push({ text: combo >= 5 ? `Combo ×${combo}!!` : `Combo ×${combo}!`, life: 1, col: combo >= 5 ? "#ff9db5" : "#ffd27a" });
     if (n >= 3) pops.push({ text: n >= 4 ? "Glimmering!" : "Brilliant!", life: 1.15, col: "#9fe6ff" });
-    shatter(cells.sort((a, b) => (a % N + Math.floor(a / N)) - (b % N + Math.floor(b / N))), (k) => CRYSTALS[typeOf(before[k])]?.color || "#c9b6ff", 12, power);
+    shatter(cells.sort((a, b) => (a % N + Math.floor(a / N)) - (b % N + Math.floor(b / N))), (k) => typeOf(before[k]), 12, power, lines);
     coinPop(cells, gained);
     board = clearCells(board, cells); cracked = sb.cracked;
     if (sb.hits) { sfx.crack(); buzz(20); }
@@ -1422,7 +1497,7 @@ function commit(i, r, c, from) {
 function endRound(cause) {
   if (state === "play") track("round_end", { mine: biome.id, cause, value: haulValue(), seconds: Math.round(maxTime - time) });
   if (state !== "play") return;
-  state = "end"; endCause = cause; drag = null; ending = { cause, at: performance.now() };
+  state = "end"; endCause = cause; drag = null; ending = { cause, at: performance.now() }; lifeStop();
   pops.push({ text: cause === "time" ? "The roots closed in!" : "No room left!", life: 1.3, col: cause === "time" ? "#ff9d7a" : "#ffd27a" });
   sfx.thud(); buzz(40);
   // first a beat to see what happened, then the rescue offer (once per dig), then the haul
@@ -1507,7 +1582,7 @@ $("rescueGo").onclick = async () => {
   else {
     const cells = rescueCells(board, 3), before = board;
     shooMoths(cells); freePets(cells, before);
-    shatter(cells, (k) => CRYSTALS[typeOf(before[k])]?.color || "#c9b6ff", 5);
+    shatter(cells, (k) => typeOf(before[k]), 5);
     board = clearCells(board, cells); cells.forEach((k) => cracked.delete(k)); tray = dealTray();
     if (time < T.rescue_time) time = T.rescue_time;
   }
@@ -1546,6 +1621,8 @@ function sell(mult) {
     else save.daily.best = Math.max(save.daily.best, haulValue());
   } else save.best[bestKey()] = Math.max(save.best[bestKey()] || 0, haulValue());
   persist();
+  if (!calm) platform.submitScore("best_haul", haulValue()); // Game Center keeps each player's best. Calm Grove has no clock, so it stays off the board
+  if (daily) platform.submitScore("daily_dig", save.daily.best); // a leaderboard that resets daily (docs/SETUP.md)
   state = "home"; renderHome(); show("home");
   track("haul_sold", { mine: biome.id, value: v, doubled: mult > 1 });
   platform.expeditionDone(); // interstitial, only when the pacing caps allow
@@ -1582,7 +1659,7 @@ function renderHome() {
     $(id).innerHTML = `${icon(ico, 22)}<span class="lbl">${label}</span>${on === undefined ? "" : `<span class="state">${on ? "On" : "Off"}</span>`}`;
     if (on !== undefined) { $(id).classList.toggle("on", on); $(id).setAttribute("aria-pressed", on); } };
   optRow("oMusic", "note", "Music", save.opt.music); optRow("oSound", save.opt.sound ? "soundOn" : "soundOff", "Sound", save.opt.sound);
-  optRow("oVib", "vibe", "Haptics", save.opt.vib); optRow("oGlyph", "symbols", "Colour-blind symbols", save.opt.glyph); optRow("oPrivacy", "lock", "Privacy choices");
+  optRow("oVib", "vibe", "Haptics", save.opt.vib); optRow("oGlyph", "symbols", "Colour-blind symbols", save.opt.glyph); optRow("oPrivacy", "lock", "Privacy choices"); optRow("oLb", "shatter", "Leaderboards");
   $("dibbleArt").innerHTML = titleHero(save.look, STILL);
   const mem = `Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}`;
   $("tMem").textContent = mem; $("campMem").textContent = mem;
@@ -1638,7 +1715,7 @@ async function renderIap() {
 function renderMarket() {
   renderIap();
   $("mktGold").textContent = save.gold;
-  const pets = save.pets.owned, shown = save.pets.active !== "none" ? save.pets.active : pets[0];
+  const pets = save.pets.owned, shown = dressPet();
   $("petTab").style.display = pets.length ? "" : "none"; if (mktTab === "pets" && !pets.length) mktTab = "tools";
   for (const b of document.querySelectorAll("#mktTabs button")) b.classList.toggle("on", b.dataset.tab === mktTab);
   $("shop").innerHTML = (mktTab === "pets" ? `<div class="puddock">"${PET_SHOP}"</div>` : "") + (mktTab === "tools" && !save.story.confessed ? `<div class="shopItem"><span class="tile">${lookItem("lantern", "granny", 40)}</span>
@@ -1859,7 +1936,7 @@ function campState() {
     found: GEMS.map((t) => save.found.includes(t) ? { color: CRYSTALS[t].color, cut: CRYSTALS[t].cut } : null),
     tent: save.camp.tent, banner: save.camp.banner, fire: save.camp.fire,
     site: save.story.site, sky: save.story.finale, packed: save.story.finale, puddockHere: save.story.site !== "stump",
-    grannySvg: save.story.site === "skywell" ? granny(60) : "", puddockSvg: puddock(60), petSvg: save.pets.active !== "none" ? pet(save.pets.active, 100, wearOf(save.pets.active)) : "", decor: { mushrooms: own("decor:mushrooms"), jars: own("decor:jars"), hammock: own("decor:hammock"), cart: own("decor:cart"), flies: save.owned.includes("fireflies") } };
+    grannySvg: save.story.site === "skywell" ? granny(60) : "", puddockSvg: puddock(60), decor: { mushrooms: own("decor:mushrooms"), jars: own("decor:jars"), hammock: own("decor:hammock"), cart: own("decor:cart"), flies: save.owned.includes("fireflies") } };
 }
 function campProgress() {
   const ups = SHOP.filter((i) => i.kind === "up"), extras = SHOP.filter((i) => i.kind !== "up" && i.kind !== "petwear");
@@ -1869,8 +1946,8 @@ function campProgress() {
 }
 function renderCamp() {
   $("campTitle").textContent = `Dibble's Camp · ${SITES[save.story.site]}`;
-  const P = save.pets, pw = wearOf(P.active);
-  $("wardDibble").innerHTML = dibble(84, save.look) + (P.active !== "none" ? `<span class="wardPet">${pet(P.active, 44, pw)}</span>` : "");
+  const P = save.pets, dp = dressPet(), pw = wearOf(dp);
+  $("wardDibble").innerHTML = dibble(84, save.look) + (dp ? `<span class="wardPet">${pet(dp, 44, pw)}</span>` : ""); // with the pet you're dressing
   const pc = campProgress();
   $("campProg").innerHTML = `<div class="bar"><i style="width:${(pc * 100).toFixed(1)}%"></i></div><small>Camp ${Math.round(pc * 100)}% grown · ${save.found.length}/${GEMS.length} gems on the shelf</small>`;
   const chip = (grp, val, label, swatch) => `<button class="chip ${save.camp[grp] === val ? "on" : ""}" data-grp="${grp}" data-val="${val}">${swatch || ""}${label}</button>`;
@@ -1882,10 +1959,11 @@ function renderCamp() {
     <h3 class="subHead">Dibble</h3>${["hat", "trinket", "scarf", "cloak", "lantern", "fur"].map((part) => `<div class="custRow"><span>${{ hat: "Hat", trinket: "Trinket", scarf: "Scarf", cloak: "Cloak", lantern: "Lantern", fur: "Fur" }[part]}</span>${Object.keys(LOOKS[part]).filter((v) => lookOwned(part, v))
       .map((v) => `<button class="chip ${save.look[part] === v ? "on" : ""}" data-look="${part}" data-val="${v}">${part === "scarf" && v !== "none" ? `<i class="sw" style="background:${v}"></i>` : part === "fur" ? `<i class="sw" style="background:${FUR[v][0]}"></i>` : ""}${v === "none" ? "None" : LOOKS[part][v].replace(/ (fur|scarf|lantern|cloak)$/i, "")}</button>`).join("")}</div>`).join("")}
     ${P.owned.length ? `<h3 class="subHead">Pet · ${P.owned.length} of ${PET_KINDS.length} found</h3>
-      <div class="custRow"><span>Pet</span>${["none", ...P.owned].map((k) => `<button class="chip petChip ${P.active === k ? "on" : ""}" data-pet="${k}">${k === "none" ? "None" : pet(k, 32, wearOf(k)) + PETS[k].name}</button>`).join("")}</div>
-      ${P.active === "none" ? "" : [["head", "Head"], ["neck", "Neck"]].map(([slot, lbl]) => { const have = PET_WEAR.filter(([v]) => PET_WEAR_SLOT[v] === slot && save.owned.includes("pet:" + v));
+      <div class="custRow"><span>At camp</span>${P.owned.map((k) => `<button class="chip petChip ${P.active.includes(k) ? "on" : ""}" data-pet="${k}" aria-pressed="${P.active.includes(k)}">${pet(k, 32, wearOf(k))}${PETS[k].name}</button>`).join("")}</div>
+      ${PET_WEAR.some(([v]) => save.owned.includes("pet:" + v)) ? `<div class="custRow"><span>Dress</span>${P.owned.map((k) => `<button class="chip ${dp === k ? "on" : ""}" data-dress="${k}">${PETS[k].name}</button>`).join("")}</div>` : ""}
+      ${[["head", "Head"], ["neck", "Neck"]].map(([slot, lbl]) => { const have = PET_WEAR.filter(([v]) => PET_WEAR_SLOT[v] === slot && save.owned.includes("pet:" + v));
         return have.length ? `<div class="custRow"><span>${lbl}</span>${[["none", "None"], ...have].map(([v, n]) => `<button class="chip ${(pw[slot] || "none") === v ? "on" : ""}" data-pwear="${slot}" data-val="${v}">${n}</button>`).join("")}</div>` : ""; }).join("")}
-      <div class="note">${P.owned.length < PET_KINDS.length ? "More are asleep in the mines. " : ""}Tiny clothes at Old Puddock's, in the Pets tab.</div>`
+      <div class="note">Tap a pet to bring it out to camp or send it to bed. ${P.owned.length < PET_KINDS.length ? "More are asleep in the mines. " : ""}Tiny clothes at Old Puddock's, in the Pets tab.</div>`
     : `<h3 class="subHead">Pet</h3><div class="note">"${PET_HINT}" Some crystals in the mines have someone asleep inside. Clear the line to wake them.</div>`}
     <h3 class="subHead">Camp</h3><div class="custRow"><span>Tent</span>${tents.map(([v, l]) => chip("tent", v, l)).join("")}</div>
     <div class="custRow"><span>Banner</span>${banners.map(([c, l]) => chip("banner", c, "", `<i class="sw" style="background:${c}" title="${l}"></i>`)).join("")}</div>
@@ -1893,8 +1971,10 @@ function renderCamp() {
     ${decor.length ? `<div class="custRow"><span>Decor</span>${decor.map((i) => `<button class="chip ${save.camp.hide.includes(i.id) ? "" : "on"}" data-hide="${i.id}">${i.name}</button>`).join("")}</div>` : ""}
     <div class="note">Lanterns = Lantern level · tool rack = Pickaxe · the sapling = Root Charm · signpost = mines opened · shelf = gem types found. More in Old Puddock's Camp tab.</div>`;
   for (const b of $("campCustom").querySelectorAll("[data-look]")) b.onclick = () => { save.look[b.dataset.look] = b.dataset.val; persist(); renderHome(); ui.chirp(); };
-  for (const b of $("campCustom").querySelectorAll("[data-pet]")) b.onclick = () => { P.active = b.dataset.pet; persist(); renderHome(); ui.chirp(); };
-  for (const b of $("campCustom").querySelectorAll("[data-pwear]")) b.onclick = () => { (P.wear[P.active] ??= {})[b.dataset.pwear] = b.dataset.val; persist(); renderHome(); ui.chirp(); };
+  for (const b of $("campCustom").querySelectorAll("[data-pet]")) b.onclick = () => { const k = b.dataset.pet; // out to camp, or back to bed; out means dressing it next
+    P.active = P.active.includes(k) ? P.active.filter((x) => x !== k) : (petDress = k, [...P.active, k]); persist(); renderHome(); ui.chirp(); };
+  for (const b of $("campCustom").querySelectorAll("[data-dress]")) b.onclick = () => { petDress = b.dataset.dress; renderCamp(); ui.chirp(); };
+  for (const b of $("campCustom").querySelectorAll("[data-pwear]")) b.onclick = () => { (P.wear[dp] ??= {})[b.dataset.pwear] = b.dataset.val; persist(); renderHome(); ui.chirp(); };
   for (const b of $("campCustom").querySelectorAll("[data-grp]")) b.onclick = () => { save.camp[b.dataset.grp] = b.dataset.val; persist(); renderHome(); tone(660, .08, "triangle", .06); };
   for (const b of $("campCustom").querySelectorAll("[data-hide]")) b.onclick = () => {
     const h = save.camp.hide, id = b.dataset.hide; save.camp.hide = h.includes(id) ? h.filter((x) => x !== id) : [...h, id]; persist(); renderHome(); };
@@ -1906,9 +1986,97 @@ function drawCamp() {
   const stage = $("campStage"); if (!stage.clientHeight) return; // hidden: the ResizeObserver draws it once it shows
   const barBottom = document.querySelector(".hubBar").getBoundingClientRect().bottom - stage.getBoundingClientRect().top;
   $("campArt").innerHTML = camp({ ...campState(), daily: campDaily, view: [stage.clientWidth, stage.clientHeight, barBottom] }, gem, dibble(100, save.look));
-  setTimeout(campTips, 900);
+  const art = $("campArt").querySelector("svg"), pud = () => $("campArt").querySelector(".pud");
+  if (pawPrints && save.story.site === "stump") campPrints(art);
+  campLife(art, save.story.site === "skywell" && save.story.finale ? "sky" : save.story.site, { visible: () => $("home").classList.contains("show") && !["talk", ...SHEETS].some((id) => $(id).classList.contains("show")),
+    extra: pud() ? ["hum"] : [], hum: () => { const b = pud()?.getBoundingClientRect(), st = stage.getBoundingClientRect(); // Puddock hums a line of something old
+      if (b) campFx(Math.min(st.width - 100, b.left + b.width / 2 - st.left), b.top - st.top - 34, pick(["♪ Hm-hm… lanterns low… ♪", "♪ Hmm, hm-hm-hmm… ♪", "♪ …down she goes, hm… ♪"]), "campSay"); } });
+  campPets(); setTimeout(campTips, 900);
 }
 new ResizeObserver(drawCamp).observe($("campStage"));
+// someone came by the stump while you were away (8h or more): small prints lead out of it, until your next dig
+let pawPrints = false;
+const cameBack = () => { pawPrints ||= Date.now() - (save.seenAt || Date.now()) > 8 * 3600e3; save.seenAt = Date.now(); persist(); };
+cameBack(); document.addEventListener("visibilitychange", () => { if (document.hidden) { save.seenAt = Date.now(); persist(); } else if (cameBack(), pawPrints) drawCamp(); });
+
+// ---------- the pets out at camp: they roam the open ground between the middle and front props, resting a lot ----------
+// Each pet is two pre-rendered images (eyes open, eyes shut) in its own element over the camp art, moved only with
+// transforms (WAAPI), so the camp SVG never redraws. Every pet runs its own timers, so no two move together:
+// rest 2.4-6.5s (one rest in five is a 7-12s doze, eyes shut, a "z"), then 2-4 hops of ~.5s each to a free spot nearby.
+// Blinks and breathing are CSS loops with a random length per pet. Reduced motion: they sit still and blink.
+function dressPet() { const P = save.pets; return P.owned.includes(petDress) ? petDress : P.active[0] || P.owned[0]; }
+const campPet = {}, rnd = (a, b) => a + Math.random() * (b - a);
+let petGround = null; // { w, free(x, y), spots, depth(y) } in stage px, from the last camp drawing
+function campPets() {
+  const svg = $("campArt").querySelector("svg"), stage = $("campStage").getBoundingClientRect(), m = svg.getScreenCTM(), [top, bot, kf] = svg.dataset.ground.split(" ").map(Number);
+  const X = (x) => m.a * x + m.e - stage.left, Y = (y) => m.d * y + m.f - stage.top, W = stage.width, w = 56 * kf * m.a, y0 = Y(top), y1 = Y(bot) - 2;
+  const avoid = svg.dataset.keep.split(",").map((b) => b.split(" ").map(Number).map((v, i) => (i % 2 ? Y(v) : X(v)) + (i < 2 ? -2 : 2))); // camp()'s keep-out boxes, 2px roomier
+  const depth = (y) => .9 + .14 * Math.max(0, Math.min(1, (y - y0) / (y1 - y0))); // lower on screen = nearer = a little bigger
+  const free = (x, y) => { const h = .3 * w * depth(y), t = y - .64 * w * depth(y);
+    return y >= y0 && y <= y1 && Math.min(x - h - 4, x - 22, W - 4 - x - h, W - 22 - x) >= 0 && !avoid.some(([l, tp, r, b]) => x + h > l && x - h < r && y > tp && t < b); };
+  const cells = new Map(); let spots = [];
+  for (let j = 0, y = y0; y <= y1; j++, y += w * .12) for (let i = 0, x = w * .3; x < W; i++, x += w * .14) if (free(x, y)) cells.set(i + "," + j, [x, y, i, j]);
+  for (const c of cells.values()) { if (c.seen) continue; const patch = [c]; c.seen = true; // keep the biggest joined-up patch: a pocket behind Dibble would trap a pet
+    for (let n = 0; n < patch.length; n++) { const [, , i, j] = patch[n]; for (const k of [`${i + 1},${j}`, `${i - 1},${j}`, `${i},${j + 1}`, `${i},${j - 1}`]) { const d = cells.get(k); if (d && !d.seen) { d.seen = true; patch.push(d); } } }
+    if (patch.length > spots.length) spots = patch; }
+  const onPatch = (x, y) => spots.some(([sx, sy]) => Math.abs(sx - x) < w * .08 && Math.abs(sy - y) < w * .07);
+  petGround = { w, free, spots, depth, avoid }; $("campPets").style.transform = ""; // a fresh drawing has no parallax yet
+  for (const k in campPet) if (!save.pets.active.includes(k)) { clearTimeout(campPet[k].t); clearTimeout(campPet[k].t2); campPet[k].el.remove(); delete campPet[k]; }
+  for (const k of save.pets.active) {
+    const look = JSON.stringify(wearOf(k)), p = campPet[k] ??= petMake(k);
+    if (p.look !== look) { p.look = look; [p.open.src, p.shut.src] = [{ bare: true }, { bare: true, sleep: true }].map((o) => petImg(k, { ...wearOf(k), ...o }).src); }
+    Object.assign(p.el.style, { width: w + "px", height: w + "px" });
+    if (!onPatch(p.x, p.y)) { const taken = Object.values(campPet).filter((q) => q !== p && q.x != null), roomy = spots.filter(([x, y]) => taken.every((q) => Math.hypot(x - q.x, y - q.y) > w * .7));
+      [p.x, p.y] = pick(roomy.length ? roomy : spots.length ? spots : [[W / 2, y0]]); p.el.getAnimations({ subtree: true }).forEach((a) => a instanceof CSSAnimation || a.cancel()); } // a hop in flight, not the blink
+    p.el.style.transform = petAt(p.x, p.y); p.el.style.zIndex = Math.round(p.y);
+    if (!p.t && !calmMotion) p.t = setTimeout(() => petRest(p), rnd(0, 3000));
+  }
+}
+const petAt = (x, y) => { const { w, depth } = petGround; return `translate(${(x - w / 2).toFixed(1)}px, ${(y - w * .93).toFixed(1)}px) scale(${depth(y).toFixed(3)})`; };
+function petMake(k) {
+  const el = document.createElement("div"); el.className = "cpet"; el.dataset.tap = "pet"; el.dataset.kind = k;
+  el.setAttribute("role", "button"); el.setAttribute("aria-label", PETS[k].name);
+  el.innerHTML = `<i class="psh"></i><div class="pf"><div class="pb"><img alt=""><img class="shut" alt=""></div></div><b class="pz">z</b>`;
+  el.style.setProperty("--blink", rnd(3.2, 6.4).toFixed(2) + "s"); el.style.setProperty("--breathe", rnd(2.4, 3.4).toFixed(2) + "s"); el.style.setProperty("--off", (-rnd(0, 6)).toFixed(2) + "s");
+  $("campPets").appendChild(el);
+  const [open, shut] = el.querySelectorAll("img"), p = { k, el, open, shut, body: el.querySelector(".pb"), flip: el.querySelector(".pf"), shadow: el.querySelector(".psh") };
+  el.pet = p; petFace(p, Math.random() < .5 ? 1 : -1); return p;
+}
+function petFace(p, dir) { p.dir = dir; p.flip.style.transform = `scaleX(${dir})`; }
+function petRest(p) { // sit: blink, breathe, look the other way now and then, or doze off
+  const doze = Math.random() < .2, ms = doze ? rnd(7000, 12000) : rnd(2400, 6500);
+  p.el.classList.toggle("doze", doze);
+  if (!doze && Math.random() < .5) p.t2 = setTimeout(() => petFace(p, -p.dir), rnd(.3, .7) * ms);
+  p.t = setTimeout(() => petWalk(p), ms);
+}
+function petWalk(p) { // a few hops to a free spot nearby (never through a prop or onto another pet), then rest again
+  p.el.classList.remove("doze");
+  const G = petGround, others = Object.values(campPet).filter((q) => q !== p);
+  if (!p.el.isConnected || document.hidden || !$("home").classList.contains("show")) return petRest(p); // nobody's watching: rest on
+  const ok = ([x, y]) => { const d = Math.hypot(x - p.x, (y - p.y) * 1.5); if (d < G.w * .45 || d > G.w * 1.7 || others.some((q) => Math.hypot(x - q.x, y - q.y) < G.w * .6)) return false;
+    for (let i = 1; i < 6; i++) if (!G.free(p.x + (x - p.x) * i / 6, p.y + (y - p.y) * i / 6)) return false; return true; };
+  const near = G.spots.filter(ok); if (!near.length) return petRest(p);
+  const [tx, ty] = pick(near), sx = p.x, sy = p.y, n = Math.max(2, Math.min(4, Math.round(Math.hypot(tx - sx, ty - sy) / (G.w * .38))));
+  if (Math.abs(tx - sx) > 2) petFace(p, tx < sx ? -1 : 1);
+  [p.x, p.y] = [tx, ty]; // claimed now, so nobody else heads here
+  let i = 0; const next = () => { if (!p.el.isConnected) return; if (i === n) return petRest(p); i++;
+    const d = rnd(440, 540); petJump(p, sx + (tx - sx) * (i - 1) / n, sy + (ty - sy) * (i - 1) / n, sx + (tx - sx) * i / n, sy + (ty - sy) * i / n, d); p.t = setTimeout(next, d + rnd(40, 160)); };
+  next();
+}
+function petJump(p, x0, y0, x1, y1, d, high = rnd(.17, .25)) { // crouch, stretch up, squash on landing; the shadow shrinks mid-air
+  const h = (p.el.offsetWidth || 50) * high, from = petAt(x0, y0), to = petAt(x1, y1);
+  p.el.style.transform = to; p.el.style.zIndex = Math.round(Math.max(y0, y1));
+  if (from !== to) p.el.animate([{ transform: from }, { transform: from, offset: .14, easing: "ease-in-out" }, { transform: to, offset: .84 }, { transform: to }], d);
+  p.body.animate([{ transform: "none" }, { transform: "scale(1.12, .86)", offset: .14, easing: "ease-out" }, { transform: `translateY(${-h * .7}px) scale(.9, 1.12)`, offset: .32, easing: "ease-out" },
+    { transform: `translateY(${-h}px) scale(.97, 1.03)`, offset: .5, easing: "ease-in" }, { transform: `translateY(${-h * .45}px) scale(.94, 1.07)`, offset: .7, easing: "ease-in" },
+    { transform: "scale(1.15, .85)", offset: .84, easing: "ease-out" }, { transform: "scale(.97, 1.03)", offset: .93 }, { transform: "none" }], d);
+  p.shadow.animate([{ transform: "none", opacity: 1 }, { transform: "none", opacity: 1, offset: .14 }, { transform: "scale(.55)", opacity: .45, offset: .5 }, { transform: "none", opacity: 1, offset: .84 }, { transform: "none", opacity: 1 }], d);
+}
+function petHappy(p) { // tapped: wakes up and does two big happy bounces on the spot
+  p.el.classList.remove("doze");
+  if (!calmMotion) { petJump(p, p.x, p.y, p.x, p.y, 520, .5); setTimeout(() => p.el.isConnected && petJump(p, p.x, p.y, p.x, p.y, 420, .28), 520); }
+  const f = 1 + PET_KINDS.indexOf(p.k) * .05; tone(1320 * f, .08, "sine", .05); tone(1760 * f, .1, "sine", .04, .07);
+}
 // the first time the lanterns, shelf, sapling or stump grow, they say what they mean (once each, after Puddock is met)
 const CAMP_TIPS = { lanterns: "Another lantern lit! One for every Lantern upgrade.", shelf: "A new gem for the shelf. Find all twelve kinds.",
   sapling: "The sapling grew. It grows with your Root Charm.", memories: "The old stump is healing. Every coin you sell gives light back to its roots." };
@@ -1936,8 +2104,7 @@ $("campStage").addEventListener("pointerdown", (e) => {
     g.animate([{ transform: "scale(1)" }, { transform: "scale(1.06, .93)", filter: "brightness(1.35)", offset: .35 }, { transform: "scale(.98, 1.03)", offset: .7 }, { transform: "scale(1)" }], { duration: 300, easing: "ease-out" });
   if (what === "dibble") { t.animate([{ transform: "translateY(0)" }, { transform: "translateY(-12px)" }, { transform: "translateY(0)" }, { transform: "translateY(-4px)" }, { transform: "translateY(0)" }], { duration: 520, easing: "ease-out" });
     ui.chirp(); campFx(x, y - 10, "♪"); buzz(10); }
-  else if (what === "pet") { t.animate([{ transform: "translateY(0)" }, { transform: "translateY(-14px) scale(.94, 1.06)" }, { transform: "translateY(0) scale(1.1, .9)" }, { transform: "translateY(-5px)" }, { transform: "translateY(0)" }], { duration: 560, easing: "ease-out" });
-    tone(1320, .08, "sine", .05); tone(1760, .1, "sine", .04, .07); campFx(x, y - 10, "♪"); buzz(8); }
+  else if (what === "pet") { petHappy(t.pet); campFx(x, y - 10, "♪"); buzz(8); }
   else if (what === "fire") { for (let k = 0; k < 5; k++) setTimeout(() => campFx(x + (Math.random() - .5) * 30, y, "✦", "campSpark"), k * 40); for (let k = 0; k < 4; k++) tone(2000 + Math.random() * 2000, .03, "square", .02, k * .03); buzz(15); }
   else if (what === "lanterns") { [523, 659, 784].forEach((f, k) => tone(f * 2, .3, "sine", .05, k * .07)); campFx(x, y, "✧"); }
   else if (what.startsWith("gem-")) { soundtrack.chime(+what.slice(4)); campFx(x, y, "✦", "campSpark"); }
@@ -1957,6 +2124,7 @@ $("campStage").addEventListener("pointermove", (e) => {
   const pud = $("campArt").querySelector(".pud"), m = pud && $("campArt").querySelector("[data-tap=market]").getBoundingClientRect(); // Puddock looks up when you come near
   if (pud) pud.classList.toggle("near", Math.hypot(e.clientX - (m.left + m.width / 2), e.clientY - (m.top + m.height / 2)) < m.width * 1.1);
   for (const g of $("campArt").querySelectorAll("[data-depth]")) g.setAttribute("transform", `translate(${(-dx * 18 * g.dataset.depth).toFixed(2)} ${(-dy * 8 * g.dataset.depth).toFixed(2)})`);
+  const k = st.width / 400 * .75; $("campPets").style.transform = `translate(${(-dx * 18 * k).toFixed(2)}px, ${(-dy * 8 * k).toFixed(2)}px)`; // the pets drift with the middle props
 });
 
 // ---------- frame ----------
@@ -1975,7 +2143,7 @@ function frame(now) {
   const frozenFx = now < hitStop, onBoard = state !== "home" && board, endT = ending ? easeOut(Math.min(1, (now - ending.at) / 900)) : 1;
   if (onBoard) drawMine(now);
   ctx.save();
-  if (shakeAmp > .2) { ctx.translate((Math.random() - .5) * shakeAmp, (Math.random() - .5) * shakeAmp); if (!frozenFx) shakeAmp *= .86; }
+  if (shakeAmp > .2) { ctx.translate((fxR() - .5) * shakeAmp, (fxR() - .5) * shakeAmp); if (!frozenFx) shakeAmp *= .86; }
   if (onBoard) {
     ctx.drawImage(bgCache.board, bgCache.x, bgCache.y, bgCache.w, bgCache.w);
     if (!calm) drawRootline(now);
@@ -2048,25 +2216,61 @@ function frame(now) {
     if (t) { const k = Math.min(1, (now - drag.at) / 160), e = easeOut(k), sz = ts + (cell - ts) * easeBack(k); // lift out of the tray: grow and rise to the finger
       drawPiece(drag, sz, drag.from.x + (t.x - drag.from.x) * e, drag.from.y + (t.y - drag.from.y) * e, .95); }
   }
-  parts = parts.filter((p) => p.life > 0);
-  for (const p of parts) { // two-tone shards: lit face, shadow face, darker edge
-    if (p.delay > 0) { p.delay -= 16; continue; }
-    if (!frozenFx) { p.x += p.vx; p.y += p.vy; p.vy += .35; p.vx *= .98; p.rot += p.vr; p.life -= .022; } // hit-stop: hold still for a beat
-    ctx.save(); ctx.globalAlpha = Math.min(1, p.life * 2); ctx.translate(p.x, p.y); ctx.rotate(p.rot); const h = p.s / 2;
-    ctx.fillStyle = p.dk; ctx.beginPath(); ctx.moveTo(-h - 1, h + 1); ctx.lineTo(-1, -h + 1); ctx.lineTo(h - 1, h * .66 + 1); ctx.fill();
-    ctx.fillStyle = p.col; ctx.beginPath(); ctx.moveTo(-h, h); ctx.lineTo(0, -h); ctx.lineTo(h, h * .66); ctx.fill();
-    ctx.fillStyle = p.lt; ctx.beginPath(); ctx.moveTo(-h, h); ctx.lineTo(0, -h); ctx.lineTo(0, h * .8); ctx.fill(); ctx.restore();
-  }
+  // glow first (additive, from the cached sprites), then the shards on top of it; everything steps on dt, so 120Hz plays at the same speed
+  const fk = dt * 60, run = !frozenFx; // hit-stop: hold still for a beat
   fx = fx.filter((f) => f.life > 0);
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
   for (const f of fx) {
-    if (f.kind === "flash") { if (f.delay > 0) { f.delay -= 16; continue; } f.life -= .08; ctx.fillStyle = `rgba(255,248,225,${f.life * .8})`; ctx.beginPath(); ctx.roundRect(f.x + 2, f.y + 2, cell - 4, cell - 4, 6); ctx.fill(); continue; }
-    if (!frozenFx) f.life -= f.kind === "ring" ? .045 : .03;
-    if (f.kind === "ring") { const e = easeOut(1 - f.life); ctx.strokeStyle = `rgba(255,246,200,${f.life * .8})`; ctx.lineWidth = 3 * f.life; ctx.beginPath(); ctx.arc(f.x, f.y, f.r + e * cell * 2.6, 0, 7); ctx.stroke(); continue; }
-    if (!frozenFx) { f.x += f.vx; f.y += f.vy; f.vx *= .93; f.vy *= .93; }
-    const r = f.s * f.life; ctx.fillStyle = f.col; ctx.globalAlpha = f.life;
-    ctx.beginPath(); ctx.moveTo(f.x, f.y - r); ctx.lineTo(f.x + r * .3, f.y - r * .3); ctx.lineTo(f.x + r, f.y); ctx.lineTo(f.x + r * .3, f.y + r * .3);
-    ctx.lineTo(f.x, f.y + r); ctx.lineTo(f.x - r * .3, f.y + r * .3); ctx.lineTo(f.x - r, f.y); ctx.lineTo(f.x - r * .3, f.y - r * .3); ctx.fill(); ctx.globalAlpha = 1;
+    if (f.delay > 0) { f.delay -= dt * 1000; continue; }
+    if (run || f.kind === "flash") f.life -= dt / f.dur;
+    const L = Math.max(0, f.life), e = 1 - L;
+    if (f.kind === "flash") { ctx.globalAlpha = L * L * f.a; ctx.fillStyle = f.col; ctx.beginPath(); ctx.roundRect(f.x + 2, f.y + 2, cell - 4, cell - 4, 6); ctx.fill(); }
+    else if (f.kind === "bloom") { const s = f.s * (calmMotion ? 1 : .55 + .55 * easeOut(e)); ctx.globalAlpha = Math.min(1, e * 8) * L ** 1.4 * f.a; ctx.drawImage(glowSpr(f.col), f.x - s / 2, f.y - s / 2, s, s); }
+    else if (f.kind === "burst") { // the crystal's own colour bursts out: a full-colour glow and short tapered rays, painted (not added) so overlaps keep their hue
+      const s = f.s * (calmMotion ? .9 : .5 + .7 * easeOut(e)), a = Math.min(1, e * 10) * L * f.a; ctx.globalAlpha = a; ctx.globalCompositeOperation = "source-over"; ctx.drawImage(glowSpr(f.col, true), f.x - s / 2, f.y - s / 2, s, s);
+      if (!calmMotion) { const r0 = cell * (.2 + .5 * easeOut(e)), r1 = cell * (.45 + 1.05 * easeOut(e)); ctx.strokeStyle = f.col; ctx.lineCap = "round"; ctx.lineWidth = cell * .11 * L; ctx.beginPath();
+        for (let j = 0; j < f.rays; j++) { const an = f.rot + j * Math.PI * 2 / f.rays, c = Math.cos(an), sn = Math.sin(an), r = j % 2 ? r1 * .75 : r1; ctx.moveTo(f.x + c * r0, f.y + sn * r0); ctx.lineTo(f.x + c * r, f.y + sn * r); }
+        ctx.stroke(); } ctx.globalCompositeOperation = "lighter"; }
+    else if (f.kind === "sweep") { // a streak of light runs along the cleared line, leaving a faint shine behind it
+      const p = easeOut(e) * (cell * N + cell * 2) - cell, mid = (f.v + .5) * cell, a = Math.sin(Math.PI * e), im = glowSpr("#fff0c4");
+      ctx.globalAlpha = a * .12; ctx.fillStyle = "#fff0c4"; if (f.row) ctx.fillRect(bx, by + f.v * cell, Math.max(0, Math.min(cell * N, p)), cell); else ctx.fillRect(bx + f.v * cell, by, cell, Math.max(0, Math.min(cell * N, p)));
+      ctx.globalAlpha = a * .85; if (f.row) ctx.drawImage(im, bx + p - cell * 1.6, by + mid - cell * .6, cell * 3.2, cell * 1.2); else ctx.drawImage(im, bx + mid - cell * .6, by + p - cell * 1.6, cell * 1.2, cell * 3.2); }
+    else if (f.kind === "screen") { const w = cell * (N + 5); ctx.globalAlpha = f.a * Math.min(1, e * 6) * L; ctx.drawImage(glowSpr(f.col), bx + cell * N / 2 - w / 2, by + cell * N / 2 - w / 2, w, w); }
+    else if (f.kind === "mote") { // drifts up, sways, twinkles out
+      if (run) { f.x += (f.vx + Math.sin(f.ph + e * 9) * .35) * fk; f.y += f.vy * fk; f.vy *= .985 ** fk; }
+      const s = f.s * (.6 + .4 * Math.sin(f.ph * 3 + e * 20) ** 2); ctx.globalAlpha = Math.min(1, e * 6) * L; ctx.drawImage(glowSpr(f.col), f.x - s / 2, f.y - s / 2, s, s); }
+    else if (f.kind === "pulse") { const s = cell * (1.4 + 3.2 * easeOut(e)); ctx.globalAlpha = .9 * Math.min(1, e * 8) * L; ctx.drawImage(glowSpr(f.col), f.x - s / 2, f.y - s / 2, s, s); }
+    else if (f.kind === "ring") { ctx.globalAlpha = 1; ctx.strokeStyle = `rgba(255,246,200,${L * .8})`; ctx.lineWidth = 3 * L; ctx.beginPath(); ctx.arc(f.x, f.y, f.r + easeOut(e) * cell * 2.6, 0, 7); ctx.stroke(); }
+    else { // star
+      if (run) { f.x += f.vx * fk; f.y += f.vy * fk; f.vx *= .93 ** fk; f.vy *= .93 ** fk; }
+      const r = f.s * L; ctx.fillStyle = f.col; ctx.globalAlpha = L;
+      ctx.beginPath(); ctx.moveTo(f.x, f.y - r); ctx.lineTo(f.x + r * .3, f.y - r * .3); ctx.lineTo(f.x + r, f.y); ctx.lineTo(f.x + r * .3, f.y + r * .3);
+      ctx.lineTo(f.x, f.y + r); ctx.lineTo(f.x - r * .3, f.y + r * .3); ctx.lineTo(f.x - r, f.y); ctx.lineTo(f.x - r * .3, f.y - r * .3); ctx.fill(); }
   }
+  ctx.restore();
+  parts = parts.filter((p) => p.life > 0);
+  for (const p of parts) { // faceted shards: shadow face, body, lit face with a light edge; a glint when a face turns to the light
+    if (p.delay > 0) { p.delay -= dt * 1000; continue; }
+    if (run) { p.x += p.vx * fk; p.y += p.vy * fk; p.vy += p.g * fk; p.vx *= (p.k === "flake" ? .96 : .98) ** fk; p.rot += p.vr * fk * (p.k === "flake" ? .5 : 1); p.life -= p.fade * fk; }
+    const a = Math.min(1, p.life * 2.5), h = p.s / 2, w = h * p.w;
+    if (p.k === "spark") { // ember sparks: a hot streak and a glowing head
+      ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = a; ctx.strokeStyle = p.lt; ctx.lineWidth = Math.max(1.2, h * .5); ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * 2.4, p.y - p.vy * 2.4); ctx.stroke(); ctx.drawImage(glowSpr(p.col), p.x - h * 2, p.y - h * 2, h * 4, h * 4);
+      ctx.globalCompositeOperation = "source-over"; continue; }
+    ctx.save(); ctx.globalAlpha = a; ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+    if (p.k === "flake") { // frost: a six-armed ice flake with a bright core
+      ctx.strokeStyle = p.lt; ctx.lineWidth = Math.max(1.3, h * .3); ctx.lineCap = "round"; ctx.beginPath();
+      for (let j = 0; j < 3; j++) { const c = Math.cos(j * 1.047) * h * 1.1, s = Math.sin(j * 1.047) * h * 1.1; ctx.moveTo(-c, -s); ctx.lineTo(c, s); }
+      ctx.stroke(); ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(0, 0, h * .28, 0, 7); ctx.fill(); ctx.restore(); continue; }
+    ctx.fillStyle = p.dk; ctx.beginPath(); ctx.moveTo(-w - 1, h + 1); ctx.lineTo(-1, -h + 1); ctx.lineTo(w - 1, h * .66 + 1); ctx.fill();
+    ctx.fillStyle = p.col; ctx.beginPath(); ctx.moveTo(-w, h); ctx.lineTo(0, -h); ctx.lineTo(w, h * .66); ctx.fill();
+    ctx.fillStyle = p.lt; ctx.beginPath(); ctx.moveTo(-w, h); ctx.lineTo(0, -h); ctx.lineTo(0, h * .8); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-w, h); ctx.lineTo(0, -h); ctx.stroke();
+    const gl = Math.max(0, Math.sin(p.rot * 1.6 + p.ph)) ** 10;
+    if (gl > .05) { ctx.globalAlpha = a * gl; ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.moveTo(-w, h); ctx.lineTo(0, -h); ctx.lineTo(0, h * .8); ctx.fill(); }
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
   if (onBoard) drawFrees(now);
   ctx.restore(); // end screen shake
   if (onBoard) drawHint(now);
@@ -2156,6 +2360,15 @@ $("coinHud").innerHTML = coin(26);
 
 if (platform.native) $("adNote").textContent = "Green buttons play a short video ad.";
 platform.init().then(() => renderHome());
+platform.gameCenter.then((ok) => { // Game Center leaderboards (iOS): the entries appear once it's available
+  if (!ok) return;
+  for (const id of ["dLb", "oLb"]) { $(id).style.display = ""; $(id).onclick = async () => (await platform.showLeaderboards()) || toast("Sign in to Game Center in Settings to see the leaderboards"); }
+  // scores from before sign-in (or before this update) reach the boards too; Game Center ignores ones below the player's best
+  const best = Math.max(0, ...Object.entries(save.best).filter(([k]) => !k.endsWith(":calm")).map(([, v]) => v));
+  if (best) platform.submitScore("best_haul", best);
+  if (save.story.mem.length) platform.submitScore("memories_found", save.story.mem.length);
+  if (save.daily.last === today()) platform.submitScore("daily_dig", save.daily.best);
+});
 $("logoSwash").innerHTML = logoSwash(); $("logo").innerHTML = logoLetters(); $("titleScene").innerHTML = titleScene(STILL);
 renderHome(); show("title"); layout(); document.fonts?.ready.then(layout);
 if (qs.has("scene")) sceneCheck(qs.get("scene"));
