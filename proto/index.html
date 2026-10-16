@@ -541,6 +541,7 @@ import { PROLOGUE, MEMORIES, MEMORY_COUNT, nextMemory, memoryById, mineOfMemory,
   CAMP_LINES, SCALE_NOTE, SCENES, nextScene, SITES, GIVEN, MAP_GATE, MURMURS, MURMURS_DEEP, MURMURS_AFTER, PETS, PET_HINT, PET_SHOP } from "./story.js";
 import { soundtrack, sfx } from "./music.js";
 import { platform, track } from "./platform.js";
+import { drawLife, lifeDig, lifeStop, lifeTap, campLife, campPrints } from "./ambient.js";
 import { curve, ring, limb, shape, stroke, rng as prng } from "./paint.js";
 
 // ---------- painted UI skins: plank, parchment and carved-recess shapes from paint.js, as 9-slice SVGs for CSS border-image (--p-*) ----------
@@ -734,6 +735,7 @@ function layout() {
   const sb = parseFloat(getComputedStyle($("safeProbe")).paddingBottom) || 0;
   cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px";
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  hudTop = $("hud").getBoundingClientRect().top;
   const top = $("hud").getBoundingClientRect().bottom + 30, bottom = H - sb - 8, GAP = 54, TR = 3.1; // 30: Rootline + leaves; GAP: Rootline + hint line
   cell = Math.floor(Math.min((W - 64) / N, (bottom - top - GAP) / (N + TR)));
   const spare = Math.max(0, bottom - top - GAP - cell * (N + TR));
@@ -743,6 +745,7 @@ function layout() {
   const hc = $("coinHud").getBoundingClientRect(); haulAt = [hc.left + hc.width / 2, hc.top + hc.height / 2];
   bgCache = null;
 }
+let hudTop = 0; // where ambient life may fly: from the HUD's top down to the board
 addEventListener("resize", layout);
 
 // ---------- color helpers ----------
@@ -810,6 +813,7 @@ function startDig(isDaily = false) {
   $("biomeName").textContent = daily ? `Daily Dig · ${today()}` : biome.name + (calm ? " · Calm" : "");
   $("comboTxt").textContent = ""; ending = null; tip = null; coins = []; pops = []; floats = []; parts = []; fx = []; shownHaul = 0; layout();
   track("round_start", { mine: biome.id, mode: daily ? "daily" : calm ? "calm" : "expedition" });
+  pawPrints = false; lifeDig(["fur", "hat", "scarf", "lantern"].map((p) => [p, Object.keys(LOOKS[p]).filter((v) => v !== "granny")]), !daily && Object.keys(save.best).length > 0);
 }
 const rawHaul = () => Object.entries(haul).reduce((s, [t, n]) => s + n * CRYSTALS[t].value, 0) + bonus;
 const haulValue = () => Math.max(0, Math.round((rawHaul() - stolen) * valueMult()));
@@ -1210,6 +1214,7 @@ function paintMine() {
 }
 function drawMine(now) { // the painted cave, plus motes drifting through it
   bgCache ??= paintMine(); ctx.drawImage(bgCache.mine, 0, 0, W, H);
+  if (state === "play") drawLife(ctx, now, { W, bx, by, bw: cell * N, top: hudTop, low: trayY, feature: look().feature, busy: !!drag }); // ambient.js: what passes, and the other lantern
   const [col, dir, n] = MOTES[look().feature] || MOTES.moss;
   if (calmMotion) return; ctx.fillStyle = col;
   for (let k = 0; k < n; k++) { const sp = 18 + (k * 7) % 23, y = (((k * 137) % 100) / 100 * H + dir * now / 1000 * sp) % H, yy = y < 0 ? y + H : y;
@@ -1340,6 +1345,8 @@ function trayRect(i) {
 // drag starts anywhere in a piece's third of the tray (the whole slot, down to the bottom of the screen)
 cv.addEventListener("pointerdown", (e) => {
   if (state !== "play" || !tray) return;
+  const said = lifeTap(e.clientX, e.clientY); // tapped the other lantern in time: a line, and a tally nobody shows you (yet)
+  if (said) { toast("", 2800); say($("toast"), said, "dibble"); save.lanterns = (save.lanterns || 0) + 1; persist(); return; }
   const i = Math.floor((e.clientX - trayX) / slotW);
   if (i < 0 || i > 2 || !tray[i] || e.clientY < trayY - 18) return;
   drag = { i, ...tray[i], x: e.clientX, y: e.clientY, touch: e.pointerType !== "mouse", at: performance.now(), from: trayRect(i) };
@@ -1423,7 +1430,7 @@ function commit(i, r, c, from) {
 function endRound(cause) {
   if (state === "play") track("round_end", { mine: biome.id, cause, value: haulValue(), seconds: Math.round(maxTime - time) });
   if (state !== "play") return;
-  state = "end"; endCause = cause; drag = null; ending = { cause, at: performance.now() };
+  state = "end"; endCause = cause; drag = null; ending = { cause, at: performance.now() }; lifeStop();
   pops.push({ text: cause === "time" ? "The roots closed in!" : "No room left!", life: 1.3, col: cause === "time" ? "#ff9d7a" : "#ffd27a" });
   sfx.thud(); buzz(40);
   // first a beat to see what happened, then the rescue offer (once per dig), then the haul
@@ -1909,9 +1916,18 @@ function drawCamp() {
   const stage = $("campStage"); if (!stage.clientHeight) return; // hidden: the ResizeObserver draws it once it shows
   const barBottom = document.querySelector(".hubBar").getBoundingClientRect().bottom - stage.getBoundingClientRect().top;
   $("campArt").innerHTML = camp({ ...campState(), daily: campDaily, view: [stage.clientWidth, stage.clientHeight, barBottom] }, gem, dibble(100, save.look));
+  const art = $("campArt").querySelector("svg"), pud = () => $("campArt").querySelector(".pud");
+  if (pawPrints && save.story.site === "stump") campPrints(art);
+  campLife(art, save.story.site === "skywell" && save.story.finale ? "sky" : save.story.site, { visible: () => $("home").classList.contains("show") && !["talk", ...SHEETS].some((id) => $(id).classList.contains("show")),
+    extra: pud() ? ["hum"] : [], hum: () => { const b = pud()?.getBoundingClientRect(), st = stage.getBoundingClientRect(); // Puddock hums a line of something old
+      if (b) campFx(Math.min(st.width - 100, b.left + b.width / 2 - st.left), b.top - st.top - 34, pick(["♪ Hm-hm… lanterns low… ♪", "♪ Hmm, hm-hm-hmm… ♪", "♪ …down she goes, hm… ♪"]), "campSay"); } });
   setTimeout(campTips, 900);
 }
 new ResizeObserver(drawCamp).observe($("campStage"));
+// someone came by the stump while you were away (8h or more): small prints lead out of it, until your next dig
+let pawPrints = false;
+const cameBack = () => { pawPrints ||= Date.now() - (save.seenAt || Date.now()) > 8 * 3600e3; save.seenAt = Date.now(); persist(); };
+cameBack(); document.addEventListener("visibilitychange", () => { if (document.hidden) { save.seenAt = Date.now(); persist(); } else if (cameBack(), pawPrints) drawCamp(); });
 // the first time the lanterns, shelf, sapling or stump grow, they say what they mean (once each, after Puddock is met)
 const CAMP_TIPS = { lanterns: "Another lantern lit! One for every Lantern upgrade.", shelf: "A new gem for the shelf. Find all twelve kinds.",
   sapling: "The sapling grew. It grows with your Root Charm.", memories: "The old stump is healing. Every coin you sell gives light back to its roots." };
