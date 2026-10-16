@@ -326,7 +326,7 @@
   <span id="dibbleArt"></span>
   <h1 class="logo">Glimmerwood</h1>
   <div class="tag tagline">Mine glowing crystals before the roots close in.</div>
-  <button id="tPlay"><span class="btnrow"><span id="icoPlay"></span>Play</span></button>
+  <button id="tPlay">Play</button>
   <button id="tOpts" class="alt">Options</button>
   <button id="tMem" class="alt"></button>
   <div class="note">Fair dealing: crystals are dealt at random. Never by ads, purchases or how close you are to your best.</div>
@@ -1444,7 +1444,7 @@ $("world").innerHTML = forest();
 for (const el of document.querySelectorAll(".vineSlot")) el.outerHTML = vine();
 $("flies").innerHTML = [...Array(14)].map((_, k) => `<i class="fly" style="left:${(k * 37) % 100}%;top:${20 + (k * 53) % 70}%;animation-delay:${-k * 0.7}s,${-k * 0.37}s"></i>`).join("");
 $("talkArt").innerHTML = puddock(120); $("puddockArtEnd").innerHTML = puddock(52); $("puddockArtMkt").innerHTML = puddock(60);
-$("hubMenu").innerHTML = icon("gear", 24); $("icoPlay").innerHTML = icon("pickaxe", 24);
+$("hubMenu").innerHTML = icon("gear", 24);
 for (const el of document.querySelectorAll(".icoBack")) el.innerHTML = icon("back", 20);
 for (const id of ["coinA", "coinB", "coinC"]) $(id).innerHTML = coin(22);
 $("coinHud").innerHTML = coin(26);
