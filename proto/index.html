@@ -568,12 +568,14 @@ const BIOMES = [ // gameplay (cost, drain, gem weights, shapes) lives in sim/gen
 ].map((b) => ({ families: {}, ...b, ...cfg0.biomes[b.id] }));
 const BANNERS = { "#5fa04e": "Moss green", "#c8553d": "Ember red", "#9b7cf2": "Gloamcap violet", "#4f7fe8": "Frost blue", "#f0c75a": "Royal gold" };
 const LOOKS = {
-  hat: { none: "No hat", leaf: "Leaf cap", mushroom: "Toadstool cap", beanie: "Knit beanie", flowers: "Flower crown", miner: "Miner's helmet" },
-  scarf: { none: "No scarf", "#c8553d": "Ember scarf", "#35b38a": "Jade scarf", "#4f7fe8": "Frost scarf", "#9b7cf2": "Gloam scarf", "#f0c75a": "Gold scarf" },
-  lantern: { amber: "Amber lantern", paper: "Paper lantern", jar: "Firefly jar", crystal: "Crystal lantern", granny: "Granny's lantern" },
-  fur: { cocoa: "Cocoa fur", sand: "Sand fur", slate: "Slate fur", snow: "Snow fur", rosewood: "Rosewood fur" },
+  hat: { none: "No hat", leaf: "Leaf cap", mushroom: "Toadstool cap", beanie: "Knit beanie", flowers: "Flower crown", miner: "Miner's helmet", acorn: "Acorn helmet", bandana: "Travel bandana" },
+  scarf: { none: "No scarf", "#c8553d": "Ember scarf", "#35b38a": "Jade scarf", "#4f7fe8": "Frost scarf", "#9b7cf2": "Gloam scarf", "#f0c75a": "Gold scarf", "#ef8fb0": "Petal scarf" },
+  lantern: { amber: "Amber lantern", paper: "Paper lantern", jar: "Firefly jar", crystal: "Crystal lantern", granny: "Granny's lantern", rose: "Rose lantern" },
+  fur: { cocoa: "Cocoa fur", sand: "Sand fur", slate: "Slate fur", snow: "Snow fur", rosewood: "Rosewood fur", blossom: "Blossom fur", midnight: "Midnight fur" },
+  trinket: { none: "No trinket", bow: "Pink bow", clip: "Gloamcap clip", locket: "Heart locket", goggles: "Explorer goggles", pendant: "Frostspar pendant" },
+  cloak: { none: "No cloak", moss: "Moss cloak", shawl: "Lace shawl", mothwing: "Moth-wing cape" },
 };
-const LOOK_FREE = { hat: ["none", "leaf"], scarf: ["none"], lantern: ["amber"], fur: ["cocoa"] };
+const LOOK_FREE = { hat: ["none", "leaf"], scarf: ["none"], lantern: ["amber"], fur: ["cocoa"], trinket: ["none"], cloak: ["none"] };
 const lookOwned = (part, v) => LOOK_FREE[part].includes(v) || save.owned.includes(`look:${part}:${v}`);
 const WARDROBE = [
   ["scarf", "#c8553d", 300, "Knitted by a very patient spider"], ["scarf", "#35b38a", 600, "Smells faintly of mint"], ["hat", "mushroom", 800, "Spotted, springy, slightly magical"],
@@ -582,7 +584,15 @@ const WARDROBE = [
   ["hat", "flowers", 4000, "Picked fresh every morning"], ["lantern", "jar", 5000, "Three fireflies who like you"], ["scarf", "#f0c75a", 6000, "Woven from gold thread"],
   ["fur", "snow", 9000, "White as Frostpine powder"], ["hat", "miner", 12000, "A proper mole's helmet, with a lamp"], ["fur", "rosewood", 15000, "A rare red from Heartroot sap"],
   ["lantern", "crystal", 20000, "Cut from a single Frostspar"],
-];
+  ["trinket", "bow", 400, "Granny always said a bow cheers up any tunnel"], ["scarf", "#ef8fb0", 700, "Knitted from the pink wool Granny left behind"],
+  ["hat", "bandana", 1100, "Puddock swears it's been past the edge of the map"], ["fur", "blossom", 1800, "Puddock mixed it from crushed petals. Mostly petals."],
+  ["cloak", "moss", 2200, "Grown, not sewn. Water it now and then."], ["hat", "acorn", 2800, "Fell from the Glimmeroak itself. Pebble-proof."],
+  ["trinket", "clip", 3500, "A gloamcap blossom that never quite stops glowing"], ["trinket", "locket", 5500, "A tiny picture of Granny inside. She's waving."],
+  ["trinket", "goggles", 7000, "For peering into veins. Fogs up near embers."], ["cloak", "shawl", 8500, "Granny's spare. Still smells of chamomile."],
+  ["fur", "midnight", 11000, "Dark as a mine with the lantern out"], ["trinket", "pendant", 16000, "A sliver of Frostspar, cold as a winter morning"],
+  ["lantern", "rose", 26000, "Cut by Puddock's cousin. Don't tell him it's lovely."],
+  ["cloak", "mothwing", 45000, "Spun from fallen scales by the Bidder's kin. A thank-you.", (st) => st.site === "skywell"], // after the reunion
+].sort((a, b) => a[2] - b[2]);
 const SHOP = [
   // Tools: permanent upgrades, price ×1.6 per level
   { id: "lantern", tab: "tools", icon: "lantern", kind: "up", name: "Lantern", desc: "+5s of Rootline", base: 150, max: 15 },
@@ -593,7 +603,7 @@ const SHOP = [
   { id: "sieve", tab: "tools", icon: "sieve", kind: "up", name: "Lucky Sieve", desc: "Geodes and Roothearts turn up 15% more", base: 25000, max: 5 },
   { id: "dewdrop", tab: "tools", icon: "dewdrop", kind: "once", name: "Dewdrop pouch", desc: "More tiny 1-cell crystals in your trays", price: 900 },
   // Wardrobe: Dibble's looks
-  ...WARDROBE.map(([part, val, price, desc]) => ({ id: `look:${part}:${val}`, tab: "wardrobe", kind: "look", part, val, name: LOOKS[part][val], desc, price })),
+  ...WARDROBE.map(([part, val, price, desc, gate]) => ({ id: `look:${part}:${val}`, tab: "wardrobe", kind: "look", part, val, name: LOOKS[part][val], desc, price, gate })),
   // Camp: looks only, shown at Dibble's Camp
   { id: "tent:patchwork", tab: "camp", icon: "tent", kind: "camp", name: "Patchwork tent", desc: "Scraps from every mine, stitched by Dibble", price: 1500 },
   { id: "tent:treehouse", tab: "camp", icon: "tent", kind: "camp", name: "Treehouse", desc: "A ladder, a lookout, a lamp in the window", price: 20000 },
@@ -612,7 +622,7 @@ const SHOP = [
 // ---------- save (per-browser) ----------
 const store = { get(k, d) { try { return JSON.parse(localStorage.getItem("gw." + k)) ?? d; } catch { return d; } },
                 set(k, v) { const s = JSON.stringify(v); try { localStorage.setItem("gw." + k, s); } catch {} platform.backup("gw." + k, s); } }; // backup: a native copy (platform.js)
-const DEFAULTS = { look: { ...DEFAULT_LOOK }, gold: 0, up: { lantern: 0, pick: 0, charm: 0, lens: 0, tongs: 0, sieve: 0 }, owned: [], biomes: ["hollow"], best: {}, sel: "hollow",
+const DEFAULTS = { look: { ...DEFAULT_LOOK, trinket: "none", cloak: "none" }, gold: 0, up: { lantern: 0, pick: 0, charm: 0, lens: 0, tongs: 0, sieve: 0 }, owned: [], biomes: ["hollow"], best: {}, sel: "hollow",
   mode: "exp", opt: { music: true, sound: true, vib: true, glyph: false }, daily: { last: "", streak: 0, best: 0 },
   metPuddock: false, trial: [], found: [], camp: { tent: "canvas", banner: "#5fa04e", fire: "ring", hide: [] },
   story: { prologue: false, mem: [], confessed: false, sprout: false, site: "stump", ledge: false, finale: false, scale: false } };
@@ -1518,7 +1528,7 @@ function renderMarket() {
   $("mktGold").textContent = save.gold;
   for (const b of document.querySelectorAll("#mktTabs button")) b.classList.toggle("on", b.dataset.tab === mktTab);
   $("shop").innerHTML = (mktTab === "tools" && !save.story.confessed ? `<div class="shopItem"><span class="tile">${lookItem("lantern", "granny", 40)}</span>
-    <span class="grow"><b>An old lantern</b><small>"Not for sale. Not that one."</small></span><span class="stamp no">Not for sale</span></div>` : "") + SHOP.filter((it) => it.tab === mktTab && mapShown(it.id.split(":")[1] || "")).map((it) => {
+    <span class="grow"><b>An old lantern</b><small>"Not for sale. Not that one."</small></span><span class="stamp no">Not for sale</span></div>` : "") + SHOP.filter((it) => it.tab === mktTab && mapShown(it.id.split(":")[1] || "") && (!it.gate || it.gate(save.story))).map((it) => {
     const lvl = it.kind === "up" ? save.up[it.id] : 0;
     const done = it.kind === "up" ? lvl >= it.max : it.kind === "biome" ? save.biomes.includes(it.id.split(":")[1]) : save.owned.includes(it.id);
     const cost = price(it), short = cost - save.gold; // owned: a stamp; can't afford yet: locked tag and how far to go
@@ -1668,8 +1678,8 @@ function renderCamp() {
   const fires = [["ring", "Campfire"], ["forge", "Forge"]].filter(([v]) => v === "ring" || save.owned.includes("fire:" + v));
   const decor = SHOP.filter((i) => i.id.startsWith("decor:") && save.owned.includes(i.id));
   $("campCustom").innerHTML = `
-    <h3 class="subHead">Dibble</h3>${["hat", "scarf", "lantern", "fur"].map((part) => `<div class="custRow"><span>${{ hat: "Hat", scarf: "Scarf", lantern: "Lantern", fur: "Fur" }[part]}</span>${Object.keys(LOOKS[part]).filter((v) => lookOwned(part, v))
-      .map((v) => `<button class="chip ${save.look[part] === v ? "on" : ""}" data-look="${part}" data-val="${v}">${part === "scarf" && v !== "none" ? `<i class="sw" style="background:${v}"></i>` : part === "fur" ? `<i class="sw" style="background:${FUR[v][0]}"></i>` : ""}${v === "none" ? "None" : LOOKS[part][v].replace(/ (fur|scarf|lantern)$/i, "")}</button>`).join("")}</div>`).join("")}
+    <h3 class="subHead">Dibble</h3>${["hat", "trinket", "scarf", "cloak", "lantern", "fur"].map((part) => `<div class="custRow"><span>${{ hat: "Hat", trinket: "Trinket", scarf: "Scarf", cloak: "Cloak", lantern: "Lantern", fur: "Fur" }[part]}</span>${Object.keys(LOOKS[part]).filter((v) => lookOwned(part, v))
+      .map((v) => `<button class="chip ${save.look[part] === v ? "on" : ""}" data-look="${part}" data-val="${v}">${part === "scarf" && v !== "none" ? `<i class="sw" style="background:${v}"></i>` : part === "fur" ? `<i class="sw" style="background:${FUR[v][0]}"></i>` : ""}${v === "none" ? "None" : LOOKS[part][v].replace(/ (fur|scarf|lantern|cloak)$/i, "")}</button>`).join("")}</div>`).join("")}
     <h3 class="subHead">Camp</h3><div class="custRow"><span>Tent</span>${tents.map(([v, l]) => chip("tent", v, l)).join("")}</div>
     <div class="custRow"><span>Banner</span>${banners.map(([c, l]) => chip("banner", c, "", `<i class="sw" style="background:${c}" title="${l}"></i>`)).join("")}</div>
     <div class="custRow"><span>Fire</span>${fires.map(([v, l]) => chip("fire", v, l)).join("")}</div>
