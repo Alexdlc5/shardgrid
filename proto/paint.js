@@ -130,7 +130,7 @@ export function dibbleBody(id, o = {}) {
         ${shape(curve(ring(180, 248, 6.4, 4.8, 9, .15, 43, -.3)), C.nose, "#7a3f48", [-1, 1])}
         <path d="M177.8 245.6 q2 -1.2 3.6 .2" stroke="#f3dcd8" stroke-width="1.2" fill="none" stroke-linecap="round" opacity=".85"/>
         <!-- cartoon eyes, one brow raised in curiosity -->
-        ${pieEye(150, 234, 45)}${pieEye(178, 232, 47)}
+        ${pieEye(150, 234, 45, 4.6, 6.6, 9)}${pieEye(178, 232, 47, 4.6, 6.6, 9)}
         <path d="M140.6 220.2 Q148 216 156.6 218.4" stroke="#2a1a14" stroke-width="2.2" fill="none" stroke-linecap="round"/>
         <path d="M170.8 217.6 Q177.4 212.4 184.4 216.2" stroke="#2a1a14" stroke-width="2" fill="none" stroke-linecap="round"/>
         ${shape(`M164 266 Q170 272.4 178.6 266.8 Q176 272.8 169.4 273.2 Q165.4 272.4 164 266 Z`, "#5e2f2c", "#2a1512", [-.6, .6])}
