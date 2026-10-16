@@ -271,7 +271,6 @@ export function dibble(size = 96, look = {}) {
     ${noodle("M67 69 Q78 68 78 57", f)}
     <g><animateTransform attributeName="transform" type="rotate" values="-4 78 54;4 78 54;-4 78 54" dur="3.2s" repeatCount="indefinite"/>
       <g transform="translate(-2 0)">${lanternArt(L.lantern, id + "L")}</g></g>
-    ${claws([75.4, 78, 80.6], 58.4)}
     <path d="M72.6 55 Q72.6 50 78 50 Q83.4 50 83.4 55 Q83.4 60 78 60 Q72.6 60 72.6 55 Z" fill="url(#${id}p)" stroke="${INK2}" stroke-width="1.9"/>
     <path d="M81.4 52 Q83.2 55 81.6 58.4" stroke="${rim}" stroke-width="1.2" fill="none" opacity=".55" stroke-linecap="round"/>`)}
   `, "dibble");
