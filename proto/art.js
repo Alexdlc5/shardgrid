@@ -242,8 +242,8 @@ export function dibble(size = 96, look = {}) {
       <path d="M67 66 Q72 77 66 90" stroke="${rim}" stroke-width="1.8" fill="none" opacity=".45" stroke-linecap="round"/>
     </g>
     <ellipse cx="50" cy="82" rx="11" ry="9" fill="url(#${id}c)"/>
-    <g stroke="${fs}" stroke-width="1.1" fill="none" opacity=".55" stroke-linecap="round"><path d="M34 76 q2 2 2 5 M66 76 q-2 2 -2 5"/></g>
-    <g stroke="${INK2}" stroke-width=".8" opacity=".35" stroke-linecap="round"><path d="M45 79 l1 2.2 M50 78 v2.4 M55 79 l-1 2.2"/></g>
+    <g stroke="${mix(fs, f, .45)}" stroke-width=".75" fill="none" opacity=".35" stroke-linecap="round"><path d="M34 76 q2 2 2 5 M66 76 q-2 2 -2 5"/></g>
+    <g stroke="${fs}" stroke-width=".7" opacity=".22" stroke-linecap="round"><path d="M45 79 l1 2.2 M50 78 v2.4 M55 79 l-1 2.2"/></g>
     ${L.scarf !== "none" ? `<defs>${linear(id + "s", L.scarf, 90)}</defs>
       <path d="M31 64 Q50 73 69 64" stroke="${INK2}" stroke-width="9.6" fill="none" stroke-linecap="round"/><path d="M31 64 Q50 73 69 64" stroke="url(#${id}s)" stroke-width="6.8" fill="none" stroke-linecap="round"/>
       <path d="M36 66.4 Q50 72 64 66.4" stroke="#fff" stroke-width=".8" stroke-dasharray="1.2 2.2" fill="none" opacity=".45"/>
@@ -255,7 +255,7 @@ export function dibble(size = 96, look = {}) {
       <path d="M23 42 Q25 64 50 70 Q31 62 30 44 Z" fill="${fs}" opacity=".42"/>
       <path d="M72 28 Q79 42 73 58" stroke="${rim}" stroke-width="2" fill="none" opacity=".4" stroke-linecap="round"/>
       <path d="M35 23 Q43 18 52 19" stroke="#ffffff" stroke-width="2" opacity=".22" fill="none" stroke-linecap="round"/>
-      <g stroke="${fs}" stroke-width="1.1" fill="none" opacity=".6" stroke-linecap="round"><path d="M27 48 q3 -1 4 -4 M29 56 q3 0 5 -3 M71 48 q-3 -1 -4 -4 M70 56 q-3 0 -5 -3 M60 66 q-1 -3 1 -5"/></g>
+      <g stroke="${mix(fs, f, .45)}" stroke-width=".75" fill="none" opacity=".35" stroke-linecap="round"><path d="M27 48 q3 -1 4 -4 M29 56 q3 0 5 -3 M71 48 q-3 -1 -4 -4 M70 56 q-3 0 -5 -3 M60 66 q-1 -3 1 -5"/></g>
     </g>
     ${pieEye(42, 42, 4.3, 6.3, .8)}${pieEye(58, 42, 4.3, 6.3, .8)}
     <ellipse cx="31" cy="53" rx="5.6" ry="3.4" fill="url(#${id}k)"/><ellipse cx="69" cy="53" rx="5.6" ry="3.4" fill="url(#${id}k)"/>
