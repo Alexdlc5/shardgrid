@@ -689,8 +689,7 @@ export function stumpArt(growth = 0, sprout = false, w = 300, tree = false) {
   const rootSvg = roots.map(([x1, y1, cx, cy, x2, y2, wd]) => shape(limb(x1, y1, cx, cy, x2, y2, wd, .8), bark, barkLine, O)).join("") +
     (g ? `<path d="${curve(ring(150, 85, 64, 7, 10, .2, 7))}" fill="#f0b543" opacity="${(g * .3).toFixed(2)}" filter="url(#${id}b)"/>` +
       roots.map(([x1, y1, cx, cy, x2, y2, wd]) => `<path d="${limb(x1, y1 - 1, cx, cy - 1, x2, y2 - .5, wd * .3, .15)}" fill="#ffd27a" opacity="${(.25 + g * .6).toFixed(2)}"/>`).join("") : "");
-  // broken trunk: splinters behind, the pale cut face, then the front of the trunk with a ragged lip
-  const spl = (x, y, wd) => shape(`M${x - wd} 51 Q${x - wd * .4} ${(y + 51) / 2} ${x} ${y} Q${x + wd * .5} ${(y + 51) / 2 + 2} ${x + wd} 51 Z`, bark, barkLine, [-1, .9]);
+  // the trunk: the pale cut face, then the front of the trunk with a ragged lip
   const body = curve([[120, 48], [117, 60], [114, 72], [107, 82], [128, 85.5], [150, 86.5], [172, 85.5], [193, 82], [186, 72], [183, 60], [180, 48],
     [174, 53], [166, 55.6], [158, 53.8], [151, 57], [144, 54.6], [136, 55.6], [128, 52.6]]);
   const face = curve(ring(150, 49, 30, 6.4, 14, .04, 9));
@@ -710,7 +709,7 @@ export function stumpArt(growth = 0, sprout = false, w = 300, tree = false) {
     <defs><filter id="${id}b" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
       <filter id="${id}s" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.2"/></filter><clipPath id="${id}c"><path d="${body}"/></clipPath></defs>
     <path d="${curve(ring(150, 86, 52, 4, 12, .2, 3))}" fill="#000" opacity=".35" filter="url(#${id}s)"/>
-    ${rootSvg}${spl(130, 36, 6)}${spl(153, 31, 7)}${spl(172, 39, 5)}
+    ${rootSvg}
     ${shape(face, wood, "#4a2e1a", [-1, .9])}
     <g fill="none" stroke="#7a5638" stroke-width=".8" opacity=".7">${[22, 15, 8].map((rx, k) => `<path d="${curve(ring(151, 49.2, rx, rx * .2, 12, .06, 11 + k))}"/>`).join("")}</g>
     ${stroke(152, 49, -2.9, 14, .7, "#4a2e1a", .6, .05)}
