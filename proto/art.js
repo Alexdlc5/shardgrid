@@ -226,7 +226,7 @@ export function dibble(size = 96, look = {}) {
     <defs>
       <radialGradient id="${id}g"><stop offset="0" stop-color="${glow}" stop-opacity=".7"/><stop offset="1" stop-color="${glow}" stop-opacity="0"/></radialGradient>
       ${radial(id + "h", f)}${radial(id + "b", f, .4, .25)}${radial(id + "c", cream, .45, .3)}${radial(id + "p", pawC, .4, .3)}
-      <radialGradient id="${id}n" cx=".38" cy=".32"><stop offset="0" stop-color="#ffb3c4"/><stop offset=".6" stop-color="#e8768e"/><stop offset="1" stop-color="#b8475f"/></radialGradient>
+      <radialGradient id="${id}n" cx=".38" cy=".32"><stop offset="0" stop-color="#f4c0c6"/><stop offset=".6" stop-color="#d98a96"/><stop offset="1" stop-color="#b06470"/></radialGradient>
       <radialGradient id="${id}k"><stop offset="0" stop-color="#ff8fa3" stop-opacity=".7"/><stop offset="1" stop-color="#ff8fa3" stop-opacity="0"/></radialGradient>
       <clipPath id="${id}B"><path d="${body}"/></clipPath><clipPath id="${id}H"><path d="${head}"/></clipPath>
     </defs>
@@ -259,7 +259,7 @@ export function dibble(size = 96, look = {}) {
     ${pieEye(41, 41, 5, 7.4, 1)}${pieEye(59, 41, 5, 7.4, 1)}
     <ellipse cx="31" cy="53" rx="5.6" ry="3.4" fill="url(#${id}k)"/><ellipse cx="69" cy="53" rx="5.6" ry="3.4" fill="url(#${id}k)"/>
     <ellipse cx="50" cy="56.4" rx="8.4" ry="6.6" fill="url(#${id}c)"/>
-    <ellipse cx="50" cy="53" rx="4.6" ry="3.6" fill="url(#${id}n)" stroke="${INK2}" stroke-width="1.8"/><ellipse cx="48.4" cy="51.7" rx="1.5" ry=".9" fill="#fff" opacity=".95"/>
+    <ellipse cx="50" cy="54.2" rx="3.3" ry="2.5" fill="url(#${id}n)" stroke="#8a4652" stroke-width="1.1"/><ellipse cx="49" cy="53.4" rx="1" ry=".6" fill="#fff" opacity=".8"/>
     <path d="M46.4 58.6 Q50 61.4 53.6 58.6" stroke="${INK2}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
     <path d="M45.6 57.8 q.4 1 1.1 1 M54.4 57.8 q-.4 1 -1.1 1" stroke="${INK2}" stroke-width="1" fill="none" stroke-linecap="round"/>
     <g stroke="${INK2}" stroke-width=".7" opacity=".45" stroke-linecap="round"><path d="M42.4 56 L35 54.8 M42.4 58 L35 58.8"/><path d="M57.6 56 L65 54.8 M57.6 58 L65 58.8"/></g>
