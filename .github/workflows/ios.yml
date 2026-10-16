@@ -1,12 +1,18 @@
 name: ios
 # Simulator build on every relevant push (proves it compiles, no Apple account needed).
 # Manual run with "upload" ticked: signed build straight to TestFlight via an App Store Connect API key.
+# Tick "appstore" as well for the build you submit for review: it serves real ads (testAds false). Builds without it keep
+# Google's test ads, and Options shows "· test ads" after the version so the two are easy to tell apart.
 # macOS minutes count 10x on private repos (~200 free macOS min/month): keep pushes batched.
 on:
   workflow_dispatch:
     inputs:
       upload:
         description: "Sign and upload to TestFlight"
+        type: boolean
+        default: false
+      appstore:
+        description: "App Store build: real ads (tick upload too)"
         type: boolean
         default: false
   push:
@@ -30,8 +36,15 @@ jobs:
           X=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -n 1)
           sudo xcode-select -s "$X" && xcodebuild -version
       - run: npm ci
-      - run: node proto/check.mjs
-      - run: npm run build && npx cap sync ios
+      - run: node proto/check.mjs && node scripts/check-save-mirror.mjs
+      - run: python3 sim/test_sim.py
+      - name: Build the web bundle (version ${{ github.run_number }}${{ inputs.appstore && ', real ads' || ', test ads' }})
+        env:
+          GW_BUILD: ${{ github.run_number }}
+          GW_APPSTORE: ${{ inputs.appstore && '1' || '' }}
+        run: |
+          [ "$GW_APPSTORE" != 1 ] || [ "${{ inputs.upload }}" = true ] || { echo "appstore needs upload ticked too"; exit 1; }
+          npm run build && npx cap sync ios
       - name: Simulator build (unsigned)
         if: ${{ !inputs.upload }}
         run: |
@@ -52,7 +65,8 @@ jobs:
           pip3 install --quiet --break-system-packages pyjwt cryptography
           KEY="$KEY" KEY_ID="$KEY_ID" ISSUER="$ISSUER" python3 scripts/revoke-ci-dev-certs.py
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' \
-            -archivePath "$RUNNER_TEMP/Glimmerwood.xcarchive" DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
+            -archivePath "$RUNNER_TEMP/Glimmerwood.xcarchive" -clonedSourcePackagesDirPath "$RUNNER_TEMP/spm" \
+            DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}" "${AUTH[@]}" archive | tail -n 30
           cat > "$RUNNER_TEMP/export.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
@@ -68,4 +82,7 @@ jobs:
           xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Glimmerwood.xcarchive" -exportOptionsPlist "$RUNNER_TEMP/export.plist" \
             -exportPath "$RUNNER_TEMP/out" "${AUTH[@]}" | tail -n 30
           rm -f "$KEY"
+          # Crashlytics needs the dSYMs to turn crash addresses into file and line; a failed upload only warns
+          "$RUNNER_TEMP/spm/checkouts/firebase-ios-sdk/Crashlytics/upload-symbols" -gsp ios/App/App/GoogleService-Info.plist \
+            -p ios "$RUNNER_TEMP/Glimmerwood.xcarchive/dSYMs" || echo "::warning::Crashlytics dSYM upload failed; crash reports stay unsymbolicated"
           echo "Uploaded build ${{ github.run_number }}: it appears in App Store Connect > TestFlight after processing (~10-30 min)."

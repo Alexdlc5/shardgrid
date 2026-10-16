@@ -13,6 +13,10 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.5.3"),
         .package(name: "CapacitorCommunityAdmob", path: "../../../node_modules/@capacitor-community/admob"),
+        .package(name: "CapacitorFirebaseAnalytics", path: "../../../node_modules/@capacitor-firebase/analytics"),
+        .package(name: "CapacitorFirebaseCrashlytics", path: "../../../node_modules/@capacitor-firebase/crashlytics"),
+        .package(name: "CapacitorFirebaseRemoteConfig", path: "../../../node_modules/@capacitor-firebase/remote-config"),
+        .package(name: "CapacitorPreferences", path: "../../../node_modules/@capacitor/preferences"),
         .package(name: "RevenuecatPurchasesCapacitor", path: "../../../node_modules/@revenuecat/purchases-capacitor")
     ],
     targets: [
@@ -22,6 +26,10 @@ let package = Package(
                 .product(name: "Capacitor", package: "capacitor-swift-pm"),
                 .product(name: "Cordova", package: "capacitor-swift-pm"),
                 .product(name: "CapacitorCommunityAdmob", package: "CapacitorCommunityAdmob"),
+                .product(name: "CapacitorFirebaseAnalytics", package: "CapacitorFirebaseAnalytics"),
+                .product(name: "CapacitorFirebaseCrashlytics", package: "CapacitorFirebaseCrashlytics"),
+                .product(name: "CapacitorFirebaseRemoteConfig", package: "CapacitorFirebaseRemoteConfig"),
+                .product(name: "CapacitorPreferences", package: "CapacitorPreferences"),
                 .product(name: "RevenuecatPurchasesCapacitor", package: "RevenuecatPurchasesCapacitor")
             ]
         )
