@@ -88,6 +88,9 @@
   .shopItem b { display: block; font-size: var(--fs-body); line-height: 1.2; }
   .shopItem small { display: block; color: var(--muted); font-size: var(--fs-small); line-height: 1.25; }
   .shopItem small.need { color: #ffb08a !important; }
+  .treasures .tile { width: 56px; height: 56px; }
+  .treasures .saving { margin: 8px 2px 2px; } .treasures .saving small { display: block; color: var(--muted); font-size: var(--fs-small); margin-bottom: 4px; }
+  .shopItem.sealed .tile { opacity: .45; filter: grayscale(.7); }
   .pips { display: flex; gap: 3px; margin-top: 5px; }
   .pips i { width: 9px; height: 5px; border-radius: 3px; background: rgba(239,230,207,.15); }
   .pips i.on { background: var(--amber); }
@@ -536,7 +539,7 @@
 import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, fitsAnywhere, deal,
   rescueCells, breakCells, pureVeinCells, stoneBreak } from "./game.js";
 
-import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, lookItem, DEFAULT_LOOK, FUR, memoryArt, stumpArt, granny, bidder, darkLantern, logoSwash, titleScene, titleHero, logoLetters, pet, PET_KINDS, PET_WEAR_SLOT } from "./art.js";
+import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, lookItem, DEFAULT_LOOK, FUR, memoryArt, stumpArt, granny, bidder, darkLantern, logoSwash, titleScene, titleHero, logoLetters, pet, PET_KINDS, PET_WEAR_SLOT, buildTile, BUILD_KINDS } from "./art.js";
 import { PROLOGUE, MEMORIES, MEMORY_COUNT, nextMemory, memoryById, mineOfMemory, mineDone, CHALK, PUDDOCK_BY_MINE, PUDDOCK_AFTER, PUDDOCK_POSTGAME,
   CAMP_LINES, SCALE_NOTE, SCENES, nextScene, SITES, GIVEN, MAP_GATE, MURMURS, MURMURS_DEEP, MURMURS_AFTER, PETS, PET_HINT, PET_SHOP } from "./story.js";
 import { soundtrack, sfx } from "./music.js";
@@ -619,12 +622,12 @@ const BIOMES = [ // gameplay (cost, drain, gem weights, shapes) lives in sim/gen
 ].map((b) => ({ families: {}, ...b, ...cfg0.biomes[b.id] }));
 const BANNERS = { "#5fa04e": "Moss green", "#c8553d": "Ember red", "#9b7cf2": "Gloamcap violet", "#4f7fe8": "Frost blue", "#f0c75a": "Royal gold" };
 const LOOKS = {
-  hat: { none: "No hat", leaf: "Leaf cap", mushroom: "Toadstool cap", beanie: "Knit beanie", flowers: "Flower crown", miner: "Miner's helmet", acorn: "Acorn helmet", bandana: "Travel bandana" },
+  hat: { none: "No hat", leaf: "Leaf cap", mushroom: "Toadstool cap", beanie: "Knit beanie", flowers: "Flower crown", miner: "Miner's helmet", acorn: "Acorn helmet", bandana: "Travel bandana", crown: "First Lantern crown" },
   scarf: { none: "No scarf", "#c8553d": "Ember scarf", "#35b38a": "Jade scarf", "#4f7fe8": "Frost scarf", "#9b7cf2": "Gloam scarf", "#f0c75a": "Gold scarf", "#ef8fb0": "Petal scarf" },
-  lantern: { amber: "Amber lantern", paper: "Paper lantern", jar: "Firefly jar", crystal: "Crystal lantern", granny: "Granny's lantern", rose: "Rose lantern" },
-  fur: { cocoa: "Cocoa fur", sand: "Sand fur", slate: "Slate fur", snow: "Snow fur", rosewood: "Rosewood fur", blossom: "Blossom fur", midnight: "Midnight fur" },
-  trinket: { none: "No trinket", bow: "Pink bow", clip: "Gloamcap clip", locket: "Heart locket", goggles: "Explorer goggles", pendant: "Frostspar pendant" },
-  cloak: { none: "No cloak", moss: "Moss cloak", shawl: "Lace shawl", mothwing: "Moth-wing cape" },
+  lantern: { amber: "Amber lantern", paper: "Paper lantern", jar: "Firefly jar", crystal: "Crystal lantern", granny: "Granny's lantern", rose: "Rose lantern", golden: "Golden lantern" },
+  fur: { cocoa: "Cocoa fur", sand: "Sand fur", slate: "Slate fur", snow: "Snow fur", rosewood: "Rosewood fur", blossom: "Blossom fur", midnight: "Midnight fur", starfur: "Starfur" },
+  trinket: { none: "No trinket", bow: "Pink bow", clip: "Gloamcap clip", locket: "Heart locket", goggles: "Explorer goggles", pendant: "Frostspar pendant", heartstone: "Heartstone pendant" },
+  cloak: { none: "No cloak", moss: "Moss cloak", shawl: "Lace shawl", mothwing: "Moth-wing cape", moonsilk: "Moonsilk cloak" },
 };
 const LOOK_FREE = { hat: ["none", "leaf"], scarf: ["none"], lantern: ["amber"], fur: ["cocoa"], trinket: ["none"], cloak: ["none"] };
 const lookOwned = (part, v) => LOOK_FREE[part].includes(v) || save.owned.includes(`look:${part}:${v}`);
@@ -648,6 +651,22 @@ const WARDROBE = [
 const PET_WEAR = [["bow", "Little bow", 500, "Granny tied one on every lantern. This one's smaller."], ["leaf", "Mini leaf cap", 900, "Just like Dibble's. Matching is the whole point."],
   ["scarf", "Tiny scarf", 1400, "Knitted on two pine needles"], ["bell", "Bell collar", 2200, "So you can hear them hop"], ["goggles", "Tiny goggles", 3500, "For very small explorers"],
   ["acorn", "Acorn cap", 5000, "The smallest acorn Puddock could find. He looked for a week."], ["crown", "Tiny crown", 9000, "Puddock says it's real gold. Puddock says a lot of things."]];
+// Someday: very long-term goals for after the mines run out. Priced from the economy sim (see the PR that added them): a regular late-game player
+// makes about 350k gold a day, so the cheapest take one to two weeks, the middle three to four, the last one to three months.
+// Gated ones show "Unlocks ..." and a teaser instead of their lore, so nothing is spoiled.
+const GATES = { ledge: [(st) => st.ledge, "Unlocks deeper in the story"], reunion: [(st) => st.site === "skywell", "Unlocks later in the story"], finale: [(st) => st.finale, "Unlocks after the last chapter"] };
+const TREASURES = [
+  { id: "decor:lamps", name: "Wickway lamp posts", price: 3500000, desc: "Two posts from the old Wickway. Puddock found them. He won't say where." },
+  { part: "trinket", val: "heartstone", name: "Heartstone pendant", price: 4000000, desc: "A chip of Rootheart, warm as a paw. Every so often it beats." },
+  { part: "lantern", val: "golden", name: "Golden lantern", price: 5000000, desc: "Puddock's cousin made it. Puddock says it's gaudy. Puddock is jealous." },
+  { id: "decor:wall", name: "Wall of Names", price: 8000000, desc: "Every Lantern Mole who ever lit a tunnel, carved in amber-wood. There's room for one more.", gate: "reunion", tease: "Some names deserve to be carved where everyone can see them." },
+  { part: "cloak", val: "moonsilk", name: "Moonsilk cloak", price: 9000000, desc: "Woven from moonlight and patience. Mostly patience. Weighs less than a sigh." },
+  { id: "decor:roost", name: "Moth roost", price: 12000000, desc: "A little silk moon on a pole. Lost moths stop here to find their way.", gate: "ledge", tease: "Someone small and fluttery needs a place to rest." },
+  { part: "fur", val: "starfur", name: "Starfur dye", price: 14000000, desc: "Fur as dark as a clear night, with stars in it. They move when you're not looking." },
+  { id: "decor:tower", name: "Lantern tower", price: 20000000, desc: "Lanterns all the way up. You'll never come home to a dark camp again." },
+  { part: "hat", val: "crown", name: "Crown of the First Lantern", price: 26000000, desc: "The first Lantern Mole wore it to light the first tunnel. Granny says it suits you.", gate: "reunion", tease: "Fit for whoever lights the way." },
+  { id: "decor:mirror", name: "Moonlight mirror", price: 30000000, desc: "Catches the moonlight pouring down the Skywell and shares it round camp.", gate: "finale", tease: "It needs a light that isn't here yet." },
+].map((t) => ({ ...t, treasure: true, ...(t.part ? { id: `look:${t.part}:${t.val}`, tab: "wardrobe", kind: "look" } : { tab: "camp", kind: "camp" }) }));
 const SHOP = [
   // Tools: permanent upgrades, price ×1.6 per level
   { id: "lantern", tab: "tools", icon: "lantern", kind: "up", name: "Lantern", desc: "+5s of Rootline", base: 150, max: 15 },
@@ -670,6 +689,7 @@ const SHOP = [
   { id: "decor:hammock", tab: "camp", icon: "hammock", kind: "camp", name: "Moss hammock", desc: "For naps between digs", price: 9000 },
   { id: "decor:cart", tab: "camp", icon: "cart", kind: "camp", name: "Puddock's spare cart", desc: "He says it's a loan. It isn't.", price: 60000 },
   { id: "fireflies", tab: "camp", icon: "fireflies", kind: "once", name: "Firefly roots", desc: "Fireflies drift along your Rootline while you dig", price: 600 },
+  ...TREASURES,
   ...PET_WEAR.map(([val, name, price, desc]) => ({ id: "pet:" + val, tab: "pets", kind: "petwear", slot: PET_WEAR_SLOT[val], val, name, desc, price })),
   // Maps
   ...BIOMES.slice(1).filter((b) => !GIVEN[b.id]).map((b) => ({ id: "biome:" + b.id, tab: "maps", icon: "map", kind: "biome", name: `Map to ${b.name}`, desc: b.blurb, price: b.cost })),
@@ -1638,6 +1658,18 @@ async function renderIap() {
   $("buyNoAds").onclick = async () => { if (await platform.buyRemoveAds()) { toast("Ads removed. Thank you!"); renderIap(); } };
   $("restoreBtn").onclick = async () => { toast((await platform.restore()) ? "Purchase restored" : "Nothing to restore"); renderIap(); };
 }
+// the Someday shelf at the end of the Camp and Wardrobe tabs: locked prices, a lore line, and a bar toward the next one in reach
+const bigG = (n) => n >= 1e6 ? `${+(n / 1e6).toFixed(n < 1e7 ? 2 : 1)}M` : n.toLocaleString("en-US");
+function someday() {
+  const items = TREASURES.filter((t) => t.tab === mktTab), open = (t) => !t.gate || GATES[t.gate][0](save.story);
+  const next = items.filter((t) => open(t) && !save.owned.includes(t.id))[0], pc = next && Math.min(1, save.gold / next.price);
+  return `<div class="treasures"><h3 class="subHead">Someday</h3><div class="puddock">"${mktTab === "camp" ? "The good stuff. I keep it at the back. Bring me a mountain of gold and we'll talk." : "Finery for a mole of means. You're not one. Yet."}"</div>
+    ${next ? `<div class="saving"><small>Saving for the ${next.name}: ${Math.floor(pc * 100)}%</small><div class="bar"><i style="width:${(pc * 100).toFixed(1)}%"></i></div></div>` : ""}
+    ${items.map((t) => { const own = save.owned.includes(t.id), ok = open(t), short = t.price - save.gold;
+      return `<div class="shopItem${ok ? "" : " sealed"}"><span class="tile">${t.part ? lookItem(t.part, t.val, 56) : buildTile(t.id.slice(6), 56)}</span><span class="grow"><b>${t.name}</b><small>${ok ? t.desc : t.tease}</small>
+        ${!ok ? `<small class="need">${GATES[t.gate][1]}</small>` : !own && short > 0 ? `<small class="need">${bigG(short)} more to go</small>` : ""}</span>
+        ${own ? `<span class="stamp">Owned</span>` : `<button data-id="${t.id}" ${ok && short <= 0 ? "" : "disabled"}>${ok && short <= 0 ? coin(16) : icon("lock", 16)}${bigG(t.price)}</button>`}</div>`; }).join("")}</div>`;
+}
 function renderMarket() {
   renderIap();
   $("mktGold").textContent = save.gold;
@@ -1645,7 +1677,7 @@ function renderMarket() {
   $("petTab").style.display = pets.length ? "" : "none"; if (mktTab === "pets" && !pets.length) mktTab = "tools";
   for (const b of document.querySelectorAll("#mktTabs button")) b.classList.toggle("on", b.dataset.tab === mktTab);
   $("shop").innerHTML = (mktTab === "pets" ? `<div class="puddock">"${PET_SHOP}"</div>` : "") + (mktTab === "tools" && !save.story.confessed ? `<div class="shopItem"><span class="tile">${lookItem("lantern", "granny", 40)}</span>
-    <span class="grow"><b>An old lantern</b><small>"Not for sale. Not that one."</small></span><span class="stamp no">Not for sale</span></div>` : "") + SHOP.filter((it) => it.tab === mktTab && mapShown(it.id.split(":")[1] || "") && (!it.gate || it.gate(save.story))).map((it) => {
+    <span class="grow"><b>An old lantern</b><small>"Not for sale. Not that one."</small></span><span class="stamp no">Not for sale</span></div>` : "") + SHOP.filter((it) => it.tab === mktTab && !it.treasure && mapShown(it.id.split(":")[1] || "") && (!it.gate || it.gate(save.story))).map((it) => {
     const lvl = it.kind === "up" ? save.up[it.id] : 0;
     const done = it.kind === "up" ? lvl >= it.max : it.kind === "biome" ? save.biomes.includes(it.id.split(":")[1]) : save.owned.includes(it.id);
     const cost = price(it), short = cost - save.gold; // owned: a stamp; can't afford yet: locked tag and how far to go
@@ -1653,7 +1685,7 @@ function renderMarket() {
       ${!done && short > 0 ? `<small class="need">${short}g more to go</small>` : ""}
       ${it.kind === "up" ? `<span class="pips" title="level ${lvl} of ${it.max}">${[...Array(it.max)].map((_, k) => `<i class="${k < lvl ? "on" : ""}"></i>`).join("")}</span>` : ""}</span>
       ${done ? `<span class="stamp">${it.kind === "up" ? "Max" : "Owned"}</span>` : `<button data-id="${it.id}" ${short > 0 ? "disabled" : ""}>${short > 0 ? icon("lock", 16) : coin(16)}${cost}</button>`}</div>`;
-  }).join("");
+  }).join("") + (mktTab === "camp" || mktTab === "wardrobe" ? someday() : "");
   for (const btn of $("shop").querySelectorAll("button")) btn.onclick = () => {
     const it = SHOP.find((s) => s.id === btn.dataset.id), cost = price(it);
     if (save.gold < cost) return;
@@ -1862,10 +1894,11 @@ function campState() {
     found: GEMS.map((t) => save.found.includes(t) ? { color: CRYSTALS[t].color, cut: CRYSTALS[t].cut } : null),
     tent: save.camp.tent, banner: save.camp.banner, fire: save.camp.fire,
     site: save.story.site, sky: save.story.finale, packed: save.story.finale, puddockHere: save.story.site !== "stump",
-    grannySvg: save.story.site === "skywell" ? granny(60) : "", puddockSvg: puddock(60), petSvg: save.pets.active !== "none" ? pet(save.pets.active, 100, wearOf(save.pets.active)) : "", decor: { mushrooms: own("decor:mushrooms"), jars: own("decor:jars"), hammock: own("decor:hammock"), cart: own("decor:cart"), flies: save.owned.includes("fireflies") } };
+    grannySvg: save.story.site === "skywell" ? granny(60) : "", puddockSvg: puddock(60), petSvg: save.pets.active !== "none" ? pet(save.pets.active, 100, wearOf(save.pets.active)) : "", decor: { mushrooms: own("decor:mushrooms"), jars: own("decor:jars"), hammock: own("decor:hammock"), cart: own("decor:cart"), flies: save.owned.includes("fireflies") },
+    builds: Object.fromEntries(BUILD_KINDS.map((k) => [k, own("decor:" + k)])) };
 }
 function campProgress() {
-  const ups = SHOP.filter((i) => i.kind === "up"), extras = SHOP.filter((i) => i.kind !== "up" && i.kind !== "petwear");
+  const ups = SHOP.filter((i) => i.kind === "up"), extras = SHOP.filter((i) => i.kind !== "up" && i.kind !== "petwear" && !i.treasure); // Someday items are extra credit
   const have = ups.reduce((s, i) => s + save.up[i.id], 0) + extras.filter((i) => i.kind === "biome" ? save.biomes.includes(i.id.split(":")[1]) : save.owned.includes(i.id)).length + save.found.length;
   const total = ups.reduce((s, i) => s + i.max, 0) + extras.length + GEMS.length;
   return have / total;
@@ -1952,6 +1985,7 @@ $("campStage").addEventListener("pointerdown", (e) => {
   else if (what === "sapling") { tone(880, .12, "sine", .04); tone(1320, .1, "sine", .03, .06); campFx(x, y - 10, "✦", "campSpark"); buzz(8); }
   else if (what === "tools") { tone(1800, .05, "square", .025); tone(2400, .05, "square", .02, .07); buzz(8); }
   else if (what === "flag") { tone(300, .1, "triangle", .04); buzz(6); }
+  else if (what.startsWith("build-")) { campFx(x, y - 20, quote(SHOP.find((i) => i.id === "decor:" + what.slice(6)).desc), "campSay"); tone(587, .14, "sine", .05); tone(880, .12, "sine", .04, .08); }
   else if (what === "granny") { campFx(x, y - 20, quote(pick(CAMP_LINES.granny)), "campSay"); tone(330, .12, "triangle", .06); }
   else if (what === "puddock") { campFx(x, y - 20, quote(pick(CAMP_LINES[save.story.finale ? "puddockPost" : save.story.site === "stump" ? "puddock" : "puddockUnder"])), "campSay"); tone(220, .12, "triangle", .07); }
 });
