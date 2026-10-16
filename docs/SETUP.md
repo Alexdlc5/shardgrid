@@ -11,11 +11,11 @@ Ads = Google AdMob, purchases = RevenueCat, stats/crashes/remote tuning = Fireba
 |---|---|---|---|
 | ✅ | Contact email | — | **pubshiftsupport@gmail.com** |
 | ✅ | Public website | — | **https://alexdlc5.github.io** (privacy, terms, app-ads.txt) |
-| ⬜ | A1. Apple Developer Program | 1–2 days | start today |
+| ✅ | A1. Apple Developer Program | done 2026-10-16 | Individual enrollment |
 | ⬜ | A2. Agreements, tax, banking | ~1 day | after A1 |
-| ⬜ | A3. Bundle ID + app record | minutes | after A1 |
-| ⬜ | A4–A6. CI key + GitHub secrets | minutes | after A1 |
-| ⬜ | A7. First TestFlight build on your iPhone | ~30 min | after A6 |
+| ✅ | A3. Bundle ID + app record | done 2026-10-16 | app name **Glimmerwood** |
+| ✅ | A4–A6. CI key + GitHub secrets | done 2026-10-16 | iPhone registered under Devices; CI revokes its old development certificates each run |
+| ✅ | A7. First TestFlight build on your iPhone | done 2026-10-16 | internal group "Me"; run the **ios** workflow from main with "Sign and upload" ticked |
 | ✅ | A8. AdMob (iOS app) | done 2026-10-16 | App ID + 3 iOS units in the app; W-9 in review; link the store listing after launch |
 | ⬜ | A9. Firebase (iOS app) | minutes | any time (code side ready) |
 | ⬜ | A10. "Remove ads" product + sandbox tester | ~1 day | after A2 |
