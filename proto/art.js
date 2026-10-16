@@ -207,18 +207,12 @@ export function fluff(cx, cy, rx, ry, n, d, seed = 3) {
 }
 // pie-cut eye: white oval, big black pupil with a pie-slice glint cut from its upper right; blinks
 export function pieEye(cx, cy, w, h, look = 0, dur = 4.4) {
-  const id = "pe" + uid++, pw = w * .78, ph = h * .8, px = look * .6, py = h * .12, a0 = -Math.PI * .42, a1 = -Math.PI * .08;
+  const pw = w * .78, ph = h * .8, px = look * .6, py = h * .12, a0 = -Math.PI * .42, a1 = -Math.PI * .08;
   const wedge = `M${px} ${py} L${px + Math.cos(a0) * pw} ${py + Math.sin(a0) * ph} A${pw} ${ph} 0 0 1 ${px + Math.cos(a1) * pw} ${py + Math.sin(a1) * ph} Z`;
   return `<g transform="translate(${cx} ${cy})"><g>
     <animateTransform attributeName="transform" type="scale" values="1 1;1 1;1 .1;1 1" keyTimes="0;.94;.97;1" dur="${dur}s" repeatCount="indefinite"/>
-    <defs><linearGradient id="${id}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ddd3c6"/><stop offset=".38" stop-color="#fffcf4"/><stop offset="1" stop-color="#fff8ec"/></linearGradient>
-      <radialGradient id="${id}p" cx=".5" cy=".78" r=".75"><stop offset="0" stop-color="#5a3622"/><stop offset=".55" stop-color="#22140c"/><stop offset="1" stop-color="#0c0604"/></radialGradient></defs>
-    <ellipse rx="${w}" ry="${h}" fill="url(#${id}s)" stroke="${INK2}" stroke-width="1.5"/>
-    <ellipse cx="${px}" cy="${py}" rx="${pw}" ry="${ph}" fill="url(#${id}p)"/>
-    <path d="M${px - pw * .62} ${py + ph * .5} A${pw * .85} ${ph * .85} 0 0 0 ${px + pw * .62} ${py + ph * .5}" stroke="#a8724a" stroke-width=".7" fill="none" opacity=".55" stroke-linecap="round"/>
-    <path d="${wedge}" fill="#fffdf6"/>
-    <circle cx="${px - pw * .4}" cy="${py + ph * .42}" r="${w * .12}" fill="#fff" opacity=".85"/>
-    <path d="M${-w * .96} ${-h * .22} A${w} ${h} 0 0 1 ${w * .96} ${-h * .22}" stroke="${INK2}" stroke-width="2.3" fill="none" stroke-linecap="round"/></g></g>`;
+    <ellipse rx="${w}" ry="${h}" fill="#fffaf0" stroke="${INK2}" stroke-width="2.1"/>
+    <ellipse cx="${px}" cy="${py}" rx="${pw}" ry="${ph}" fill="${INK2}"/><path d="${wedge}" fill="#fffaf0"/></g></g>`;
 }
 const noodle = (d, c, w = 7) => `<path d="${d}" stroke="${INK2}" stroke-width="${w}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="${c}" stroke-width="${w - 3}" fill="none" stroke-linecap="round"/>`;
 
