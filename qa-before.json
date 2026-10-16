@@ -1,0 +1,584 @@
+{
+ "title 375x667": {
+  "fit": true,
+  "bad": [
+   "font 12px div.note \"Fair dealing: crystals a\""
+  ]
+ },
+ "title 402x874": {
+  "fit": true,
+  "bad": [
+   "font 12px div.note \"Fair dealing: crystals a\""
+  ]
+ },
+ "title 440x956": {
+  "fit": true,
+  "bad": [
+   "font 12px div.note \"Fair dealing: crystals a\""
+  ]
+ },
+ "home 375x667": {
+  "fit": true,
+  "bad": []
+ },
+ "home 402x874": {
+  "fit": true,
+  "bad": []
+ },
+ "home 440x956": {
+  "fit": true,
+  "bad": []
+ },
+ "mineSheet 375x667": {
+  "fit": false,
+  "bad": [
+   "font 11px small \"beat the Rootline\"",
+   "font 11px small \"no timer, ×0.6 gold\"",
+   "font 12.5px small \"Soft moss, easy veins. M\"",
+   "font 12.5px small \"Embers shatter everythin\"",
+   "font 12.5px small \"Gloamcap gems feed the r\"",
+   "font 12px span.lockTag \"15000g\"",
+   "font 12.5px small \"Buy the map at Old Puddo\"",
+   "font 12px span.lockTag \"30000g\"",
+   "font 12.5px small \"Buy the map at Old Puddo\"",
+   "font 12px span.lockTag \"55000g\"",
+   "font 12.5px small \"Buy the map at Old Puddo\"",
+   "font 12.5px small \"Old Puddock swears there\""
+  ]
+ },
+ "mineSheet 402x874": {
+  "fit": true,
+  "bad": [
+   "font 11px small \"beat the Rootline\"",
+   "font 11px small \"no timer, ×0.6 gold\"",
+   "font 12.5px small \"Soft moss, easy veins. M\"",
+   "font 12.5px small \"Embers shatter everythin\"",
+   "font 12.5px small \"Gloamcap gems feed the r\"",
+   "font 12px span.lockTag \"15000g\"",
+   "font 12.5px small \"Buy the map at Old Puddo\"",
+   "font 12px span.lockTag \"30000g\"",
+   "font 12.5px small \"Buy the map at Old Puddo\"",
+   "font 12px span.lockTag \"55000g\"",
+   "font 12.5px small \"Buy the map at Old Puddo\"",
+   "font 12.5px small \"Old Puddock swears there\""
+  ]
+ },
+ "mineSheet 440x956": {
+  "fit": true,
+  "bad": [
+   "font 11px small \"beat the Rootline\"",
+   "font 11px small \"no timer, ×0.6 gold\"",
+   "font 12.5px small \"Soft moss, easy veins. M\"",
+   "font 12.5px small \"Embers shatter everythin\"",
+   "font 12.5px small \"Gloamcap gems feed the r\"",
+   "font 12px span.lockTag \"15000g\"",
+   "font 12.5px small \"Buy the map at Old Puddo\"",
+   "font 12px span.lockTag \"30000g\"",
+   "font 12.5px small \"Buy the map at Old Puddo\"",
+   "font 12px span.lockTag \"55000g\"",
+   "font 12.5px small \"Buy the map at Old Puddo\"",
+   "font 12.5px small \"Old Puddock swears there\""
+  ]
+ },
+ "dailySheet 375x667": {
+  "fit": true,
+  "bad": [
+   "font 12px div.note \"No streak yet\""
+  ]
+ },
+ "dailySheet 402x874": {
+  "fit": true,
+  "bad": [
+   "font 12px div.note \"No streak yet\""
+  ]
+ },
+ "dailySheet 440x956": {
+  "fit": true,
+  "bad": [
+   "font 12px div.note \"No streak yet\""
+  ]
+ },
+ "wardrobe 375x667": {
+  "fit": false,
+  "bad": [
+   "tap h31 button.chip \"None\"",
+   "tap h33 button.chip.on \"Leaf cap\"",
+   "tap h31 button.chip \"Toadstool cap\"",
+   "tap h33 button.chip.on \"None\"",
+   "tap h32 button.chip \"Ember\"",
+   "tap h33 button.chip.on \"Amber\"",
+   "tap h34 button.chip.on \"Cocoa\"",
+   "tap h33 button.chip.on \"Canvas\"",
+   "tap h31 button.chip \"Patchwork\"",
+   "tap h34 button.chip.on \"\"",
+   "tap h32 button.chip \"\"",
+   "tap h33 button.chip.on \"Campfire\"",
+   "tap h33 button.chip.on \"Gloamcap garden\"",
+   "font 12px div.note \"Lanterns = Lantern level\""
+  ]
+ },
+ "wardrobe 402x874": {
+  "fit": true,
+  "bad": [
+   "tap h31 button.chip \"None\"",
+   "tap h33 button.chip.on \"Leaf cap\"",
+   "tap h31 button.chip \"Toadstool cap\"",
+   "tap h33 button.chip.on \"None\"",
+   "tap h32 button.chip \"Ember\"",
+   "tap h33 button.chip.on \"Amber\"",
+   "tap h34 button.chip.on \"Cocoa\"",
+   "tap h33 button.chip.on \"Canvas\"",
+   "tap h31 button.chip \"Patchwork\"",
+   "tap h34 button.chip.on \"\"",
+   "tap h32 button.chip \"\"",
+   "tap h33 button.chip.on \"Campfire\"",
+   "tap h33 button.chip.on \"Gloamcap garden\"",
+   "font 12px div.note \"Lanterns = Lantern level\""
+  ]
+ },
+ "wardrobe 440x956": {
+  "fit": true,
+  "bad": [
+   "tap h31 button.chip \"None\"",
+   "tap h33 button.chip.on \"Leaf cap\"",
+   "tap h31 button.chip \"Toadstool cap\"",
+   "tap h33 button.chip.on \"None\"",
+   "tap h32 button.chip \"Ember\"",
+   "tap h33 button.chip.on \"Amber\"",
+   "tap h34 button.chip.on \"Cocoa\"",
+   "tap h33 button.chip.on \"Canvas\"",
+   "tap h31 button.chip \"Patchwork\"",
+   "tap h34 button.chip.on \"\"",
+   "tap h32 button.chip \"\"",
+   "tap h33 button.chip.on \"Campfire\"",
+   "tap h33 button.chip.on \"Gloamcap garden\"",
+   "font 12px div.note \"Lanterns = Lantern level\""
+  ]
+ },
+ "optsSheet 375x667": {
+  "fit": true,
+  "bad": [
+   "font 11px button#oMusic.on \"Music\"",
+   "font 11px button#oSound.on \"Sound\"",
+   "font 11px button#oVib.on \"Vibration\"",
+   "font 11px button#oGlyph \"Symbols\"",
+   "font 11px button#oPrivacy \"Privacy\"",
+   "font 12px div.note \"Fair dealing: crystals a\""
+  ]
+ },
+ "optsSheet 402x874": {
+  "fit": true,
+  "bad": [
+   "font 11px button#oMusic.on \"Music\"",
+   "font 11px button#oSound.on \"Sound\"",
+   "font 11px button#oVib.on \"Vibration\"",
+   "font 11px button#oGlyph \"Symbols\"",
+   "font 11px button#oPrivacy \"Privacy\"",
+   "font 12px div.note \"Fair dealing: crystals a\""
+  ]
+ },
+ "optsSheet 440x956": {
+  "fit": true,
+  "bad": [
+   "font 11px button#oMusic.on \"Music\"",
+   "font 11px button#oSound.on \"Sound\"",
+   "font 11px button#oVib.on \"Vibration\"",
+   "font 11px button#oGlyph \"Symbols\"",
+   "font 11px button#oPrivacy \"Privacy\"",
+   "font 12px div.note \"Fair dealing: crystals a\""
+  ]
+ },
+ "market 375x667": {
+  "fit": false,
+  "bad": [
+   "tap h36 button.on \"Tools\"",
+   "tap h36 button \"Wardrobe\"",
+   "tap h36 button \"Camp\"",
+   "tap h36 button \"Maps\"",
+   "font 12.5px small \"\"Not for sale. Not that \"",
+   "tap h36 button \"Not for sale\"",
+   "font 12.5px small \"+5s of Rootline\"",
+   "tap h36 button \"614\"",
+   "font 12.5px small \"+10% crystal value\"",
+   "tap h36 button \"512\"",
+   "font 12.5px small \"+10% time from every vei\"",
+   "tap h36 button \"180\"",
+   "font 12.5px small \"Pure veins pay +0.5× mor\"",
+   "tap h36 button \"900\"",
+   "font 12.5px small \"+25% gold from crystals \"",
+   "tap h36 button \"3000\"",
+   "font 12.5px small \"Geodes and Roothearts tu\"",
+   "tap h36 button \"25000\"",
+   "font 12.5px small \"More tiny 1-cell crystal\"",
+   "tap h36 button \"900\""
+  ]
+ },
+ "market 402x874": {
+  "fit": false,
+  "bad": [
+   "tap h36 button.on \"Tools\"",
+   "tap h36 button \"Wardrobe\"",
+   "tap h36 button \"Camp\"",
+   "tap h36 button \"Maps\"",
+   "font 12.5px small \"\"Not for sale. Not that \"",
+   "tap h36 button \"Not for sale\"",
+   "font 12.5px small \"+5s of Rootline\"",
+   "tap h36 button \"614\"",
+   "font 12.5px small \"+10% crystal value\"",
+   "tap h36 button \"512\"",
+   "font 12.5px small \"+10% time from every vei\"",
+   "tap h36 button \"180\"",
+   "font 12.5px small \"Pure veins pay +0.5× mor\"",
+   "tap h36 button \"900\"",
+   "font 12.5px small \"+25% gold from crystals \"",
+   "tap h36 button \"3000\"",
+   "font 12.5px small \"Geodes and Roothearts tu\"",
+   "tap h36 button \"25000\"",
+   "font 12.5px small \"More tiny 1-cell crystal\"",
+   "tap h36 button \"900\""
+  ]
+ },
+ "market 440x956": {
+  "fit": false,
+  "bad": [
+   "tap h36 button.on \"Tools\"",
+   "tap h36 button \"Wardrobe\"",
+   "tap h36 button \"Camp\"",
+   "tap h36 button \"Maps\"",
+   "font 12.5px small \"\"Not for sale. Not that \"",
+   "tap h36 button \"Not for sale\"",
+   "font 12.5px small \"+5s of Rootline\"",
+   "tap h36 button \"614\"",
+   "font 12.5px small \"+10% crystal value\"",
+   "tap h36 button \"512\"",
+   "font 12.5px small \"+10% time from every vei\"",
+   "tap h36 button \"180\"",
+   "font 12.5px small \"Pure veins pay +0.5× mor\"",
+   "tap h36 button \"900\"",
+   "font 12.5px small \"+25% gold from crystals \"",
+   "tap h36 button \"3000\"",
+   "font 12.5px small \"Geodes and Roothearts tu\"",
+   "tap h36 button \"25000\"",
+   "font 12.5px small \"More tiny 1-cell crystal\"",
+   "tap h36 button \"900\""
+  ]
+ },
+ "market&tab=wardrobe 375x667": {
+  "fit": false,
+  "bad": [
+   "tap h36 button \"Tools\"",
+   "tap h36 button.on \"Wardrobe\"",
+   "tap h36 button \"Camp\"",
+   "tap h36 button \"Maps\"",
+   "font 12.5px small \"Knitted by a very patien\"",
+   "tap h36 button \"Owned ✓\"",
+   "font 12.5px small \"Smells faintly of mint\"",
+   "tap h36 button \"600\"",
+   "font 12.5px small \"Spotted, springy, slight\"",
+   "tap h36 button \"Owned ✓\"",
+   "font 12.5px small \"A sunny dye from Puddock\"",
+   "tap h36 button \"1000\"",
+   "font 12.5px small \"Stays cool, even near em\"",
+   "tap h36 button \"1200\"",
+   "font 12.5px small \"With a pompom that bounc\"",
+   "tap h36 button \"1500\"",
+   "font 12.5px small \"Glows a warm sunset red\"",
+   "tap h36 button \"2000\"",
+   "font 12.5px small \"Faintly glows in Gloamca\"",
+   "tap h36 button \"2500\"",
+   "font 12.5px small \"Moody, mysterious, very \"",
+   "tap h36 button \"3000\"",
+   "font 12.5px small \"Picked fresh every morni\"",
+   "tap h36 button \"4000\"",
+   "font 12.5px small \"Three fireflies who like\"",
+   "tap h36 button \"5000\"",
+   "font 12.5px small \"Woven from gold thread\"",
+   "tap h36 button \"6000\"",
+   "font 12.5px small \"White as Frostpine powde\"",
+   "tap h36 button \"9000\"",
+   "font 12.5px small \"A proper mole's helmet, \"",
+   "tap h36 button \"12000\"",
+   "font 12.5px small \"A rare red from Heartroo\"",
+   "tap h36 button \"15000\"",
+   "font 12.5px small \"Cut from a single Frosts\"",
+   "tap h36 button \"20000\""
+  ]
+ },
+ "market&tab=wardrobe 402x874": {
+  "fit": false,
+  "bad": [
+   "tap h36 button \"Tools\"",
+   "tap h36 button.on \"Wardrobe\"",
+   "tap h36 button \"Camp\"",
+   "tap h36 button \"Maps\"",
+   "font 12.5px small \"Knitted by a very patien\"",
+   "tap h36 button \"Owned ✓\"",
+   "font 12.5px small \"Smells faintly of mint\"",
+   "tap h36 button \"600\"",
+   "font 12.5px small \"Spotted, springy, slight\"",
+   "tap h36 button \"Owned ✓\"",
+   "font 12.5px small \"A sunny dye from Puddock\"",
+   "tap h36 button \"1000\"",
+   "font 12.5px small \"Stays cool, even near em\"",
+   "tap h36 button \"1200\"",
+   "font 12.5px small \"With a pompom that bounc\"",
+   "tap h36 button \"1500\"",
+   "font 12.5px small \"Glows a warm sunset red\"",
+   "tap h36 button \"2000\"",
+   "font 12.5px small \"Faintly glows in Gloamca\"",
+   "tap h36 button \"2500\"",
+   "font 12.5px small \"Moody, mysterious, very \"",
+   "tap h36 button \"3000\"",
+   "font 12.5px small \"Picked fresh every morni\"",
+   "tap h36 button \"4000\"",
+   "font 12.5px small \"Three fireflies who like\"",
+   "tap h36 button \"5000\"",
+   "font 12.5px small \"Woven from gold thread\"",
+   "tap h36 button \"6000\"",
+   "font 12.5px small \"White as Frostpine powde\"",
+   "tap h36 button \"9000\"",
+   "font 12.5px small \"A proper mole's helmet, \"",
+   "tap h36 button \"12000\"",
+   "font 12.5px small \"A rare red from Heartroo\"",
+   "tap h36 button \"15000\"",
+   "font 12.5px small \"Cut from a single Frosts\"",
+   "tap h36 button \"20000\""
+  ]
+ },
+ "market&tab=wardrobe 440x956": {
+  "fit": false,
+  "bad": [
+   "tap h36 button \"Tools\"",
+   "tap h36 button.on \"Wardrobe\"",
+   "tap h36 button \"Camp\"",
+   "tap h36 button \"Maps\"",
+   "font 12.5px small \"Knitted by a very patien\"",
+   "tap h36 button \"Owned ✓\"",
+   "font 12.5px small \"Smells faintly of mint\"",
+   "tap h36 button \"600\"",
+   "font 12.5px small \"Spotted, springy, slight\"",
+   "tap h36 button \"Owned ✓\"",
+   "font 12.5px small \"A sunny dye from Puddock\"",
+   "tap h36 button \"1000\"",
+   "font 12.5px small \"Stays cool, even near em\"",
+   "tap h36 button \"1200\"",
+   "font 12.5px small \"With a pompom that bounc\"",
+   "tap h36 button \"1500\"",
+   "font 12.5px small \"Glows a warm sunset red\"",
+   "tap h36 button \"2000\"",
+   "font 12.5px small \"Faintly glows in Gloamca\"",
+   "tap h36 button \"2500\"",
+   "font 12.5px small \"Moody, mysterious, very \"",
+   "tap h36 button \"3000\"",
+   "font 12.5px small \"Picked fresh every morni\"",
+   "tap h36 button \"4000\"",
+   "font 12.5px small \"Three fireflies who like\"",
+   "tap h36 button \"5000\"",
+   "font 12.5px small \"Woven from gold thread\"",
+   "tap h36 button \"6000\"",
+   "font 12.5px small \"White as Frostpine powde\"",
+   "tap h36 button \"9000\"",
+   "font 12.5px small \"A proper mole's helmet, \"",
+   "tap h36 button \"12000\"",
+   "font 12.5px small \"A rare red from Heartroo\"",
+   "tap h36 button \"15000\"",
+   "font 12.5px small \"Cut from a single Frosts\"",
+   "tap h36 button \"20000\""
+  ]
+ },
+ "market&bottom 375x667": {
+  "fit": false,
+  "bad": [
+   "tap h36 button.on \"Tools\"",
+   "tap h36 button \"Wardrobe\"",
+   "tap h36 button \"Camp\"",
+   "tap h36 button \"Maps\"",
+   "font 12.5px small \"\"Not for sale. Not that \"",
+   "tap h36 button \"Not for sale\"",
+   "font 12.5px small \"+5s of Rootline\"",
+   "tap h36 button \"614\"",
+   "font 12.5px small \"+10% crystal value\"",
+   "tap h36 button \"512\"",
+   "font 12.5px small \"+10% time from every vei\"",
+   "tap h36 button \"180\"",
+   "font 12.5px small \"Pure veins pay +0.5× mor\"",
+   "tap h36 button \"900\"",
+   "font 12.5px small \"+25% gold from crystals \"",
+   "tap h36 button \"3000\"",
+   "font 12.5px small \"Geodes and Roothearts tu\"",
+   "tap h36 button \"25000\"",
+   "font 12.5px small \"More tiny 1-cell crystal\"",
+   "tap h36 button \"900\""
+  ]
+ },
+ "market&bottom 402x874": {
+  "fit": false,
+  "bad": [
+   "tap h36 button.on \"Tools\"",
+   "tap h36 button \"Wardrobe\"",
+   "tap h36 button \"Camp\"",
+   "tap h36 button \"Maps\"",
+   "font 12.5px small \"\"Not for sale. Not that \"",
+   "tap h36 button \"Not for sale\"",
+   "font 12.5px small \"+5s of Rootline\"",
+   "tap h36 button \"614\"",
+   "font 12.5px small \"+10% crystal value\"",
+   "tap h36 button \"512\"",
+   "font 12.5px small \"+10% time from every vei\"",
+   "tap h36 button \"180\"",
+   "font 12.5px small \"Pure veins pay +0.5× mor\"",
+   "tap h36 button \"900\"",
+   "font 12.5px small \"+25% gold from crystals \"",
+   "tap h36 button \"3000\"",
+   "font 12.5px small \"Geodes and Roothearts tu\"",
+   "tap h36 button \"25000\"",
+   "font 12.5px small \"More tiny 1-cell crystal\"",
+   "tap h36 button \"900\""
+  ]
+ },
+ "market&bottom 440x956": {
+  "fit": false,
+  "bad": [
+   "tap h36 button.on \"Tools\"",
+   "tap h36 button \"Wardrobe\"",
+   "tap h36 button \"Camp\"",
+   "tap h36 button \"Maps\"",
+   "font 12.5px small \"\"Not for sale. Not that \"",
+   "tap h36 button \"Not for sale\"",
+   "font 12.5px small \"+5s of Rootline\"",
+   "tap h36 button \"614\"",
+   "font 12.5px small \"+10% crystal value\"",
+   "tap h36 button \"512\"",
+   "font 12.5px small \"+10% time from every vei\"",
+   "tap h36 button \"180\"",
+   "font 12.5px small \"Pure veins pay +0.5× mor\"",
+   "tap h36 button \"900\"",
+   "font 12.5px small \"+25% gold from crystals \"",
+   "tap h36 button \"3000\"",
+   "font 12.5px small \"Geodes and Roothearts tu\"",
+   "tap h36 button \"25000\"",
+   "font 12.5px small \"More tiny 1-cell crystal\"",
+   "tap h36 button \"900\""
+  ]
+ },
+ "end 375x667": {
+  "fit": false,
+  "bad": [
+   "font 11.5px small \"Moss Quartz\"",
+   "font 11.5px small \"10g\"",
+   "font 11.5px small \"Leaf Jade\"",
+   "font 11.5px small \"13g\"",
+   "font 11.5px small \"Sun Amber\"",
+   "font 11.5px small \"10g\"",
+   "font 11.5px small \"Ember Shard\"",
+   "font 11.5px small \"19g\"",
+   "font 11.5px small \"Bonuses\"",
+   "font 11.5px small \"lens, tongs, shooed moth\"",
+   "font 12px div#adNote.note \"Green buttons are reward\""
+  ]
+ },
+ "end 402x874": {
+  "fit": false,
+  "bad": [
+   "font 11.5px small \"Moss Quartz\"",
+   "font 11.5px small \"10g\"",
+   "font 11.5px small \"Leaf Jade\"",
+   "font 11.5px small \"13g\"",
+   "font 11.5px small \"Sun Amber\"",
+   "font 11.5px small \"10g\"",
+   "font 11.5px small \"Ember Shard\"",
+   "font 11.5px small \"19g\"",
+   "font 11.5px small \"Bonuses\"",
+   "font 11.5px small \"lens, tongs, shooed moth\"",
+   "font 12px div#adNote.note \"Green buttons are reward\""
+  ]
+ },
+ "end 440x956": {
+  "fit": true,
+  "bad": [
+   "font 11.5px small \"Moss Quartz\"",
+   "font 11.5px small \"10g\"",
+   "font 11.5px small \"Leaf Jade\"",
+   "font 11.5px small \"13g\"",
+   "font 11.5px small \"Sun Amber\"",
+   "font 11.5px small \"10g\"",
+   "font 11.5px small \"Ember Shard\"",
+   "font 11.5px small \"19g\"",
+   "font 11.5px small \"Bonuses\"",
+   "font 11.5px small \"lens, tongs, shooed moth\"",
+   "font 12px div#adNote.note \"Green buttons are reward\""
+  ]
+ },
+ "end&bottom 375x667": {
+  "fit": false,
+  "bad": [
+   "font 11.5px small \"Moss Quartz\"",
+   "font 11.5px small \"10g\"",
+   "font 11.5px small \"Leaf Jade\"",
+   "font 11.5px small \"13g\"",
+   "font 11.5px small \"Sun Amber\"",
+   "font 11.5px small \"10g\"",
+   "font 11.5px small \"Ember Shard\"",
+   "font 11.5px small \"19g\"",
+   "font 11.5px small \"Bonuses\"",
+   "font 11.5px small \"lens, tongs, shooed moth\"",
+   "font 12px div#adNote.note \"Green buttons are reward\""
+  ]
+ },
+ "end&bottom 402x874": {
+  "fit": false,
+  "bad": [
+   "font 11.5px small \"Moss Quartz\"",
+   "font 11.5px small \"10g\"",
+   "font 11.5px small \"Leaf Jade\"",
+   "font 11.5px small \"13g\"",
+   "font 11.5px small \"Sun Amber\"",
+   "font 11.5px small \"10g\"",
+   "font 11.5px small \"Ember Shard\"",
+   "font 11.5px small \"19g\"",
+   "font 11.5px small \"Bonuses\"",
+   "font 11.5px small \"lens, tongs, shooed moth\"",
+   "font 12px div#adNote.note \"Green buttons are reward\""
+  ]
+ },
+ "end&bottom 440x956": {
+  "fit": true,
+  "bad": [
+   "font 11.5px small \"Moss Quartz\"",
+   "font 11.5px small \"10g\"",
+   "font 11.5px small \"Leaf Jade\"",
+   "font 11.5px small \"13g\"",
+   "font 11.5px small \"Sun Amber\"",
+   "font 11.5px small \"10g\"",
+   "font 11.5px small \"Ember Shard\"",
+   "font 11.5px small \"19g\"",
+   "font 11.5px small \"Bonuses\"",
+   "font 11.5px small \"lens, tongs, shooed moth\"",
+   "font 12px div#adNote.note \"Green buttons are reward\""
+  ]
+ },
+ "talk 375x667": {
+  "fit": true,
+  "bad": []
+ },
+ "talk 402x874": {
+  "fit": true,
+  "bad": []
+ },
+ "talk 440x956": {
+  "fit": true,
+  "bad": []
+ },
+ "memories 375x667": {
+  "fit": true,
+  "bad": []
+ },
+ "memories 402x874": {
+  "fit": true,
+  "bad": []
+ },
+ "memories 440x956": {
+  "fit": true,
+  "bad": []
+ }
+}
