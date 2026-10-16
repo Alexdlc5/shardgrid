@@ -32,7 +32,7 @@ The player learns all of this in pieces, in this order.
 
 Camp: at the stump.
 
-**Prologue** (first launch, 4 wordless panels, skippable): the oak glowing at dusk · a red glow under the roots · lanterns going down into the ground · dawn, a stump, a toad with a cart.
+**Prologue** (first launch, 4 panels with one caption each, skippable, shown once): the oak glowing at dusk · a red glow under the roots · lanterns going down into the ground · dawn, a stump, a toad with a cart.
 
 **Meeting Puddock** (already in game): "Haven't seen one of those since the old oak fell." He looks at the lantern like he's seen a ghost.
 

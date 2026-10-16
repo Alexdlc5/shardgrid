@@ -1,5 +1,5 @@
 // Glimmerwood menu art: every picture is inline SVG drawn in code (no image files until the look is approved).
-import { dibbleBody, puddockBody, rng, curve, ring, shape, stroke, limb, shard, shardCluster, pieEye } from "./paint.js";
+import { dibbleBody, puddockBody, rng, curve, ring, shape, stroke, limb, shard, shardCluster, pieEye, leafCap, amberLantern } from "./paint.js";
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 const mix = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * t).toString(16).padStart(2, "0")).join("");
 let uid = 0;
@@ -173,6 +173,18 @@ const ICONS = {
 };
 export const icon = (name, size = 22) => svg(size, "0 0 24 24", ICONS[name]);
 
+// The title's brushstroke under the logo: one tapered amber sweep with a darker edge, dry-brush streaks, and a leaf
+// sprouting from its tip (Dibble's cap).
+export function logoSwash() {
+  const r = rng(17);
+  return `<svg class="logoSwash" viewBox="0 0 300 30" aria-hidden="true">
+    ${shape(curve([[18, 22], [60, 15], [150, 10.6], [232, 11.4], [270, 15], [236, 20.4], [150, 22.4], [64, 25]]), "#e39a36", "#5a3410", [-2, 2])}
+    <path d="${curve([[44, 18.6], [110, 13.4], [180, 12.6], [244, 14]], false)}" stroke="#ffe3a6" stroke-width="2" fill="none" opacity=".55" stroke-linecap="round"/>
+    ${[...Array(10)].map((_, k) => stroke(40 + k * 22 + r() * 8, 19 + r() * 2.4, -.04 + (r() - .5) * .05, 12 + r() * 14, .6, "#a8611c", .45, .02)).join("")}
+    ${shape(curve([[262, 15], [268, 5], [281, 0.6], [290, 1.6], [285, 9.6], [273, 15]]), "#8fae68", "#3f5a2f", [-1.2, 1.2])}
+    <path d="M265 14 Q275 6.4 287 2.4" stroke="#4f6a3d" stroke-width="1" fill="none" opacity=".8"/></svg>`;
+}
+
 // ---------- characters ----------
 // Style: soft brown outlines (never black), one cel-shade tone, big glossy eyes with two highlights, gentle idle motion.
 const INK = "#3a2418";
@@ -192,50 +204,67 @@ export const FUR = { silver: ["#b8aea4", "#958a80"], cocoa: ["#8a5a44", "#6b4232
 export const LANTERN_GLOW = { amber: "#f0b543", granny: "#e8f0a0", crystal: "#9fe6ff", jar: "#fff3a0", paper: "#ff9a7a" };
 export const DEFAULT_LOOK = { fur: "cocoa", hat: "leaf", scarf: "none", lantern: "amber" };
 
+// Every wardrobe part is painted like Dibble: hand-built shapes from paint.js with a darker edge peeking out down-left
+// (never an ink outline), shading clipped inside (cool down-left, warm up-right, the lantern side), soft blobs for light.
+const blurDef = (id, sd) => `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${sd}"/></filter>`;
+const part = (d, c, o = [-.6, .55], extra = "") => shape(d, c, line(c), o, extra);
+// shading clipped to a part (needs the ${id}s filter): a cool shadow lower-left and a warm light upper-right
+const shadeIn = (id, d, [cx, cy, rx, ry], cool, warm) => `<clipPath id="${id}"><path d="${d}"/></clipPath><g clip-path="url(#${id})">
+  <path d="${curve(ring(cx - rx * .45, cy + ry * .35, rx * .7, ry * .8, 9, .2, 3))}" fill="${cool}" opacity=".5" filter="url(#${id}s)"/>
+  <path d="${curve(ring(cx + rx * .5, cy - ry * .4, rx * .45, ry * .55, 9, .2, 5))}" fill="${warm}" opacity=".6" filter="url(#${id}s)"/></g>`;
 function lanternArt(kind, id) {
-  const metal = "#5b4630", ml = line(metal);
-  const frame = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.6" fill="url(#${id}m)" stroke="${ml}" stroke-width="1.1"/>`;
-  const defs = `<linearGradient id="${id}m" x1="0" x2="1"><stop offset="0" stop-color="#8a6d48"/><stop offset=".45" stop-color="#c8a46a"/><stop offset="1" stop-color="#4a3824"/></linearGradient>`;
-  if (kind === "crystal") return `<defs>${defs}<linearGradient id="${id}c" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#bff0ff"/><stop offset="1" stop-color="#5fb8d8"/></linearGradient></defs>
-    ${frame(77, 53, 6, 2.6)}<polygon points="80,55.5 86.2,63.5 80,73.5 73.8,63.5" fill="url(#${id}c)" stroke="#2f6f8a" stroke-width="1.2" stroke-linejoin="round"/>
-    <path d="M80 55.5 V73.5 M73.8 63.5 H86.2" stroke="#ffffff" stroke-opacity=".5" stroke-width=".7" fill="none"/><polygon points="80,56.5 84,63 80,63" fill="#fff" opacity=".75"/>`;
-  if (kind === "jar") return `<defs>${defs}<radialGradient id="${id}j"><stop offset="0" stop-color="#fffbe0" stop-opacity=".9"/><stop offset="1" stop-color="#bfe8dc" stop-opacity=".35"/></radialGradient></defs>
-    <rect x="74.5" y="57" width="11" height="14.5" rx="4" fill="url(#${id}j)" stroke="#4f7d70" stroke-width="1.2"/>${frame(75.3, 54.3, 9.4, 3.2)}
-    <path d="M76.6 59 Q76 64 77 69" stroke="#fff" stroke-width=".9" opacity=".7" fill="none" stroke-linecap="round"/>
-    <circle cx="79" cy="62.5" r="1.4" fill="#fff6a0"><animate attributeName="opacity" values="1;.25;1" dur="1.4s" repeatCount="indefinite"/></circle><circle cx="82.4" cy="67" r="1.1" fill="#fff6a0"><animate attributeName="opacity" values=".3;1;.3" dur="1.9s" repeatCount="indefinite"/></circle>`;
-  if (kind === "paper") return `<defs>${defs}<radialGradient id="${id}p" cx=".45" cy=".45"><stop offset="0" stop-color="#ffd2b8"/><stop offset=".6" stop-color="#f08a6a"/><stop offset="1" stop-color="#b8503a"/></radialGradient></defs>
-    <ellipse cx="80" cy="63.5" rx="7.2" ry="8.6" fill="url(#${id}p)" stroke="#8a3424" stroke-width="1.2"/><path d="M73.4 60.6 Q80 59 86.6 60.6 M73 64.6 Q80 63.4 87 64.6 M73.6 68.4 Q80 67.4 86.4 68.4" stroke="#a8432f" stroke-width=".7" fill="none" opacity=".7"/>
-    ${frame(76.8, 53.6, 6.4, 2.6)}${frame(76.8, 71.4, 6.4, 2.6)}<ellipse cx="77.6" cy="60.6" rx="1.8" ry="2.6" fill="#fff" opacity=".35"/>`;
-  if (kind === "granny") return `<defs>${defs}<radialGradient id="${id}g"><stop offset="0" stop-color="#fbffe6"/><stop offset=".55" stop-color="#e2ea9a"/><stop offset="1" stop-color="#9aa84a"/></radialGradient></defs>
-    <path d="M74.6 57.5 Q80 54.5 85.4 57.5 V70 H74.6 Z" fill="url(#${id}g)" stroke="${ml}" stroke-width="1.2"/>${frame(73.2, 53.6, 13.6, 3.2)}${frame(73.8, 70, 12.4, 2.6)}
-    <path d="M77.2 57 V70 M80 56 V70 M82.8 57 V70" stroke="${ml}" stroke-width=".7" opacity=".6"/><circle cx="80" cy="63.4" r="2" fill="#fff"/><path d="M84 66 l-1.2 1.6 M83.4 64.6 q1 .8 0 1.6" stroke="#fff" stroke-width=".5" opacity=".6"/>`;
-  return `<defs>${defs}<radialGradient id="${id}a"><stop offset="0" stop-color="#fffbe6"/><stop offset=".5" stop-color="#f7d77a"/><stop offset="1" stop-color="#d99a2b"/></radialGradient></defs>
-    <rect x="75" y="56.5" width="10" height="14.5" rx="3" fill="url(#${id}a)" stroke="${ml}" stroke-width="1.2"/>${frame(73.6, 54, 12.8, 3)}${frame(74.2, 70.4, 11.6, 2.4)}
-    <path d="M77.6 57 V70.4 M82.4 57 V70.4" stroke="${ml}" stroke-width=".8" opacity=".7"/><circle cx="80" cy="63.6" r="2.2" fill="#fff"/><path d="M76.4 59 V64" stroke="#fff" stroke-width=".9" opacity=".7" stroke-linecap="round"/>`;
+  const metal = "#6a5236", f = `filter="url(#${id}b)"`, defs = `<defs>${blurDef(id + "b", 1.4)}</defs>`;
+  const cap = (y, w) => part(curve([[80 - w, y + .2], [80 + w, y], [80 + w + .4, y + 2.8], [80 - w - .3, y + 3]]), metal, [-.5, .5]);
+  const base = (y, w) => part(curve([[80 - w, y + .1], [80 + w, y], [80 + w - .2, y + 2.6], [80 - w + .1, y + 2.7]]), metal, [-.5, .5]);
+  const glow = (c, r = 9, y = 63.5) => `<path d="${curve(ring(80, y, r, r * 1.05, 10, .2, 3))}" fill="${c}" opacity=".32" ${f}/>`;
+  if (kind === "amber") return `<defs>${blurDef(id + "blur2", 2.4)}</defs><g transform="translate(80 54) scale(${(1 / 1.9).toFixed(4)}) translate(-231 -287)">${amberLantern(id)}</g>`;
+  if (kind === "crystal") return defs + glow("#9fe6ff", 10, 64) + cap(52.6, 2.8) + part("M80 55.5 L86.2 63.5 L80 73.5 L73.8 63.5 Z", "#9fe6ff") +
+    `<path d="M80 55.5 L86.2 63.5 L80 73.5 Z" fill="#effcff" opacity=".55"/><path d="M80 55.5 L73.8 63.5 L80 73.5 Z" fill="#3f8fae" opacity=".3"/>
+    ${stroke(80, 56.6, 1.57, 16, .35, "#ffffff", .55, .01)}<path d="M81.4 58 l1.6 2.4 l-1.6 .8 Z" fill="#ffffff" opacity=".85"/>`;
+  if (kind === "jar") return defs + glow("#fff3a0", 8, 64) +
+    shape(curve([[74.6, 57.6], [85.4, 57.4], [86, 64], [85.4, 71.2], [80, 71.8], [74.6, 71.2], [74, 64]]), "#bfe8dc", "#4f7d70", [-.6, .55], 'opacity=".55"') +
+    [[79, 62.5, 1.4, "1;.25;1", 1.4], [82.4, 67, 1.1, ".3;1;.3", 1.9]].map(([x, y, r, v, d]) => `<g><animate attributeName="opacity" values="${v}" dur="${d}s" repeatCount="indefinite"/>
+      <path d="${curve(ring(x, y, r * 2.4, r * 2.4, 8, .2, x | 0))}" fill="#fff6a0" opacity=".45" ${f}/><path d="${curve(ring(x, y, r, r * .9, 7, .15, y | 0))}" fill="#fff6a0"/></g>`).join("") +
+    part(curve([[75, 54.4], [85, 54.2], [85.3, 57.6], [74.8, 57.8]]), metal, [-.5, .5]) + stroke(76.4, 59, 1.62, 9, .45, "#ffffff", .6, .08);
+  if (kind === "paper") return defs + glow("#ff9a7a", 10) + part(curve(ring(80, 63.5, 7.4, 8.6, 14, .04, 7)), "#ee8566") +
+    `<path d="${curve(ring(81.4, 62.4, 4.2, 5.4, 9, .2, 9))}" fill="#ffd8bc" opacity=".8" ${f}/>
+    <path d="M73.4 60.6 Q80 59 86.6 60.6 M73 64.6 Q80 63.4 87 64.6 M73.6 68.4 Q80 67.4 86.4 68.4" stroke="#a8432f" stroke-width=".6" fill="none" opacity=".6"/>` +
+    cap(53.4, 3.4) + base(71.4, 3.4);
+  // granny: her old green-glass lantern
+  return defs + glow("#e8f0a0") + part(curve([[74.8, 57.6], [80, 55.4], [85.2, 57.6], [85.6, 64], [85.2, 70.2], [74.8, 70.4], [74.4, 64]]), "#d9e294") +
+    `<path d="${curve(ring(80.6, 63, 3.6, 5, 9, .2, 11))}" fill="#fbffe6" opacity=".9" ${f}/>${stroke(77.2, 57, 1.57, 13, .5, "#4a3a24", .55, .01)}${stroke(82.8, 57, 1.57, 13, .5, "#4a3a24", .55, .01)}
+    <path d="${curve([[80, 60.4], [81.5, 63.2], [80, 65.8], [78.5, 63.2]])}" fill="#ffffff"/>` + cap(53.6, 6.8) + base(70, 6.2);
 }
 function hatArt(kind, id) {
-  const H = (c, d) => `fill="url(#${id}${d})" stroke="${line(c)}" stroke-width="1.1" stroke-linejoin="round"`;
+  const defs = (sd = 1.6) => `<defs>${blurDef(id + "cs", sd)}${blurDef(id + "b", 1.2)}</defs>`;
   switch (kind) {
-    case "leaf": return `<defs>${linear(id + "l", "#6aa84f", 100)}${linear(id + "s", "#9be08a", 60)}</defs>
-      <path d="M26 28 Q50 8 74 28 Q50 21 26 28 Z" ${H("#6aa84f", "l")}/><path d="M33 22 Q50 14 63 19" stroke="#c7f0b0" stroke-width="1.3" fill="none" opacity=".7" stroke-linecap="round"/>
-      <path d="M52 15 Q56 2 68 4 Q63 13 52 15 Z" ${H("#9be08a", "s")}/><path d="M53 14 Q59 8 65 6" stroke="${line("#9be08a")}" stroke-width=".8" fill="none"/>`;
-    case "mushroom": return `<defs><radialGradient id="${id}m" cx=".35" cy=".25" r=".8"><stop offset="0" stop-color="#ff8a7a"/><stop offset=".6" stop-color="#d9534f"/><stop offset="1" stop-color="#9c2f2c"/></radialGradient></defs>
-      <path d="M23 29 Q25 5 50 4 Q75 5 77 29 Q50 22 23 29 Z" fill="url(#${id}m)" stroke="${line("#d9534f")}" stroke-width="1.1" stroke-linejoin="round"/>
-      <g fill="#fff6ea" stroke="#e8d8c4" stroke-width=".6"><ellipse cx="38" cy="14" rx="4.4" ry="3.2"/><ellipse cx="57" cy="10" rx="3.6" ry="2.7"/><ellipse cx="67" cy="20" rx="2.8" ry="2.1"/><ellipse cx="30" cy="23" rx="2.3" ry="1.7"/><ellipse cx="49" cy="20" rx="2" ry="1.5"/></g>
-      <path d="M30 13 Q36 7 44 6" stroke="#ffffff" stroke-width="1.4" opacity=".55" fill="none" stroke-linecap="round"/>`;
-    case "beanie": return `<defs>${linear(id + "b", "#5f8fd0", 95)}</defs>
-      <path d="M26 31 Q26 10 50 9 Q74 10 74 31 Z" ${H("#5f8fd0", "b")}/><g stroke="${shade("#5f8fd0", .25)}" stroke-width="1.1" opacity=".8">${[33, 39, 45, 51, 57, 63, 69].map((x) => `<path d="M${x} 13 Q${x - 1} 20 ${x} 27"/>`).join("")}</g>
-      <rect x="24.5" y="26.5" width="51" height="7.5" rx="3.7" fill="${shade("#5f8fd0", .18)}" stroke="${line("#5f8fd0")}" stroke-width="1.1"/>
-      <g stroke="${shade("#5f8fd0", .4)}" stroke-width=".8">${[29, 34, 39, 44, 49, 54, 59, 64, 69].map((x) => `<path d="M${x} 28 V32.5"/>`).join("")}</g>
-      <circle cx="50" cy="8" r="5.4" fill="#f6ead0" stroke="#b8a888" stroke-width="1.4"/><path d="M47 5.6 Q49 4.4 51 5" stroke="#fff" stroke-width="1" fill="none"/>`;
-    case "flowers": return `<path d="M25 28 Q50 15 75 28" stroke="#4f8a3e" stroke-width="2.4" fill="none" stroke-linecap="round"/>` +
-      [[30, 25, "#ff9db5"], [40, 19, "#fff3a0"], [50, 17, "#ffffff"], [60, 19, "#ff9db5"], [70, 25, "#c9b6ff"]].map(([x, y, c]) =>
-      `<g transform="translate(${x} ${y})">${[0, 72, 144, 216, 288].map((a) => `<ellipse cx="0" cy="-3.1" rx="2.3" ry="3.1" fill="${c}" stroke="${line(c)}" stroke-width=".7" transform="rotate(${a})"/>`).join("")}<circle r="1.7" fill="#f0b543" stroke="#a8761a" stroke-width=".6"/><circle cx="-.5" cy="-.5" r=".5" fill="#fff"/></g>`).join("");
-    case "miner": return `<defs><radialGradient id="${id}h" cx=".35" cy=".25" r=".8"><stop offset="0" stop-color="#ffe8a0"/><stop offset=".55" stop-color="#f0c75a"/><stop offset="1" stop-color="#b88a28"/></radialGradient></defs>
-      <path d="M25 31 Q25 9 50 8 Q75 9 75 31 Z" fill="url(#${id}h)" stroke="${line("#f0c75a")}" stroke-width="1.1" stroke-linejoin="round"/>
-      <path d="M50 9 V30" stroke="${shade("#f0c75a", .2)}" stroke-width="2"/><rect x="20.5" y="27.5" width="59" height="6" rx="3" fill="#d9a83a" stroke="${line("#f0c75a")}" stroke-width="1.1"/>
-      <circle cx="50" cy="17" r="5.2" fill="#fffbe6" stroke="#8a6a2a" stroke-width="1.4"/><circle cx="48.6" cy="15.6" r="1.6" fill="#fff"/><path d="M50 17 L28 -6 L72 -6 Z" fill="#fff6c8" opacity=".14"/>`;
-    default: return `<path d="M44 20 Q46 13 49 19 Q51 11 54 19 Q57 14 57 21" stroke="${INK}" stroke-width="1.2" fill="none" stroke-linecap="round"/>`; // a little tuft
+    case "leaf": return `<defs>${blurDef(id + "blur2", 2.4)}</defs><g transform="translate(50 28) scale(${(1 / 2.1).toFixed(4)}) translate(-150 -214)">${leafCap(id)}</g>`;
+    case "mushroom": { const d = curve([[23, 29.4], [24, 18], [33, 8.4], [50, 4.6], [67, 8.2], [76, 18], [77, 29.4], [63, 25.4], [50, 24.6], [37, 25.4]]);
+      return defs() + part(d, "#d9534f", [-1, .9]) + shadeIn(id + "c", d, [50, 17, 27, 12], "#6a1e30", "#ff9a84") +
+        [[38, 14, 4.4, 3.2], [57, 10, 3.6, 2.7], [67, 20, 2.8, 2.1], [30, 23, 2.3, 1.7], [49, 19, 2, 1.5]].map(([x, y, rx, ry], k) =>
+          shape(curve(ring(x, y, rx, ry, 9, .14, 20 + k, .2)), "#fff6ea", "#b89c88", [-.4, .35])).join("") +
+        `<path d="${curve([[26, 28.8], [50, 24.6], [74, 28.8]], false)}" stroke="#f3e2c6" stroke-width="1.2" fill="none" opacity=".7" stroke-linecap="round"/>`; }
+    case "beanie": { const d = curve([[26, 31], [27, 18], [36, 10.6], [50, 8.8], [64, 10.6], [73, 18], [74, 31], [50, 31.6]]);
+      return defs() + part(d, "#5f8fd0", [-.9, .8]) + shadeIn(id + "c", d, [50, 20, 24, 11], "#24406e", "#b8d0f4") +
+        [33, 39, 45, 51, 57, 63, 69].map((x) => stroke(x, 12.6 + Math.abs(x - 51) * .16, 1.57 + (x - 51) * .004, 15 - Math.abs(x - 51) * .14, .5, "#3a5f98", .7, .02)).join("") +
+        part(curve([[24.6, 27.2], [50, 26.4], [75.4, 27.2], [75.8, 31], [75, 34], [50, 34.6], [25, 34], [24.2, 31]]), "#4f7cbc", [-.7, .6]) +
+        [29, 34, 39, 44, 49, 54, 59, 64, 69].map((x) => stroke(x, 28.2, 1.57, 4.6, .4, "#2a4a80", .6, .02)).join("") +
+        part(curve(ring(50, 7.6, 5.6, 5.2, 14, .1, 9)), "#f3e6cc", [-.6, .55]) +
+        [...Array(7)].map((_, k) => { const a = k / 7 * Math.PI * 2; return stroke(50 + Math.cos(a) * 3.4, 7.6 + Math.sin(a) * 3.2, a, 3, .7, "#fffaf0", .7, .2); }).join("") + `<path d="${curve(ring(51.6, 6, 2.4, 1.8, 8, .2, 10))}" fill="#fffaf0" opacity=".7" filter="url(#${id}b)"/>`; }
+    case "flowers": return defs() + shape(limb(25, 28, 50, 13, 75, 28, 1.3, 1.1), "#4f8a3e", line("#4f8a3e"), [-.4, .4]) +
+      [[35, 22.6, -2.2], [64, 22.4, -.9]].map(([x, y, a]) => leafAt(x, y, a, 5, 1.6, "#6aa84f")).join("") +
+      [[30, 25, "#ff9db5"], [40, 19, "#fff3a0"], [50, 17, "#fbf6ee"], [60, 19, "#ff9db5"], [70, 25, "#c9b6ff"]].map(([x, y, c], k) =>
+        [0, 72, 144, 216, 288].map((deg) => { const a = (deg + k * 13) * Math.PI / 180;
+          return shape(curve(ring(x + Math.cos(a) * 3, y + Math.sin(a) * 3, 2.5, 1.7, 8, .1, k * 5 + deg, a)), c, line(c), [-.35, .3]); }).join("") +
+        shape(curve(ring(x, y, 1.7, 1.6, 8, .1, k + 40)), "#f0b543", "#8a5a1a", [-.3, .3]) + `<path d="${curve(ring(x + .5, y - .5, .6, .5, 6, .1, k))}" fill="#fff8e0"/>`).join("");
+    case "miner": { const d = curve([[25, 31], [26, 18], [35, 10], [50, 7.8], [65, 10], [74, 18], [75, 31], [50, 31.4]]);
+      return defs(2.4) + `<path d="${curve([[46, 14], [54, 14], [76, -10], [24, -10]])}" fill="#fff6c8" opacity=".2" filter="url(#${id}cs)"/>` +
+        part(d, "#f0c75a", [-.9, .8]) + shadeIn(id + "c", d, [50, 20, 25, 12], "#8a5a14", "#fff2b8") + shape(limb(50, 9, 50.6, 20, 50, 30, 1.3, 1), "#d9a83a", line("#d9a83a"), [-.4, .4]) +
+        part(curve([[20.4, 28.4], [50, 27.2], [79.6, 28.4], [80, 31], [79.4, 33.6], [50, 34], [20.6, 33.6], [20, 31]]), "#d9a83a", [-.8, .7]) +
+        `<path d="${curve(ring(50, 16.6, 7, 6.6, 10, .2, 4))}" fill="#fff6c8" opacity=".55" filter="url(#${id}b)"/>` +
+        part(curve(ring(50, 17, 5.6, 5.4, 12, .05, 3)), "#8a6a2a", [-.5, .5]) + shape(curve(ring(50, 16.6, 4, 3.8, 10, .05, 5)), "#fffbe6", "#c8a860", [-.3, .3]) +
+        `<path d="${curve(ring(51.2, 15.4, 1.4, 1.1, 7, .1, 6))}" fill="#ffffff"/>`; }
+    default: return [[45, 21, -1.9], [48.6, 20, -1.65], [52.4, 20.4, -1.4], [55.6, 22, -1.15]].map(([x, y, a]) => stroke(x, y, a, 7, 1.3, "#4a3024", .9, .2)).join(""); // a little tuft
   }
 }
 
@@ -255,18 +284,18 @@ export function lookItem(part, val, size = 40) {
   const id = "li" + uid++;
   if (part === "hat") return svg(size, val === "miner" || val === "beanie" ? "16 0 68 40" : "18 -2 64 40", hatArt(val, id) || "", "lookItem");
   if (part === "lantern") return svg(size, "66 48 28 30", `<path d="M80 49 Q76 52 79 55" stroke="#4a3824" stroke-width="1.4" fill="none"/>${lanternArt(val, id)}`, "lookItem");
-  if (part === "scarf") return svg(size, "0 0 40 40", `<defs>${linear(id, val, 90)}</defs>
-    <path d="M6 14 Q20 24 34 14" stroke="${line(val)}" stroke-width="9.6" fill="none" stroke-linecap="round"/><path d="M6 14 Q20 24 34 14" stroke="url(#${id})" stroke-width="7.2" fill="none" stroke-linecap="round"/>
-    <path d="M10 17 Q20 22.6 30 17" stroke="#fff" stroke-width=".8" stroke-dasharray="1.2 2.2" fill="none" opacity=".45"/>
-    <path d="M24 19 L27.5 33 L33 31 L29 18 Z" fill="url(#${id})" stroke="${line(val)}" stroke-width="1.5" stroke-linejoin="round"/>
-    <path d="M27.5 33 l-.6 2.6 M29.4 32.4 l-.2 2.8 M31.2 31.6 l.3 2.7" stroke="${val}" stroke-width="1.2" stroke-linecap="round"/>`, "lookItem");
+  if (part === "scarf") { const deep = mix(val, "#1a0f08", .12), band = curve([[5.4, 11.6], [12, 16.6], [20, 19.4], [28, 16.6], [34.6, 11.6], [36, 15.4], [29.4, 21.6], [20, 24.6], [10.6, 21.6], [4, 15.4]]);
+    return svg(size, "0 0 40 40", `${shape(band, val, line(val), [-.8, .8])}
+    <path d="${curve([[9, 14.4], [20, 22.4], [31, 14.4]], false)}" stroke="${mix(val, "#ffffff", .35)}" stroke-width=".8" stroke-dasharray="1.2 2.2" fill="none" opacity=".5"/>
+    <path d="${curve([[9, 14.6], [20, 21.2], [31, 14.6]], false)}" stroke="${mix(val, "#ffffff", .3)}" stroke-width="1.4" fill="none" opacity=".45" stroke-linecap="round"/>${shape(limb(26, 18.6, 28, 26, 30.4, 33, 3, 2.6), deep, line(val), [-.7, .6])}
+    ${[27.6, 29.4, 31.2].map((x, k) => stroke(x, 33 - k * .3, 1.75 - k * .12, 3, .55, val, 1, .1)).join("")}`, "lookItem"); }
   const [f] = FUR[val] || FUR.cocoa; // fur dye: a little stoppered jar
-  return svg(size, "0 0 40 40", `<defs>${radial(id, f, .35, .35)}</defs>
-    <rect x="11" y="13" width="18" height="21" rx="6" fill="#d9f0ec" fill-opacity=".35" stroke="#5a7a70" stroke-width="1.4"/>
-    <rect x="12.4" y="19" width="15.2" height="13.6" rx="5" fill="url(#${id})" stroke="${line(f)}" stroke-width=".8"/>
-    <rect x="14" y="8" width="12" height="6" rx="2" fill="#a0703f" stroke="#5a3b24" stroke-width="1.2"/>
-    <path d="M14 16 Q13 24 15 31" stroke="#fff" stroke-width="1.2" opacity=".6" fill="none" stroke-linecap="round"/>
-    <circle cx="23" cy="24" r="1.3" fill="#fff" opacity=".5"/>`, "lookItem");
+  return svg(size, "0 0 40 40", `<defs>${blurDef(id + "b", 1.4)}</defs>
+    ${shape(curve([[11.4, 14], [28.6, 13.6], [29.6, 22], [28.8, 33], [20, 34.6], [11.2, 33], [10.4, 22]]), "#d9f0ec", "#5a7a70", [-.7, .6], 'opacity=".35"')}
+    ${shape(curve([[12.6, 20], [27.4, 19.6], [28, 26], [27.2, 32.2], [20, 33.4], [12.8, 32.2], [12, 26]]), f, line(f), [-.6, .55])}
+    <path d="${curve(ring(16, 29, 4, 3, 8, .2, 3))}" fill="${mix(f, "#000000", .35)}" opacity=".4" filter="url(#${id}b)"/>
+    <path d="${curve(ring(23.6, 23.6, 3.2, 2.4, 8, .2, 5))}" fill="${mix(f, "#ffffff", .45)}" opacity=".55" filter="url(#${id}b)"/>
+    ${shape(curve([[14, 8.4], [26, 8], [26.4, 13.6], [13.6, 14]]), "#a0703f", line("#a0703f"), [-.6, .55])}${stroke(14, 16, 1.62, 14, .7, "#ffffff", .55, .05)}`, "lookItem");
 }
 
 // Old Puddock: a wise travelling toad merchant. Straw hat, round spectacles, droopy white brows, patched indigo coat.
@@ -844,7 +873,9 @@ export function memoryArt(kind, w = 160) {
     <g clip-path="url(#${id}c)"><rect width="160" height="100" fill="url(#${id})"/>${(MEM[kind] || MEM.leaf)()}
       <rect width="160" height="100" fill="url(#${id}v)"/><rect width="160" height="100" filter="url(#${id}n)" opacity=".1"/>
       <path d="${curve(ring(52, 22, 38, 8, 10, .12, 1, -.22))}" fill="#fff" opacity=".08" filter="url(#${id}b)"/></g>
-    <ellipse cx="80" cy="50" rx="78" ry="48" fill="none" stroke="#3a2208" stroke-width="3"/><ellipse cx="80" cy="50" rx="74" ry="44.5" fill="none" stroke="#ffd27a" stroke-width=".8" opacity=".35"/></svg>`;
+    <path d="${donut(R(80, 50, 79.6, 49.6, 12, 0, .006, 24), ring(80, 50, 76.4, 46.6, 24, .006, 13))}" fill="#3a2208" fill-rule="evenodd"/>
+    <path d="${curve(ring(80, 50, 78, 48, 24, .006, 15).slice(17, 23), false)}" stroke="#a8742c" stroke-width="1.2" fill="none" opacity=".6" stroke-linecap="round"/>
+    <path d="${curve(ring(80, 50, 74.4, 44.8, 24, .006, 14))}" stroke="#ffd27a" stroke-width=".8" fill="none" opacity=".35"/></svg>`;
 }
 
 // The old stump on the home screen. growth 0..1 (lifetime light released) brings moss, glowing roots and caps;
@@ -911,7 +942,7 @@ export function granny(size = 96) {
 }
 
 // The Pale Bidder: an old moth, wings folded into a cloak, holding the heart-shard up like a candle.
-export function bidder(size = 96, shard = true) {
+export function bidder(size = 96, holding = true) {
   const id = "pb" + uid++, wing = "#eee6fb", fur = "#d8cdf2", wl = mix(wing, "#2a1a3a", .55), fl = mix(fur, "#2a1a3a", .6), O = [-.8, .7];
   const cloak = curve([[50, 44], [36, 50], [24, 68], [18, 96], [50, 98], [82, 96], [76, 68], [64, 50]]);
   return svg(size, "0 0 100 100", `
@@ -928,7 +959,7 @@ export function bidder(size = 96, shard = true) {
     <path d="M22 92 Q50 98 78 92" stroke="#8f7cb8" stroke-width="1" fill="none" stroke-dasharray="2 2.5"/>
     ${shape(curve(ring(50, 52, 20, 9, 14, .12, 6)), "#fff8ea", mix("#fff8ea", "#3a2a1a", .45), O)}
     ${[...Array(7)].map((_, k) => stroke(34 + k * 5.4, 57 + (k % 2), 1.57 + (k - 3) * .12, 3.4, .9, "#e6dccb", .9, .1)).join("")}
-    <path d="M41 23 Q34 8 22 7 M59 23 Q66 8 78 7" stroke="${fl}" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    ${[[41, 23, 34, 8, 22, 7], [59, 23, 66, 8, 78, 7]].map((a) => shape(limb(...a, .95, .35), fl, mix(fl, "#1a0f2a", .5), [-.4, .4])).join("")}
     <g stroke="${fl}" stroke-width=".8" stroke-linecap="round">${[.2, .4, .6, .8].map((t) => { const x = 41 - 19 * t, y = 23 - 16 * t + 10 * t * t;
       return `<path d="M${x} ${y} l-3 -3 M${100 - x} ${y} l3 -3"/>`; }).join("")}</g>
     ${shape(curve(ring(50, 34, 17, 15, 14, .08, 4)), fur, fl, O)}
@@ -937,10 +968,10 @@ export function bidder(size = 96, shard = true) {
     <path d="M38 29.4 Q43 27.4 48 29.4 M52 29.4 Q57 27.4 62 29.4" stroke="${fl}" stroke-width="1.1" fill="none" stroke-linecap="round"/>
     <path d="M47 42 Q50 43.6 53 42" stroke="${fl}" stroke-width="1.1" fill="none" stroke-linecap="round"/>
     <path d="${curve(ring(36, 40, 4, 2.2, 8, .2, 9))}" fill="#ff8fa3" opacity=".28" filter="url(#${id}b)"/><path d="${curve(ring(64, 40, 4, 2.2, 8, .2, 10))}" fill="#ff8fa3" opacity=".28" filter="url(#${id}b)"/>
-    ${shard ? `<circle cx="50" cy="66" r="16" fill="url(#${id}g)"><animate attributeName="r" values="14;18;14" dur="2.4s" repeatCount="indefinite"/></circle>
-      ${shape("M50 56 L56 66 L50 76 L44 66 Z", "#ff6f8f", "#7a2a3a", [-.6, .5])}<path d="M50 58 L53 66 L50 66 Z" fill="#fff" opacity=".7"/>` : ""}
+    ${holding ? `<circle cx="50" cy="66" r="16" fill="url(#${id}g)"><animate attributeName="r" values="14;18;14" dur="2.4s" repeatCount="indefinite"/></circle>
+      ${shard(50, 72, 10, 17, 0, "#ff6f8f", rng(7), true)}` : ""}
     ${shape(curve([[40, 70], [43, 65], [46, 68], [45, 72.6], [41, 72.4]]), fur, fl, [-.5, .5])}${shape(curve([[60, 70], [57, 65], [54, 68], [55, 72.6], [59, 72.4]]), fur, fl, [-.5, .5])}
-    ${[...Array(5)].map((_, k) => `<circle cx="${26 + k * 12}" cy="${60 + (k % 2) * 8}" r=".9" fill="#fff"><animate attributeName="opacity" values="0;1;0" dur="${2 + k * .4}s" begin="${-k * .5}s" repeatCount="indefinite"/></circle>`).join("")}
+    ${[...Array(5)].map((_, k) => `<path d="${curve(ring(26 + k * 12, 60 + (k % 2) * 8, 1.2, .75, 6, .2, k, k * .7))}" fill="#e8dcff"><animate attributeName="opacity" values=".2;.7;.2" dur="${3 + k * .4}s" begin="${-k * .5}s" repeatCount="indefinite"/></path>`).join("")}
     `, 3.8, 1.2)}`, "bidder");
 }
 

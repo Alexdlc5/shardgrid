@@ -6,6 +6,8 @@
 <title>Glimmerwood Prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- the native splash stays up until the title has painted (end of the module script); this hides it anyway if the game never boots -->
+<script>setTimeout(() => window.Capacitor?.Plugins?.SplashScreen?.hide(), 4000);</script>
 <style>
   :root { --forest: #0f2219; --forest2: #1d3b2a; --text: #efe6cf; --muted: #a9b79a; --amber: #f0b543;
     --red: #d6453d; --card: rgba(16, 32, 23, .92); --line: rgba(239, 230, 207, .14); }
@@ -188,9 +190,11 @@
   .tabs { display: flex; gap: 6px; margin: 12px 0 2px; }
   .tabs button { margin: 0; padding: 7px; font-size: 14px; background: linear-gradient(180deg, #84593a, #613f25); color: #f6ead0; border: 2px solid #2b1a0e; box-shadow: 0 3px 0 #2b1a0e; }
   .tabs button.on { background: linear-gradient(180deg, #ffd98a, #e8a52f); color: #3a2208; border-color: #8a5a1a; box-shadow: 0 3px 0 #7a4a12; }
-  .talkArt { display: flex; justify-content: center; margin-top: -4px; }
+  /* every dialogue step shares one stage, as tall as an amber panel, so the card never jumps; speakers stand on its floor */
+  .talkArt { display: flex; justify-content: center; align-items: flex-end; height: calc(min(300px, 100vw - 80px) * .625); margin-top: -4px; }
   .talkArt .puddock { animation: bob 2.6s ease-in-out infinite; }
   .talkBubble { font-size: 16px; line-height: 1.4; margin: 6px 0 4px; min-height: 66px; }
+  #talkSkip { font-size: 15px; min-height: 44px; padding: 10px; margin: 2px 0 0; }
   .talkBubble::before { left: 50%; top: -6px; margin: 0 0 0 -6px; border: 6px solid transparent; border-bottom-color: #f3e6c4; border-top: 0; }
   .gift { display: flex; gap: 10px; align-items: center; background: rgba(30,16,6,.38); border-radius: 12px; padding: 8px; margin-top: 10px; animation: pop .5s ease-out; }
   .gift div { flex: 1; } .gift small { display: block; }
@@ -204,7 +208,7 @@
   .memCard small, .memTag { display: block; font-size: 12px; color: var(--muted); }
   .talkBubble:empty { display: none; }
   .talkArt .granny, .talkArt .bidder { animation: bob 2.6s ease-in-out infinite; }
-  .talkBubble .who { display: block; font-style: normal; font-size: 12px; letter-spacing: .6px; text-transform: uppercase; color: #8a5a32; margin-bottom: 2px; }
+  .talkBubble .who { display: block; font-style: normal; font-size: 13px; letter-spacing: .6px; text-transform: uppercase; color: #8a5a32; margin-bottom: 2px; }
   .chalkNote { font-family: Fredoka, sans-serif; font-size: 22px; text-align: center; color: #3a2418; letter-spacing: .5px; transform: rotate(-3deg); }
   .wickHead { display: flex; align-items: center; gap: 6px; font-weight: 600; color: #ffd27a; margin: 4px 2px 6px; }
   .wickLamp { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
@@ -277,11 +281,19 @@
   /* ===== title screen and the camp hub ===== */
   .titleScr { align-items: center; padding-top: 0 !important; background: radial-gradient(ellipse at 50% 40%, rgba(5,12,8,.1), rgba(5,12,8,.55)); }
   .titleWrap { width: min(400px, calc(100vw - 48px)); margin: auto; text-align: center; }
-  .titleWrap .dibble { width: 150px; height: 150px; animation: bob 3s ease-in-out infinite; }
-  .logo { font-size: min(56px, 14vw); margin: -6px 0 2px; }
-  .tagline { color: #e8d6aa !important; margin: 0 0 14px; }
+  #dibbleArt { display: block; height: 150px; }
+  /* Dibble breathes: a little squash at the bottom of each bob, a stretch at the top */
+  .titleWrap .dibble { width: 150px; height: 150px; transform-origin: 50% 96%; animation: titleIdle 3.4s ease-in-out infinite; }
+  @keyframes titleIdle { 0%, 100% { transform: scale(1.025, .975); } 50% { transform: translateY(-5px) scale(.99, 1.012); } }
+  /* painted lettering: lit pale gold at the top right, deep amber down-left, brush grain, a darker edge peeking out down-left */
+  .logo { font-size: min(54px, 13.2vw); margin: 0; padding: 0 6px; color: #ffd27a; text-shadow: none;
+    background: linear-gradient(170deg, #ffe7a8 10%, #ffd27a 40%, #f0b04a 68%, #c97f24 96%); -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; filter: url(#logoPaint) drop-shadow(-2px 2.2px 0 #5a3410) drop-shadow(0 5px 7px rgba(0,0,0,.45)); }
+  #logoSwash { display: block; } .logoSwash { display: block; width: 58%; height: auto; margin: 0 auto 4px; }
+  .tagline { color: #e8d6aa !important; margin: 0 0 10px; text-wrap: balance; }
   .titleWrap button { font-size: 19px; padding: 13px; }
-  .titleWrap .note { color: rgba(246,234,208,.6); }
+  .titleWrap .note { color: rgba(246,234,208,.66); font-size: 13px; }
+  @media (prefers-reduced-motion: reduce) { .titleWrap .dibble { animation: none; } }
   .hub { top: 0; padding: 0 !important; background: #0b1510; align-items: stretch; justify-content: center; overflow: hidden; }
   .hub .campStage { width: min(100vw, 480px); height: 100vh; height: 100dvh; margin: 0 auto; box-shadow: none; }
   .hub #campArt, .hub .campArt { display: block; width: 100%; height: 100%; }
@@ -322,14 +334,19 @@
 </div>
 <div id="toast"></div>
 
-<section id="title" class="screen titleScr"><div class="titleWrap">
+<section id="title" class="screen titleScr show"><div class="titleWrap">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="logoPaint" x="-6%" y="-15%" width="112%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="4" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="2.2" result="d"/>
+    <feTurbulence type="fractalNoise" baseFrequency=".012 .2" numOctaves="3" seed="2" result="b"/>
+    <feColorMatrix in="b" values="0 0 0 0 .55  0 0 0 0 .34  0 0 0 0 .12  0 0 0 .32 -.08" result="bb"/><feComposite in="bb" in2="d" operator="in" result="bi"/>
+    <feBlend in="d" in2="bi" mode="multiply"/></filter></svg>
   <span id="dibbleArt"></span>
-  <h1 class="logo">Glimmerwood</h1>
-  <div class="tag tagline">Mine glowing crystals before the roots close in.</div>
+  <h1 class="logo" id="logo">Glimmerwood</h1><span id="logoSwash"></span>
+  <div class="tag tagline" id="tagline">Mine glowing crystals before the roots close in.</div>
   <button id="tPlay">Play</button>
   <button id="tOpts" class="alt">Options</button>
   <button id="tMem" class="alt"></button>
-  <div class="note">Fair dealing: crystals are dealt at random. Never by ads, purchases or how close you are to your best.</div>
+  <div class="note" id="titleNote">Fair dealing: crystals are dealt at random. Never by ads, purchases or how close you are to your best.</div>
 </div></section>
 
 <section id="home" class="screen hub">
@@ -411,7 +428,7 @@
 import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, fitsAnywhere, deal,
   rescueCells, breakCells, pureVeinCells, stoneBreak } from "./game.js";
 
-import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, lookItem, DEFAULT_LOOK, FUR, memoryArt, stumpArt, granny, bidder, darkLantern } from "./art.js";
+import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, lookItem, DEFAULT_LOOK, FUR, memoryArt, stumpArt, granny, bidder, darkLantern, logoSwash } from "./art.js";
 import { PROLOGUE, MEMORIES, MEMORY_COUNT, nextMemory, memoryById, mineOfMemory, mineDone, CHALK, PUDDOCK_BY_MINE, PUDDOCK_AFTER, PUDDOCK_POSTGAME,
   CAMP_LINES, SCALE_NOTE, SCENES, nextScene, SITES, GIVEN, MAP_GATE, MURMURS, MURMURS_DEEP, MURMURS_AFTER } from "./story.js";
 import { soundtrack } from "./music.js";
@@ -1219,15 +1236,14 @@ const INTRO = [
 ];
 const home = () => { renderHome(); show("home"); };
 // steps: [{ say, html (picture, default Puddock), gift, btn }]; skip shows a Skip link (prologue, replays)
-function dialog(steps, then, skip = false) {
-  let k = 0;
+function dialog(steps, then, skip = false, k = 0) {
   const step = () => {
     const st = steps[k], lastStep = k === steps.length - 1;
     $("talkArt").innerHTML = st.html || puddock(120);
     $("talkLine").innerHTML = (st.name && st.say ? `<b class="who">${st.name}</b>` : "") + (st.say || "");
     $("talkGift").innerHTML = st.gift || "";
     $("talkNext").innerHTML = st.btn || (lastStep ? "Back" : "Go on…");
-    $("talkSkip").style.display = skip && !lastStep ? "block" : "none";
+    $("talkSkip").style.display = skip ? "block" : "none";
     tone(220 + k * 40, .12, "triangle", .07); tone(180 + k * 30, .1, "triangle", .05, .1);
   };
   $("talkNext").onclick = () => { if (++k < steps.length) return step(); then(); };
@@ -1242,12 +1258,14 @@ function talk(then) {
   });
 }
 const PANEL_W = Math.min(300, innerWidth - 80);
-function prologue() {
-  dialog(PROLOGUE.map((art, k) => ({ html: memoryArt(art, PANEL_W), btn: k < PROLOGUE.length - 1 ? "…" : "Begin" })),
-    () => { save.story.prologue = true; persist(); home(); }, true);
+// shown once: it counts as seen as soon as it starts, so quitting halfway never brings it back
+function prologue(start = 0) {
+  save.story.prologue = true; persist();
+  dialog(PROLOGUE.map(({ art, text }, k) => ({ html: memoryArt(art, PANEL_W), say: `<i>${text}</i>`, btn: k < PROLOGUE.length - 1 ? "Next" : "Begin" })), home, true, start);
 }
 const NAMES = { puddock: "Old Puddock", granny: "Granny Burr", bidder: "The Pale Bidder" };
-const SPEAKER = { puddock: () => puddock(120), granny: () => granny(124), bidder: () => bidder(132) };
+// sized so each figure stands about 150px tall on the stage (their boxes leave different headroom)
+const SPEAKER = { puddock: () => puddock(164), granny: () => granny(184), bidder: () => bidder(162) };
 const giftCard = (art, title, sub) => `<div class="gift">${art}<div><b>${title}</b><small>${sub}</small></div></div>`;
 const GIFTS = {
   lantern: () => [giftCard(lookItem("lantern", "granny", 46), "Granny Burr's lantern", "It still knows the way down."), `${icon("lantern", 22)}Take Granny's lantern`],
@@ -1265,9 +1283,9 @@ const AFTER = { // what each scene changes, once it has played
   reunion: (st) => { st.site = "skywell"; if (!save.biomes.includes("skywell")) save.biomes.push("skywell"); save.sel = "skywell"; },
   finale: (st) => { st.finale = true; },
 };
-function playScene(name) {
-  dialog(SCENES[name].map((st) => {
-    const [gift, btn] = st.gift ? GIFTS[st.gift]() : [];
+function playScene(name, start = 0) {
+  dialog(SCENES[name].map((st, k, all) => {
+    const [gift, btn = k === all.length - 1 ? "Continue" : null] = st.gift ? GIFTS[st.gift]() : [];
     const html = st.who ? SPEAKER[st.who]() : memoryArt(st.art, PANEL_W);
     const say = st.letter ? `<div class="letter">${st.letter}</div>` : st.chalk ? `<div class="chalkNote">${st.chalk}</div>` : st.say;
     return { html, say, gift, name: NAMES[st.who], btn: btn && `<span class="btnrow">${btn}</span>` };
@@ -1276,12 +1294,53 @@ function playScene(name) {
     [523, 659, 784, 1047].forEach((f, j) => tone(f, .4, "sine", .07, j * .12));
     if (name === "lead" || name === "reunion") { home(); toast("Camp unpacked. Everything's here.", 2200); }
     else home();
-  });
+  }, false, start);
 }
 function replayMemories(back) {
   const found = Object.values(MEMORIES).flat().filter((m) => save.story.mem.includes(m.id));
   if (!found.length) return toast("No Amber Memories yet. They turn up in the mines, glowing.", 2200);
   dialog(found.map((m) => ({ html: memoryArt(m.art, PANEL_W), say: `<i>${m.text}</i>` })), back, true);
+}
+
+// Story fit check (scripts/scene-check.mjs): ?scene=title | all | prologue:2 | confession:3 opens that screen with
+// motion frozen; "all" walks every prologue and scene step. Problems go in <pre id="fitReport"> as JSON.
+const STORY_STEPS = [...PROLOGUE.map((_, k) => "prologue:" + k), ...Object.entries(SCENES).flatMap(([n, s]) => s.map((_, k) => `${n}:${k}`))];
+function openStep(id) {
+  if (id === "title") return show("title");
+  const [name, k] = id.split(":");
+  name === "prologue" ? prologue(+k) : playScene(name, +k);
+}
+function fitProblems(title) {
+  const probe = getComputedStyle($("safeProbe")), root = document.documentElement, out = [];
+  const ad = root.classList.contains("hasAd") ? parseFloat(getComputedStyle(root).getPropertyValue("--ad")) || 0 : 0;
+  const top = parseFloat(probe.paddingTop), bottom = innerHeight - parseFloat(probe.paddingBottom) - ad;
+  const card = title ? $("title").querySelector(".titleWrap") : $("talk").querySelector(".card");
+  const ids = title ? ["dibbleArt", "logo", "logoSwash", "tagline", "tPlay", "tOpts", "tMem", "titleNote"] : ["talkArt", "talkLine", "talkGift", "talkNext", "talkSkip"];
+  const parts = ids.map((id) => [id, $(id)]).filter(([, el]) => el && getComputedStyle(el).display !== "none" && el.getBoundingClientRect().height > 0)
+    .map(([id, el]) => [id, el, el.getBoundingClientRect()]);
+  const c = card.getBoundingClientRect();
+  if (card.scrollHeight > card.clientHeight + 1) out.push("card scrolls");
+  for (const [id, el, r] of [["card", card, c], ...parts]) {
+    if (r.top < top - .5 || r.bottom > bottom + .5) out.push(`${id} leaves the safe area (${Math.round(r.top)}–${Math.round(r.bottom)}, safe ${top}–${bottom})`);
+    if (r.left < 0 || r.right > innerWidth) out.push(`${id} cut off at the side`);
+    if (el !== card && (r.top < c.top - .5 || r.bottom > c.bottom + .5)) out.push(`${id} clipped by the card`);
+    if (el.tagName === "BUTTON" && r.height < 44) out.push(`${id} is ${Math.round(r.height)}px tall (44 minimum)`);
+  }
+  parts.forEach(([a, , r], i) => parts.slice(i + 1).forEach(([b, , q]) => {
+    if (Math.min(r.right, q.right) - Math.max(r.left, q.left) > 1 && Math.min(r.bottom, q.bottom) - Math.max(r.top, q.top) > 1) out.push(`${a} overlaps ${b}`); }));
+  for (const el of card.querySelectorAll("*")) {
+    if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) || !el.getClientRects().length) continue;
+    const px = parseFloat(getComputedStyle(el).fontSize), min = !title && $("talkLine").contains(el) && !el.matches(".who") ? 15 : 13;
+    if (px < min) out.push(`"${el.textContent.trim().slice(0, 24)}" is ${px}px (${min} minimum)`);
+  }
+  return out;
+}
+function sceneCheck(which) {
+  document.head.insertAdjacentHTML("beforeend", "<style>*, *::before, *::after { animation: none !important; transition: none !important; } #dust { display: none; }</style>");
+  const report = { size: [innerWidth, innerHeight], steps: {} };
+  for (const id of which === "all" ? ["title", ...STORY_STEPS] : [which]) { openStep(id); report.steps[id] = fitProblems(id === "title"); }
+  if (which === "all") openStep("title");
+  document.body.insertAdjacentHTML("beforeend", `<pre id="fitReport" hidden>${JSON.stringify(report)}</pre>`);
 }
 
 // ---------- Dibble's Camp: every purchase shows up here ----------
@@ -1480,7 +1539,10 @@ $("icoDig").innerHTML = icon("pickaxe", 24);
 
 if (platform.native) $("adNote").textContent = "Green buttons play a short video ad.";
 platform.init().then(() => renderHome());
+$("logoSwash").innerHTML = logoSwash();
 renderHome(); show("title");
+if (qs.has("scene")) sceneCheck(qs.get("scene"));
+requestAnimationFrame(() => requestAnimationFrame(() => window.Capacitor?.Plugins?.SplashScreen?.hide())); // the title has painted
 requestAnimationFrame(frame);
 </script>
 </body>

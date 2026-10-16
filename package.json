@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node scripts/build-web.mjs",
     "check": "node proto/check.mjs && python sim/test_sim.py",
+    "check:story": "npm run build && node scripts/scene-check.mjs",
     "android": "npm run build && npx cap sync android && npx cap open android",
     "assets": "node scripts/app-art.mjs"
   },
@@ -17,6 +18,7 @@
     "@capacitor/android": "^8.5.3",
     "@capacitor/core": "^8.5.3",
     "@capacitor/ios": "^8.5.3",
+    "@capacitor/splash-screen": "^8.0.2",
     "@fontsource/fredoka": "^5.3.0",
     "@revenuecat/purchases-capacitor": "^13.7.4"
   },

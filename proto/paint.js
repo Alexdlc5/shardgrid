@@ -51,11 +51,12 @@ export function furEdge(pts, cx, cy, cols, seed, len = 6, w = 3.2) {
   return out;
 }
 // tapered limb along a quadratic path: width w1 at the shoulder narrowing to w2
-// cartoon pie-cut eye: cream eye, ink outline, big pupil with a wedge of light cut out of its top-right
+// cartoon pie-cut eye: cream eye with its darker edge peeking out down-left (no ink ring), big pupil with a wedge of
+// light cut out of its top-right (the lantern side)
 export function pieEye(cx, cy, seed, dur = 4.6, rx = 5.8, ry = 8, line = "#241812", lw = 1.4) {
   const k = rx / 5.8, px = cx + .9 * k, py = cy + 1.2 * ry / 8, pw = 4.3 * k, ph = 6 * ry / 8, a1 = -Math.PI * .42, a2 = -Math.PI * .08;
   return `<g transform="translate(${cx} ${cy})"><g><animateTransform attributeName="transform" type="scale" values="1 1;1 1;1 .1;1 1" keyTimes="0;.94;.97;1" dur="${dur}s" repeatCount="indefinite"/><g transform="translate(${-cx} ${-cy})">
-    <path d="${curve(ring(cx, cy, rx, ry, 10, .05, seed))}" fill="#fbf3e6" stroke="${line}" stroke-width="${lw}"/>
+    ${shape(curve(ring(cx, cy, rx, ry, 10, .05, seed)), "#fbf3e6", line, [-lw * .8, lw * .8])}
     <path d="${curve(ring(px, py, pw, ph, 10, .04, seed + 1))}" fill="${line}"/>
     <path d="M${f2(px)} ${f2(py)} L${f2(px + Math.cos(a1) * pw)} ${f2(py + Math.sin(a1) * ph)} A${pw} ${ph} 0 0 1 ${f2(px + Math.cos(a2) * pw)} ${f2(py + Math.sin(a2) * ph)} Z" fill="#fbf3e6"/></g></g></g>`;
 }
@@ -137,15 +138,7 @@ export function dibbleBody(id, o = {}) {
         <path d="${curve(ring(130, 252, 9, 5, 8, .3, 47))}" fill="#d98f8f" opacity=".38" filter="url(#${id}blur2)"/>
         <path d="${curve(ring(186, 240, 7, 4, 8, .3, 49))}" fill="#e39a8c" opacity=".4" filter="url(#${id}blur2)"/>
         ${[[184, 258, -.2], [185, 263, .1], [186, 268, .35]].map(([x, y, a]) => stroke(x, y, a, 15, .55, "#2a1a14", .45, .02)).join("")}
-        ${o.hat ? `<g transform="translate(150 214) scale(2.1) translate(-50 -28)">${o.hat}</g>` : `
-        <!-- leaf cap: one big irregular leaf with veins, and a curled sprout -->
-        ${shape(curve([[98, 218], [112, 194], [146, 184], [180, 188], [202, 208], [186, 208], [150, 202], [114, 212]]), C.leaf, C.leafDeep, [-1.6, 1.6])}
-        <path d="M104 214 Q148 194 196 206" stroke="${C.leafDeep}" stroke-width="1.2" fill="none" opacity=".7"/>
-        ${[[122, 205, -.9], [140, 199, -1], [160, 197, -1.1], [178, 200, -1.2]].map(([x, y, a]) => stroke(x, y, a, 8, .7, C.leafDeep, .6, .1)).join("")}
-        <path d="${curve(ring(150, 196, 22, 5, 8, .3, 51))}" fill="#b6c98e" opacity=".35" filter="url(#${id}blur2)"/>
-        ${shape(curve([[150, 190], [156, 172], [168, 162], [180, 164], [170, 176], [158, 188]]), "#93ad6c", C.leafDeep, [-1.2, 1.2])}
-        <path d="M152 188 Q164 174 176 166" stroke="${C.leafDeep}" stroke-width=".9" fill="none" opacity=".8"/>
-        `}
+        ${o.hat ? `<g transform="translate(150 214) scale(2.1) translate(-50 -28)">${o.hat}</g>` : leafCap(id)}
       </g>
       ${o.scarf && o.scarf !== "none" ? `<path d="M110 300 Q150 324 194 294" stroke="${mix(o.scarf, "#1a0f08", .55)}" stroke-width="15" fill="none" stroke-linecap="round" transform="translate(-1.6 1.6)"/>
         <path d="M110 300 Q150 324 194 294" stroke="${o.scarf}" stroke-width="15" fill="none" stroke-linecap="round"/>
@@ -159,18 +152,28 @@ export function dibbleBody(id, o = {}) {
       <path d="${limb(186, 313, 212, 320, 226, 337, 3.5, 1.4)}" fill="${C.furWarm}" opacity=".75" filter="url(#${id}blur2)"/>
       <g><animateTransform attributeName="transform" type="rotate" values="-4 231 344;4 231 344;-4 231 344" dur="3.4s" repeatCount="indefinite"/><g transform="translate(0 72)">
         <path d="M222 289 Q231 266 240 289" stroke="#4a3a2a" stroke-width="1.5" fill="none"/>
-        ${o.lantern ? `<g transform="translate(231 287) scale(1.9) translate(-80 -54)">${o.lantern}</g>` : `
-        ${shape(curve([[220, 287], [242, 286], [244, 291], [218, 292]]), "#6a5236", "#2a1e14", [-1, 1])}
-        ${shape(curve([[222, 292], [240, 292], [241, 312], [221, 312]]), "#ffd894", "#7a5226", [-1.2, 1.1])}
-        <path d="${curve([[225, 296], [237, 296], [237, 309], [225, 309]])}" fill="#fff4d6" opacity=".9" filter="url(#${id}blur2)"/>
-        <path d="M226 293 L226 311 M236 293 L236 311" stroke="#5a4028" stroke-width="1.3" opacity=".8"/>
-        ${shape(curve([[219, 312], [243, 311], [242, 316], [220, 316]]), "#6a5236", "#2a1e14", [-1, 1])}
-        `}
+        ${o.lantern ? `<g transform="translate(231 287) scale(1.9) translate(-80 -54)">${o.lantern}</g>` : amberLantern(id)}
       </g></g>
       ${shape(curve(ring(231, 342, 8, 7, 9, .18, 55, .2)), "#d9a99c", "#7a4a42", [-1.3, 1.2])}
       <path d="M233 337 q3 3 1 7" stroke="#ffe0b0" stroke-width="1.2" fill="none" opacity=".8" stroke-linecap="round"/>
     </g>` };
 }
+
+// Dibble's own leaf cap (sample coords; needs the ${id}blur2 filter): one big irregular leaf with veins, a curled sprout
+export function leafCap(id, leaf = "#7f9a5e", deep = "#4f6a3d") {
+  return `${shape(curve([[98, 218], [112, 194], [146, 184], [180, 188], [202, 208], [186, 208], [150, 202], [114, 212]]), leaf, deep, [-1.6, 1.6])}
+    <path d="M104 214 Q148 194 196 206" stroke="${deep}" stroke-width="1.2" fill="none" opacity=".7"/>
+    ${[[122, 205, -.9], [140, 199, -1], [160, 197, -1.1], [178, 200, -1.2]].map(([x, y, a]) => stroke(x, y, a, 8, .7, deep, .6, .1)).join("")}
+    <path d="${curve(ring(150, 196, 22, 5, 8, .3, 51))}" fill="#b6c98e" opacity=".35" filter="url(#${id}blur2)"/>
+    ${shape(curve([[150, 190], [156, 172], [168, 162], [180, 164], [170, 176], [158, 188]]), "#93ad6c", deep, [-1.2, 1.2])}
+    <path d="M152 188 Q164 174 176 166" stroke="${deep}" stroke-width=".9" fill="none" opacity=".8"/>`;
+}
+// Dibble's amber lantern (sample coords, hanging from (231, 287); needs the ${id}blur2 filter)
+export const amberLantern = (id) => `${shape(curve([[220, 287], [242, 286], [244, 291], [218, 292]]), "#6a5236", "#2a1e14", [-1, 1])}
+  ${shape(curve([[222, 292], [240, 292], [241, 312], [221, 312]]), "#ffd894", "#7a5226", [-1.2, 1.1])}
+  <path d="${curve([[225, 296], [237, 296], [237, 309], [225, 309]])}" fill="#fff4d6" opacity=".9" filter="url(#${id}blur2)"/>
+  ${stroke(226, 293, 1.57, 18, .65, "#5a4028", .8, .01)}${stroke(236, 293, 1.57, 18, .65, "#5a4028", .8, .01)}
+  ${shape(curve([[219, 312], [243, 311], [242, 316], [220, 316]]), "#6a5236", "#2a1e14", [-1, 1])}`;
 
 export function sampleScene() {
   const id = "pt" + uid++, r = rng(11), D = dibbleBody(id + "d");
