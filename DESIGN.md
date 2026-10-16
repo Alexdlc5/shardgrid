@@ -158,16 +158,31 @@ The bots' think times are guesses; once the prototype has real players, measure 
 - **Pilfermoths** (cave critters; tuning in `sim/generator.json → pilfermoths`): after 6 placements, when a tray is dealt, a fluffy moth may flutter onto an empty cell. The chance is 12% in Mossy Hollow, rising to 34% in Heartroot Deep. There's at most 1 at a time (2 in Heartroot). Each new tray, a moth next to crystals nibbles 8% of the haul (a pulsing **!** warns you first), then hops toward glimmer; after 3 nibbles it flies off with the loot. Clearing a line through it, or an ember blast, shoos it: it drops what it took ×1.5 + 4. Never in Calm Grove. Seeded in the Daily Dig. Never affects which pieces are dealt.
 - **Not yet modelled in the sims:** `proto/economy.mjs` and `sim/sim.py` don't include Pilfermoths. The numbers above are first guesses; retune after playtest feedback.
 
-## Art direction (2026-10-15): rubber-hose hybrid
+## Art direction (2026-10-16): painterly storybook
 
-The owner compared three takes on the 1930s rubber-hose cartoon look in a style lab and picked the **hybrid**: today's shaded Dibble, re-inked.
-- **Characters:** a fluffy scalloped silhouette, bold ink (`#1d120c`), pie-cut eyes that blink, noodle arms. Kept the detail: form shading, a warm lantern rim light, detailed lanterns (metal frames, glass, fireflies), shaded hats, knitted scarves, clawed paws. Old Puddock and the Pilfermoth get the same ink and pie eyes.
-- **Board:** gems keep their bevels and glints but get bold ink outlines to sit with the characters. The board itself stays unfiltered so it's easy to read.
+This replaces the rubber-hose hybrid. The owner wrote a 9-point checklist (linework, color, shading, shapes, expression, subject matter, rendering, composition, software artifacts), iterated on a sample scene (`proto/style-sample.html`, `assets/style-sample.png`) and approved it for the whole game.
+- **Toolkit (`proto/paint.js`):**
+  - Hand-built shapes: jittered Catmull-Rom curves and tapered limbs, with no primitive circles or rectangles.
+  - No ink outlines. A tinted, darker copy of each shape peeks out down-left, on the side turned away from the light.
+  - Two-light shading: soft blurred blobs, cool from the top-left and warm from the lantern.
+  - Fur tufts belong to the silhouette, not a layer behind it.
+- **Dibble (`dibbleBody`):**
+  - Stubby legs with fur spilling over the ankles.
+  - Cartoon pie eyes that blink.
+  - A soft snout that peaks up between the eyes.
+  - A leaf cap seated on the head, with a contact shadow.
+  - The lantern hangs from its bail at hip height.
+  - Fur dye, hats, scarves and lanterns still swap. `art.js` fits him into the 100x100 box every caller expects.
+- **Old Puddock (`puddockBody`):** the same toolkit, with drowsy lids over his pie eyes.
+- **Scenes, camp, forest:**
+  - Compositions are off-centre: rock masses, a soft light shaft and hanging roots.
+  - Crystal clusters grow out of mounds (`shard`, `shardCluster`).
+  - Pines are painted, and blurred ferns sit in the foreground.
+- **Board:** crystals drop the bold outline for the same tinted shadow-side edge. The moth uses tinted lines.
 - **Filter stack:**
-  - Line boil on character SVGs: a feTurbulence displacement re-seeded about 8 times a second, like hand-inked frames.
+  - Gentle line boil on character SVGs (displacement scale 1): a feTurbulence re-seeded about 8 times a second.
   - A warm multiply grade with a vignette over everything.
   - Film grain with flicker.
   - A subtle sepia on the forest.
   - Dust specks and hair scratches in menus and camp only.
   - All motion is off when the device asks for reduced motion.
-- **Borrowed:** only the era's techniques. No Cuphead (Studio MDHR) character designs.

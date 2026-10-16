@@ -266,7 +266,7 @@
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <!-- line boil: character outlines wobble a few times a second, like hand-inked frames -->
   <filter id="boil" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence id="boilNoise" type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="1"/>
-    <feDisplacementMap in="SourceGraphic" scale="1.8" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>
+    <feDisplacementMap in="SourceGraphic" scale="1" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>
 <div id="world"></div><div id="flies"></div><div id="grade"></div><div id="dust"></div>
 <canvas id="cv"></canvas>
 <div class="hud" id="hud">
@@ -562,7 +562,7 @@ function drawMoth(m, now) {
   const born = Math.min(1, (now - m.bornAt) / 400), s = cell * .5 * (born < 1 ? .4 + .6 * born : 1);
   const x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t - Math.sin(t * Math.PI) * cell * .35 + Math.sin(now / 280 + m.uid) * cell * .04;
   const flap = Math.sin(now / 70 + m.uid) * .3, wig = now - (m.nibbleAt || 0) < 300 ? Math.sin(now / 25) * .12 : 0;
-  const fur = "#b6a3e6", furLine = "#1d120c", wing = "#efe6fb", wingLine = "#1d120c";
+  const fur = "#b6a3e6", furLine = mix(fur, "#1a0f08", .62), wing = "#efe6fb", wingLine = mix("#c9b6ff", "#1a0f08", .5);
   const radial = (cx, cy, r, c0, c1, c2) => { const g = ctx.createRadialGradient(cx - r * .35, cy - r * .4, 0, cx, cy, r * 1.1); g.addColorStop(0, c0); g.addColorStop(.6, c1); g.addColorStop(1, c2); return g; };
   ctx.save(); ctx.translate(x, y); ctx.rotate(wig); ctx.lineJoin = "round"; ctx.lineCap = "round";
   { const hg = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 1.5); hg.addColorStop(0, "rgba(201,182,255,.16)"); hg.addColorStop(1, "rgba(201,182,255,0)"); ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(0, 0, s * 1.5, 0, 7); ctx.fill(); }
@@ -570,7 +570,7 @@ function drawMoth(m, now) {
   for (const side of [-1, 1]) { // dusty wings: graded, veined, with a soft eyespot
     ctx.save(); ctx.scale(side, 1); ctx.rotate(-.45 + flap);
     const wg = ctx.createLinearGradient(s * .2, -s * .8, s * 1.4, s * .2); wg.addColorStop(0, "#ffffff"); wg.addColorStop(.6, wing); wg.addColorStop(1, "#cbbbe8");
-    ctx.fillStyle = wg; ctx.strokeStyle = wingLine; ctx.lineWidth = Math.max(1, s * .05);
+    ctx.fillStyle = wg; ctx.strokeStyle = wingLine; ctx.lineWidth = Math.max(.8, s * .035);
     ctx.beginPath(); ctx.moveTo(s * .2, -s * .1); ctx.bezierCurveTo(s * .5, -s * .95, s * 1.45, -s * .85, s * 1.42, -s * .2); ctx.bezierCurveTo(s * 1.4, s * .2, s * .8, s * .3, s * .2, s * .15); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.strokeStyle = "rgba(150,120,200,.35)"; ctx.lineWidth = Math.max(.6, s * .025); ctx.beginPath();
     ctx.moveTo(s * .25, 0); ctx.quadraticCurveTo(s * .8, -s * .5, s * 1.25, -s * .55); ctx.moveTo(s * .25, .02 * s); ctx.quadraticCurveTo(s * .8, -s * .05, s * 1.3, -s * .1); ctx.stroke();
@@ -585,7 +585,7 @@ function drawMoth(m, now) {
     for (let k = 1; k <= 4; k++) { const u = k / 5, ax = side * (s * .18 + (s * .44) * u), ay = -s * .52 - s * .58 * Math.sin(u * 1.4); ctx.moveTo(ax, ay); ctx.lineTo(ax + side * s * .1, ay - s * .08); }
     ctx.stroke(); ctx.lineWidth = Math.max(1, s * .045);
   }
-  ctx.fillStyle = radial(0, 0, s * .62, "#ddd2fa", fur, mix(fur, "#000000", .3)); ctx.strokeStyle = furLine; ctx.lineWidth = Math.max(1.2, s * .07);
+  ctx.fillStyle = radial(0, 0, s * .62, "#ddd2fa", fur, mix(fur, "#000000", .3)); ctx.strokeStyle = furLine; ctx.lineWidth = Math.max(.9, s * .045);
   ctx.beginPath(); ctx.arc(0, 0, s * .62, 0, 7); ctx.fill(); ctx.stroke(); // fluffy body
   ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = Math.max(.8, s * .035); ctx.beginPath(); ctx.arc(0, 0, s * .5, Math.PI * 1.1, Math.PI * 1.45); ctx.stroke();
   ctx.fillStyle = radial(0, s * .36, s * .38, "#fffbee", "#f6ead0", "#d9c9a6"); ctx.strokeStyle = mix("#f6ead0", "#1a0f08", .5); ctx.lineWidth = Math.max(.8, s * .035);
@@ -594,9 +594,9 @@ function drawMoth(m, now) {
   ctx.restore();
   for (const side of [-1, 1]) { // pie-cut eyes, like Dibble's
     const ex = side * s * .22, ey = -s * .07, w = s * .15, h = s * .2, pw = w * .78, ph = h * .8, px = ex + s * .02, py = ey + h * .12;
-    ctx.fillStyle = "#fffaf0"; ctx.strokeStyle = "#1d120c"; ctx.lineWidth = Math.max(1, s * .05);
+    ctx.fillStyle = "#fffaf0"; ctx.strokeStyle = furLine; ctx.lineWidth = Math.max(.8, s * .04);
     ctx.beginPath(); ctx.ellipse(ex, ey, w, h, 0, 0, 7); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = "#1d120c"; ctx.beginPath(); ctx.ellipse(px, py, pw, ph, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#241812"; ctx.beginPath(); ctx.ellipse(px, py, pw, ph, 0, 0, 7); ctx.fill();
     ctx.fillStyle = "#fffaf0"; ctx.beginPath(); ctx.moveTo(px, py); ctx.ellipse(px, py, pw, ph, 0, -Math.PI * .42, -Math.PI * .08); ctx.closePath(); ctx.fill();
   }
 
@@ -627,6 +627,7 @@ function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, gly
       if (edgeOf(r, c, -1, 0)) { ctx.moveTo(x, y); ctx.lineTo(x + size, y); } if (edgeOf(r, c, 1, 0)) { ctx.moveTo(x, y + size); ctx.lineTo(x + size, y + size); }
       if (edgeOf(r, c, 0, -1)) { ctx.moveTo(x, y); ctx.lineTo(x, y + size); } if (edgeOf(r, c, 0, 1)) { ctx.moveTo(x + size, y); ctx.lineTo(x + size, y + size); } } };
   ctx.save(); ctx.globalAlpha = alpha;
+  ctx.fillStyle = mix(color, "#0e1c1a", .55); ctx.beginPath(); for (const [r, c] of cells) ctx.rect(ox + c * size - size * .05, oy + r * size + size * .045, size + .5, size + .5); ctx.fill();
   ctx.beginPath(); for (const [r, c] of cells) ctx.rect(ox + c * size, oy + r * size, size + .5, size + .5);
   const g = ctx.createLinearGradient(x0, y0, x0 + bw, y0 + bh);
   g.addColorStop(0, mix(color, "#ffffff", .38)); g.addColorStop(.45, color); g.addColorStop(1, mix(color, "#000000", .32));
@@ -652,7 +653,6 @@ function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, gly
   ctx.restore();
   // crisp outer line in the stone's own dark tone, and a thin highlight on the lit edges
   ctx.save(); ctx.globalAlpha = alpha; ctx.lineJoin = "round"; ctx.lineCap = "round";
-  ctx.strokeStyle = mix(color, "#1d120c", .82); ctx.lineWidth = Math.max(1.6, size * .055); outline(); ctx.stroke();
   ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = Math.max(1, size * .025); ctx.beginPath();
   for (const [r, c] of cells) { const x = ox + c * size, y = oy + r * size, i = size * .07;
     if (edgeOf(r, c, -1, 0)) { ctx.moveTo(x + i, y + i); ctx.lineTo(x + size - (edgeOf(r, c, 0, 1) ? i : 0), y + i); }
