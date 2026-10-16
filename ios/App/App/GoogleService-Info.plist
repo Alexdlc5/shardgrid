@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyAC36ZDBa9X4ouV6fQR9nU7gisCRlGHdhc</string>
+	<key>GCM_SENDER_ID</key>
+	<string>808956834201</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>io.github.alexdlc5.glimmerwood</string>
+	<key>PROJECT_ID</key>
+	<string>glimmerwood-bd21c</string>
+	<key>STORAGE_BUCKET</key>
+	<string>glimmerwood-bd21c.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:808956834201:ios:051170d5f4ba1813c3e308</string>
+</dict>
+</plist>
