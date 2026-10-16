@@ -398,34 +398,97 @@ const f1 = (n) => n.toFixed(1);
 // a plank / board: slightly wonky rounded rectangle with a tinted shadow-side line
 const plank = (x, y, w, h, c, r) => shape(curve([[x, y + r() * .8], [x + w * .5, y + (r() - .5) * .8], [x + w, y + r() * .8], [x + w + .4, y + h * .5], [x + w, y + h], [x + w * .5, y + h + (r() - .5) * .6], [x, y + h], [x - .4, y + h * .5]]), c, mix(c, "#1a0f08", .55), [-1, 1]);
 
-// Dibble's Camp: a living night clearing. Every Market purchase shows up here, and most things react to a tap
-// (elements with data-tap). Groups with data-depth drift for parallax (index.html moves them).
-// st = { lantern, pick, charm, lens, tongs, sieve, mines:[colour], found:[{color,cut}|null], tent, banner, fire,
-//        decor:{mushrooms,jars,hammock,cart,flies}, puddockSvg }
+// Dibble's Camp: a living night clearing. Every Market purchase shows up here, and everything reacts to a tap
+// (elements with data-tap; data-tip marks the props that explain themselves the first time they grow). Groups with
+// data-depth drift for parallax (index.html moves them). Three depths: the lantern line, gem shelf, clothes rack, stump
+// and sapling behind; the signpost, tent, fire and Dibble in the middle; the Daily Dig board, tool bench and Puddock's
+// stall in front. The viewBox is 400 wide and as tall as the stage (st.view = [px wide, px tall, px down to the bottom of
+// the top bar]), so the props fill whatever height the phone has and labels are a fixed size on screen. Each prop is
+// drawn in its own coordinates and set down with place().
+// st = { lantern, pick, charm, lens, tongs, sieve, mines:[colour], found:[{color,cut}|null], tent, banner, fire, daily,
+//        decor:{mushrooms,jars,hammock,cart,flies}, puddockSvg, grannySvg, stumpSvg, memories, metPuddock, firstRun, view }
 export function camp(st, gemFn, dibbleSvg) {
-  const W = 400, H = 300, n = Math.min(st.lantern, 15), strip = (svgStr) => svgStr.replace(/^<svg[^>]*>|<\/svg>$/g, "");
-  const sagX = (t) => 46 + t * 308, sagY = (t) => 74 + Math.sin(t * Math.PI) * 30;
-  const r = rng(77), O = [-1.2, 1.1];
+  const [vw, vh, top] = st.view || [402, 778, 115], strip = (svgStr) => svgStr.replace(/^<svg[^>]*>|<\/svg>$/g, "");
+  const W = 400, s = vw / W, H = Math.max(520, vh / s), T = top / s + 4, bot = H - 44 / s, U = bot - T;
+  const kf = Math.min(1.08, Math.max(.7, U / 610)); // props shrink on short phones (the SE); labels never do
+  const yL = T + 10, yH = T + .3 * U, yB = T + .4 * U, yM = T + .71 * U, yF = bot, F = 15 / s, MIN = 48 / s;
+  const r = rng(77), O = [-1.2, 1.1], n = Math.min(st.lantern, 15), d = st.decor;
+  // place(ox, oy, x, y, k): set down art drawn around (ox, oy) at (x, y), k times bigger; .x() and .y() map its points
+  const place = (ox, oy, x, y, k) => ({ x: (u) => x + (u - ox) * k, y: (v) => y + (v - oy) * k,
+    g: (svg) => `<g transform="translate(${f1(x)} ${f1(y)}) scale(${k.toFixed(3)}) translate(${-ox} ${-oy})">${svg}</g>` });
+  // an invisible tap target over a prop's box (in its own coordinates), never under 48px a side
+  const hit = (P, x0, y0, x1, y1) => { let x = P.x(x0), y = P.y(y0), w = P.x(x1) - x, h = P.y(y1) - y;
+    if (w < MIN) { x -= (MIN - w) / 2; w = MIN; } if (h < MIN) { y -= (MIN - h) / 2; h = MIN; }
+    w = Math.min(w + Math.min(0, x), W - Math.max(0, x)); x = Math.max(0, x); // and never off the sides
+    return `<rect x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(h)}" fill="transparent"/>`; };
+  // a wooden sign whose text is the same size on every phone (15px unless told), kept clear of the edges
+  const label = (x, y, text, f = F, c = "#8a5a32", wt = 600) => { const w = text.length * f * .56 + f * 1.3, h = f * 1.6; x = Math.max(w / 2 + 8, Math.min(W - 8 - w / 2, x));
+    return `${plank(x - w / 2, y - h / 2, w, h, c, r)}<text x="${f1(x)}" y="${f1(y + f * .36)}" font-size="${f1(f)}" text-anchor="middle" fill="#fff1d0" font-family="Fredoka, sans-serif" font-weight="${wt}">${text}</text>`; };
+
+  // ---- behind: the lantern line (one lantern per Lantern level), the gem shelf, the rack, the stump, the sapling ----
+  const q = 1.5 * kf, sagX = (t) => 18 + t * 364, sagY = (t) => yL + Math.sin(t * Math.PI) * 30 * kf;
   const lanterns = [...Array(15)].map((_, k) => {
-    const t = (k + .5) / 15, x = sagX(t), y = sagY(t), lit = k < n, sw = 2 + (k % 3);
-    return `<g data-tap="lanterns"><animateTransform attributeName="transform" type="rotate" values="-${sw} ${x} ${y};${sw} ${x} ${y};-${sw} ${x} ${y}" dur="${2.6 + (k % 4) * .4}s" repeatCount="indefinite"/>
-      <path d="M${x} ${y} v5" stroke="#5a4a3a" stroke-width="1"/>${lit ? `<circle cx="${x}" cy="${y + 11}" r="13" fill="url(#lanternGlow)"><animate attributeName="opacity" values=".16;.28;.16" dur="${1.8 + k % 3 * .5}s" repeatCount="indefinite"/></circle>` : ""}
-      ${shape(curve([[x - 3.4, y + 5.4], [x + 3.4, y + 5.4], [x + 3.8, y + 13.6], [x - 3.8, y + 13.6]]), lit ? "#f7d77a" : "#3a3328", lit ? "#8a5a24" : "#1a1610", [-.6, .6])}
-      ${lit ? `<path d="M${x - 1.6} ${y + 7} v5 M${x + 1.6} ${y + 7} v5" stroke="#c08a3a" stroke-width=".6" opacity=".7"/>` : ""}</g>`;
+    const t = (k + .5) / 15, lit = k < n, sw = 2 + (k % 3);
+    return `<g transform="translate(${f1(sagX(t))} ${f1(sagY(t))}) scale(${q.toFixed(3)})"><g><animateTransform attributeName="transform" type="rotate" values="-${sw};${sw};-${sw}" dur="${2.6 + (k % 4) * .4}s" repeatCount="indefinite"/>
+      <path d="M0 0 v5" stroke="#5a4a3a" stroke-width="1"/>${lit ? `<circle cy="11" r="13" fill="url(#lanternGlow)"><animate attributeName="opacity" values=".16;.28;.16" dur="${1.8 + k % 3 * .5}s" repeatCount="indefinite"/></circle>` : ""}
+      ${shape(curve([[-3.4, 5.4], [3.4, 5.4], [3.8, 13.6], [-3.8, 13.6]]), lit ? "#f7d77a" : "#3a3328", lit ? "#8a5a24" : "#1a1610", [-.6, .6])}
+      ${lit ? `<path d="M-1.6 7 v5 M1.6 7 v5" stroke="#c08a3a" stroke-width=".6" opacity=".7"/>` : ""}</g></g>`;
   }).join("");
-  const tier = (lv) => ["#9aa3ab", "#c6ccd2", "#f0c75a", "#9fe6ff"][Math.min(3, Math.floor(lv / 5))];
-  const picks = [...Array(5)].map((_, k) => { const on = k < Math.ceil(st.pick / 3), x = 318 + k * 12;
-    return on ? `${shape(limb(x, 232, x - .4, 214, x, 196, 1.5, 1.1), "#8a5a32", "#3a2418", [-.6, .5])}${shape(curve([[x - 8, 197], [x - 3, 190.6], [x + 3, 190.6], [x + 8, 197], [x, 194]]), tier(st.pick), mix(tier(st.pick), "#1a0f08", .55), [-.7, .6])}`
-      : `<path d="M${x} 232 L${x} 206" stroke="#3a2a1a" stroke-width="1" stroke-dasharray="2 2"/>`; }).join("");
-  const c = Math.min(st.charm, 15), trunk = 14 + c * 2.2, crown = 9 + c * .9, tx = 288, ty = 250, ct = ty - trunk; // the Root Charm sapling: planted on open ground right of the fire, not behind Dibble
+  const wire = `M${sagX(0)} ${f1(sagY(0))} ${[...Array(29)].map((_, k) => `L${f1(sagX((k + 1) / 29))} ${f1(sagY((k + 1) / 29))}`).join(" ")}`;
+  const lanternLine = `<g data-tap="lanterns" data-tip="lanterns"><path d="${wire}" transform="translate(0 ${f1(9 * q)})" stroke="transparent" stroke-width="${f1(MIN)}" fill="none"/>
+    <path d="${wire}" stroke="#5a4a3a" stroke-width="1.3" fill="none"/>${lanterns}</g>`;
+
+  const yS = yB + 14 * kf, PSh = place(316, 167, 200, yS - 99 * kf, 1.5 * kf); // the shelf stands just above the stump's crown
+  const shelf = `<g data-tip="shelf">${PSh.g(`${plank(252, 128, 128, 5, "#8a5a32", r)}${plank(252, 158, 128, 5, "#8a5a32", r)}
+    ${shape(limb(254, 126, 253, 146, 254, 167, 1.3, 1.2), "#5a3b24", "#2e1e12", [-.5, .5])}${shape(limb(378, 126, 379, 146, 378, 167, 1.3, 1.2), "#5a3b24", "#2e1e12", [-.5, .5])}
+    ${st.found.map((g, k) => { const x = 257 + (k % 6) * 20.5, y = k < 6 ? 108 : 138; // the cells tile the shelf: every tap on it rings a gem
+      return `<g data-tap="gem-${k}"><rect x="${x - 1.25}" y="${y - 4}" width="20.5" height="30" fill="transparent"/><svg x="${x}" y="${y}" width="18" height="18" viewBox="0 0 24 24">${g ? strip(gemFn(g.color, 24, "", g.cut)) : `<path d="${curve(ring(12, 13, 6, 6, 8, .1, k))}" fill="#000" opacity=".3"/><text x="12" y="16" font-size="9" text-anchor="middle" fill="#8a7a5a">?</text>`}</svg></g>`; }).join("")}`)}</g>`;
+
+  const sc = st.rackScarf || "#c8553d", PR = place(52, 396, 58, yB, 1.3 * kf);
+  const rack = `<g data-tap="wardrobe">${hit(PR, 18, 318, 86, 398)}${PR.g(`
+    ${shape(limb(28, 396, 27, 362, 28, 326, 2, 1.6), "#6b4a2a", "#2e1e12", [-.6, .5])}${shape(limb(76, 396, 77, 362, 76, 326, 2, 1.6), "#6b4a2a", "#2e1e12", [-.6, .5])}
+    ${plank(20, 324, 64, 4.5, "#8a5a32", r)}<path d="M40 324 q0 -4 3 -4 M59 324 q0 -4 3 -4" stroke="#3a2a1a" stroke-width=".8" fill="none"/>
+    ${shape(curve([[37, 328], [45, 328], [47, 352], [45, 374], [40, 376], [38, 352]]), sc, mix(sc, "#1a0f08", .55), [-.6, .5])}
+    <path d="M38 340 Q42 342 46 340 M38 360 Q42 362 46 360" stroke="${mix(sc, "#ffffff", .35)}" stroke-width=".8" fill="none" opacity=".6"/>
+    ${shape(curve([[52, 328], [67, 328], [71, 356], [63, 368], [51, 364], [50, 344]]), "#c9a46a", "#5a4024", [-.6, .5])}<path d="M58.5 330 V364" stroke="#8a6a3a" stroke-width=".7" opacity=".7"/>
+    ${st.rackHat ? `<g transform="translate(5.5 313.4) scale(.45)">${hatArt(st.rackHat, "rk")}</g>` : ""}
+    ${shape(curve(ring(44, 394, 6, 3, 8, .1, 3)), "#5a3b24", "#2a1a10", [-.5, .4])}${shape(curve(ring(59, 395, 6, 3, 8, .1, 4)), "#5a3b24", "#2a1a10", [-.5, .4])}`)}
+    ${label(PR.x(52), PR.y(318) - F * 1.1, "Wardrobe")}</g>`;
+
+  // the stump (or, away from it, the memory jar): its svg is re-placed at this size; Memories is labelled in front
+  const sw = 340 * kf, stumpSvg = st.stumpSvg ? st.stumpSvg.replace(/<path d="M0 80 Q150 70 300 80 V90 H0 Z" fill="#14241a"\/>/, "")
+    .replace(/<svg class="stumpArt" width="([\d.]+)" height="([\d.]+)"/, (m, w, h) => `<svg class="stumpArt" x="${f1(200 - sw / 2)}" y="${f1(yS - h * sw / w)}" width="${f1(sw)}" height="${f1(h * sw / w)}"`) : "";
+  const PJ = place(220, 404, 200, yS, 1.4 * kf);
+  const keep = `<g data-tap="memories" data-tip="memories">${stumpSvg ? `<rect x="${f1(200 - sw * .19)}" y="${f1(yS - sw * .24)}" width="${f1(sw * .38)}" height="${f1(sw * .26)}" fill="transparent"/>${stumpSvg}`
+    : `${hit(PJ, 200, 360, 240, 406)}${PJ.g(`<circle cx="220" cy="386" r="20" fill="#f0b543" opacity=".22"><animate attributeName="opacity" values=".12;.3;.12" dur="3s" repeatCount="indefinite"/></circle>
+      ${shape(curve([[210, 372], [230, 372], [234, 392], [229, 404], [211, 404], [206, 392]]), "#e8a84a", "#6a3a10", [-.8, .7], 'opacity=".9"')}${plank(209, 366, 22, 6, "#8a5a32", r)}
+      <path d="M213 378 Q212 390 214 398" stroke="#fff3d0" stroke-width="1.2" fill="none" opacity=".6"/>`)}`}</g>`;
+  const memLabel = st.memories != null ? `<g data-tap="memories" role="none" aria-hidden="true">${label(200, yS + F * .7, `Memories ${st.memories}`)}</g>` : "";
+
+  const c = Math.min(st.charm, 15), trunk = 14 + c * 2.2, crown = 9 + c * .9, tx = 288, ty = 250, ct = ty - trunk; // the Root Charm sapling grows with each level
   const lobe = (dx, dy, rr, col, seed) => shape(curve(ring(tx + dx * crown, ct + dy * crown, rr * crown, rr * crown * .9, 12, .14, seed)), col, "#1d3a19", [-1.4, 1.2]);
   const ringStones = [-9, -4.5, 0, 4.5, 9].map((dx, k) => shape(curve(ring(tx + dx, ty + 2.5 - Math.abs(dx) * .12, 2.6, 1.7, 8, .25, 80 + k)), k % 2 ? "#6a6458" : "#7a7366", "#2a2620", [-.5, .4])).join("");
-  const tree = `${ringStones}${c >= 15 ? `<path d="${curve(ring(tx, ct - crown * .4, crown + 12, crown + 10, 10, .15, 90))}" fill="#9be08a" opacity=".2" filter="url(#campBlur)"><animate attributeName="opacity" values=".12;.28;.12" dur="3s" repeatCount="indefinite"/></path>` : ""}
+  const PS = place(288, 252, 334, yB, 1.7 * kf);
+  const sapling = `<g data-tap="sapling" data-tip="sapling" role="button" aria-label="Root Charm sapling">${hit(PS, tx - crown * 1.2, ct - crown * 1.3, tx + crown * 1.2, ty + 4)}${PS.g(`${ringStones}${c >= 15 ? `<path d="${curve(ring(tx, ct - crown * .4, crown + 12, crown + 10, 10, .15, 90))}" fill="#9be08a" opacity=".2" filter="url(#campBlur)"><animate attributeName="opacity" values=".12;.28;.12" dur="3s" repeatCount="indefinite"/></path>` : ""}
     ${shape(limb(tx, ty + 2, tx - 2, ty - trunk * .5, tx, ct, 2 + c * .3, 1 + c * .15), "#6b4a2a", "#2e1e12", [-1, 1])}
     <g><animateTransform attributeName="transform" type="rotate" values="-1.5 ${tx} ${ct};1.5 ${tx} ${ct};-1.5 ${tx} ${ct}" dur="5s" repeatCount="indefinite"/>
     ${lobe(.5, -.05, .58, "#4f8a3e", 1)}${lobe(-.48, .02, .62, "#4a8239", 2)}${lobe(0, -.35, .82, "#5f9a48", 3)}
     <path d="${curve(ring(tx - crown * .3, ct - crown * .6, crown * .4, crown * .3, 9, .2, 4))}" fill="#a8dc88" opacity=".35" filter="url(#campBlur)"/>
-    ${[...Array(5)].map(() => stroke(tx + (r() - .5) * crown * 1.2, ct - crown * (.1 + r() * .7), -1 - r(), crown * .22, crown * .05, "#2f5a2a", .4)).join("")}</g>`;
+    ${[...Array(5)].map(() => stroke(tx + (r() - .5) * crown * 1.2, ct - crown * (.1 + r() * .7), -1 - r(), crown * .22, crown * .05, "#2f5a2a", .4)).join("")}</g>`)}</g>`;
+  const hammock = d.hammock ? place(340, 262, 352, yB - 4 * kf, .95 * kf).g(`${shape(limb(380, 262, 381, 214, 380, 168, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}${shape(limb(300, 262, 299, 224, 300, 186, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}<path d="M300 194 Q340 226 380 176" stroke="#e8d6aa" stroke-width="5.5" fill="none"/><path d="M302 196 Q340 222 378 179" stroke="#b8a678" stroke-width="1" fill="none" opacity=".6"/>`) : "";
+  const jars = d.jars ? place(250, 258, 120, yB + 2 * kf, .9 * kf).g(`${plank(238, 246, 26, 12, "#6b4a2a", r)}<g transform="translate(236 222)">${ICONS.jar}</g><g transform="translate(252 226) scale(.8)">${ICONS.jar}</g>`) : "";
+  const gb = 60 * kf, grannyAt = st.grannySvg ? `<g data-tap="granny"><svg x="${f1(112 - gb / 2)}" y="${f1(yB + 6 * kf - gb)}" width="${f1(gb)}" height="${f1(gb)}" viewBox="0 0 100 100">${strip(st.grannySvg)}</svg></g>` : "";
+
+  // ---- the middle: the Go mining signpost (one arm per mine opened), the tent and banner, the fire, Dibble ----
+  const PG = place(26, 264, 44, yM + 8 * kf, 1.45 * kf), goY = PG.y(152), GF = 17 / s;
+  const sign = `<g data-tap="mines">${hit(PG, -10, 112, 74, 268)}${PG.g(`<path d="${curve(ring(30, 206, 42, 64, 10, .15, 91))}" fill="#ffd27a" opacity=".16" filter="url(#campBlur)"><animate attributeName="opacity" values=".1;.26;.1" dur="2.4s" repeatCount="indefinite"/></path>
+    ${shape(limb(26, 264, 25, 220, 26, 160, 2.6, 2), "#6b4a2a", "#2e1e12", [-.8, .7])}${st.mines.map((col, k) => {
+      const y = 176 + k * Math.min(12, 70 / Math.max(1, st.mines.length - 1)), right = k % 2 === 0;
+      return `${shape(curve(right ? [[26, y], [56, y + .4], [62, y + 5], [56, y + 10], [26, y + 9.6]] : [[26, y], [-2, y + .4], [-8, y + 5], [-2, y + 10], [26, y + 9.6]]), "#a0703f", "#3a2418", [-.7, .6])}
+      <path d="${curve(ring(right ? 46 : 6, y + 5, 2.8, 2.8, 8, .08, k))}" fill="${col}"/>`; }).join("")}`)}
+    ${label(PG.x(33), goY, "Go mining", GF, "#b07a3a", 700)}
+    ${st.firstRun ? place(33, 139, Math.max(GF * 3.6, PG.x(33)), goY - GF * 1.05, 1.3).g(`<g><animateTransform attributeName="transform" type="translate" values="0 0;0 -5;0 0" dur="1.1s" repeatCount="indefinite"/>${shape("M28 114 Q33 113 38 114 L38 126 L45 126 L33 139 L21 126 L28 126 Z", "#ffd27a", "#8a5a1a", [-.7, .6])}</g>`) : ""}</g>`;
+
   const tentLine = "#5a4024", canvas = "#e8d6aa";
   const tentBody = (extra) => `${shape(curve([[44, 236], [62, 200], [88, 156], [112, 200], [132, 236], [88, 239]]), canvas, tentLine, O)}
       <path d="${curve([[88, 158], [110, 200], [130, 235], [88, 238]])}" fill="#7a5a30" opacity=".22"/>${extra}
@@ -445,27 +508,75 @@ export function camp(st, gemFn, dibbleSvg) {
       <path d="${curve([[40, 180], [88, 141], [88, 177]])}" fill="#ffffff" opacity=".3"/><path d="M54 180 Q88 150 122 180" stroke="#f0b543" stroke-width="1.6" fill="none"/>
       <circle cx="88" cy="196" r="20" fill="#9fe6ff" opacity=".15"><animate attributeName="opacity" values=".08;.22;.08" dur="3s" repeatCount="indefinite"/></circle>${plank(70, 218, 36, 18, "#5a3b24", r)}`,
   }[st.tent] || "";
+  const kT = (st.tent === "treehouse" ? 1.05 : 1.45) * kf, PT = place(88, 238, 156, yM - 2 * kf, kT), tentTop = { treehouse: 86, pavilion: 140 }[st.tent] || 156; // the tall treehouse is drawn smaller so it never hides the stump
+  const PFl = place(140, 262, 206, PT.y(262), kT); // the banner pole stands at the tent's corner, clear of the fire
+  const tent = `<g data-tap="tent">${hit(PT, 44, tentTop, 132, 240)}${PT.g(`${tents}${st.sieve ? `<g transform="translate(98 156) scale(.9)">${ICONS.sieve}</g>` : ""}`)}</g>
+    <g data-tap="flag" role="button" aria-label="Camp banner">${hit(PFl, 132, 148, 174, 262)}${PFl.g(`${shape(limb(140, 262, 139, 206, 140, 150, 1.4, 1.1), "#6b4a2a", "#2e1e12", [-.6, .5])}
+      <path fill="${st.banner}" stroke="${mix(st.banner, "#1a0f08", .5)}" stroke-width=".8" d="M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z">
+      <animate attributeName="d" values="M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z;M141 152 Q156 157 170 151 L163 162 L170 171 Q156 177 141 172 Z;M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z" dur="2.8s" repeatCount="indefinite"/></path>`)}</g>
+    ${d.mushrooms ? PT.g([[106, 268, 8], [120, 273, 6], [94, 276, 5]].map(([x, y, sz]) => `<path d="${curve(ring(x, y + sz * .3, sz * .2, sz * .6, 6, .1, x))}" fill="#e2d8f0"/>
+      ${shape(curve([[x - sz, y - .5], [x - sz * .5, y - sz * 1.1], [x + sz * .4, y - sz * 1.15], [x + sz, y - .6], [x, y - sz * .3]]), "#9b7cf2", "#3a2458", [-.6, .6])}
+      <circle cx="${x}" cy="${y - sz * .6}" r="${sz * 1.6}" fill="#9b7cf2" opacity=".2"><animate attributeName="opacity" values=".1;.3;.1" dur="${2.4 + sz * .1}s" repeatCount="indefinite"/></circle>`).join("")) : ""}`;
+
   const flame = (x, y, h, col, dur) => `<path fill="${col}" d="M${x - h * .32} ${y} Q${x} ${y - h * 1.15} ${x + h * .32} ${y} Z">
     <animate attributeName="d" values="M${x - h * .32} ${y} Q${x} ${y - h * 1.15} ${x + h * .32} ${y} Z;M${x - h * .3} ${y} Q${x - 2} ${y - h * 1.3} ${x + h * .3} ${y} Z;M${x - h * .33} ${y} Q${x + 2} ${y - h} ${x + h * .33} ${y} Z;M${x - h * .32} ${y} Q${x} ${y - h * 1.15} ${x + h * .32} ${y} Z" dur="${dur}s" repeatCount="indefinite"/></path>`;
   const sparks = [...Array(7)].map((_, k) => `<circle cx="${178 + (k % 4) * 4}" cy="250" r="1.2" fill="#ffd27a"><animate attributeName="cy" values="246;196" dur="${1.6 + k * .23}s" begin="${-k * .4}s" repeatCount="indefinite"/>
     <animate attributeName="cx" values="${178 + (k % 4) * 4};${170 + (k * 7) % 22}" dur="${1.6 + k * .23}s" begin="${-k * .4}s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="${1.6 + k * .23}s" begin="${-k * .4}s" repeatCount="indefinite"/></circle>`).join("");
-  const fire = st.fire === "forge"
-    ? `<g data-tap="fire">${plank(160, 230, 44, 26, "#7a746a", r)}<path d="M169 256 V244 Q182 232 195 244 V256 Z" fill="#ff8a3d"><animate attributeName="fill" values="#ff8a3d;#ffb15a;#ff8a3d" dur="1.2s" repeatCount="indefinite"/></path>${plank(192, 210, 8, 22, "#5e5850", r)}${sparks}</g>`
-    : `<g data-tap="fire">${[0, 1, 2, 3, 4, 5].map((k) => shape(curve(ring(167 + k * 6, 254 + (k % 2), 5, 3, 8, .2, 110 + k)), k % 2 ? "#6f6a60" : "#7d776c", "#2a2620", [-.7, .6])).join("")}
+  const PF = place(183, 254, 252, yM, 1.55 * kf);
+  const fire = `<g data-tap="fire">${hit(PF, 160, 204, 206, 260)}${PF.g(st.fire === "forge"
+    ? `${plank(160, 230, 44, 26, "#7a746a", r)}<path d="M169 256 V244 Q182 232 195 244 V256 Z" fill="#ff8a3d"><animate attributeName="fill" values="#ff8a3d;#ffb15a;#ff8a3d" dur="1.2s" repeatCount="indefinite"/></path>${plank(192, 210, 8, 22, "#5e5850", r)}${sparks}`
+    : `${[0, 1, 2, 3, 4, 5].map((k) => shape(curve(ring(167 + k * 6, 254 + (k % 2), 5, 3, 8, .2, 110 + k)), k % 2 ? "#6f6a60" : "#7d776c", "#2a2620", [-.7, .6])).join("")}
       ${shape(limb(168, 253, 183, 249, 198, 243, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.6, .6])}${shape(limb(168, 243, 183, 248, 198, 253, 2.2, 1.8), "#7a5432", "#2e1e12", [-.6, .6])}
       <g filter="url(#campBlur1)">${flame(183, 250, 26, "#ff7a3d", .9)}</g>${flame(183, 250, 17, "#ffb15a", .7)}${flame(183, 250, 9, "#fff3a0", .55)}${sparks}
-      <path d="M183 214 Q178 196 186 180 Q192 166 184 150" stroke="#cfd6cc" stroke-width="4" fill="none" opacity=".08"><animate attributeName="opacity" values=".05;.12;.05" dur="4s" repeatCount="indefinite"/></path></g>`;
-  const shelf = `${plank(252, 128, 128, 5, "#8a5a32", r)}${plank(252, 158, 128, 5, "#8a5a32", r)}
-    ${shape(limb(254, 126, 253, 146, 254, 167, 1.3, 1.2), "#5a3b24", "#2e1e12", [-.5, .5])}${shape(limb(378, 126, 379, 146, 378, 167, 1.3, 1.2), "#5a3b24", "#2e1e12", [-.5, .5])}
-    ${st.found.map((g, k) => { const x = 257 + (k % 6) * 20.5, y = k < 6 ? 108 : 138;
-      return `<g data-tap="gem-${k}"><rect x="${x - 1}" y="${y - 1}" width="20" height="21" fill="transparent"/><svg x="${x}" y="${y}" width="18" height="18" viewBox="0 0 24 24">${g ? strip(gemFn(g.color, 24, "", g.cut)) : `<path d="${curve(ring(12, 13, 6, 6, 8, .1, k))}" fill="#000" opacity=".3"/><text x="12" y="16" font-size="9" text-anchor="middle" fill="#8a7a5a">?</text>`}</svg></g>`; }).join("")}`;
-  const sign = `${shape(limb(26, 264, 25, 220, 26, 170, 2.6, 2), "#6b4a2a", "#2e1e12", [-.8, .7])}${st.mines.map((col, k) => {
-    const y = 176 + k * Math.min(12, 70 / Math.max(1, st.mines.length - 1)), right = k % 2 === 0;
-    return `${shape(curve(right ? [[26, y], [56, y + .4], [62, y + 5], [56, y + 10], [26, y + 9.6]] : [[26, y], [-2, y + .4], [-8, y + 5], [-2, y + 10], [26, y + 9.6]]), "#a0703f", "#3a2418", [-.7, .6])}
-      <path d="${curve(ring(right ? 46 : 6, y + 5, 2.8, 2.8, 8, .08, k))}" fill="${col}"/>`; }).join("")}`;
-  const flag = `<path fill="${st.banner}" stroke="${mix(st.banner, "#1a0f08", .5)}" stroke-width=".8" d="M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z">
-    <animate attributeName="d" values="M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z;M141 152 Q156 157 170 151 L163 162 L170 171 Q156 177 141 172 Z;M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z" dur="2.8s" repeatCount="indefinite"/></path>`;
-  const d = st.decor, flies = [...Array(d.flies ? 12 : 5)].map((_, k) => `<circle r="1.7" fill="#fff3a0"><animateMotion dur="${9 + k * 1.7}s" begin="${-k * 1.3}s" repeatCount="indefinite" path="M${40 + k * 30} ${120 + (k % 3) * 30} q30 -20 60 0 t60 0 q-30 25 -60 0 t-60 0"/>
+      <path d="M183 214 Q178 196 186 180 Q192 166 184 150" stroke="#cfd6cc" stroke-width="4" fill="none" opacity=".08"><animate attributeName="opacity" values=".05;.12;.05" dur="4s" repeatCount="indefinite"/></path>`)}</g>`;
+  const fireLight = PF.g(`<ellipse cx="183" cy="246" rx="120" ry="58" fill="url(#fireLight)"><animate attributeName="rx" values="112;128;116;112" dur="1.3s" repeatCount="indefinite"/></ellipse>`);
+
+  const db = 108 * kf, dx = 318 - db / 2, dyy = yM + 10 * kf - db;
+  const dib = `<g data-tap="dibble" class="campDibble"><rect x="${f1(dx + db / 2 - Math.max(db * .3, MIN / 2))}" y="${f1(dyy + db * .1)}" width="${f1(Math.max(db * .6, MIN))}" height="${f1(db * .85)}" fill="transparent"/><svg x="${f1(dx)}" y="${f1(dyy)}" width="${f1(db)}" height="${f1(db)}" viewBox="0 0 100 100">${strip(dibbleSvg)}</svg></g>`;
+  // Puddock's spare cart (or, after the finale, his packed cart with him beside it), right of Dibble
+  const PC = place(292, 276, 374, yM, .95 * kf), pb = 50 * kf;
+  const cart = st.packed || d.cart ? `${PC.g(`<g transform="translate(270 240) scale(1.8)">${ICONS.cart}</g>`)}${st.packed && st.puddockSvg ? `<g data-tap="puddock"><svg x="${f1(366 - pb / 2)}" y="${f1(yM + 6 * kf - pb)}" width="${f1(pb)}" height="${f1(pb)}" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}` : "";
+
+  // ---- in front: the Daily Dig chalkboard, the tool bench (picks = Pickaxe level), Puddock's stall ----
+  const dy = st.daily || {}, chalk = "#efe9da", PB = place(128, 402, 76, yF, 1.7 * Math.max(kf, .85));
+  const board = `<g data-tap="daily">${hit(PB, 94, 326, 162, 404)}${PB.g(`
+    ${shape(limb(128, 398, 128, 372, 128, 346, 1.3, 1), "#4a3420", "#2a1a10", [-.5, .4])}
+    ${shape(limb(104, 400, 108, 370, 112, 336, 1.7, 1.3), "#6b4a2a", "#2e1e12", [-.6, .5])}${shape(limb(152, 400, 148, 370, 144, 336, 1.7, 1.3), "#6b4a2a", "#2e1e12", [-.6, .5])}
+    ${shape(curve([[98, 330], [158, 328], [160, 372], [96, 374]]), "#2c3a32", "#121a14", [-.9, .8])}
+    <path d="${curve([[98, 330], [158, 328], [160, 372], [96, 374]])}" fill="none" stroke="#8a5a32" stroke-width="2.2"/>
+    ${[...Array(7)].map((_, k) => k < (dy.streak || 0) ? stroke(105 + k * 7.4, 355, -1.35, 7, .7, chalk, .9, .08) : `<path d="M${105 + k * 7.4} 354 v1" stroke="${chalk}" stroke-width=".8" opacity=".3" stroke-linecap="round"/>`).join("")}
+    ${plank(99, 373, 58, 3, "#8a5a32", r)}
+    ${dy.done ? `<path d="M147 360 l3 3 l6 -8" stroke="${chalk}" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".85"/>`
+      : `<circle cx="151" cy="362" r="8" fill="#9fe6c8" opacity=".3"><animate attributeName="opacity" values=".15;.4;.15" dur="2.2s" repeatCount="indefinite"/></circle>${shard(151, 371, 5, 11, -.1, "#5fc9a8", r, true)}`}`)}
+    <text x="${f1(PB.x(128))}" y="${f1(PB.y(340) + F * .36)}" font-size="${f1(F)}" text-anchor="middle" fill="${chalk}" font-family="Fredoka, sans-serif" font-weight="600" opacity=".95">Daily Dig</text>
+    <text x="${f1(PB.x(101))}" y="${f1(PB.y(366) + 4.7 / s)}" font-size="${f1(13 / s)}" fill="${chalk}" font-family="Fredoka, sans-serif" opacity=".85">${dy.done ? `best ${dy.best || 0}g` : dy.streak ? `${dy.streak} day${dy.streak > 1 ? "s" : ""}` : "new today"}</text></g>`;
+
+  const tier = (lv) => ["#9aa3ab", "#c6ccd2", "#f0c75a", "#9fe6ff"][Math.min(3, Math.floor(lv / 5))];
+  const picks = [...Array(5)].map((_, k) => { const on = k < Math.ceil(st.pick / 3), x = 318 + k * 12;
+    return on ? `${shape(limb(x, 232, x - .4, 214, x, 196, 1.5, 1.1), "#8a5a32", "#3a2418", [-.6, .5])}${shape(curve([[x - 8, 197], [x - 3, 190.6], [x + 3, 190.6], [x + 8, 197], [x, 194]]), tier(st.pick), mix(tier(st.pick), "#1a0f08", .55), [-.7, .6])}`
+      : `<path d="M${x} 232 L${x} 206" stroke="#3a2a1a" stroke-width="1" stroke-dasharray="2 2"/>`; }).join("");
+  const PK = place(344, 256, 194, yF - 4 * kf, 1.25 * kf);
+  const bench = `<g data-tap="tools" role="button" aria-label="Tool bench">${hit(PK, 300, 186, 388, 258)}${PK.g(`${plank(306, 230, 76, 7, "#5a3b24", r)}${shape(limb(310, 237, 306, 246, 303, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${shape(limb(378, 237, 382, 246, 385, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${picks}
+    ${st.lens ? `<g transform="translate(330 214) scale(.9)">${ICONS.lens}</g>` : ""}${st.tongs ? `<g transform="translate(352 212) scale(.9)">${ICONS.tongs}</g>` : ""}`)}</g>`;
+
+  const stripe = (k) => { const x = 282 + k * 19.3; return shape(curve([[x, 312], [x + 19.3, 312], [x + 19.3, 328], [x + 9.6, 334], [x, 328]]), k % 2 ? "#f1e4c4" : "#c8553d", k % 2 ? "#a08a60" : "#5a1e14", [-.6, .6]); };
+  const PSt = place(340, 404, 319, yF, 1.3 * kf), bk = 16 / 11 / s; // the Psst! bubble is drawn at a fixed 16px
+  const stall = `<g data-tap="market">${hit(PSt, 280, 294, 400, 406)}${PSt.g(`
+    ${shape(limb(288, 404, 287, 360, 288, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}${shape(limb(388, 404, 389, 360, 388, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}
+    ${st.puddockSvg && !st.packed ? `<g class="pud"><svg x="306" y="312" width="64" height="64" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}
+    ${[0, 1, 2, 3, 4, 5].map(stripe).join("")}
+    ${plank(282, 366, 112, 9, "#8a5a32", r)}${plank(286, 375, 104, 26, "#6b4a2a", r)}
+    <path d="M292 381 H384 M292 389 H384" stroke="#4a3220" stroke-width=".8" opacity=".6"/>
+    <g transform="translate(290 350) scale(.7)">${ICONS.jar}</g>${shard(352, 367, 5, 11, .2, "#9b7cf2", r)}${shard(360, 367, 4, 8, -.3, "#5fa99b", r)}
+    <path d="M394 326 Q395 332 394 336" stroke="#4a3a2a" stroke-width=".9" fill="none"/>${shape(curve([[390.6, 336], [397.4, 336], [397.8, 345], [390.2, 345]]), "#f7d77a", "#6a4a24", [-.5, .5])}
+    <circle cx="394" cy="341" r="14" fill="url(#lanternGlow)"/>`)}
+    ${!st.metPuddock && !st.firstRun ? place(338, 270, PSt.x(338), PSt.y(304), bk).g(`<g><animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0" dur="1.6s" repeatCount="indefinite"/>
+      ${shape(curve([[312, 262], [338, 258.4], [364, 262], [367, 271.6], [362, 279.6], [346, 281], [339, 290], [335.4, 281], [316, 280], [309.6, 271.6]]), "#fff4dc", "#8a6a3a", [-.8, .7])}
+      <text x="338" y="274.6" font-size="11" text-anchor="middle" fill="#3a2410" font-family="Fredoka, sans-serif" font-weight="700">Psst!</text></g>`)
+      : label(PSt.x(338), PSt.y(304), st.packed ? "Back soon (probably)" : "Puddock's", st.packed ? 13 / s : F)}</g>`; // after the first haul (the signpost comes first), a Psst! hangs where his sign goes until you meet him
+
+  // ---- the backdrop: sky, far layer, tall trees, the ground, ferns in front ----
+  const flies = [...Array(d.flies ? 12 : 5)].map((_, k) => `<circle r="1.9" fill="#fff3a0"><animateMotion dur="${9 + k * 1.7}s" begin="${-k * 1.3}s" repeatCount="indefinite" path="M${40 + k * 30} ${f1(yH + (k % 4) * U * .14)} q30 -20 60 0 t60 0 q-30 25 -60 0 t-60 0"/>
     <animate attributeName="opacity" values="0;1;0" dur="${2 + k % 3}s" begin="${-k * .4}s" repeatCount="indefinite"/></circle>`).join("");
   const stars = [[30, 18], [90, 34], [170, 14], [250, 28], [340, 16], [210, 44], [130, 52], [300, 54], [380, 40], [60, 58]].map(([x, y], k) =>
     `<circle cx="${x}" cy="${y}" r="${k % 3 ? .9 : 1.3}" fill="#fff"><animate attributeName="opacity" values=".2;1;.2" dur="${2.5 + k % 4}s" begin="${-k * .6}s" repeatCount="indefinite"/></circle>`).join("");
@@ -476,8 +587,8 @@ export function camp(st, gemFn, dibbleSvg) {
   const moonSky = `${stars}<circle cx="320" cy="46" r="34" fill="url(#moonGlow)"/><path d="${curve(ring(320, 46, 13, 13, 14, .02, 5))}" fill="#fff6d8"/>
       <path d="${curve(ring(315, 43, 3, 2.6, 8, .2, 6))}" fill="#e8dcb8" opacity=".6"/><path d="${curve(ring(325, 51, 2, 1.8, 8, .2, 7))}" fill="#e8dcb8" opacity=".6"/>
       <path d="${curve(ring(120, 70, 60, 7, 12, .2, 8))}" fill="#cfd8c8" opacity=".06" filter="url(#campBlur)"/>`;
-  const drift = (n, col, seed) => [...Array(n)].map((_, k) => { const x = (k * 71 + seed) % 400, d = 9 + (k % 5) * 2;
-    return `<ellipse cx="${x}" rx="1.6" ry="1" fill="${col}"><animate attributeName="cy" values="-10;200" dur="${d}s" begin="${-k * 1.3}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.8;0" dur="${d}s" begin="${-k * 1.3}s" repeatCount="indefinite"/></ellipse>`; }).join("");
+  const drift = (n, col, seed) => [...Array(n)].map((_, k) => { const x = (k * 71 + seed) % 400, dd = 9 + (k % 5) * 2;
+    return `<ellipse cx="${x}" rx="1.6" ry="1" fill="${col}"><animate attributeName="cy" values="-10;200" dur="${dd}s" begin="${-k * 1.3}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.8;0" dur="${dd}s" begin="${-k * 1.3}s" repeatCount="indefinite"/></ellipse>`; }).join("");
   const rootPillar = (x, w, col) => `<path d="M${x - w} 200 Q${x - w * .6} 120 ${x - w * 1.4} 0 H${x + w * 1.4} Q${x + w * .6} 120 ${x + w} 200 Z" fill="${col}"/><path d="M${x - w * .3} 190 Q${x} 110 ${x - w * .6} 10" stroke="#ff8a3d" stroke-width="1.2" fill="none" opacity=".35"/>`;
   const rock = (x, h, col) => `<path d="M${x - h * .3} 200 L${x - h * .2} ${200 - h} L${x} ${200 - h * 1.1} L${x + h * .22} ${200 - h * .9} L${x + h * .32} 200 Z" fill="${col}"/>`;
   const open = st.sky; // the Skywell, after the finale
@@ -498,108 +609,41 @@ export function camp(st, gemFn, dibbleSvg) {
       mid: `${rock(30, 120, "#16161e")}${rock(90, 70, "#1a1a24")}${rock(320, 90, "#1a1a24")}${rock(380, 130, "#16161e")}`,
       near: `${rock(10, 150, "#20202a")}${rock(394, 160, "#20202a")}` },
   }[st.site || "stump"];
-  const puddockAt = !st.stall && st.puddockHere && !st.packed && !st.decor.cart && st.puddockSvg ? `<g data-tap="puddock"><svg x="262" y="206" width="46" height="46" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : "";
-  const grannyAt = st.grannySvg ? `<g data-tap="granny"><svg x="112" y="206" width="54" height="54" viewBox="0 0 100 100">${strip(st.grannySvg)}</svg></g>` : "";
-  const packed = st.packed ? `<g transform="translate(278 236) scale(1.8)">${ICONS.cart}</g>
-      ${st.puddockSvg ? `<g data-tap="puddock"><svg x="246" y="208" width="42" height="42" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}
-      <g transform="translate(336 204) rotate(-4)"><path d="M0 4 V26" stroke="#5a3b24" stroke-width="2"/><rect x="-38" y="-10" width="76" height="15" rx="2" fill="#e8d6aa" stroke="#3a2418" stroke-width="1"/>
-      <text x="0" y=".2" font-size="6.6" text-anchor="middle" fill="#3a2418" font-family="Fredoka, sans-serif" font-weight="600">Back soon (probably)</text></g>` : "";
-  // ---- hub props: a clothes rack, the Daily Dig chalkboard, the stump (or the memory jar), Puddock's stall ----
-  const tag = (x, y, text, w = 46) => `<g pointer-events="none">${plank(x - w / 2, y - 7, w, 13, "#8a5a32", r)}<text x="${x}" y="${y + 2.6}" font-size="8" text-anchor="middle" fill="#fff1d0" font-family="Fredoka, sans-serif" font-weight="600">${text}</text></g>`;
-  const sc = st.rackScarf || "#c8553d";
-  const rack = `<g data-tap="wardrobe"><rect x="10" y="296" width="82" height="106" fill="transparent"/>
-    ${shape(limb(28, 396, 27, 362, 28, 326, 2, 1.6), "#6b4a2a", "#2e1e12", [-.6, .5])}${shape(limb(76, 396, 77, 362, 76, 326, 2, 1.6), "#6b4a2a", "#2e1e12", [-.6, .5])}
-    ${plank(20, 324, 64, 4.5, "#8a5a32", r)}<path d="M40 324 q0 -4 3 -4 M59 324 q0 -4 3 -4" stroke="#3a2a1a" stroke-width=".8" fill="none"/>
-    ${shape(curve([[37, 328], [45, 328], [47, 352], [45, 374], [40, 376], [38, 352]]), sc, mix(sc, "#1a0f08", .55), [-.6, .5])}
-    <path d="M38 340 Q42 342 46 340 M38 360 Q42 362 46 360" stroke="${mix(sc, "#ffffff", .35)}" stroke-width=".8" fill="none" opacity=".6"/>
-    ${shape(curve([[52, 328], [67, 328], [71, 356], [63, 368], [51, 364], [50, 344]]), "#c9a46a", "#5a4024", [-.6, .5])}<path d="M58.5 330 V364" stroke="#8a6a3a" stroke-width=".7" opacity=".7"/>
-    ${st.rackHat ? `<g transform="translate(5.5 313.4) scale(.45)">${hatArt(st.rackHat, "rk")}</g>` : ""}
-    ${shape(curve(ring(44, 394, 6, 3, 8, .1, 3)), "#5a3b24", "#2a1a10", [-.5, .4])}${shape(curve(ring(59, 395, 6, 3, 8, .1, 4)), "#5a3b24", "#2a1a10", [-.5, .4])}
-    ${tag(52, 306, "Wardrobe", 52)}</g>`;
-  const dy = st.daily || {}, chalk = "#efe9da";
-  const board = `<g data-tap="daily"><rect x="92" y="322" width="72" height="82" fill="transparent"/>
-    ${shape(limb(128, 398, 128, 372, 128, 346, 1.3, 1), "#4a3420", "#2a1a10", [-.5, .4])}
-    ${shape(limb(104, 400, 108, 370, 112, 336, 1.7, 1.3), "#6b4a2a", "#2e1e12", [-.6, .5])}${shape(limb(152, 400, 148, 370, 144, 336, 1.7, 1.3), "#6b4a2a", "#2e1e12", [-.6, .5])}
-    ${shape(curve([[98, 330], [158, 328], [160, 372], [96, 374]]), "#2c3a32", "#121a14", [-.9, .8])}
-    <path d="${curve([[98, 330], [158, 328], [160, 372], [96, 374]])}" fill="none" stroke="#8a5a32" stroke-width="2.2"/>
-    <text x="128" y="341" font-size="8.6" text-anchor="middle" fill="${chalk}" font-family="Fredoka, sans-serif" font-weight="600" opacity=".92">Daily Dig</text>
-    ${[...Array(7)].map((_, k) => k < (dy.streak || 0) ? stroke(105 + k * 7.4, 357, -1.35, 8, .7, chalk, .9, .08) : `<path d="M${105 + k * 7.4} 356 v1" stroke="${chalk}" stroke-width=".8" opacity=".3" stroke-linecap="round"/>`).join("")}
-    <text x="102" y="368" font-size="5.6" fill="${chalk}" font-family="Fredoka, sans-serif" opacity=".75">${dy.done ? `best ${dy.best || 0}g` : dy.streak ? `${dy.streak}-day streak` : "new today"}</text>
-    ${plank(99, 373, 58, 3, "#8a5a32", r)}
-    ${dy.done ? `<path d="M142 371 l3 3 l6 -8" stroke="${chalk}" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".85"/>`
-      : `<circle cx="148" cy="364" r="9" fill="#9fe6c8" opacity=".3"><animate attributeName="opacity" values=".15;.4;.15" dur="2.2s" repeatCount="indefinite"/></circle>${shard(148, 373, 6, 13, -.1, "#5fc9a8", r, true)}`}</g>`;
-  const stumpSvg = st.stumpSvg ? st.stumpSvg.replace(/<path d="M0 80 Q150 70 300 80 V90 H0 Z" fill="#14241a"\/>/, "").replace(/<svg class="stumpArt" width="([\d.]+)" height="([\d.]+)"/, (m, w, h) => `<svg class="stumpArt" x="${228 - w / 2}" y="${360 - h}" width="${w}" height="${h}"`) : "";
-  const keep = `<g data-tap="memories"><rect x="172" y="288" width="112" height="92" fill="transparent"/>${stumpSvg || `<circle cx="220" cy="386" r="20" fill="#f0b543" opacity=".22"><animate attributeName="opacity" values=".12;.3;.12" dur="3s" repeatCount="indefinite"/></circle>
-      ${shape(curve([[210, 372], [230, 372], [234, 392], [229, 404], [211, 404], [206, 392]]), "#e8a84a", "#6a3a10", [-.8, .7], 'opacity=".9"')}${plank(209, 366, 22, 6, "#8a5a32", r)}
-      <path d="M213 378 Q212 390 214 398" stroke="#fff3d0" stroke-width="1.2" fill="none" opacity=".6"/>`}
-    ${st.memories != null ? tag(228, 372, `Memories ${st.memories}`, 66) : ""}</g>`;
-  const stripe = (k) => { const x = 282 + k * 19.3; return shape(curve([[x, 312], [x + 19.3, 312], [x + 19.3, 328], [x + 9.6, 334], [x, 328]]), k % 2 ? "#f1e4c4" : "#c8553d", k % 2 ? "#a08a60" : "#5a1e14", [-.6, .6]); };
-  const stall = `<g data-tap="market"><rect x="278" y="282" width="122" height="124" fill="transparent"/>
-    ${shape(limb(288, 404, 287, 360, 288, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}${shape(limb(388, 404, 389, 360, 388, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}
-    ${st.stall && st.puddockSvg && !st.packed ? `<svg x="306" y="312" width="64" height="64" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg>` : ""}
-    ${[0, 1, 2, 3, 4, 5].map(stripe).join("")}${plank(300, 298, 76, 13, "#8a5a32", r)}
-    <text x="338" y="307.4" font-size="8" text-anchor="middle" fill="#fff1d0" font-family="Fredoka, sans-serif" font-weight="600">${st.packed ? "Back soon (probably)" : "Puddock's"}</text>
-    ${plank(282, 366, 112, 9, "#8a5a32", r)}${plank(286, 375, 104, 26, "#6b4a2a", r)}
-    <path d="M292 381 H384 M292 389 H384" stroke="#4a3220" stroke-width=".8" opacity=".6"/>
-    <g transform="translate(290 350) scale(.7)">${ICONS.jar}</g>${shard(352, 367, 5, 11, .2, "#9b7cf2", r)}${shard(360, 367, 4, 8, -.3, "#5fa99b", r)}
-    <path d="M394 326 Q395 332 394 336" stroke="#4a3a2a" stroke-width=".9" fill="none"/>${shape(curve([[390.6, 336], [397.4, 336], [397.8, 345], [390.2, 345]]), "#f7d77a", "#6a4a24", [-.5, .5])}
-    <circle cx="394" cy="341" r="14" fill="url(#lanternGlow)"/>
-    ${st.metPuddock ? "" : `<g><animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0" dur="1.6s" repeatCount="indefinite"/>
-      ${shape(curve([[312, 262], [338, 258.4], [364, 262], [367, 271.6], [362, 279.6], [346, 281], [339, 290], [335.4, 281], [316, 280], [309.6, 271.6]]), "#fff4dc", "#8a6a3a", [-.8, .7])}
-      <text x="338" y="274.6" font-size="11" text-anchor="middle" fill="#3a2410" font-family="Fredoka, sans-serif" font-weight="700">Psst!</text></g>`}</g>`; // first visit: Puddock beckons
-  const OFF = 250, H2 = 730;
   const bough = (x, y, dir, len) => { let o = shape(limb(x, y, x + dir * len * .5, y + len * .12, x + dir * len, y + len * .3, 5, 1), "#07130c", "#07130c", [0, 0]);
     for (let k = 1; k < 9; k++) { const t = k / 9, px = x + dir * len * t, py = y + len * .3 * t * t; o += stroke(px, py, Math.PI / 2 + dir * .5, 22 * (1 - t * .5), 3.4 * (1 - t * .4), "#07130c") + stroke(px, py, Math.PI / 2 - dir * .2, 16 * (1 - t * .5), 3 * (1 - t * .4), "#091710"); }
     return o; };
-  const tall = (st.site || "stump") === "stump" ? `${[[24, 340], [96, 300], [312, 290], [384, 350], [200, 250]].map(([x, h]) => paintPine(x, 520, h, "#10241a", null, r)).join("")}${bough(-10, 8, 1, 150)}${bough(410, 30, -1, 130)}`
+  const tall = (st.site || "stump") === "stump" ? `<g transform="translate(0 ${f1(yH + 74 - 520)})">${[[24, 340], [96, 300], [312, 290], [384, 350], [200, 250]].map(([x, h]) => paintPine(x, 520, h, "#10241a", null, r)).join("")}</g>
+      <g transform="translate(0 ${f1(T - 70)})">${bough(-10, 8, 1, 150)}${bough(410, 30, -1, 130)}</g>`
     : st.site === "underroot" ? [[30, 14, 210], [92, 8, 120], [170, 10, 170], [260, 6, 140], [330, 12, 230], [384, 4, 150]].map(([x, w, h]) => shape(limb(x, -10, x + 10, h * .5, x - 6, h, w, 1.5), "#1a110a", "#0c0704", [-1, 1])).join("")
     : `<path d="${curve([[-10, 0], [70, 0], [96, 140], [60, 300], [80, 480], [-10, 520]])}" fill="#15151d"/><path d="${curve([[410, 0], [330, 0], [300, 160], [340, 320], [320, 500], [410, 520]])}" fill="#15151d"/>`;
-  return `<svg class="campArt" viewBox="0 0 ${W} ${H2}" preserveAspectRatio="xMidYMax meet" aria-label="Dibble's camp">
-    <defs><linearGradient id="campSky" x1="0" y1="0" x2="0" y2="1">${S.sky.map((c, k) => `<stop offset="${[0, .6, 1][k]}" stop-color="${c}"/>`).join("")}</linearGradient>
+  const grass = (pts, y0, y) => pts.map(([x, gy]) => stroke(x, y + gy - y0, -1.4 - r() * .4, (6 + r() * 4) * kf, 1.4, r() < .5 ? "#3f7348" : "#4f8a54", .7)).join("");
+  const ground = `<defs><linearGradient id="campGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${S.ground[0]}"/><stop offset="1" stop-color="${S.ground[1]}"/></linearGradient></defs>
+      <path d="${curve([[-10, yH + 24], [60, yH + 10], [140, yH + 4], [220, yH], [300, yH + 6], [410, yH + 20], [410, H + 20], [-10, H + 20]])}" fill="url(#campGround)"/>
+      <path d="${curve([[-10, yM + 34 * kf], [120, yM + 40 * kf], [280, yM + 36 * kf], [410, yM + 32 * kf], [410, H + 20], [-10, H + 20]])}" fill="${S.ground[1]}"/>
+      <path d="${curve(ring(200, yF - 10, 200, 34, 16, .1, 13))}" fill="${S.ground[2]}" opacity=".35" filter="url(#campBlur)"/>
+      <path d="${curve(ring(200, yB, 190, 34, 16, .08, 9))}" fill="${S.ground[2]}" opacity=".4" filter="url(#campBlur)"/>
+      <path d="${curve(ring(200, yM, 190, 40, 16, .08, 9))}" fill="${S.ground[2]}" opacity=".6" filter="url(#campBlur)"/>
+      ${grass([[60, 260], [120, 282], [250, 276], [330, 268], [160, 292], [290, 290], [30, 286], [370, 284]], 254, yM)}
+      ${grass([[20, 414], [90, 424], [170, 410], [250, 422], [300, 430], [370, 418], [130, 436], [230, 440]], 440, yF)}`;
+  return `<svg class="campArt" viewBox="0 0 ${W} ${f1(H)}" preserveAspectRatio="xMidYMax meet" aria-label="Dibble's camp">
+    <defs><linearGradient id="campSky" x1="0" y1="0" x2="0" y2="1">${S.sky.map((col, k) => `<stop offset="${[0, .6, 1][k]}" stop-color="${col}"/>`).join("")}</linearGradient>
       <radialGradient id="fireLight" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb15a" stop-opacity=".42"/><stop offset=".5" stop-color="#ff8a3d" stop-opacity=".12"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/></radialGradient>
       <radialGradient id="lanternGlow"><stop offset="0" stop-color="#ffd27a" stop-opacity=".55"/><stop offset="1" stop-color="#f0b543" stop-opacity="0"/></radialGradient>
       <radialGradient id="moonGlow"><stop offset="0" stop-color="#fff6d8" stop-opacity=".5"/><stop offset="1" stop-color="#fff6d8" stop-opacity="0"/></radialGradient>
       <filter id="campBlur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
       <filter id="campBlur1" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.4"/></filter></defs>
-    <rect x="-300" y="-900" width="1000" height="${H2 + 1200}" fill="${S.sky[0]}"/>
-    <rect width="${W}" height="${H2}" fill="url(#campSky)"/>
-    <g transform="translate(0 40)"><g data-depth=".15">${S.far}</g></g>
+    <rect x="-300" y="-900" width="1000" height="${f1(H + 1200)}" fill="${S.sky[0]}"/>
+    <rect width="${W}" height="${f1(H)}" fill="url(#campSky)"/>
+    <g data-depth=".15"><g transform="translate(0 ${f1(T - 24)})">${S.far}</g></g>
     <g data-depth=".22">${tall}</g>
-    <g transform="translate(0 ${OFF})">
-    <g data-depth=".3">${S.mid}</g>
-    <g data-depth=".5">${S.near}
-      <path d="M${sagX(0)} ${sagY(0)} ${[...Array(29)].map((_, k) => `L${sagX((k + 1) / 29)} ${sagY((k + 1) / 29)}`).join(" ")}" stroke="#5a4a3a" stroke-width="1.3" fill="none"/>${lanterns}</g>
-    <g data-depth=".75">
-      <defs><linearGradient id="campGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${S.ground[0]}"/><stop offset="1" stop-color="${S.ground[1]}"/></linearGradient>
-        <radialGradient id="campVig" cx=".5" cy=".55" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></radialGradient></defs>
-      <path d="${curve([[-10, 196], [60, 182], [140, 176], [220, 172], [300, 178], [410, 192], [410, 310], [-10, 310]])}" fill="url(#campGround)"/>
-      <path d="${curve([[-10, 296], [120, 302], [280, 298], [410, 294], [410, 490], [-10, 490]])}" fill="${S.ground[1]}"/>
-      <path d="${curve(ring(200, 400, 200, 34, 16, .1, 13))}" fill="${S.ground[2]}" opacity=".35" filter="url(#campBlur)"/>
-      ${[[20, 420], [90, 430], [170, 414], [250, 428], [300, 440], [370, 424], [130, 452], [230, 456]].map(([x, y]) => stroke(x, y, -1.4 - r() * .4, 6 + r() * 4, 1.4, r() < .5 ? "#3f7348" : "#4f8a54", .7)).join("")}
-      <path d="${curve(ring(200, 254, 190, 40, 16, .08, 9))}" fill="${S.ground[2]}" opacity=".6" filter="url(#campBlur)"/>
-      ${[[60, 260], [120, 282], [250, 276], [330, 268], [160, 292], [290, 290], [30, 286], [370, 284]].map(([x, y]) => stroke(x, y, -1.4 - r() * .4, 6 + r() * 4, 1.4, r() < .5 ? "#3f7348" : "#4f8a54", .7)).join("")}
-      <ellipse cx="183" cy="246" rx="120" ry="58" fill="url(#fireLight)"><animate attributeName="rx" values="112;128;116;112" dur="1.3s" repeatCount="indefinite"/></ellipse>
-      ${tree}${shelf}<g data-tap="tent">${tents}</g>
-      ${shape(limb(140, 262, 139, 206, 140, 150, 1.4, 1.1), "#6b4a2a", "#2e1e12", [-.6, .5])}${flag}
-      ${d.hammock ? `${shape(limb(380, 262, 381, 214, 380, 168, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}${shape(limb(300, 262, 299, 224, 300, 186, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}<path d="M300 194 Q340 226 380 176" stroke="#e8d6aa" stroke-width="5.5" fill="none"/><path d="M302 196 Q340 222 378 179" stroke="#b8a678" stroke-width="1" fill="none" opacity=".6"/>` : ""}
-      ${plank(306, 230, 76, 7, "#5a3b24", r)}${shape(limb(310, 237, 306, 246, 303, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${shape(limb(378, 237, 382, 246, 385, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${picks}
-      ${st.lens ? `<g transform="translate(330 214) scale(.9)">${ICONS.lens}</g>` : ""}${st.tongs ? `<g transform="translate(352 212) scale(.9)">${ICONS.tongs}</g>` : ""}${st.sieve ? `<g transform="translate(98 156) scale(.9)">${ICONS.sieve}</g>` : ""}
-      ${fire}<g data-tap="mines"><rect x="-10" y="112" width="84" height="156" fill="transparent"/>
-        ${st.hub ? `<path d="${curve(ring(30, 206, 42, 64, 10, .15, 91))}" fill="#ffd27a" opacity=".16" filter="url(#campBlur)"><animate attributeName="opacity" values=".1;.26;.1" dur="2.4s" repeatCount="indefinite"/></path>` : ""}${sign}
-        ${st.hub ? plank(2, 144, 62, 17, "#b07a3a", r) : ""}${st.hub ? `<text x="33" y="156" font-size="10" text-anchor="middle" fill="#fff4d6" font-family="Fredoka, sans-serif" font-weight="700">Go mining</text>` : ""}
-        ${st.hub && st.firstRun ? `<g><animateTransform attributeName="transform" type="translate" values="0 0;0 5;0 0" dur="1.1s" repeatCount="indefinite"/>${shape("M28 114 Q33 113 38 114 L38 126 L45 126 L33 139 L21 126 L28 126 Z", "#ffd27a", "#8a5a1a", [-.7, .6])}</g>` : ""}</g>
-      ${d.mushrooms ? [[106, 268, 8], [120, 273, 6], [94, 276, 5]].map(([x, y, s]) => `<path d="${curve(ring(x, y + s * .3, s * .2, s * .6, 6, .1, x))}" fill="#e2d8f0"/>
-        ${shape(curve([[x - s, y - .5], [x - s * .5, y - s * 1.1], [x + s * .4, y - s * 1.15], [x + s, y - .6], [x, y - s * .3]]), "#9b7cf2", "#3a2458", [-.6, .6])}
-        <circle cx="${x}" cy="${y - s * .6}" r="${s * 1.6}" fill="#9b7cf2" opacity=".2"><animate attributeName="opacity" values=".1;.3;.1" dur="${2.4 + s * .1}s" repeatCount="indefinite"/></circle>`).join("") : ""}
-      ${d.jars ? `${plank(238, 246, 26, 12, "#6b4a2a", r)}<g transform="translate(236 222) scale(1)">${ICONS.jar}</g><g transform="translate(252 226) scale(.8)">${ICONS.jar}</g>` : ""}
-      ${grannyAt}${puddockAt}${packed}${d.cart && !st.packed ? `<g transform="translate(270 240) scale(1.8)">${ICONS.cart}</g>${st.puddockSvg && !st.stall ? `<g data-tap="puddock"><svg x="252" y="208" width="42" height="42" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}` : ""}
-      ${st.hub ? rack + board + keep + stall : ""}
-      <g data-tap="dibble" class="campDibble"><svg x="190" y="196" width="68" height="68" viewBox="0 0 100 100">${strip(dibbleSvg)}</svg></g>
-      ${flies}
-    </g>
-    <path d="${curve(ring(200, 286, 230, 18, 14, .1, 11))}" fill="#cfe0d0" opacity=".06" filter="url(#campBlur)"/>
-    <g data-depth="1.1" filter="url(#campBlur1)">${fern(-6, 484, -1.1, 80, "#07130c")}${fern(406, 484, -2.05, 80, "#07130c")}</g>
-    </g>
+    <g data-depth=".3"><g transform="translate(0 ${f1(yH - 180)})">${S.mid}</g></g>
+    <g data-depth=".45"><g transform="translate(0 ${f1(yH - 180)})">${S.near}</g></g>
+    <g data-depth=".6">${ground}${lanternLine}${hammock}${keep}${shelf}${rack}${jars}${grannyAt}${sapling}</g>
+    <g data-depth=".75">${fireLight}${tent}${sign}${fire}${cart}${dib}${flies}</g>
+    <g data-depth=".9">${board}${bench}${stall}</g>
+    <g data-depth=".6">${memLabel}</g>
+    <path d="${curve(ring(200, yM + 40 * kf, 230, 18, 14, .1, 11))}" fill="#cfe0d0" opacity=".06" filter="url(#campBlur)"/>
+    <g data-depth="1.1" filter="url(#campBlur1)">${fern(-6, H + 4, -1.1, 80 * kf, "#07130c")}${fern(406, H + 4, -2.05, 80 * kf, "#07130c")}</g>
   </svg>`;
 }
 
