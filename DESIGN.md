@@ -160,6 +160,18 @@ The bots' think times are guesses; once the prototype has real players, measure 
 - **Pilfermoths** (cave critters; tuning in `sim/generator.json → pilfermoths`): after 6 placements, when a tray is dealt, a fluffy moth may flutter onto an empty cell. The chance is 12% in Mossy Hollow, rising to 34% in Heartroot Deep. There's at most 1 at a time (2 in Heartroot). Each new tray, a moth next to crystals nibbles 8% of the haul (a pulsing **!** warns you first), then hops toward glimmer; after 3 nibbles it flies off with the loot. Clearing a line through it, or an ember blast, shoos it: it drops what it took ×1.5 + 4. Never in Calm Grove. Seeded in the Daily Dig. Never affects which pieces are dealt.
 - **Not yet modelled in the sims:** `proto/economy.mjs` and `sim/sim.py` don't include Pilfermoths. The numbers above are first guesses; retune after playtest feedback.
 
+## Menus (2026-10-16): the camp is the home screen
+
+- **Title screen:** Glimmerwood logo and Dibble, with Play, Options and Amber Memories. Play runs the prologue the first time.
+- **The camp hub:** Dibble's camp, full screen and portrait, is home. You do everything by tapping things in the scene, each with a small wooden label:
+  - The **signpost** opens the mine board: Expedition or Calm Grove, the mine postcards, and Dig.
+  - The **chalkboard** is the Daily Dig. Chalk tallies show the streak, and a glowing crystal sits on the ledge until today's dig is done.
+  - The **clothes rack** and the **tent** open the wardrobe. It dresses Dibble and sets up the camp: tent, banner, fire, decor. Spare owned hats and scarves hang on the rack.
+  - **Puddock's stall** opens the Market. Puddock stands at it once you've met him.
+  - The **stump** (or an amber jar away from the stump) replays the Amber Memories.
+- **Top bar:** gold, the site name, and a gear that opens Options (music, sound, vibration, symbols, privacy, memories, main menu).
+- **Popups:** every popup hangs over the camp, so you never leave it.
+
 ## Art direction (2026-10-16): painterly storybook
 
 This replaces the rubber-hose hybrid. The owner wrote a 9-point checklist (linework, color, shading, shapes, expression, subject matter, rendering, composition, software artifacts), iterated on a sample scene (`proto/style-sample.html`, `assets/style-sample.png`) and approved it for the whole game.

@@ -242,7 +242,6 @@
   .chip { transition: transform .18s cubic-bezier(.34,1.56,.64,1); } .chip.on { transform: scale(1.06); }
   .tile svg.dibble { margin-top: 2px; }
   /* ===== camp: a full-width living scene above the signboard ===== */
-  .campScreen { flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 0 !important; background: rgba(5,12,8,.55); }
   .campStage { position: relative; width: min(100vw, 720px); flex: none; touch-action: none; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
   .campStage .campArt { display: block; }
   .campStage [data-tap] { cursor: pointer; }
@@ -251,7 +250,6 @@
   .campSpark { color: #ffd27a; font-size: 18px; }
   .campSay { background: #f3e6c4; color: #3a2410; padding: 6px 10px; border-radius: 12px; font-size: 14px; font-style: italic; text-shadow: none; white-space: nowrap; }
   .campHint { position: absolute; right: 10px; bottom: 8px; font-size: 12px; color: rgba(246,234,208,.7); pointer-events: none; }
-  .campScreen .hang { margin-top: 34px; }
   /* ===== texture: film grain over everything, real wood grain on signboards ===== */
   body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 45; opacity: .07; mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); }
@@ -276,6 +274,33 @@
   #dust i { position: absolute; background: #2a1a0e; border-radius: 50%; opacity: .45; }
   #world { filter: sepia(.18) saturate(1.08) contrast(1.04); }
   @media (prefers-reduced-motion: reduce) { svg.dibble, svg.puddock { filter: none; } body::after { animation: none; } #dust { display: none; } }
+  /* ===== title screen and the camp hub ===== */
+  .titleScr { align-items: center; padding-top: 0 !important; background: radial-gradient(ellipse at 50% 40%, rgba(5,12,8,.1), rgba(5,12,8,.55)); }
+  .titleWrap { width: min(340px, calc(100vw - 40px)); margin: auto; text-align: center; }
+  .titleWrap .dibble { width: 150px; height: 150px; animation: bob 3s ease-in-out infinite; }
+  .logo { font-size: min(56px, 14vw); margin: -6px 0 2px; }
+  .tagline { color: #e8d6aa !important; margin: 0 0 14px; }
+  .titleWrap button { font-size: 19px; padding: 13px; }
+  .titleWrap .note { color: rgba(246,234,208,.6); }
+  .hub { padding: 0 !important; background: #0b1510; align-items: stretch; justify-content: center; overflow: hidden; }
+  .hub .campStage { width: min(100vw, 480px); height: 100vh; height: 100dvh; margin: 0 auto; box-shadow: none; }
+  .hub #campArt, .hub .campArt { display: block; width: 100%; height: 100%; }
+  .hub .campArt { overflow: visible; }
+  .campStage [data-tap] { cursor: pointer; transition: filter .15s; }
+  .campStage [data-tap]:hover { filter: brightness(1.18) drop-shadow(0 0 4px rgba(255,214,122,.5)); }
+  .hubBar { position: absolute; z-index: 5; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
+    width: min(calc(100vw - 20px), 460px); display: flex; align-items: center; gap: 8px; pointer-events: none; }
+  .hubBar > * { pointer-events: auto; }
+  .siteName { flex: 1; text-align: center; color: #f3e1b0; font-weight: 600; font-size: 14px; text-shadow: 0 1px 3px #000; pointer-events: none; }
+  .iconBtn { width: 46px; height: 46px; margin: 0; padding: 0; display: grid; place-items: center; border-radius: 12px; }
+  .iconBtn .ico { margin: 0; }
+  .hub .campHint { position: absolute; left: 0; right: 0; bottom: max(14px, env(safe-area-inset-bottom)); text-align: center; font-size: 13px;
+    color: rgba(246,234,208,.8); text-shadow: 0 1px 3px #000; pointer-events: none; animation: hintPulse 3s ease-in-out infinite; }
+  @keyframes hintPulse { 50% { opacity: .45; } }
+  .sheet { background: rgba(5,12,8,.5); z-index: 6; }
+  .wardHead { display: flex; align-items: center; gap: 10px; }
+  .wardHead .dibble { flex: none; }
+  .subHead { margin: 12px 0 0; font-size: 14px; letter-spacing: .6px; text-transform: uppercase; color: #ffd27a; }
 </style>
 </head>
 <body>
@@ -291,19 +316,54 @@
 </div>
 <div id="toast"></div>
 
-<section id="home" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
-  <div class="hero"><span id="dibbleArt"></span><div><h1>Glimmerwood</h1><div class="tag" style="margin:4px 0 0">Mine glowing crystals before the roots close in.</div></div></div>
-  <button id="stump" class="stumpCard alt"></button>
-  <div class="pill" id="homeGoldPill"><span id="coinA"></span><span id="homeGold">0</span></div>
+<section id="title" class="screen titleScr"><div class="titleWrap">
+  <span id="dibbleArt"></span>
+  <h1 class="logo">Glimmerwood</h1>
+  <div class="tag tagline">Mine glowing crystals before the roots close in.</div>
+  <button id="tPlay"><span class="btnrow"><span id="icoPlay"></span>Play</span></button>
+  <button id="tOpts" class="alt">Options</button>
+  <button id="tMem" class="alt"></button>
+  <div class="note">Fair dealing: crystals are dealt at random. Never by ads, purchases or how close you are to your best.</div>
+</div></section>
+
+<section id="home" class="screen hub">
+  <div class="campStage" id="campStage"><div id="campArt"></div><div id="campFx" class="campFx"></div></div>
+  <div class="hubBar"><div class="pill" id="homeGoldPill"><span id="coinA"></span><span id="homeGold">0</span></div>
+    <span class="siteName" id="campTitle"></span><button id="hubMenu" class="alt iconBtn" aria-label="Menu"></button></div>
+  <div class="campHint" id="campHint"></div>
+</section>
+
+<section id="mineSheet" class="screen sheet"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
+  <h2>To the mines</h2>
   <div class="seg"><button id="mExp"><span id="icoExp"></span>Expedition<small>beat the Rootline</small></button>
     <button id="mCalm"><span id="icoCalm"></span>Calm Grove<small>no timer, ×0.6 gold</small></button></div>
   <div id="wickHead"></div>
   <div id="mines"></div>
   <button id="dig"><span class="btnrow"><span id="icoDig"></span>Dig</span></button>
-  <button id="daily" class="alt"></button>
-  <div class="twoBtn"><button id="toMarket" class="alt"><span class="btnrow"><span id="icoStall"></span>Market</span></button>
-    <button id="toCamp" class="alt"><span class="btnrow"><span id="icoCamp"></span>Dibble's Camp</span></button></div>
+  <button class="alt close"><span class="btnrow"><span class="icoBack"></span>Back to camp</span></button>
+</div></div></section>
+
+<section id="dailySheet" class="screen sheet"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
+  <h2>Daily Dig</h2>
+  <div class="tag">Today's crystals are the same for everyone. One dig a day; keep the streak going.</div>
+  <div id="dailyInfo"></div>
+  <button id="daily"></button>
+  <button class="alt close"><span class="btnrow"><span class="icoBack"></span>Back to camp</span></button>
+</div></div></section>
+
+<section id="wardrobe" class="screen sheet"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
+  <div class="wardHead"><span id="wardDibble"></span><div><h2>Wardrobe</h2><div class="tag" style="margin:0">Dress Dibble, and set up camp. New things come from Old Puddock.</div></div></div>
+  <div id="campProg" class="campProg"></div>
+  <div id="campCustom"></div>
+  <button class="alt close"><span class="btnrow"><span class="icoBack"></span>Back to camp</span></button>
+</div></div></section>
+
+<section id="optsSheet" class="screen sheet"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
+  <h2>Options</h2>
   <div class="opts"><button id="oMusic"></button><button id="oSound"></button><button id="oVib"></button><button id="oGlyph"></button><button id="oPrivacy"></button></div>
+  <button id="campMem" class="alt"></button>
+  <button id="toTitle" class="alt">Main menu</button>
+  <button class="close">Back</button>
   <div class="note">Fair dealing: crystals are dealt at random. Never by ads, purchases or how close you are to your best.</div>
 </div></div></section>
 
@@ -323,14 +383,14 @@
   <div class="note" id="adNote">Green buttons are rewarded ads in the real game; free here.</div>
 </div></div></section>
 
-<section id="market" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><div class="awning"></div><div class="card">
+<section id="market" class="screen sheet"><div class="hang"><i class="rope l"></i><i class="rope r"></i><div class="awning"></div><div class="card">
   <h2>Old Puddock's Market</h2>
   <div class="speech"><span id="puddockArtMkt"></span><div class="bubble">"Shiny rocks, shiny coins. Fair trade, little mole."</div></div>
   <div class="pill"><span id="coinC"></span><span id="mktGold">0</span></div>
   <div id="iapRow"></div>
   <div class="tabs" id="mktTabs"><button data-tab="tools">Tools</button><button data-tab="wardrobe">Wardrobe</button><button data-tab="camp">Camp</button><button data-tab="maps">Maps</button></div>
   <div id="shop"></div>
-  <button id="mktBack" class="alt"><span class="btnrow"><span id="icoBack"></span>Back to the mines</span></button>
+  <button id="mktBack" class="alt close"><span class="btnrow"><span class="icoBack"></span>Back to camp</span></button>
 </div></div></section>
 
 <section id="talk" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
@@ -339,18 +399,6 @@
   <div id="talkGift"></div>
   <button id="talkNext">Go on…</button>
   <button id="talkSkip" class="linkBtn" style="display:none">Skip</button>
-</div></div></section>
-
-<section id="campScr" class="screen campScreen">
-  <div class="campStage" id="campStage"><div id="campArt"></div><div id="campFx" class="campFx"></div>
-    <div class="campHint">Tap things around camp ✦</div></div>
-  <div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
-  <h2 id="campTitle">Dibble's Camp</h2>
-  <div class="tag" style="margin:0 0 8px">Everything you buy from Old Puddock ends up here.</div>
-  <div id="campProg" class="campProg"></div>
-  <div id="campCustom"></div>
-  <button id="campMem" class="alt"></button>
-  <button id="campBack" class="alt"><span class="btnrow"><span id="icoBack2"></span>Back to the mines</span></button>
 </div></div></section>
 
 <script type="module">
@@ -995,12 +1043,17 @@ $("sell").onclick = () => sell(1);
 $("sell2").onclick = async () => (await platform.rewarded("double_deal")) ? sell(2) : toast("No ad ready, try again in a moment");
 
 // ---------- home and market ----------
+const SHEETS = ["mineSheet", "dailySheet", "wardrobe", "optsSheet", "market"];
+let base = "title"; // the screen popups sit on: the title screen or the camp
 function show(id) {
+  if (id === "title" || id === "home") base = id;
+  const under = SHEETS.includes(id) ? base : null;
   document.body.classList.toggle("playing", !id);
-  for (const s of ["home", "end", "market", "talk", "campScr"]) $(s).classList.toggle("show", s === id);
+  for (const s of ["title", "home", "end", "talk", ...SHEETS]) $(s).classList.toggle("show", s === id || s === under);
   $("hud").style.visibility = id && id !== "end" ? "hidden" : "visible";
-  platform.banner(id === "home" || id === "market" || id === "campScr");
-  if (id === "campScr") soundtrack.play("camp"); else if (id && id !== "end") soundtrack.play("home"); }
+  platform.banner(id === "home" || id === "market");
+  if (id === "title") soundtrack.play("home"); else if (id && id !== "end" && id !== "talk") soundtrack.play("camp"); }
+for (const b of document.querySelectorAll(".close")) b.onclick = () => { renderHome(); show(base); };
 function teaser() { // the card after the last mine you can see: a hint of what's next
   const S = save.story, [title, text] = S.finale ? ["A dark lantern", "It has a little toad print on it. Not lit yet. Puddock keeps 'meaning to write'."]
     : S.site === "skywell" ? ["Above the rubble", "Somewhere up there: the sky."]
@@ -1011,23 +1064,26 @@ function teaser() { // the card after the last mine you can see: a hint of what'
 }
 function renderHome() {
   $("homeGold").textContent = save.gold;
-  $("mExp").classList.toggle("on", save.mode === "exp"); $("mCalm").classList.toggle("on", save.mode === "calm");
   for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).classList.toggle("on", save.opt[k]);
   $("oSound").innerHTML = icon(save.opt.sound ? "soundOn" : "soundOff", 20) + "Sound";
   $("oVib").innerHTML = icon("vibe", 20) + "Vibration";
   $("oGlyph").innerHTML = icon("symbols", 20) + "Symbols";
   $("oPrivacy").innerHTML = icon("lock", 20) + "Privacy";
   $("oMusic").innerHTML = icon("note", 20) + "Music"; $("oMusic").classList.toggle("on", save.opt.music);
-  $("dibbleArt").innerHTML = dibble(116, save.look);
-  const n = save.story.mem.length, S = save.story, sprout = S.sprout || S.site !== "stump", growth = Math.log10(save.light + 1) / 5.3;
-  $("stump").innerHTML = stumpArt(growth, sprout, 300, S.finale) + `<small>${S.finale ? "A young Glimmeroak, where the stump was." : S.site !== "stump" ? "Back at the stump, the shoot keeps growing."
-    : sprout ? "Green, after all these years." : growth > .45 ? "Moss creeps back where your light reaches." : "The old stump. Puddock won't sit on it."}
-    ${n ? ` · ${n}/${MEMORY_COUNT} memories` : ""}</small>`;
+  $("dibbleArt").innerHTML = dibble(150, save.look);
+  const mem = `<span class="btnrow">${icon("lantern", 22)}Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}</span>`;
+  $("tMem").innerHTML = mem; $("campMem").innerHTML = mem;
   const done = save.daily.last === today(), st = save.daily.last === today() || save.daily.last === new Date(Date.now() - 864e5).toISOString().slice(0, 10) ? save.daily.streak : 0;
-  $("daily").innerHTML = `<span class="btnrow">${icon("calendar", 22)}${done ? `Daily Dig done · best ${save.daily.best}g` : "Daily Dig: today's crystals"}</span>
-    <span class="streak" title="streak: ${st} day(s)">${[...Array(7)].map((_, k) => `<i class="${k < Math.min(st, 7) ? "on" : ""}"></i>`).join("")}</span>
-    <small style="display:block;font-weight:400;font-size:12px;color:var(--muted);margin-top:3px">${st ? `${st}-day streak` : "Same crystals for everyone, once a day"}</small>`;
+  $("dailyInfo").innerHTML = `<span class="streak" title="streak: ${st} day(s)">${[...Array(7)].map((_, k) => `<i class="${k < Math.min(st, 7) ? "on" : ""}"></i>`).join("")}</span>
+    <div class="note" style="margin-top:6px">${st ? `${st}-day streak` : "No streak yet"}${done ? ` · today's best ${save.daily.best}g` : ""}</div>`;
+  $("daily").innerHTML = `<span class="btnrow">${icon("calendar", 22)}${done ? "Done for today. Come back tomorrow" : "Start today's dig"}</span>`;
   $("daily").disabled = done;
+  $("campHint").textContent = !save.metPuddock && !Object.keys(save.best).length ? "Tap the signpost to go mining ✦" : "Tap things around camp ✦";
+  renderMines(); renderCamp();
+  $("campArt").innerHTML = camp({ ...campState(), daily: { done, streak: st, best: save.daily.best } }, gem, dibble(100, save.look));
+}
+function renderMines() {
+  $("mExp").classList.toggle("on", save.mode === "exp"); $("mCalm").classList.toggle("on", save.mode === "calm");
   const wick = save.story.finale, glow = (b) => Math.min(1, Math.log10((save.best[b.id] || 0) + 1) / 4);
   $("wickHead").innerHTML = wick ? `<div class="wickHead">${icon("lantern", 20)}The Wickway · step into any lantern</div>` : "";
   $("mines").innerHTML = BIOMES.filter(revealed).map((b) => {
@@ -1042,7 +1098,7 @@ function renderHome() {
   }).join("") + teaser();
   for (const el of document.querySelectorAll(".mine[data-id]")) el.onclick = () => {
     if (!canEnter(el.dataset.id)) return;
-    save.sel = el.dataset.id; persist(); renderHome();
+    save.sel = el.dataset.id; persist(); renderMines();
   };
 }
 const mapTile = (id) => { const b = BIOMES.find((x) => x.id === id); return scene(Object.keys(b.types).map((t) => CRYSTALS[t].color), b.pal, 46, 46); };
@@ -1096,18 +1152,19 @@ function renderMarket() {
   };
 }
 $("dig").onclick = () => startDig(false);
-$("stump").onclick = () => replayMemories(home);
 $("daily").onclick = () => startDig(true);
-$("mExp").onclick = () => { save.mode = "exp"; persist(); renderHome(); };
-$("mCalm").onclick = () => { save.mode = "calm"; persist(); renderHome(); };
+$("mExp").onclick = () => { save.mode = "exp"; persist(); renderMines(); };
+$("mCalm").onclick = () => { save.mode = "calm"; persist(); renderMines(); };
 for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).onclick = () => { save.opt[k] = !save.opt[k]; persist(); renderHome(); };
 $("oMusic").onclick = () => { save.opt.music = !save.opt.music; persist(); soundtrack.setEnabled(save.opt.music); renderHome(); };
 $("oPrivacy").onclick = () => platform.native ? platform.privacyChoices() : toast("Privacy choices open here in the app");
-$("toMarket").onclick = () => save.metPuddock ? (renderMarket(), show("market")) : talk(() => { renderMarket(); show("market"); });
+const openMarket = () => save.metPuddock ? (renderMarket(), show("market")) : talk(() => { renderMarket(); show("market"); });
 for (const b of document.querySelectorAll("#mktTabs button")) b.onclick = () => { mktTab = b.dataset.tab; renderMarket(); $("shop").animate([{ opacity: 0, transform: "translateX(14px)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" }); };
-$("toCamp").onclick = () => { renderCamp(); show("campScr"); $("campScr").scrollTop = 0; };
-$("campBack").onclick = () => { renderHome(); show("home"); };
-$("campMem").onclick = () => replayMemories(() => { renderCamp(); show("campScr"); });
+$("campMem").onclick = $("tMem").onclick = () => replayMemories(() => { renderHome(); show(base); });
+$("hubMenu").onclick = () => show("optsSheet");
+$("tOpts").onclick = () => show("optsSheet");
+$("toTitle").onclick = () => { renderHome(); show("title"); };
+$("tPlay").onclick = () => save.story.prologue ? home() : prologue();
 
 // ---------- meeting Old Puddock ----------
 const INTRO = [
@@ -1172,7 +1229,7 @@ function playScene(name) {
   }), () => {
     AFTER[name]?.(save.story); persist(); track("story_" + name);
     [523, 659, 784, 1047].forEach((f, j) => tone(f, .4, "sine", .07, j * .12));
-    if (name === "lead" || name === "reunion") { renderCamp(); show("campScr"); $("campScr").scrollTop = 0; toast("Camp unpacked. Everything's here.", 2200); }
+    if (name === "lead" || name === "reunion") { home(); toast("Camp unpacked. Everything's here.", 2200); }
     else home();
   });
 }
@@ -1184,8 +1241,11 @@ function replayMemories(back) {
 
 // ---------- Dibble's Camp: every purchase shows up here ----------
 function campState() {
-  const own = (id) => save.owned.includes(id) && !save.camp.hide.includes(id);
-  return { ...save.up, mines: BIOMES.filter((b) => save.biomes.includes(b.id)).map((b) => b.pal.glow),
+  const own = (id) => save.owned.includes(id) && !save.camp.hide.includes(id), S = save.story;
+  const spare = (part) => Object.keys(LOOKS[part]).find((v) => v !== "none" && v !== save.look[part] && lookOwned(part, v));
+  const hub = { hub: true, stall: true, metPuddock: save.metPuddock, memories: S.mem.length || null, rackHat: spare("hat"), rackScarf: spare("scarf"),
+    stumpSvg: S.site === "stump" ? stumpArt(Math.log10(save.light + 1) / 5.3, S.sprout, 170, S.finale) : "" };
+  return { ...hub, ...save.up, mines: BIOMES.filter((b) => save.biomes.includes(b.id)).map((b) => b.pal.glow),
     found: Object.keys(CRYSTALS).map((t) => save.found.includes(t) ? { color: CRYSTALS[t].color, cut: CRYSTALS[t].cut } : null),
     tent: save.camp.tent, banner: save.camp.banner, fire: save.camp.fire,
     site: save.story.site, sky: save.story.finale, packed: save.story.finale, puddockHere: save.story.site !== "stump",
@@ -1198,9 +1258,8 @@ function campProgress() {
   return have / total;
 }
 function renderCamp() {
-  $("campArt").innerHTML = camp(campState(), gem, dibble(100, save.look));
   $("campTitle").textContent = `Dibble's Camp · ${SITES[save.story.site]}`;
-  $("campMem").innerHTML = `<span class="btnrow">${icon("lantern", 22)}Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}</span>`;
+  $("wardDibble").innerHTML = dibble(84, save.look);
   const pc = campProgress();
   $("campProg").innerHTML = `<div class="bar"><i style="width:${(pc * 100).toFixed(1)}%"></i></div><small>Camp ${Math.round(pc * 100)}% grown · ${save.found.length}/${Object.keys(CRYSTALS).length} gems on the shelf</small>`;
   const chip = (grp, val, label, swatch) => `<button class="chip ${save.camp[grp] === val ? "on" : ""}" data-grp="${grp}" data-val="${val}">${swatch || ""}${label}</button>`;
@@ -1209,19 +1268,18 @@ function renderCamp() {
   const fires = [["ring", "Campfire"], ["forge", "Forge"]].filter(([v]) => v === "ring" || save.owned.includes("fire:" + v));
   const decor = SHOP.filter((i) => i.id.startsWith("decor:") && save.owned.includes(i.id));
   $("campCustom").innerHTML = `
-    ${["hat", "scarf", "lantern", "fur"].map((part) => `<div class="custRow"><span>${{ hat: "Hat", scarf: "Scarf", lantern: "Lantern", fur: "Fur" }[part]}</span>${Object.keys(LOOKS[part]).filter((v) => lookOwned(part, v))
+    <h3 class="subHead">Dibble</h3>${["hat", "scarf", "lantern", "fur"].map((part) => `<div class="custRow"><span>${{ hat: "Hat", scarf: "Scarf", lantern: "Lantern", fur: "Fur" }[part]}</span>${Object.keys(LOOKS[part]).filter((v) => lookOwned(part, v))
       .map((v) => `<button class="chip ${save.look[part] === v ? "on" : ""}" data-look="${part}" data-val="${v}">${part === "scarf" && v !== "none" ? `<i class="sw" style="background:${v}"></i>` : part === "fur" ? `<i class="sw" style="background:${FUR[v][0]}"></i>` : ""}${v === "none" ? "None" : LOOKS[part][v].replace(/ (fur|scarf|lantern)$/i, "")}</button>`).join("")}</div>`).join("")}
-    <div class="custRow"><span>Tent</span>${tents.map(([v, l]) => chip("tent", v, l)).join("")}</div>
+    <h3 class="subHead">Camp</h3><div class="custRow"><span>Tent</span>${tents.map(([v, l]) => chip("tent", v, l)).join("")}</div>
     <div class="custRow"><span>Banner</span>${banners.map(([c, l]) => chip("banner", c, "", `<i class="sw" style="background:${c}" title="${l}"></i>`)).join("")}</div>
     <div class="custRow"><span>Fire</span>${fires.map(([v, l]) => chip("fire", v, l)).join("")}</div>
     ${decor.length ? `<div class="custRow"><span>Decor</span>${decor.map((i) => `<button class="chip ${save.camp.hide.includes(i.id) ? "" : "on"}" data-hide="${i.id}">${i.name}</button>`).join("")}</div>` : ""}
     <div class="note">Lanterns = Lantern level · tool rack = Pickaxe · the sapling = Root Charm · signpost = mines opened · shelf = gem types found. More in Old Puddock's Camp tab.</div>`;
-  for (const b of $("campCustom").querySelectorAll("[data-look]")) b.onclick = () => { save.look[b.dataset.look] = b.dataset.val; persist(); renderCamp(); ui.chirp(); };
-  for (const b of $("campCustom").querySelectorAll("[data-grp]")) b.onclick = () => { save.camp[b.dataset.grp] = b.dataset.val; persist(); renderCamp(); tone(660, .08, "triangle", .06); };
+  for (const b of $("campCustom").querySelectorAll("[data-look]")) b.onclick = () => { save.look[b.dataset.look] = b.dataset.val; persist(); renderHome(); ui.chirp(); };
+  for (const b of $("campCustom").querySelectorAll("[data-grp]")) b.onclick = () => { save.camp[b.dataset.grp] = b.dataset.val; persist(); renderHome(); tone(660, .08, "triangle", .06); };
   for (const b of $("campCustom").querySelectorAll("[data-hide]")) b.onclick = () => {
-    const h = save.camp.hide, id = b.dataset.hide; save.camp.hide = h.includes(id) ? h.filter((x) => x !== id) : [...h, id]; persist(); renderCamp(); };
+    const h = save.camp.hide, id = b.dataset.hide; save.camp.hide = h.includes(id) ? h.filter((x) => x !== id) : [...h, id]; persist(); renderHome(); };
 }
-$("mktBack").onclick = () => { renderHome(); show("home"); };
 
 // camp: taps make things happen, and the layers drift with your finger (parallax)
 function campFx(x, y, html, cls = "campPop") {
@@ -1238,7 +1296,11 @@ $("campStage").addEventListener("pointerdown", (e) => {
   else if (what === "fire") { for (let k = 0; k < 5; k++) setTimeout(() => campFx(x + (Math.random() - .5) * 30, y, "✦", "campSpark"), k * 40); for (let k = 0; k < 4; k++) tone(2000 + Math.random() * 2000, .03, "square", .02, k * .03); buzz(15); }
   else if (what === "lanterns") { [523, 659, 784].forEach((f, k) => tone(f * 2, .3, "sine", .05, k * .07)); campFx(x, y, "✧"); }
   else if (what.startsWith("gem-")) { soundtrack.chime(+what.slice(4)); campFx(x, y, "✦", "campSpark"); }
-  else if (what === "tent") { tone(180, .2, "triangle", .04); campFx(x, y, "z z z"); }
+  else if (what === "tent" || what === "wardrobe") { tone(520, .08, "triangle", .05); show("wardrobe"); }
+  else if (what === "mines") { tone(392, .1, "triangle", .06); renderMines(); show("mineSheet"); }
+  else if (what === "daily") { tone(660, .08, "triangle", .05); show("dailySheet"); }
+  else if (what === "market") { tone(330, .1, "triangle", .06); openMarket(); }
+  else if (what === "memories") replayMemories(home);
   else if (what === "granny") { campFx(x, y - 20, quote(pick(CAMP_LINES.granny)), "campSay"); tone(330, .12, "triangle", .06); }
   else if (what === "puddock") { campFx(x, y - 20, quote(pick(CAMP_LINES[save.story.finale ? "puddockPost" : save.story.site === "stump" ? "puddock" : "puddockUnder"])), "campSay"); tone(220, .12, "triangle", .07); }
 });
@@ -1362,16 +1424,17 @@ if (qs.has("debug")) window.gw = { place: (i, r, c) => commit(i, r, c), get tray
 $("world").innerHTML = forest();
 for (const el of document.querySelectorAll(".vineSlot")) el.outerHTML = vine();
 $("flies").innerHTML = [...Array(14)].map((_, k) => `<i class="fly" style="left:${(k * 37) % 100}%;top:${20 + (k * 53) % 70}%;animation-delay:${-k * 0.7}s,${-k * 0.37}s"></i>`).join("");
-$("dibbleArt").innerHTML = dibble(116); $("talkArt").innerHTML = puddock(120); $("icoCamp").innerHTML = icon("campIco", 24); $("icoBack2").innerHTML = icon("back", 20); $("puddockArtEnd").innerHTML = puddock(52); $("puddockArtMkt").innerHTML = puddock(60);
+$("talkArt").innerHTML = puddock(120); $("puddockArtEnd").innerHTML = puddock(52); $("puddockArtMkt").innerHTML = puddock(60);
+$("hubMenu").innerHTML = icon("gear", 24); $("icoPlay").innerHTML = icon("pickaxe", 24);
+for (const el of document.querySelectorAll(".icoBack")) el.innerHTML = icon("back", 20);
 for (const id of ["coinA", "coinB", "coinC"]) $(id).innerHTML = coin(22);
 $("coinHud").innerHTML = coin(26);
 $("icoExp").innerHTML = icon("vine", 26); $("icoCalm").innerHTML = icon("leaf", 26);
-$("icoDig").innerHTML = icon("pickaxe", 24); $("icoStall").innerHTML = icon("stall", 24); $("icoBack").innerHTML = icon("back", 20);
+$("icoDig").innerHTML = icon("pickaxe", 24);
 
 if (platform.native) $("adNote").textContent = "Green buttons play a short video ad.";
 platform.init().then(() => renderHome());
-renderHome(); show("home");
-if (!save.story.prologue) prologue();
+renderHome(); show("title");
 requestAnimationFrame(frame);
 </script>
 </body>

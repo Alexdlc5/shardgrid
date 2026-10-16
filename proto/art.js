@@ -125,6 +125,7 @@ const ICONS = {
   campIco: `<path d="M3 20 L10 6 L17 20 Z" fill="#e8d6aa"/><path d="M10 13 L8 20 H12 Z" fill="#5a3b24"/><path d="M16 20 Q18 15 20 20 Z" fill="#ff8a3d"/><path d="M17.5 20 Q18 17 18.5 20 Z" fill="#fff3a0"/>`,
   note: `<path d="M9 18 V5 L19 3 V16" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><ellipse cx="7" cy="18" rx="3" ry="2.4" fill="currentColor"/><ellipse cx="17" cy="16" rx="3" ry="2.4" fill="currentColor"/>`,
   back: `<path d="M15 5 L8 12 L15 19" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+  gear: `<path d="${[...Array(16)].map((_, k) => { const a = (k / 16) * Math.PI * 2, R = k % 2 ? 7.2 : 9.6; return `${k ? "L" : "M"}${(12 + Math.cos(a) * R).toFixed(1)} ${(12 + Math.sin(a) * R).toFixed(1)}`; }).join(" ")} Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" fill="#3a2410"/>`,
 };
 export const icon = (name, size = 22) => svg(size, "0 0 24 24", ICONS[name]);
 
@@ -423,21 +424,72 @@ export function camp(st, gemFn, dibbleSvg) {
       mid: `${rock(30, 120, "#16161e")}${rock(90, 70, "#1a1a24")}${rock(320, 90, "#1a1a24")}${rock(380, 130, "#16161e")}`,
       near: `${rock(10, 150, "#20202a")}${rock(394, 160, "#20202a")}` },
   }[st.site || "stump"];
-  const puddockAt = st.puddockHere && !st.packed && !st.decor.cart && st.puddockSvg ? `<g data-tap="puddock"><svg x="262" y="206" width="46" height="46" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : "";
+  const puddockAt = !st.stall && st.puddockHere && !st.packed && !st.decor.cart && st.puddockSvg ? `<g data-tap="puddock"><svg x="262" y="206" width="46" height="46" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : "";
   const grannyAt = st.grannySvg ? `<g data-tap="granny"><svg x="112" y="206" width="54" height="54" viewBox="0 0 100 100">${strip(st.grannySvg)}</svg></g>` : "";
   const packed = st.packed ? `<g transform="translate(278 236) scale(1.8)">${ICONS.cart}</g>
       ${st.puddockSvg ? `<g data-tap="puddock"><svg x="246" y="208" width="42" height="42" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}
       <g transform="translate(336 204) rotate(-4)"><path d="M0 4 V26" stroke="#5a3b24" stroke-width="2"/><rect x="-38" y="-10" width="76" height="15" rx="2" fill="#e8d6aa" stroke="#3a2418" stroke-width="1"/>
       <text x="0" y=".2" font-size="6.6" text-anchor="middle" fill="#3a2418" font-family="Fredoka, sans-serif" font-weight="600">Back soon (probably)</text></g>` : "";
-  return `<svg class="campArt" viewBox="0 0 ${W} ${H}" width="100%" aria-label="Dibble's camp">
+  // ---- hub props: a clothes rack, the Daily Dig chalkboard, the stump (or the memory jar), Puddock's stall ----
+  const tag = (x, y, text, w = 46) => `<g pointer-events="none">${plank(x - w / 2, y - 7, w, 13, "#8a5a32", r)}<text x="${x}" y="${y + 2.6}" font-size="8" text-anchor="middle" fill="#fff1d0" font-family="Fredoka, sans-serif" font-weight="600">${text}</text></g>`;
+  const sc = st.rackScarf || "#c8553d";
+  const rack = `<g data-tap="wardrobe"><rect x="10" y="296" width="82" height="106" fill="transparent"/>
+    ${shape(limb(28, 396, 27, 362, 28, 326, 2, 1.6), "#6b4a2a", "#2e1e12", [-.6, .5])}${shape(limb(76, 396, 77, 362, 76, 326, 2, 1.6), "#6b4a2a", "#2e1e12", [-.6, .5])}
+    ${plank(20, 324, 64, 4.5, "#8a5a32", r)}<path d="M40 324 q0 -4 3 -4 M59 324 q0 -4 3 -4" stroke="#3a2a1a" stroke-width=".8" fill="none"/>
+    ${shape(curve([[37, 328], [45, 328], [47, 352], [45, 374], [40, 376], [38, 352]]), sc, mix(sc, "#1a0f08", .55), [-.6, .5])}
+    <path d="M38 340 Q42 342 46 340 M38 360 Q42 362 46 360" stroke="${mix(sc, "#ffffff", .35)}" stroke-width=".8" fill="none" opacity=".6"/>
+    ${shape(curve([[52, 328], [67, 328], [71, 356], [63, 368], [51, 364], [50, 344]]), "#c9a46a", "#5a4024", [-.6, .5])}<path d="M58.5 330 V364" stroke="#8a6a3a" stroke-width=".7" opacity=".7"/>
+    ${st.rackHat ? `<g transform="translate(5.5 313.4) scale(.45)">${hatArt(st.rackHat, "rk")}</g>` : ""}
+    ${shape(curve(ring(44, 394, 6, 3, 8, .1, 3)), "#5a3b24", "#2a1a10", [-.5, .4])}${shape(curve(ring(59, 395, 6, 3, 8, .1, 4)), "#5a3b24", "#2a1a10", [-.5, .4])}
+    ${tag(52, 306, "Wardrobe", 52)}</g>`;
+  const dy = st.daily || {}, chalk = "#efe9da";
+  const board = `<g data-tap="daily"><rect x="92" y="322" width="72" height="82" fill="transparent"/>
+    ${shape(limb(128, 398, 128, 372, 128, 346, 1.3, 1), "#4a3420", "#2a1a10", [-.5, .4])}
+    ${shape(limb(104, 400, 108, 370, 112, 336, 1.7, 1.3), "#6b4a2a", "#2e1e12", [-.6, .5])}${shape(limb(152, 400, 148, 370, 144, 336, 1.7, 1.3), "#6b4a2a", "#2e1e12", [-.6, .5])}
+    ${shape(curve([[98, 330], [158, 328], [160, 372], [96, 374]]), "#2c3a32", "#121a14", [-.9, .8])}
+    <path d="${curve([[98, 330], [158, 328], [160, 372], [96, 374]])}" fill="none" stroke="#8a5a32" stroke-width="2.2"/>
+    <text x="128" y="341" font-size="8.6" text-anchor="middle" fill="${chalk}" font-family="Fredoka, sans-serif" font-weight="600" opacity=".92">Daily Dig</text>
+    ${[...Array(7)].map((_, k) => k < (dy.streak || 0) ? stroke(105 + k * 7.4, 357, -1.35, 8, .7, chalk, .9, .08) : `<path d="M${105 + k * 7.4} 356 v1" stroke="${chalk}" stroke-width=".8" opacity=".3" stroke-linecap="round"/>`).join("")}
+    <text x="122" y="368" font-size="5.6" text-anchor="middle" fill="${chalk}" font-family="Fredoka, sans-serif" opacity=".75">${dy.done ? `done · best ${dy.best || 0}g` : dy.streak ? `${dy.streak}-day streak` : "today's crystals"}</text>
+    ${plank(99, 373, 58, 3, "#8a5a32", r)}
+    ${dy.done ? `<path d="M142 371 l3 3 l6 -8" stroke="${chalk}" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".85"/>`
+      : `<circle cx="148" cy="364" r="9" fill="#9fe6c8" opacity=".3"><animate attributeName="opacity" values=".15;.4;.15" dur="2.2s" repeatCount="indefinite"/></circle>${shard(148, 373, 6, 13, -.1, "#5fc9a8", r, true)}`}</g>`;
+  const stumpSvg = st.stumpSvg ? st.stumpSvg.replace(/<path d="M0 80 Q150 70 300 80 V90 H0 Z" fill="#14241a"\/>/, "").replace(/<svg class="stumpArt" width="([\d.]+)" height="([\d.]+)"/, (m, w, h) => `<svg class="stumpArt" x="${220 - w / 2}" y="${408 - h}" width="${w}" height="${h}"`) : "";
+  const keep = `<g data-tap="memories"><rect x="168" y="350" width="104" height="78" fill="transparent"/>${stumpSvg || `<circle cx="220" cy="386" r="20" fill="#f0b543" opacity=".22"><animate attributeName="opacity" values=".12;.3;.12" dur="3s" repeatCount="indefinite"/></circle>
+      ${shape(curve([[210, 372], [230, 372], [234, 392], [229, 404], [211, 404], [206, 392]]), "#e8a84a", "#6a3a10", [-.8, .7], 'opacity=".9"')}${plank(209, 366, 22, 6, "#8a5a32", r)}
+      <path d="M213 378 Q212 390 214 398" stroke="#fff3d0" stroke-width="1.2" fill="none" opacity=".6"/>`}
+    ${st.memories != null ? tag(220, 420, `Memories ${st.memories}`, 66) : ""}</g>`;
+  const stripe = (k) => { const x = 282 + k * 19.3; return shape(curve([[x, 312], [x + 19.3, 312], [x + 19.3, 328], [x + 9.6, 334], [x, 328]]), k % 2 ? "#f1e4c4" : "#c8553d", k % 2 ? "#a08a60" : "#5a1e14", [-.6, .6]); };
+  const stall = `<g data-tap="market"><rect x="278" y="282" width="122" height="124" fill="transparent"/>
+    ${shape(limb(288, 404, 287, 360, 288, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}${shape(limb(388, 404, 389, 360, 388, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}
+    ${st.stall && st.metPuddock && st.puddockSvg && !st.packed ? `<svg x="306" y="312" width="64" height="64" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg>` : ""}
+    ${[0, 1, 2, 3, 4, 5].map(stripe).join("")}${plank(300, 298, 76, 13, "#8a5a32", r)}
+    <text x="338" y="307.4" font-size="8" text-anchor="middle" fill="#fff1d0" font-family="Fredoka, sans-serif" font-weight="600">${st.packed ? "Back soon (probably)" : "Puddock's"}</text>
+    ${plank(282, 366, 112, 9, "#8a5a32", r)}${plank(286, 375, 104, 26, "#6b4a2a", r)}
+    <path d="M292 381 H384 M292 389 H384" stroke="#4a3220" stroke-width=".8" opacity=".6"/>
+    <g transform="translate(290 350) scale(.7)">${ICONS.jar}</g>${shard(352, 367, 5, 11, .2, "#9b7cf2", r)}${shard(360, 367, 4, 8, -.3, "#5fa99b", r)}
+    <path d="M394 326 Q395 332 394 336" stroke="#4a3a2a" stroke-width=".9" fill="none"/>${shape(curve([[390.6, 336], [397.4, 336], [397.8, 345], [390.2, 345]]), "#f7d77a", "#6a4a24", [-.5, .5])}
+    <circle cx="394" cy="341" r="14" fill="url(#lanternGlow)"/>
+    ${st.metPuddock ? "" : tag(338, 290, "Market?", 50)}</g>`;
+  const OFF = 250, H2 = 730;
+  const bough = (x, y, dir, len) => { let o = shape(limb(x, y, x + dir * len * .5, y + len * .12, x + dir * len, y + len * .3, 5, 1), "#07130c", "#07130c", [0, 0]);
+    for (let k = 1; k < 9; k++) { const t = k / 9, px = x + dir * len * t, py = y + len * .3 * t * t; o += stroke(px, py, Math.PI / 2 + dir * .5, 22 * (1 - t * .5), 3.4 * (1 - t * .4), "#07130c") + stroke(px, py, Math.PI / 2 - dir * .2, 16 * (1 - t * .5), 3 * (1 - t * .4), "#091710"); }
+    return o; };
+  const tall = (st.site || "stump") === "stump" ? `${[[24, 340], [96, 300], [312, 290], [384, 350], [200, 250]].map(([x, h]) => paintPine(x, 520, h, "#10241a", null, r)).join("")}${bough(-10, 8, 1, 150)}${bough(410, 30, -1, 130)}`
+    : st.site === "underroot" ? [[30, 14, 210], [92, 8, 120], [170, 10, 170], [260, 6, 140], [330, 12, 230], [384, 4, 150]].map(([x, w, h]) => shape(limb(x, -10, x + 10, h * .5, x - 6, h, w, 1.5), "#1a110a", "#0c0704", [-1, 1])).join("")
+    : `<path d="${curve([[-10, 0], [70, 0], [96, 140], [60, 300], [80, 480], [-10, 520]])}" fill="#15151d"/><path d="${curve([[410, 0], [330, 0], [300, 160], [340, 320], [320, 500], [410, 520]])}" fill="#15151d"/>`;
+  return `<svg class="campArt" viewBox="0 0 ${W} ${H2}" preserveAspectRatio="xMidYMax meet" aria-label="Dibble's camp">
     <defs><linearGradient id="campSky" x1="0" y1="0" x2="0" y2="1">${S.sky.map((c, k) => `<stop offset="${[0, .6, 1][k]}" stop-color="${c}"/>`).join("")}</linearGradient>
       <radialGradient id="fireLight" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb15a" stop-opacity=".42"/><stop offset=".5" stop-color="#ff8a3d" stop-opacity=".12"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/></radialGradient>
       <radialGradient id="lanternGlow"><stop offset="0" stop-color="#ffd27a" stop-opacity=".55"/><stop offset="1" stop-color="#f0b543" stop-opacity="0"/></radialGradient>
       <radialGradient id="moonGlow"><stop offset="0" stop-color="#fff6d8" stop-opacity=".5"/><stop offset="1" stop-color="#fff6d8" stop-opacity="0"/></radialGradient>
       <filter id="campBlur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
       <filter id="campBlur1" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.4"/></filter></defs>
-    <rect width="${W}" height="${H}" fill="url(#campSky)"/>
-    <g data-depth=".15">${S.far}</g>
+    <rect x="-300" y="-900" width="1000" height="${H2 + 1200}" fill="${S.sky[0]}"/>
+    <rect width="${W}" height="${H2}" fill="url(#campSky)"/>
+    <g transform="translate(0 40)"><g data-depth=".15">${S.far}</g></g>
+    <g data-depth=".22">${tall}</g>
+    <g transform="translate(0 ${OFF})">
     <g data-depth=".3">${S.mid}</g>
     <g data-depth=".5">${S.near}
       <path d="M${sagX(0)} ${sagY(0)} ${[...Array(29)].map((_, k) => `L${sagX((k + 1) / 29)} ${sagY((k + 1) / 29)}`).join(" ")}" stroke="#5a4a3a" stroke-width="1.3" fill="none"/>${lanterns}</g>
@@ -445,6 +497,9 @@ export function camp(st, gemFn, dibbleSvg) {
       <defs><linearGradient id="campGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${S.ground[0]}"/><stop offset="1" stop-color="${S.ground[1]}"/></linearGradient>
         <radialGradient id="campVig" cx=".5" cy=".55" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></radialGradient></defs>
       <path d="${curve([[-10, 196], [60, 182], [140, 176], [220, 172], [300, 178], [410, 192], [410, 310], [-10, 310]])}" fill="url(#campGround)"/>
+      <path d="${curve([[-10, 296], [120, 302], [280, 298], [410, 294], [410, 490], [-10, 490]])}" fill="${S.ground[1]}"/>
+      <path d="${curve(ring(200, 400, 200, 34, 16, .1, 13))}" fill="${S.ground[2]}" opacity=".35" filter="url(#campBlur)"/>
+      ${[[20, 420], [90, 430], [170, 414], [250, 428], [300, 440], [370, 424], [130, 452], [230, 456]].map(([x, y]) => stroke(x, y, -1.4 - r() * .4, 6 + r() * 4, 1.4, r() < .5 ? "#3f7348" : "#4f8a54", .7)).join("")}
       <path d="${curve(ring(200, 254, 190, 40, 16, .08, 9))}" fill="${S.ground[2]}" opacity=".6" filter="url(#campBlur)"/>
       ${[[60, 260], [120, 282], [250, 276], [330, 268], [160, 292], [290, 290], [30, 286], [370, 284]].map(([x, y]) => stroke(x, y, -1.4 - r() * .4, 6 + r() * 4, 1.4, r() < .5 ? "#3f7348" : "#4f8a54", .7)).join("")}
       <ellipse cx="183" cy="246" rx="120" ry="58" fill="url(#fireLight)"><animate attributeName="rx" values="112;128;116;112" dur="1.3s" repeatCount="indefinite"/></ellipse>
@@ -453,18 +508,19 @@ export function camp(st, gemFn, dibbleSvg) {
       ${d.hammock ? `${shape(limb(380, 262, 381, 214, 380, 168, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}${shape(limb(300, 262, 299, 224, 300, 186, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}<path d="M300 194 Q340 226 380 176" stroke="#e8d6aa" stroke-width="5.5" fill="none"/><path d="M302 196 Q340 222 378 179" stroke="#b8a678" stroke-width="1" fill="none" opacity=".6"/>` : ""}
       ${plank(306, 230, 76, 7, "#5a3b24", r)}${shape(limb(310, 237, 306, 246, 303, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${shape(limb(378, 237, 382, 246, 385, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${picks}
       ${st.lens ? `<g transform="translate(330 214) scale(.9)">${ICONS.lens}</g>` : ""}${st.tongs ? `<g transform="translate(352 212) scale(.9)">${ICONS.tongs}</g>` : ""}${st.sieve ? `<g transform="translate(98 156) scale(.9)">${ICONS.sieve}</g>` : ""}
-      ${fire}${sign}
+      ${fire}<g data-tap="mines"><rect x="-10" y="146" width="78" height="122" fill="transparent"/>${sign}</g>
       ${d.mushrooms ? [[106, 268, 8], [120, 273, 6], [94, 276, 5]].map(([x, y, s]) => `<path d="${curve(ring(x, y + s * .3, s * .2, s * .6, 6, .1, x))}" fill="#e2d8f0"/>
         ${shape(curve([[x - s, y - .5], [x - s * .5, y - s * 1.1], [x + s * .4, y - s * 1.15], [x + s, y - .6], [x, y - s * .3]]), "#9b7cf2", "#3a2458", [-.6, .6])}
         <circle cx="${x}" cy="${y - s * .6}" r="${s * 1.6}" fill="#9b7cf2" opacity=".2"><animate attributeName="opacity" values=".1;.3;.1" dur="${2.4 + s * .1}s" repeatCount="indefinite"/></circle>`).join("") : ""}
       ${d.jars ? `${plank(238, 246, 26, 12, "#6b4a2a", r)}<g transform="translate(236 222) scale(1)">${ICONS.jar}</g><g transform="translate(252 226) scale(.8)">${ICONS.jar}</g>` : ""}
-      ${grannyAt}${puddockAt}${packed}${d.cart && !st.packed ? `<g transform="translate(270 240) scale(1.8)">${ICONS.cart}</g>${st.puddockSvg ? `<g data-tap="puddock"><svg x="252" y="208" width="42" height="42" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}` : ""}
+      ${grannyAt}${puddockAt}${packed}${d.cart && !st.packed ? `<g transform="translate(270 240) scale(1.8)">${ICONS.cart}</g>${st.puddockSvg && !st.stall ? `<g data-tap="puddock"><svg x="252" y="208" width="42" height="42" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}` : ""}
+      ${st.hub ? rack + board + keep + stall + tag(26, 156, "Mines", 40) : ""}
       <g data-tap="dibble" class="campDibble"><svg x="190" y="196" width="68" height="68" viewBox="0 0 100 100">${strip(dibbleSvg)}</svg></g>
       ${flies}
     </g>
     <path d="${curve(ring(200, 286, 230, 18, 14, .1, 11))}" fill="#cfe0d0" opacity=".06" filter="url(#campBlur)"/>
-    <g data-depth="1.1" filter="url(#campBlur1)">${fern(-6, 304, -1.1, 90, "#07130c")}${fern(20, 310, -1.45, 70, "#0a1a10")}${fern(406, 304, -2.05, 90, "#07130c")}${fern(382, 310, -1.7, 66, "#0a1a10")}</g>
-  <rect width="${W}" height="${H}" fill="url(#campVig)" pointer-events="none"/>
+    <g data-depth="1.1" filter="url(#campBlur1)">${fern(-6, 484, -1.1, 80, "#07130c")}${fern(406, 484, -2.05, 80, "#07130c")}</g>
+    </g>
   </svg>`;
 }
 
