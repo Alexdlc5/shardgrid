@@ -479,9 +479,10 @@ export function camp(st, gemFn, dibbleSvg) {
       <path d="${curve([[40, 180], [88, 141], [88, 177]])}" fill="#ffffff" opacity=".3"/><path d="M54 180 Q88 150 122 180" stroke="#f0b543" stroke-width="1.6" fill="none"/>
       <circle cx="88" cy="196" r="20" fill="#9fe6ff" opacity=".15"><animate attributeName="opacity" values=".08;.22;.08" dur="3s" repeatCount="indefinite"/></circle>${plank(70, 218, 36, 18, "#5a3b24", r)}`,
   }[st.tent] || "";
-  const PT = place(88, 238, 156, yM - 2 * kf, (st.tent === "treehouse" ? 1.05 : 1.45) * kf), tentTop = { treehouse: 86, pavilion: 140 }[st.tent] || 156; // the tall treehouse is drawn smaller so it never hides the stump
+  const kT = (st.tent === "treehouse" ? 1.05 : 1.45) * kf, PT = place(88, 238, 156, yM - 2 * kf, kT), tentTop = { treehouse: 86, pavilion: 140 }[st.tent] || 156; // the tall treehouse is drawn smaller so it never hides the stump
+  const PFl = place(140, 262, 206, PT.y(262), kT); // the banner pole stands at the tent's corner, clear of the fire
   const tent = `<g data-tap="tent">${hit(PT, 44, tentTop, 132, 240)}${PT.g(`${tents}${st.sieve ? `<g transform="translate(98 156) scale(.9)">${ICONS.sieve}</g>` : ""}`)}</g>
-    <g data-tap="flag">${hit(PT, 132, 148, 174, 262)}${PT.g(`${shape(limb(140, 262, 139, 206, 140, 150, 1.4, 1.1), "#6b4a2a", "#2e1e12", [-.6, .5])}
+    <g data-tap="flag">${hit(PFl, 132, 148, 174, 262)}${PFl.g(`${shape(limb(140, 262, 139, 206, 140, 150, 1.4, 1.1), "#6b4a2a", "#2e1e12", [-.6, .5])}
       <path fill="${st.banner}" stroke="${mix(st.banner, "#1a0f08", .5)}" stroke-width=".8" d="M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z">
       <animate attributeName="d" values="M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z;M141 152 Q156 157 170 151 L163 162 L170 171 Q156 177 141 172 Z;M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z" dur="2.8s" repeatCount="indefinite"/></path>`)}</g>
     ${d.mushrooms ? PT.g([[106, 268, 8], [120, 273, 6], [94, 276, 5]].map(([x, y, sz]) => `<path d="${curve(ring(x, y + sz * .3, sz * .2, sz * .6, 6, .1, x))}" fill="#e2d8f0"/>
