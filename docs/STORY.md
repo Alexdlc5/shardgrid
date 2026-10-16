@@ -2,7 +2,7 @@
 
 *Agreed with the owner 2026-10-15. Supersedes the three-sentence story in DESIGN.md. Every line here is meant to be placed in the game; nothing needs a wall of text to work.*
 
-Names checked by web search 2026-10-15 (no existing game, book or brand found): Glimmeroak, Lantern Moles, Granny Burr, Pale Bidder, Amber Memories, Underroot, Cinderthread Run, Undermoon, Scalefall Roost, Moonloom, Wickhold, Skywell, Wickway. Avoided: "Hollow Moon" (several novels and games), "Moth Moon" (an itch.io game). **Before launch:** run Glimmerwood and Glimmeroak through a USPTO trademark search in classes 9 and 41.
+Names checked by web search 2026-10-15 (no existing game, book or brand found): Glimmeroak, Lantern Moles, Granny Burr, Pale Bidder, Amber Memories, Underroot, Cinderthread Run, Undermoon, Scalefall Roost, Moonloom, Wickhold, Skywell, Wickway. Avoided: "Hollow Moon" (several novels and games), "Moth Moon" (an itch.io game). **Trademark check (2026-10-16):** USPTO clear for both, but an iOS game "Glimmerwood: Potion Sort" launched 2026-10-13; see [SETUP.md A13](SETUP.md#a13-trademark-check-5-minutes).
 
 ## How the story is told
 

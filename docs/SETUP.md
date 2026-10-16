@@ -1,6 +1,6 @@
 # Glimmerwood: everything you set up, step by step
 
-*Updated 2026-10-15. **Launch order: Apple App Store first, Google Play second.** The game is one web codebase
+*Updated 2026-10-16. **Launch order: Apple App Store first, Google Play second.** The game is one web codebase
 wrapped with Capacitor: `ios/` and `android/` are both in the repo, so adding Android later is a build away.
 Ads = Google AdMob, purchases = RevenueCat, stats/crashes/remote tuning = Firebase.*
 *Menus on these sites move around; if a label differs slightly, look for the nearest match.*
@@ -17,11 +17,11 @@ Ads = Google AdMob, purchases = RevenueCat, stats/crashes/remote tuning = Fireba
 | ⬜ | A4–A6. CI key + GitHub secrets | minutes | after A1 |
 | ⬜ | A7. First TestFlight build on your iPhone | ~30 min | after A6 |
 | ⬜ | A8. AdMob (iOS app) | 1–3 days review | start today |
-| ⬜ | A9. Firebase (iOS app) | minutes | any time |
+| ⬜ | A9. Firebase (iOS app) | minutes | any time (code side ready) |
 | ⬜ | A10. "Remove ads" product + sandbox tester | ~1 day | after A2 |
 | ⬜ | A11. RevenueCat (iOS) | minutes | after A10 |
 | ⬜ | A12. App Store listing, privacy labels, review | 1–2 days review | at launch |
-| ⬜ | A13. Trademark check | 5 min | any time |
+| ⚠️ | A13. Trademark check | — | **name decision needed:** an iOS game "Glimmerwood: Potion Sort" launched 2026-10-13 |
 | ⬜ | B. Google Play (later) | 14+ days of testing | after iOS launch |
 
 You need **an iPhone** (iOS 15 or newer) to play the TestFlight builds. You **don't** need a Mac: GitHub's Macs build and upload the app.
@@ -58,6 +58,7 @@ Everything else Claude asks for (ad IDs, SDK keys, the Firebase file) ships insi
    - Platform **iOS** · Name **Glimmerwood** · Language **English (U.S.)**
    - Bundle ID: pick `io.github.alexdlc5.glimmerwood` · SKU `glimmerwood-ios` · User access **Full Access** → **Create**.
    - If "Glimmerwood" is taken on the App Store, use **Glimmerwood: Crystal Puzzle** and tell Claude.
+     *First read A13: another "Glimmerwood" puzzle game is already on the App Store, so the name itself may change.*
 
 **Send Claude:** the exact app name you got.
 
@@ -120,7 +121,21 @@ Apple has **no 12-testers-for-14-days rule**. Internal testers (up to 100 people
 2. **Add app** → **iOS** → Apple bundle ID **`io.github.alexdlc5.glimmerwood`** → nickname `Glimmerwood iOS` → App Store ID: leave blank → **Register** → **Download GoogleService-Info.plist** → skip the rest.
 3. **Crashlytics → Get started.** **Remote Config → Create configuration** (leave empty).
 
-**Send Claude:** the **GoogleService-Info.plist** file.
+**Send Claude:** the **GoogleService-Info.plist** file. It is not a secret (it ships inside the app), but keep it out of
+public chats anyway; Claude commits it to `ios/App/App/` because the TestFlight build needs it.
+
+*Already in the code (no keys needed):* `proto/platform.js` sends its events (`ad_shown`, `reward_offer_taken`, `iap_success`, …)
+to Firebase Analytics, and reads the interstitial pacing from Remote Config once the plugin is installed.
+Until then the game behaves exactly as now.
+
+*What Claude does when the plist arrives* (not before: the Firebase SDK stops the app at launch without it):
+1. `npm i @capacitor-firebase/analytics @capacitor-firebase/crashlytics @capacitor-firebase/remote-config` → `npx cap sync ios`.
+2. Adds the plist to the Xcode target, sets the Crashlytics dSYM upload in the `ios` workflow, and checks a TestFlight build.
+3. Updates the App Privacy answers (A12): Firebase adds *Usage data* and *Diagnostics*.
+
+*Optional, after that build:* in **Remote Config** add any of these number parameters to retune ads without an update
+(leave one out to keep the default): `ad_grace` (default 3 expeditions with no interstitial), `ad_every_n` (2),
+`ad_gap_s` (90 seconds). The level timer stays in `sim/generator.json`, because the CI sim gate tests it.
 
 ## A10. "Remove ads" product and a sandbox tester (after A2 is Active)
 
@@ -152,6 +167,40 @@ Claude prepares the text and pictures; you paste them in and press submit.
 ## A13. Trademark check (5 minutes)
 
 **tmsearch.uspto.gov** → search **GLIMMERWOOD** and **GLIMMER WOOD** → look for live marks in class **9** (software/games) and **41** (entertainment). **Send Claude:** "clear", or what you found.
+
+### Findings, checked by Claude on 2026-10-16
+
+*This is a desk search, not legal advice and not a clearance opinion. Common-law (unregistered) rights and
+foreign marks are not fully covered. Before spending on a filing or a launch push, a trademark attorney should confirm.*
+
+**USPTO (tmsearch.uspto.gov, searched 2026-10-16):**
+- **GLIMMERWOOD**: one record, serial 86624886 / reg. 4870590, class **25 (clothing)**, owner an individual in
+  Camarillo, CA. **Dead:** cancelled 2026-06-26 because no Section 8 declaration was filed. Not a game mark, and no longer live.
+- **GLIMMER WOOD**, **GLIMMEROAK**, **GLIMMER OAK** (as one phrase): **no records**.
+- Live **GLIMMER…** marks near games (filter: live, classes 9 and 41; 38 hits). None contains "wood" or "oak". The closest:
+  **GLIMMER STUDIOS**, serial 97637759, class 9 *downloadable video game programs* (Glimmer Studios, LLC, Florida), and
+  **GLIMMER STUDIOS**, serial 98160838, classes 35/41/42 (Glimmer Technologies Inc.). Also **GLIMMER**, serial 97903141 (music, classes 9/41),
+  **MUSE GLIMMER**, serial 50039313 (Meta, pending), **GLIMMERHOLD**, serial 90893132 (game retail, class 35).
+  "Glimmer" is a crowded word, so each mark is narrow; a two-part coined name like Glimmerwood is less likely to clash with them.
+
+**App stores (searched 2026-10-16):**
+- ⚠️ **"Glimmerwood: Potion Sort"** by Efe GEREK, US App Store, **released 2026-10-13**: a free, 4+, *"cozy color sorting puzzle"*
+  set in "Glimmerwood", with forest friends and a moth named Wick. [App Store](https://apps.apple.com/us/app/glimmerwood-potion-sort/id6818744035)
+  (bundle `com.efegerek.Glimmerwood`, terms at efegerek.com/en/apps/glimmerwood/). No USPTO filing yet, but using the name
+  in commerce can give them common-law rights, and it is the **same name, same store, same genre, and nearly the same pitch** as ours.
+- Also on the App Store: "Glimmerwing: Night Garden" (casual, 2026-08). It is a different name, so not a conflict.
+- **"Glimmeroak"**: nothing on the App Store or Google Play. **"Glimmerwood"** on Google Play: nothing (2026-10-16).
+
+**Web (2026-10-16):** no game, book or brand named Glimmerwood or Glimmeroak found beyond the above. Similar names (not conflicts):
+*Songs of Glimmerwick* (Eastshade Studios RPG), *Gloomwood* (New Blood stealth game), *The Glimmering Woods* and *Glimmershade* (itch.io).
+
+**Verdict:** the USPTO register is clear, but the App Store is not. **Glimmeroak looks clear.** **Glimmerwood** now collides with a
+live game in the same niche. Apple may also refuse the bare name "Glimmerwood" if it is close to an existing listing.
+
+**Owner decision (send Claude one of these):**
+1. **Rename** before the App Store record (A3). This is the cheapest moment: only the title, the store text and the in-game logo change, and the bundle ID
+   `io.github.alexdlc5.glimmerwood` can stay. Glimmeroak-based names look clear, but Claude should run them through this same check before you commit.
+2. **Keep Glimmerwood** with a subtitle (e.g. "Glimmerwood: Crystal Mines"). Ask a trademark attorney first: the other game shipped first.
 
 ---
 
