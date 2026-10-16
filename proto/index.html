@@ -8,7 +8,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root { --forest: #0f2219; --forest2: #1d3b2a; --text: #efe6cf; --muted: #a9b79a; --amber: #f0b543;
-    --red: #d6453d; --card: rgba(16, 32, 23, .92); --line: rgba(239, 230, 207, .14); }
+    --red: #d6453d; --card: rgba(16, 32, 23, .92); --line: rgba(239, 230, 207, .14);
+    /* type scale: every sheet and menu uses these four sizes (nothing under 13px) */
+    --fs-title: 26px; --fs-head: 18px; --fs-body: 16px; --fs-small: 14px; --adH: 0px; }
+  .hasAd { --adH: var(--ad); }
   html, body { margin: 0; height: 100%; overflow: hidden; touch-action: none; user-select: none; color: var(--text);
     font: 16px/1.3 Fredoka, system-ui, sans-serif;
     background: radial-gradient(120% 70% at 50% 0%, #2b5a3c 0%, var(--forest2) 45%, var(--forest) 100%); }
@@ -29,30 +32,24 @@
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px 22px 18px;
     width: min(440px, calc(100vw - 24px)); max-height: calc(100vh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; box-sizing: border-box; }
   h1 { margin: 0; font-size: 40px; line-height: 1; color: var(--amber); letter-spacing: .5px; }
-  h2 { margin: 0 0 6px; font-size: 22px; }
+  h2 { margin: 0 0 6px; font-size: var(--fs-title); line-height: 1.15; }
   .tag { color: var(--muted); margin: 6px 0 14px; }
   .gold { font-weight: 700; color: var(--amber); }
   button { display: block; width: 100%; margin-top: 10px; padding: 12px; border: 0; border-radius: 12px; cursor: pointer;
-    font: inherit; font-weight: 700; font-size: 17px; background: var(--amber); color: #2a1d06; }
-  button.alt { background: transparent; color: var(--text); border: 1px solid var(--line); }
-  button.ad { background: #7cc46a; color: #10240f; }
+    font: inherit; font-weight: 700; font-size: var(--fs-head); background: var(--amber); color: #2a1d06; min-height: 44px; }
   button:disabled { opacity: .4; cursor: default; }
   .row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
   .row:last-child { border-bottom: 0; }
   .row .grow { flex: 1; }
-  .row small { display: block; color: var(--muted); font-size: 13px; }
-  .row button { width: auto; margin: 0; padding: 8px 12px; font-size: 15px; white-space: nowrap; }
+  .row small { display: block; color: var(--muted); font-size: var(--fs-small); }
+  .row button { width: auto; margin: 0; padding: 8px 12px; font-size: var(--fs-body); white-space: nowrap; }
   .mine { border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; margin-top: 8px; cursor: pointer; }
   .mine.sel { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
   .mine.locked { opacity: .5; cursor: default; }
-  .note { font-size: 12px; color: var(--muted); margin-top: 10px; text-align: center; }
+  .note { font-size: var(--fs-small); color: var(--muted); margin-top: 10px; text-align: center; }
   .seg { display: flex; gap: 6px; margin-top: 12px; }
-  .seg button { margin: 0; padding: 9px 6px; font-size: 14px; background: transparent; color: var(--text); border: 1px solid var(--line); }
-  .seg button.on { background: var(--amber); color: #2a1d06; border-color: var(--amber); }
-  .seg small { display: block; font-weight: 400; font-size: 11px; opacity: .8; }
-  .opts { display: flex; gap: 6px; margin-top: 10px; }
-  .opts button { margin: 0; padding: 7px; font-size: 13px; font-weight: 600; background: transparent; color: var(--muted); border: 1px solid var(--line); }
-  .opts button.on { color: var(--text); border-color: var(--muted); }
+  .seg button { margin: 0; padding: 8px 6px; font-size: var(--fs-body); }
+  .seg small { display: block; font-weight: 400; font-size: var(--fs-small); opacity: .85; }
   .puddock { font-style: italic; color: var(--muted); margin: 8px 0 2px; }
   .ico { display: inline-block; vertical-align: middle; flex: none; }
   .shimmer { animation: shimmer 3.2s ease-in-out infinite; }
@@ -64,43 +61,49 @@
   .hero .dibble { animation: bob 3s ease-in-out infinite; }
   @keyframes bob { 50% { transform: translateY(-4px) rotate(-2deg); } }
   .pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(240,181,67,.12); border: 1px solid rgba(240,181,67,.35);
-    border-radius: 999px; padding: 4px 12px 4px 6px; font-weight: 700; color: var(--amber); font-size: 18px; }
+    border-radius: 999px; padding: 4px 12px 4px 6px; font-weight: 700; color: var(--amber); font-size: var(--fs-head); }
   .seg button { display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .mine { display: flex; gap: 10px; align-items: center; position: relative; }
   .mine .scene { flex: none; border-radius: 10px; }
   .mine .info { flex: 1; min-width: 0; }
   .mine .gems { display: flex; gap: 2px; margin-top: 4px; }
   .mine .lockTag { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column;
-    align-items: center; gap: 2px; font-size: 12px; font-weight: 700; color: var(--text); text-shadow: 0 1px 3px #000; }
+    align-items: center; gap: 2px; font-size: var(--fs-small); font-weight: 700; color: var(--text); text-shadow: 0 1px 3px #000; }
   .mine.locked { opacity: .75; } .mine.locked .scene { filter: grayscale(.8) brightness(.6); }
   button .ico { margin: -4px 6px -4px 0; }
   .btnrow { display: flex; align-items: center; justify-content: center; }
   .streak { display: flex; gap: 4px; justify-content: center; margin-top: 6px; }
   .streak i { width: 10px; height: 10px; border-radius: 50%; background: rgba(239,230,207,.15); }
   .streak i.on { background: #7cc46a; box-shadow: 0 0 6px #7cc46a; }
-  .opts button { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; }
-  .shopItem { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
-  .shopItem:last-child { border-bottom: 0; }
-  .tile { width: 48px; height: 48px; border-radius: 12px; background: rgba(239,230,207,.07); display: grid; place-items: center; flex: none; }
+  .shopItem { display: flex; gap: 10px; align-items: center; }
+  .tile { width: 48px; height: 48px; display: grid; place-items: center; flex: none; }
   .shopItem .grow { flex: 1; min-width: 0; }
-  .shopItem small { display: block; color: var(--muted); font-size: 12.5px; }
+  .shopItem b { display: block; font-size: var(--fs-body); line-height: 1.2; }
+  .shopItem small { display: block; color: var(--muted); font-size: var(--fs-small); line-height: 1.25; }
+  .shopItem small.need { color: #ffb08a !important; }
   .pips { display: flex; gap: 3px; margin-top: 5px; }
   .pips i { width: 9px; height: 5px; border-radius: 3px; background: rgba(239,230,207,.15); }
   .pips i.on { background: var(--amber); }
-  .shopItem button { width: auto; margin: 0; padding: 7px 10px; font-size: 15px; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+  .shopItem button { width: auto; margin: 0; padding: 7px 10px; font-size: var(--fs-body); white-space: nowrap; display: flex; align-items: center; gap: 4px; flex: none; }
   .shopItem button .ico { margin: 0; }
   .speech { display: flex; gap: 8px; align-items: center; margin: 4px 0 8px; }
   .bubble { position: relative; background: rgba(239,230,207,.1); border-radius: 12px; padding: 8px 10px; font-style: italic;
-    color: var(--text); font-size: 14px; }
+    color: var(--text); font-size: var(--fs-body); }
   .bubble::before { content: ""; position: absolute; left: -6px; top: 50%; margin-top: -6px; border: 6px solid transparent;
     border-right-color: rgba(239,230,207,.1); border-left: 0; }
-  .causeIco { display: flex; justify-content: center; margin-bottom: 4px; }
-  .haulGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin: 10px 0 4px; }
-  .haulTile { background: rgba(239,230,207,.06); border-radius: 12px; padding: 8px 6px; text-align: center; }
-  .haulTile b { display: block; font-size: 18px; } .haulTile small { display: block; color: var(--muted); font-size: 11.5px; }
+  .haulList { margin: 6px 0 2px; }
+  .haulRow { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: var(--fs-body); opacity: 0; transform: translateX(-10px); }
+  .haulRow.in { opacity: 1; transform: none; transition: opacity .2s, transform .3s cubic-bezier(.34,1.56,.64,1); }
+  .haulRow .n { width: 30px; font-weight: 700; } .haulRow .nm { flex: 1; min-width: 0; line-height: 1.15; }
+  .haulRow .nm small { display: block; font-size: var(--fs-small); }
+  .haulRow .v { font-weight: 700; min-width: 54px; text-align: right; }
+  .haulRow .newTag { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; background: #c8553d; color: #fff3dc; font-size: var(--fs-small); font-weight: 700; font-style: normal; }
   .total .gold { display: flex; align-items: center; gap: 6px; }
   .hud b { display: flex; align-items: center; gap: 6px; }
-  .total { display: flex; justify-content: space-between; font-size: 20px; font-weight: 700; margin-top: 10px; }
+  .total { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-head); font-weight: 700; margin-top: 10px; }
+  .total .gold { font-size: var(--fs-title); }
+  .total.land { animation: pop .35s ease-out; }
+
   /* ===== world: forest, mine entrance, fireflies ===== */
   #world { position: fixed; inset: 0; pointer-events: none; transition: opacity .6s, filter .6s; }
   body.playing #world { opacity: .16; filter: blur(2px); }
@@ -116,7 +119,8 @@
     background: repeating-linear-gradient(160deg, #9a7a4a 0 4px, #6b5030 4px 8px); }
   .hang .rope.l { left: 34px; } .hang .rope.r { right: 34px; }
   .hang .vineTrim { position: absolute; top: -9px; left: 8px; right: 8px; width: calc(100% - 16px); z-index: 2; pointer-events: none; }
-  .card { width: 100%; max-height: none; overflow: visible; color: #f6ead0; padding: 26px 20px 18px;
+  .card { width: 100%; overflow: visible; color: #f6ead0; padding: 24px 18px 16px;
+    display: flex; flex-direction: column; max-height: calc(100dvh - env(safe-area-inset-top, 0px) - max(28px, 4vh) - env(safe-area-inset-bottom, 0px) - var(--adH) - 26px);
     background:
       repeating-linear-gradient(180deg, transparent 0 62px, rgba(0,0,0,.22) 62px 64px),
       repeating-linear-gradient(178deg, rgba(0,0,0,.05) 0 2px, transparent 2px 9px),
@@ -125,20 +129,26 @@
     box-shadow: 0 14px 34px rgba(0,0,0,.55), inset 0 2px 0 rgba(255,220,170,.18), inset 0 -4px 0 rgba(0,0,0,.25); }
   .card .tag, .card .note, .card small { color: #d9c49c !important; }
   h1, h2 { color: #ffd27a; text-shadow: 0 2px 0 #5a3410, 0 0 18px rgba(240,181,67,.3); }
-  /* carved recesses for anything inside a board */
-  .mine, .shopItem, .seg button, .opts button, .tile {
-    background: rgba(30, 16, 6, .38) !important; border: 1px solid rgba(0,0,0,.4) !important; color: #f6ead0;
-    box-shadow: inset 0 2px 5px rgba(0,0,0,.4), 0 1px 0 rgba(255,220,170,.1); }
-  .shopItem { border-radius: 12px; padding: 8px 10px; margin-top: 8px; }
-  /* buttons: lantern glass, wood plank, moss */
-  button { border: 2px solid #8a5a1a; background: linear-gradient(180deg, #ffd98a, #e8a52f); color: #3a2208;
-    box-shadow: 0 4px 0 #7a4a12, inset 0 1px 0 rgba(255,255,255,.55); text-shadow: 0 1px 0 rgba(255,255,255,.35); transition: transform .06s, box-shadow .06s; }
-  button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #7a4a12, inset 0 1px 0 rgba(255,255,255,.55); }
-  button.alt { background: linear-gradient(180deg, #84593a, #613f25); color: #f6ead0; border: 2px solid #2b1a0e;
-    box-shadow: 0 4px 0 #2b1a0e, inset 0 1px 0 rgba(255,220,170,.2); text-shadow: 0 1px 0 #2b1a0e; }
-  button.ad { background: linear-gradient(180deg, #a6e692, #5fa04e); border-color: #2f5a2a; color: #10240f; box-shadow: 0 4px 0 #2f5a2a, inset 0 1px 0 rgba(255,255,255,.5); }
-  .seg button.on { background: linear-gradient(180deg, #ffd98a, #e8a52f) !important; color: #3a2208; border-color: #8a5a1a !important; }
-  .opts button { color: #bfa77c; } .opts button.on { color: #f6ead0; }
+  /* one sheet layout: header (title + close), a body that scrolls inside the board, a footer for the main buttons */
+  .sheetHead { display: flex; align-items: center; gap: 10px; flex: none; margin-bottom: 6px; }
+  .sheetHead h2 { flex: 1; min-width: 0; margin: 0; }
+  .sheetHead .xBtn { margin: -6px -6px 0 0; }
+  .sheetBody { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; margin: 0 -10px; padding: 2px 10px 6px;
+    scrollbar-width: thin; scrollbar-color: rgba(255,210,122,.3) transparent; }
+  .sheetFoot { flex: none; padding-top: 4px; }
+  .sheetBody > :first-child, .sheetFoot > :first-child { margin-top: 0; }
+  .xBtn { width: 44px; height: 44px; flex: none; margin: 0; padding: 0; display: grid; place-items: center; }
+  .xBtn svg { display: block; }
+  /* painted UI: planks, parchment and carved recesses are 9-slice SVGs painted with paint.js (uiSkins() sets --p-*) */
+  .mine, .shopItem, .iap, .gift {
+    border: 3px solid transparent; border-image: var(--p-recess) 18 fill / 14px stretch; background: none; box-shadow: none; color: #f6ead0; }
+  .shopItem { padding: 8px 8px 8px 6px; margin-top: 8px; }
+  button { border: 3px solid transparent; border-image: var(--p-amber) 18 fill / 15px stretch; background: none; box-shadow: none; color: #3a2208;
+    filter: drop-shadow(0 3px 0 rgba(48,24,6,.55)); text-shadow: 0 1px 0 rgba(255,240,200,.45); }
+  button.alt, .seg button, .tabs button, .chip, .optRow, .xBtn { border-image-source: var(--p-wood); color: #f6ead0; text-shadow: 0 1px 0 #2b1a0e; }
+  button.ad { border-image-source: var(--p-moss); color: #10240f; text-shadow: 0 1px 0 rgba(225,255,205,.45); }
+  .seg button.on, .tabs button.on, .chip.on { border-image-source: var(--p-amber); color: #3a2208; text-shadow: 0 1px 0 rgba(255,240,200,.45); }
+  button:disabled { opacity: .5; filter: saturate(.4); }
   .pill { background: linear-gradient(180deg, #4a2d18, #3a2212); border: 2px solid #8a5a2a; color: #ffd27a; box-shadow: inset 0 1px 0 rgba(255,220,170,.2); }
   /* mines: a scrolling row of postcards */
   #mines::-webkit-scrollbar { height: 6px; } #mines::-webkit-scrollbar-thumb { background: rgba(255,210,122,.35); border-radius: 3px; }
@@ -147,7 +157,10 @@
   .mine .scene { width: 100%; height: 84px; }
   .mine .lockTag { left: 50%; top: 50px; transform: translate(-50%, -50%); flex-direction: row; gap: 4px;
     background: rgba(20,10,4,.75); padding: 4px 8px; border-radius: 999px; }
-  .mine.sel { box-shadow: 0 0 0 2px #ffd27a, 0 0 14px rgba(240,181,67,.45) !important; }
+  .mine.sel { filter: drop-shadow(0 0 1.5px #ffd27a) drop-shadow(0 0 1.5px #ffd27a) drop-shadow(0 0 8px rgba(240,181,67,.6)); }
+  .mine[data-id]:not(.locked):active { transform: scale(.97); transition: transform .05s; }
+  .mine .info b { font-size: var(--fs-body); line-height: 1.2; }
+  .mine .info small { display: block; color: var(--muted); font-size: var(--fs-small); line-height: 1.25; margin-top: 2px; }
   .mine .gems { flex-wrap: wrap; }
   /* market stall: striped awning and paper price tags */
   .awning { position: absolute; top: -26px; left: -10px; right: -10px; height: 30px; z-index: 3; border-radius: 10px 10px 0 0;
@@ -156,20 +169,21 @@
     background: radial-gradient(circle at 13px 0, #c8553d 12px, transparent 12.5px) 0 0 / 52px 12px repeat-x,
                 radial-gradient(circle at 39px 0, #f1e4c4 12px, transparent 12.5px) 0 0 / 52px 12px repeat-x; }
   #market .card { padding-top: 34px; }
-  .shopItem button { background: linear-gradient(180deg, #f6ead0, #e2cf9f); color: #3a2410; border: 1px solid #a88a53;
-    border-radius: 4px 12px 12px 4px; box-shadow: 0 2px 0 #7a5f33; position: relative; padding-left: 16px; text-shadow: none; }
-  .shopItem button::before { content: ""; position: absolute; left: 5px; top: 50%; width: 5px; height: 5px; margin-top: -2.5px;
+  .shopItem button { border-image-source: var(--p-parch); color: #3a2410; position: relative; padding-left: 18px; text-shadow: none; }
+  .shopItem button::before { content: ""; position: absolute; left: 6px; top: 50%; width: 5px; height: 5px; margin-top: -2.5px;
     border-radius: 50%; background: #6b5030; }
+  .shopItem button .ico { margin: 0 -1px 0 0; }
+  .stamp { flex: none; padding: 4px 10px; border: 2px solid #8fd18b; border-radius: 8px; color: #b8f0a8; font-weight: 700; font-size: var(--fs-small);
+    letter-spacing: .5px; text-transform: uppercase; transform: rotate(-6deg); opacity: .9; }
   /* haul: Puddock's ledger on parchment */
-  .ledger { background: linear-gradient(180deg, #f3e6c4, #e4cf9e); color: #3a2410; border-radius: 6px; padding: 10px 12px 12px;
-    margin: 10px 0 8px; box-shadow: 0 3px 0 #a88a53, inset 0 0 22px rgba(140,100,40,.25); transform: rotate(-.6deg); }
-  .ledger h3 { margin: 0 0 4px; font-size: 15px; letter-spacing: .5px; color: #6b3f12; text-align: center; border-bottom: 1px dashed #a88a53; padding-bottom: 5px; }
-  .ledger .haulGrid { margin: 8px 0 2px; }
-  .ledger .haulTile { background: transparent; border: 1px dashed rgba(107,63,18,.3); }
-  .ledger .haulTile small { color: #6b5030 !important; }
+  .ledger { border: 4px solid transparent; border-image: var(--p-parch) 18 fill / 16px stretch; color: #3a2410; padding: 8px 10px 10px;
+    margin: 10px 0 8px; transform: rotate(-.6deg); }
+  .ledger h3 { margin: 0 0 4px; font-size: var(--fs-small); letter-spacing: .5px; color: #6b3f12; text-align: center; border-bottom: 1px dashed #a88a53; padding-bottom: 5px; }
+  .ledger .haulRow small { color: #6b5030 !important; }
   .ledger .total { color: #3a2410; border-top: 2px solid #6b3f12; padding-top: 6px; margin-top: 8px; }
   .ledger .total .gold { color: #9a5a10; }
-  .bubble { background: #f3e6c4; color: #3a2410; } .bubble::before { border-right-color: #f3e6c4; }
+  .bubble { background: none; border: 3px solid transparent; border-image: var(--p-parch) 18 fill / 14px stretch; border-radius: 0; color: #3a2410; }
+  .bubble::before { left: -9px; border-right-color: #f1e2bd; }
   /* in-game HUD: a small wooden tag */
   .hud > div:first-child { background: linear-gradient(180deg, #6e4a2c, #4f331d); border: 2px solid #2b1a0e; border-radius: 10px;
     padding: 2px 12px 4px; box-shadow: 0 3px 0 #2b1a0e; }
@@ -180,35 +194,34 @@
   #rescueOffer { align-items: center; padding-top: 0; z-index: 6; }
   .twoBtn { display: flex; gap: 8px; } .twoBtn button { flex: 1; }
   @property --a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
-  .mine.legend { border: 2px solid transparent !important;
+  .mine.legend { border: 2px solid transparent !important; border-image: none;
     background: linear-gradient(rgba(40,22,8,.92), rgba(40,22,8,.92)) padding-box,
                 conic-gradient(from var(--a), #fff6c8, #f0b543, #a8761a, #f0b543, #fff6c8) border-box !important;
     box-shadow: 0 0 16px rgba(240,181,67,.45) !important; animation: ring 4s linear infinite; }
   @keyframes ring { to { --a: 360deg; } }
   .mine.legend .info b { color: #ffd27a; }
-  .mine.teaser { cursor: default; opacity: .9; border-style: dashed !important; }
+  .mine.teaser { cursor: default; opacity: .9; }
   .trialTag { position: absolute; left: 50%; top: 50px; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 4px;
-    background: #f0b543; color: #3a2208; font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; box-shadow: 0 2px 0 #7a4a12; white-space: nowrap; }
-  .tabs { display: flex; gap: 6px; margin: 12px 0 2px; }
-  .tabs button { margin: 0; padding: 7px; font-size: 14px; background: linear-gradient(180deg, #84593a, #613f25); color: #f6ead0; border: 2px solid #2b1a0e; box-shadow: 0 3px 0 #2b1a0e; }
-  .tabs button.on { background: linear-gradient(180deg, #ffd98a, #e8a52f); color: #3a2208; border-color: #8a5a1a; box-shadow: 0 3px 0 #7a4a12; }
+    background: #f0b543; color: #3a2208; font-size: var(--fs-small); font-weight: 700; padding: 3px 8px; border-radius: 999px; box-shadow: 0 2px 0 #7a4a12; white-space: nowrap; }
+  .tabs { display: flex; gap: 4px; margin: 12px 0 2px; }
+  .tabs button { margin: 0; padding: 6px 2px; font-size: var(--fs-small); }
   .talkArt { display: flex; justify-content: center; margin-top: -4px; }
   .talkArt .puddock { animation: bob 2.6s ease-in-out infinite; }
-  .talkBubble { font-size: 16px; line-height: 1.4; margin: 6px 0 4px; min-height: 66px; }
-  .talkBubble::before { left: 50%; top: -6px; margin: 0 0 0 -6px; border: 6px solid transparent; border-bottom-color: #f3e6c4; border-top: 0; }
-  .gift { display: flex; gap: 10px; align-items: center; background: rgba(30,16,6,.38); border-radius: 12px; padding: 8px; margin-top: 10px; animation: pop .5s ease-out; }
+  .talkBubble { font-size: var(--fs-body); line-height: 1.4; margin: 6px 0 4px; min-height: 66px; }
+  .talkBubble::before { left: 50%; top: -9px; margin: 0 0 0 -6px; border: 6px solid transparent; border-bottom-color: #f1e2bd; border-top: 0; }
+  .gift { display: flex; gap: 10px; align-items: center; padding: 6px; margin-top: 10px; animation: pop .5s ease-out; }
   .gift div { flex: 1; } .gift small { display: block; }
   /* story: the stump, Amber Memories, Granny's chalk */
   .stumpCard { display: block; width: 100%; padding: 4px 8px 8px; margin: 8px 0 4px; background: rgba(20,12,6,.32); border-radius: 14px; text-align: center; }
   .stumpCard svg { display: block; width: 100%; height: auto; }
-  .stumpCard small { display: block; font-weight: 400; font-size: 12.5px; color: var(--muted); font-style: italic; }
+  .stumpCard small { display: block; font-weight: 400; font-size: var(--fs-small); color: var(--muted); font-style: italic; }
   .memCard { text-align: center; margin: 4px 0 8px; animation: pop .5s ease-out; }
   .memCard .memArt, .talkArt .memArt { display: block; margin: 0 auto; max-width: 100%; height: auto; filter: drop-shadow(0 4px 10px rgba(240,181,67,.35)); }
-  .memCap { font-style: italic; font-size: 15px; line-height: 1.35; margin: 6px 4px 2px; color: #f3e1b0; }
-  .memCard small, .memTag { display: block; font-size: 12px; color: var(--muted); }
+  .memCap { font-style: italic; font-size: var(--fs-body); line-height: 1.35; margin: 6px 4px 2px; color: #f3e1b0; }
+  .memCard small, .memTag { display: block; font-size: var(--fs-small); color: var(--muted); }
   .talkBubble:empty { display: none; }
   .talkArt .granny, .talkArt .bidder { animation: bob 2.6s ease-in-out infinite; }
-  .talkBubble .who { display: block; font-style: normal; font-size: 12px; letter-spacing: .6px; text-transform: uppercase; color: #8a5a32; margin-bottom: 2px; }
+  .talkBubble .who { display: block; font-style: normal; font-size: var(--fs-small); letter-spacing: .6px; text-transform: uppercase; color: #8a5a32; margin-bottom: 2px; }
   .chalkNote { font-family: Fredoka, sans-serif; font-size: 22px; text-align: center; color: #3a2418; letter-spacing: .5px; transform: rotate(-3deg); }
   .wickHead { display: flex; align-items: center; gap: 6px; font-weight: 600; color: #ffd27a; margin: 4px 2px 6px; }
   .wickLamp { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
@@ -220,21 +233,45 @@
   .bar { height: 10px; border-radius: 6px; background: rgba(30,16,6,.5); overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,.5); }
   .bar i { display: block; height: 100%; background: linear-gradient(90deg, #7cc46a, #f0b543); border-radius: 6px; }
   .custRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
-  .custRow > span { width: 56px; font-weight: 700; font-size: 13px; color: #d9c49c; }
-  .chip { width: auto; margin: 0; padding: 5px 10px; font-size: 13px; background: linear-gradient(180deg, #84593a, #613f25); color: #f6ead0;
-    border: 2px solid #2b1a0e; box-shadow: 0 2px 0 #2b1a0e; display: inline-flex; align-items: center; gap: 4px; }
-  .chip.on { background: linear-gradient(180deg, #ffd98a, #e8a52f); color: #3a2208; border-color: #8a5a1a; }
+  .custRow > span { width: 64px; font-weight: 700; font-size: var(--fs-small); color: #d9c49c; }
+  .chip { width: auto; margin: 0; padding: 4px 12px; font-size: var(--fs-small); display: inline-flex; align-items: center; gap: 6px; }
   .chip .sw { width: 16px; height: 16px; border-radius: 4px; display: inline-block; border: 1px solid rgba(0,0,0,.4); }
-  .iap { display: flex; gap: 10px; align-items: center; margin-top: 10px; padding: 8px 10px; border-radius: 12px; color: #f6ead0;
-    background: rgba(124,196,106,.16); border: 1px solid rgba(124,196,106,.45); }
-  .iap .grow { flex: 1; } .iap small { display: block; }
-  .iap button { width: auto; margin: 0; padding: 7px 12px; font-size: 15px; }
-  .linkBtn { background: none !important; border: 0 !important; box-shadow: none !important; color: #d9c49c !important; font-size: 13px;
+  .iap { display: flex; gap: 10px; align-items: center; margin-top: 10px; padding: 8px 8px 8px 6px; }
+  .iap .grow { flex: 1; min-width: 0; } .iap b { display: block; font-size: var(--fs-body); } .iap small { display: block; font-size: var(--fs-small); line-height: 1.25; }
+  .iap button { width: auto; margin: 0; padding: 6px 14px; font-size: var(--fs-body); flex: none; }
+  .linkBtn { background: none !important; border: 0 !important; border-image: none !important; filter: none !important; box-shadow: none !important; color: #d9c49c !important; font-size: var(--fs-small);
     text-decoration: underline; padding: 4px; margin: 4px 0 0; text-shadow: none; }
+  /* options: one painted row per setting */
+  .optList { display: flex; flex-direction: column; gap: 6px; }
+  .optRow { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0; padding: 6px 12px; min-height: 48px; text-align: left; font-size: var(--fs-body); box-sizing: border-box; }
+  .optRow .ico { margin: 0; flex: none; } .optRow .lbl { flex: 1; }
+  .optRow .state { font-size: var(--fs-small); padding: 2px 10px; border-radius: 8px; background: rgba(20,10,4,.45); color: #bfa77c; text-shadow: none; }
+  .optRow.on .state { background: #f0b543; color: #3a2208; }
+  details.optRow { display: block; padding: 0; cursor: pointer; border: 3px solid transparent; border-image: var(--p-wood) 18 fill / 15px stretch; filter: drop-shadow(0 3px 0 rgba(48,24,6,.55)); }
+  details.optRow summary { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 0 12px; list-style: none; font-weight: 700; }
+  details.optRow summary::-webkit-details-marker { display: none; }
+  details.optRow p { margin: 0 12px 10px; font-size: var(--fs-small); color: #e8d6aa; line-height: 1.4; }
+  /* Amber Memories: a collection, one shelf per mine */
+  .memMine { margin-top: 12px; } .memMine:first-child { margin-top: 0; }
+  .memGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
+  .memTile { margin: 0; padding: 0; min-height: 0; border: 0; border-image: none; filter: none; background: none; display: block; aspect-ratio: 1.6; }
+  .memTile svg { display: block; width: 100%; height: 100%; }
+  .memTile.found svg { filter: drop-shadow(0 3px 6px rgba(240,181,67,.35)); }
+  .memTile.unfound { cursor: default; } .memTile.unfound svg { filter: grayscale(1) brightness(.22) contrast(.7); opacity: .8; }
+  /* haul moments: a new best, a new gem */
+  .endHead { flex-direction: column; gap: 0; text-align: center; } .endHead h2 { flex: none; } .endHead .tag { margin: 4px 0 0; }
+  .causeIco { display: flex; justify-content: center; margin-bottom: 2px; }
+  @media (max-height: 700px) { .causeIco { display: none; } } /* SE: room for the ledger */
+  .haulRow .ph { width: 26px; flex: none; } .haulRow.neg .v { color: #b03a2a; }
+  .sheetFoot { transition: opacity .3s; } .sheetFoot.wait { opacity: 0; pointer-events: none; }
+  .stamp.no { border-color: #e08a6a; color: #ffb59a; }
+  .ribbon { display: none; margin: 8px auto 0; padding: 4px 16px; width: fit-content; border: 3px solid transparent; border-image: var(--p-amber) 18 fill / 14px stretch;
+    color: #3a2208; font-weight: 700; font-size: var(--fs-head); text-align: center; animation: pop .45s cubic-bezier(.34,1.56,.64,1); }
+
   /* ===== satisfying UI ===== */
   button { transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .12s, filter .12s; }
-  button:hover:not(:disabled) { filter: brightness(1.06); transform: translateY(-1px); }
-  button:active:not(:disabled) { transform: translateY(3px) scale(.97); transition-duration: .05s; }
+  button:hover:not(:disabled) { filter: brightness(1.06) drop-shadow(0 4px 0 rgba(48,24,6,.55)); transform: translateY(-1px); }
+  button:active:not(:disabled) { filter: brightness(.94) drop-shadow(0 1px 0 rgba(48,24,6,.55)); transform: translateY(2px) scale(.97); transition-duration: .05s; }
   .screen.show .hang { animation: swingIn .7s cubic-bezier(.34,1.56,.64,1) both; transform-origin: 50% -40px; }
   @keyframes swingIn { 0% { transform: translateY(-70px) rotate(-6deg); opacity: 0; } 55% { transform: translateY(4px) rotate(2.5deg); opacity: 1; }
     75% { transform: rotate(-1deg); } 100% { transform: none; } }
@@ -263,8 +300,7 @@
       linear-gradient(180deg, #74502f, #4f331d) !important; background-size: 400px 240px, auto, auto !important; }
   h1 { letter-spacing: .3px; text-shadow: 0 1px 0 #ffe9b0, 0 3px 0 #6b3f12, 0 4px 10px rgba(0,0,0,.45), 0 0 22px rgba(240,181,67,.28); }
   h2 { text-shadow: 0 2px 0 #5a3410, 0 3px 8px rgba(0,0,0,.4); }
-  .pill, .tile, .mine, .shopItem { box-shadow: inset 0 2px 5px rgba(0,0,0,.45), inset 0 -1px 0 rgba(255,220,170,.08), 0 1px 0 rgba(255,220,170,.1) !important; }
-  button { text-shadow: 0 1px 0 rgba(255,255,255,.35); }
+  .pill { box-shadow: inset 0 2px 5px rgba(0,0,0,.45), inset 0 -1px 0 rgba(255,220,170,.08), 0 1px 0 rgba(255,220,170,.1) !important; }
   .seg button.on small { color: #5a3a10 !important; opacity: 1; }
   /* ===== vintage cartoon filter stack: boil on characters, warm grade + vignette + flicker everywhere, dust in menus ===== */
   svg.dibble, svg.puddock { filter: url(#boil); }
@@ -285,7 +321,7 @@
   .titleWrap .dibble { width: 150px; height: 150px; animation: bob 3s ease-in-out infinite; }
   .logo { font-size: min(56px, 14vw); margin: -6px 0 2px; }
   .tagline { color: #e8d6aa !important; margin: 0 0 14px; }
-  .titleWrap button { font-size: 19px; padding: 13px; }
+  .titleWrap button { font-size: var(--fs-head); padding: 12px; }
   .titleWrap .note { color: rgba(246,234,208,.6); }
   .hub { top: 0; padding: 0 !important; background: #0b1510; align-items: stretch; justify-content: center; overflow: hidden; }
   .hub .campStage { width: min(100vw, 480px); height: 100vh; height: 100dvh; margin: 0 auto; box-shadow: none; }
@@ -309,7 +345,7 @@
   .sheet { background: rgba(5,12,8,.5); z-index: 6; }
   .wardHead { display: flex; align-items: center; gap: 10px; }
   .wardHead .dibble { flex: none; }
-  .subHead { margin: 12px 0 0; font-size: 14px; letter-spacing: .6px; text-transform: uppercase; color: #ffd27a; }
+  .subHead { margin: 12px 0 0; font-size: var(--fs-small); letter-spacing: .6px; text-transform: uppercase; color: #ffd27a; }
 </style>
 </head>
 <body>
@@ -352,71 +388,97 @@
 </section>
 
 <section id="mineSheet" class="screen sheet"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
-  <h2>To the mines</h2>
-  <div class="seg"><button id="mExp"><span id="icoExp"></span>Expedition<small>beat the Rootline</small></button>
-    <button id="mCalm"><span id="icoCalm"></span>Calm Grove<small>no timer, ×0.6 gold</small></button></div>
-  <div id="wickHead"></div>
-  <div id="mines"></div>
-  <button id="dig"><span class="btnrow"><span id="icoDig"></span>Dig</span></button>
-  <button class="alt close"><span class="btnrow"><span class="icoBack"></span>Back to camp</span></button>
+  <div class="sheetHead"><h2>To the mines</h2><button class="alt xBtn close" aria-label="Close"><span class="icoX"></span></button></div>
+  <div class="sheetBody">
+    <div class="seg"><button id="mExp">Expedition<small>beat the Rootline</small></button>
+      <button id="mCalm">Calm Grove<small>no timer, ×0.6 gold</small></button></div>
+    <div id="wickHead"></div>
+    <div id="mines"></div>
+  </div>
+  <div class="sheetFoot"><button id="dig">Dig</button></div>
 </div></div></section>
 
 <section id="dailySheet" class="screen sheet"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
-  <h2>Daily Dig</h2>
-  <div class="tag">Today's crystals are the same for everyone. One dig a day; keep the streak going.</div>
-  <div id="dailyInfo"></div>
-  <button id="daily"></button>
-  <button class="alt close"><span class="btnrow"><span class="icoBack"></span>Back to camp</span></button>
+  <div class="sheetHead"><h2>Daily Dig</h2><button class="alt xBtn close" aria-label="Close"><span class="icoX"></span></button></div>
+  <div class="sheetBody">
+    <div class="tag">Today's crystals are the same for everyone. One dig a day; keep the streak going.</div>
+    <div id="dailyInfo"></div>
+  </div>
+  <div class="sheetFoot"><button id="daily"></button></div>
 </div></div></section>
 
 <section id="wardrobe" class="screen sheet"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
-  <div class="wardHead"><span id="wardDibble"></span><div><h2>Wardrobe</h2><div class="tag" style="margin:0">Dress Dibble, and set up camp. New things come from Old Puddock.</div></div></div>
-  <div id="campProg" class="campProg"></div>
-  <div id="campCustom"></div>
-  <button class="alt close"><span class="btnrow"><span class="icoBack"></span>Back to camp</span></button>
+  <div class="sheetHead wardHead"><span id="wardDibble"></span><h2>Wardrobe</h2><button class="alt xBtn close" aria-label="Close"><span class="icoX"></span></button></div>
+  <div class="sheetBody">
+    <div class="tag" style="margin-top:0">Dress Dibble, and set up camp. New things come from Old Puddock.</div>
+    <div id="campProg" class="campProg"></div>
+    <div id="campCustom"></div>
+  </div>
 </div></div></section>
 
 <section id="optsSheet" class="screen sheet"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
-  <h2>Options</h2>
-  <div class="opts"><button id="oMusic"></button><button id="oSound"></button><button id="oVib"></button><button id="oGlyph"></button><button id="oPrivacy"></button></div>
-  <button id="campMem" class="alt"></button>
-  <button id="toTitle" class="alt">Main menu</button>
-  <button class="close">Back</button>
-  <div class="note">Fair dealing: crystals are dealt at random. Never by ads, purchases or how close you are to your best.</div>
+  <div class="sheetHead"><h2>Options</h2><button class="alt xBtn close" aria-label="Close"><span class="icoX"></span></button></div>
+  <div class="sheetBody">
+    <div class="optList">
+      <button id="oMusic" class="optRow"></button><button id="oSound" class="optRow"></button><button id="oVib" class="optRow"></button>
+      <button id="oGlyph" class="optRow"></button><button id="oPrivacy" class="optRow"></button>
+      <details class="optRow" id="oCredits"><summary><span class="icoCredits"></span><span class="lbl">Credits</span></summary>
+        <p>Glimmerwood is made by Alex de la Chica.<br>Fredoka typeface by Milena Brandão and Hafontia (SIL Open Font License).<br>Music and sounds are synthesised in the game.</p></details>
+      <div id="optsPlatform"></div>
+    </div>
+    <button id="campMem" class="alt"></button>
+    <button id="toTitle" class="alt">Main menu</button>
+    <div class="note">Fair dealing: crystals are dealt at random. Never by ads, purchases or how close you are to your best.</div>
+  </div>
+</div></div></section>
+
+<section id="memSheet" class="screen sheet"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
+  <div class="sheetHead"><h2>Amber Memories</h2><button class="alt xBtn close" aria-label="Close"><span class="icoX"></span></button></div>
+  <div class="sheetBody"><div class="tag" style="margin-top:0"><b id="memCount"></b> found. They turn up in the mines, glowing. Tap one to remember it.</div><div id="memShelf"></div></div>
 </div></div></section>
 
 <section id="end" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
-  <div class="causeIco" id="causeIco"></div>
-  <h2 id="endTitle" style="text-align:center">The roots closed the tunnel</h2>
-  <div class="tag" id="endSub" style="text-align:center;margin-bottom:6px">Dibble climbs out with the haul.</div>
-  <div id="newBest" class="gold" style="font-size:20px;display:none;text-align:center">New best haul!</div>
-  <button id="rescue" class="ad"></button>
-  <div id="memCard"></div>
-  <div class="speech"><span id="puddockArtEnd"></span><div class="bubble" id="puddockLine"></div></div>
-  <div class="ledger"><h3>OLD PUDDOCK'S LEDGER</h3>
-    <div class="haulGrid" id="haulList"></div>
-    <div class="total"><span>Haul value</span><span class="gold" id="haulTotalWrap"><span id="coinB"></span><span id="haulTotal">0g</span></span></div></div>
-  <button id="sell2" class="ad"></button>
-  <button id="sell"></button>
-  <div class="note" id="adNote">Green buttons are rewarded ads in the real game; free here.</div>
+  <div class="sheetHead endHead"><div class="causeIco" id="causeIco"></div>
+    <h2 id="endTitle">The roots closed the tunnel</h2>
+    <div class="tag" id="endSub">Dibble climbs out with the haul.</div></div>
+  <div class="sheetBody" id="endBody">
+    <button id="rescue" class="ad"></button>
+    <div id="memCard"></div>
+    <div class="speech"><span id="puddockArtEnd"></span><div class="bubble" id="puddockLine"></div></div>
+    <div class="ledger" id="ledger"><h3>OLD PUDDOCK'S LEDGER</h3>
+      <div class="haulList" id="haulList"></div>
+      <div class="total"><span>Haul value</span><span class="gold" id="haulTotalWrap"><span id="coinB"></span><span id="haulTotal">0g</span></span></div></div>
+    <div id="newBest" class="ribbon">New best haul!</div>
+    <div id="newGem" class="ribbon"></div>
+  </div>
+  <div class="sheetFoot" id="endFoot">
+    <button id="sell2" class="ad"></button>
+    <button id="sell"></button>
+    <div class="note" id="adNote">Green buttons are rewarded ads in the real game; free here.</div>
+  </div>
 </div></div></section>
 
 <section id="market" class="screen sheet"><div class="hang"><i class="rope l"></i><i class="rope r"></i><div class="awning"></div><div class="card">
-  <h2>Old Puddock's Market</h2>
-  <div class="speech"><span id="puddockArtMkt"></span><div class="bubble">"Shiny rocks, shiny coins. Fair trade, little mole."</div></div>
-  <div class="pill"><span id="coinC"></span><span id="mktGold">0</span></div>
-  <div id="iapRow"></div>
-  <div class="tabs" id="mktTabs"><button data-tab="tools">Tools</button><button data-tab="wardrobe">Wardrobe</button><button data-tab="camp">Camp</button><button data-tab="maps">Maps</button></div>
-  <div id="shop"></div>
-  <button id="mktBack" class="alt close"><span class="btnrow"><span class="icoBack"></span>Back to camp</span></button>
+  <div class="sheetHead"><h2>Old Puddock's Market</h2><button class="alt xBtn close" aria-label="Close"><span class="icoX"></span></button></div>
+  <div class="sheetBody">
+    <div class="speech"><span id="puddockArtMkt"></span><div class="bubble">"Shiny rocks, shiny coins. Fair trade, little mole."</div></div>
+    <div class="pill"><span id="coinC"></span><span id="mktGold">0</span></div>
+    <div id="iapRow"></div>
+    <div class="tabs" id="mktTabs"><button data-tab="tools">Tools</button><button data-tab="wardrobe">Wardrobe</button><button data-tab="camp">Camp</button><button data-tab="maps">Maps</button></div>
+    <div id="shop"></div>
+  </div>
 </div></div></section>
 
 <section id="talk" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
-  <div class="talkArt" id="talkArt"></div>
-  <div class="bubble talkBubble" id="talkLine"></div>
-  <div id="talkGift"></div>
-  <button id="talkNext">Go on…</button>
-  <button id="talkSkip" class="linkBtn" style="display:none">Skip</button>
+  <div class="sheetBody">
+    <div class="talkArt" id="talkArt"></div>
+    <div class="bubble talkBubble" id="talkLine"></div>
+    <div id="talkGift"></div>
+  </div>
+  <div class="sheetFoot">
+    <button id="talkNext">Go on…</button>
+    <button id="talkSkip" class="linkBtn" style="display:none">Skip</button>
+  </div>
 </div></div></section>
 
 <script type="module">
@@ -427,8 +489,37 @@ import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, l
 import { PROLOGUE, MEMORIES, MEMORY_COUNT, nextMemory, memoryById, mineOfMemory, mineDone, CHALK, PUDDOCK_BY_MINE, PUDDOCK_AFTER, PUDDOCK_POSTGAME,
   CAMP_LINES, SCALE_NOTE, SCENES, nextScene, SITES, GIVEN, MAP_GATE, MURMURS, MURMURS_DEEP, MURMURS_AFTER } from "./story.js";
 import { soundtrack, sfx } from "./music.js";
-import { curve, ring, limb } from "./paint.js";
 import { platform, track } from "./platform.js";
+import { curve, ring, limb, shape, stroke, rng as prng } from "./paint.js";
+
+// ---------- painted UI skins: plank, parchment and carved-recess shapes from paint.js, as 9-slice SVGs for CSS border-image (--p-*) ----------
+function uiSkins() {
+  const W = 96, H = 48, m = 3.5, rr = 12;
+  const outline = (seed) => { // a rounded plank, hand-wobbled; corners stay inside the 18px slice
+    const R = prng(seed), j = () => (R() - .5) * 1.6, pts = [];
+    const corner = (cx, cy, a0) => { for (let k = 0; k <= 2; k++) { const a = a0 + k * Math.PI / 4; pts.push([cx + Math.cos(a) * rr + j(), cy + Math.sin(a) * rr + j()]); } };
+    corner(W - m - rr, m + rr, -Math.PI / 2); pts.push([W - m + j() * .4, H / 2]); corner(W - m - rr, H - m - rr, 0);
+    for (const x of [.66, .33]) pts.push([W * x + j() * 3, H - m + j()]);
+    corner(m + rr, H - m - rr, Math.PI / 2); pts.push([m + j() * .4, H / 2]); corner(m + rr, m + rr, Math.PI);
+    for (const x of [.33, .66]) pts.push([W * x + j() * 3, m + j()]);
+    return curve(pts);
+  };
+  const skin = (fill, line, light, grain, seed, off = [-1.4, 2]) => { // body + darker shadow-side edge, brush grain, a soft light
+    const d = outline(seed), R = prng(seed + 9);
+    const marks = [...Array(7)].map(() => stroke(8 + R() * 64, 10 + R() * 28, (R() - .5) * .06, 12 + R() * 22, .6 + R() * .5, grain, .4, .03)).join("");
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs><clipPath id="c"><path d="${d}"/></clipPath>
+      <filter id="b" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="3"/></filter></defs>${shape(d, fill, line, off)}
+      <g clip-path="url(#c)">${marks}<path d="${curve(ring(34, 9, 30, 6, 10, .25, seed))}" fill="${light}" opacity=".6" filter="url(#b)"/>
+      <path d="${curve(ring(62, H - 7, 34, 6, 10, .25, seed + 3))}" fill="${line}" opacity=".22" filter="url(#b)"/></g></svg>`;
+  };
+  const S = { amber: skin("#eeb04a", "#8a5418", "#ffe7a8", "#c47f22", 11), wood: skin("#7c5434", "#2b1a0e", "#a87c55", "#4f331d", 23),
+    moss: skin("#79b863", "#2f5a2a", "#c6f0aa", "#4f8a3e", 37), parch: skin("#f1e2bd", "#a2824c", "#fffaea", "#c9ad78", 41),
+    recess: skin("#3a2414", "#8a6a48", "#140a03", "#2a180c", 53, [1.2, 1.6]) };
+  for (const k in S) document.documentElement.style.setProperty("--p-" + k, `url("data:image/svg+xml,${encodeURIComponent(S[k])}")`);
+}
+uiSkins();
+// a painted close mark: two tapered brush strokes
+const brushX = (size = 20, col = "#f6ead0") => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">${stroke(4.5, 4.5, Math.PI / 4, 21, 2.4, col, 1, .04)}${stroke(19.5, 4.5, Math.PI * .75, 21, 2.4, col, 1, -.04)}</svg>`;
 const cfg0 = await (await fetch("../sim/generator.json", { cache: "no-cache" })).json();
 const $ = (id) => document.getElementById(id);
 
@@ -1235,22 +1326,57 @@ function showHaul() {
     $("endSub").innerHTML = (cause === "time" && !daily ? `<i>${pick(save.story.finale ? MURMURS_AFTER : save.story.site === "stump" ? MURMURS : MURMURS_DEEP)}</i><br>` : "") + "Dibble climbs out with the haul. Nothing is lost.";
     $("memCard").innerHTML = newMem.map((id) => { const m = memoryById(id), mine = mineOfMemory(id), k = MEMORIES[mine].indexOf(m) + 1;
       return `<div class="memCard">${memoryArt(m.art, 200)}<div class="memCap">${m.text}</div><small>Amber Memory · ${BIOMES.find((b) => b.id === mine).name} ${k}/${MEMORIES[mine].length}</small></div>`; }).join("");
-    $("causeIco").innerHTML = cause === "time" ? icon("vine", 44) : icon("board", 44);
+    clearTimeout(tallyHaul.t);
+    $("causeIco").innerHTML = cause === "time" ? icon("vine", 34) : icon("board", 34);
     $("rescue").innerHTML = `<span class="btnrow">${icon(cause === "time" ? "regrow" : "shatter", 22)}${cause === "time" ? `Roots regrow +${T.rescue_time}s` : "Shatter the 3 fullest veins"}</span>`;
     $("rescue").style.display = "none"; // offered before the haul now (offerRescue)
-    $("haulList").innerHTML = Object.entries(haul).map(([t, n]) => `<div class="haulTile">${gem(CRYSTALS[t].color, 34, save.opt.glyph ? CRYSTALS[t].glyph : "", CRYSTALS[t].cut)}
-      <b>×${n}</b><small>${CRYSTALS[t].name}</small><small>${Math.round(n * CRYSTALS[t].value * valueMult())}g</small></div>`).join("") ||
-      `<div class="note" style="grid-column:1/-1">No crystals this time.</div>`;
-    if (stolen > 0) $("haulList").innerHTML += `<div class="haulTile"><b style="color:#c0392b">-${Math.round(stolen * valueMult())}g</b><small>Pilfermoths</small><small>clear a line through one to win it back</small></div>`;
-    if (bonus) $("haulList").innerHTML += `<div class="haulTile">${icon(save.up.tongs ? "tongs" : "lens", 34)}<b>+${Math.round(bonus * valueMult())}g</b><small>Bonuses</small><small>lens, tongs, shooed moths</small></div>`;
-    $("sell2").innerHTML = `<span class="btnrow">${coin(20)}${coin(20)}Puddock's double deal: ×2</span>`;
-    $("sell").innerHTML = `<span class="btnrow">${coin(20)}Sell to Old Puddock</span>`;
-    $("haulTotal").textContent = haulValue() + "g";
+    // Puddock's ledger, one line per gem type; tallyHaul() reveals them one by one
+    const mult = valueMult(), fresh = Object.keys(haul).filter((t) => GEMS.includes(t) && !save.found.includes(t));
+    const rows = Object.entries(haul).map(([t, n]) => ({ v: Math.round(n * CRYSTALS[t].value * mult), fresh: fresh.includes(t),
+      html: `${gem(CRYSTALS[t].color, 26, save.opt.glyph ? CRYSTALS[t].glyph : "", CRYSTALS[t].cut)}<span class="n">×${n}</span><span class="nm">${CRYSTALS[t].name}${fresh.includes(t) ? `<em class="newTag">New</em>` : ""}</span>` }));
+    if (stolen > 0) rows.push({ v: -Math.round(stolen * mult), html: `<i class="ph"></i><span class="n"></span><span class="nm">Pilfermoths<small>clear a line through one to win it back</small></span>` });
+    if (bonus) rows.push({ v: Math.round(bonus * mult), html: `${icon(save.up.tongs ? "tongs" : "lens", 26)}<span class="n"></span><span class="nm">Bonuses<small>lens, tongs, shooed moths</small></span>` });
+    $("haulList").innerHTML = rows.map((r) => `<div class="haulRow${r.v < 0 ? " neg" : ""}">${r.html}<span class="v">${r.v < 0 ? "−" : ""}${Math.abs(r.v)}g</span></div>`).join("") ||
+      `<div class="note">No crystals this time.</div>`;
+    $("sell2").textContent = "Puddock's double deal: ×2";
+    $("sell").textContent = "Sell to Old Puddock";
+    $("haulTotal").textContent = "0g";
     $("sell2").style.display = haulValue() ? "block" : "none";
-    $("newBest").style.display = haulValue() > (daily ? save.daily.best : save.best[bestKey()] || 0) && haulValue() ? "block" : "none";
     $("puddockLine").textContent = puddockLine();
-    show("end");
+    show("end"); $("endBody").scrollTop = 0;
+    tallyHaul(rows, haulValue() > (daily ? save.daily.best : save.best[bestKey()] || 0) && haulValue(), fresh);
   }
+}
+// the haul tallies: each ledger line lands with a tick and the total counts up, then the total, any new best or new gem, then Sell
+function tallyHaul(rows, best, fresh) {
+  const els = [...$("haulList").querySelectorAll(".haulRow")], total = $("ledger").querySelector(".total"), foot = $("endFoot");
+  let k = 0, sum = 0, done = false;
+  const reveal = (el) => { const b = $("endBody"), d = el.getBoundingClientRect().bottom - b.getBoundingClientRect().bottom + 6; if (d > 0) b.scrollTop += d; }; // scroll the ledger only, never the page
+  for (const id of ["newBest", "newGem"]) $(id).style.display = "none";
+  total.classList.remove("land"); foot.classList.add("wait");
+  const countTo = (from, to) => { const t0 = performance.now(), f = (now) => { if (done) return; const p = Math.min(1, (now - t0) / 280);
+    $("haulTotal").textContent = Math.max(0, Math.round(from + (to - from) * p)) + "g"; if (p < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); };
+  const finish = () => {
+    if (done) return; done = true; clearTimeout(tallyHaul.t);
+    for (const el of els) el.classList.add("in");
+    $("haulTotal").textContent = haulValue() + "g"; total.classList.add("land"); tone(1319, .18, "triangle", .07); tone(1760, .22, "triangle", .05, .06);
+    const moments = [];
+    if (best) moments.push($("newBest"));
+    if (fresh.length) { $("newGem").textContent = `New on the shelf: ${fresh.map((t) => CRYSTALS[t].name).join(", ")}`; moments.push($("newGem")); }
+    for (const el of moments) el.style.display = "block";
+    if (moments.length) setTimeout(() => { for (const el of moments) sparkleAt(el); [1047, 1319, 1568, 2093].forEach((f, j) => tone(f, .3, "sine", .06, j * .07)); buzz(20); }, 120);
+    reveal(moments.at(-1) || total);
+    foot.classList.remove("wait");
+  };
+  const step = () => {
+    if (k >= els.length) return finish();
+    const el = els[k], r = rows[k]; el.classList.add("in"); reveal(el);
+    countTo(sum, sum += r.v); tone(880 + Math.min(k, 8) * 90, .07, "triangle", .05); buzz(5);
+    if (r.fresh) sparkleAt(el.querySelector("svg") || el);
+    k++; tallyHaul.t = setTimeout(step, 360);
+  };
+  $("ledger").onclick = finish; // tap the ledger to skip the count
+  if (!els.length || matchMedia("(prefers-reduced-motion: reduce)").matches) finish(); else tallyHaul.t = setTimeout(step, 500);
 }
 $("rescueGo").onclick = async () => {
   if (!(await platform.rewarded(endCause === "time" ? "rescue_time" : "rescue_stuck"))) return toast("No ad ready, try again in a moment");
@@ -1309,7 +1435,7 @@ $("sell").onclick = () => sell(1);
 $("sell2").onclick = async () => (await platform.rewarded("double_deal")) ? sell(2) : toast("No ad ready, try again in a moment");
 
 // ---------- home and market ----------
-const SHEETS = ["mineSheet", "dailySheet", "wardrobe", "optsSheet", "market"];
+const SHEETS = ["mineSheet", "dailySheet", "wardrobe", "optsSheet", "market", "memSheet"];
 let base = "title"; // the screen popups sit on: the title screen or the camp
 function show(id) {
   if (id === "title" || id === "home") base = id;
@@ -1326,23 +1452,22 @@ function teaser() { // the card after the last mine you can see: a hint of what'
     : S.site === "underroot" ? (S.ledge ? ["Far below", "A pale glow, where no light should be. Somebody built a moon."] : ["Further down", "The scorch marks all point the same way."])
     : ["More caves soon…", "Old Puddock swears there's something even deeper. He won't say what."];
   return `<div class="mine teaser">${S.finale ? darkLantern(134, 80) : mystery(134, 80)}<div class="info"><b>${title}</b>
-    <small style="display:block;color:var(--muted);font-size:12.5px;margin-top:2px">${text}</small></div></div>`;
+    <small>${text}</small></div></div>`;
 }
 function renderHome() {
   $("homeGold").textContent = save.gold;
-  for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).classList.toggle("on", save.opt[k]);
-  $("oSound").innerHTML = icon(save.opt.sound ? "soundOn" : "soundOff", 20) + "Sound";
-  $("oVib").innerHTML = icon("vibe", 20) + "Vibration";
-  $("oGlyph").innerHTML = icon("symbols", 20) + "Symbols";
-  $("oPrivacy").innerHTML = icon("lock", 20) + "Privacy";
-  $("oMusic").innerHTML = icon("note", 20) + "Music"; $("oMusic").classList.toggle("on", save.opt.music);
+  const optRow = (id, ico, label, on) => { // on: true/false for a toggle, undefined for a row that opens something
+    $(id).innerHTML = `${icon(ico, 22)}<span class="lbl">${label}</span>${on === undefined ? "" : `<span class="state">${on ? "On" : "Off"}</span>`}`;
+    if (on !== undefined) { $(id).classList.toggle("on", on); $(id).setAttribute("aria-pressed", on); } };
+  optRow("oMusic", "note", "Music", save.opt.music); optRow("oSound", save.opt.sound ? "soundOn" : "soundOff", "Sound", save.opt.sound);
+  optRow("oVib", "vibe", "Haptics", save.opt.vib); optRow("oGlyph", "symbols", "Colour-blind symbols", save.opt.glyph); optRow("oPrivacy", "lock", "Privacy choices");
   $("dibbleArt").innerHTML = dibble(150, save.look);
-  const mem = `<span class="btnrow">${icon("lantern", 22)}Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}</span>`;
-  $("tMem").innerHTML = mem; $("campMem").innerHTML = mem;
+  const mem = `Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}`;
+  $("tMem").textContent = mem; $("campMem").textContent = mem;
   const done = save.daily.last === today(), st = save.daily.last === today() || save.daily.last === new Date(Date.now() - 864e5).toISOString().slice(0, 10) ? save.daily.streak : 0;
   $("dailyInfo").innerHTML = `<span class="streak" title="streak: ${st} day(s)">${[...Array(7)].map((_, k) => `<i class="${k < Math.min(st, 7) ? "on" : ""}"></i>`).join("")}</span>
     <div class="note" style="margin-top:6px">${st ? `${st}-day streak` : "No streak yet"}${done ? ` · today's best ${save.daily.best}g` : ""}</div>`;
-  $("daily").innerHTML = `<span class="btnrow">${icon("calendar", 22)}${done ? "Done for today. Come back tomorrow" : "Start today's dig"}</span>`;
+  $("daily").textContent = done ? "Done for today. Come back tomorrow" : "Start today's dig";
   $("daily").disabled = done;
   $("campHint").textContent = !Object.keys(save.best).length ? "Tap the signpost to go mining ✦" : !save.metPuddock ? "Puddock's waving you over to his stall ✦" : "Tap things around camp ✦";
   renderMines(); renderCamp();
@@ -1358,9 +1483,9 @@ function renderMines() {
     return `<div class="mine ${open ? "" : "locked"} ${save.sel === b.id ? "sel" : ""} ${last ? "legend" : ""}" data-id="${b.id}">
       ${scene(cols, b.pal, 134, 80)}${wick && open ? `<span class="wickLamp" style="--g:${glow(b).toFixed(2)}">${icon("lantern", 20)}</span>` : ""}
       ${open ? "" : `<span class="lockTag">${icon("lock", 22)}${b.cost}g</span>`}${trial ? `<span class="trialTag">${icon("ticket", 18)}Trial map · 1 dig</span>` : ""}
-      <div class="info"><b>${b.name}</b>${open && best ? ` <small class="gold">· best ${best}g</small>` : ""}
+      <div class="info"><b>${b.name}</b>${open && best ? `<small class="gold">Best ${best}g</small>` : ""}
         <div class="gems">${Object.keys(b.types).map((t) => gem(CRYSTALS[t].color, 18, "", CRYSTALS[t].cut)).join("")}</div>
-        <small style="display:block;color:var(--muted);font-size:12.5px;margin-top:2px">${open ? b.blurb : "Buy the map at Old Puddock's Market."}</small></div></div>`;
+        <small>${open ? b.blurb : "Buy the map at Old Puddock's Market."}</small></div></div>`;
   }).join("") + teaser();
   for (const el of document.querySelectorAll(".mine[data-id]")) el.onclick = () => {
     if (!canEnter(el.dataset.id)) return;
@@ -1393,13 +1518,14 @@ function renderMarket() {
   $("mktGold").textContent = save.gold;
   for (const b of document.querySelectorAll("#mktTabs button")) b.classList.toggle("on", b.dataset.tab === mktTab);
   $("shop").innerHTML = (mktTab === "tools" && !save.story.confessed ? `<div class="shopItem"><span class="tile">${lookItem("lantern", "granny", 40)}</span>
-    <span class="grow"><b>An old lantern</b><small>"Not for sale. Not that one."</small></span><button disabled>Not for sale</button></div>` : "") + SHOP.filter((it) => it.tab === mktTab && mapShown(it.id.split(":")[1] || "")).map((it) => {
+    <span class="grow"><b>An old lantern</b><small>"Not for sale. Not that one."</small></span><span class="stamp no">Not for sale</span></div>` : "") + SHOP.filter((it) => it.tab === mktTab && mapShown(it.id.split(":")[1] || "")).map((it) => {
     const lvl = it.kind === "up" ? save.up[it.id] : 0;
     const done = it.kind === "up" ? lvl >= it.max : it.kind === "biome" ? save.biomes.includes(it.id.split(":")[1]) : save.owned.includes(it.id);
-    const cost = price(it);
+    const cost = price(it), short = cost - save.gold; // owned: a stamp; can't afford yet: locked tag and how far to go
     return `<div class="shopItem"><span class="tile" ${it.color ? `style="color:${it.color}"` : ""}>${it.kind === "biome" ? mapTile(it.id.split(":")[1]) : it.kind === "look" ? lookItem(it.part, it.val, 40) : icon(it.icon, 34)}</span><span class="grow"><b>${it.name}</b><small>${it.desc}</small>
+      ${!done && short > 0 ? `<small class="need">${short}g more to go</small>` : ""}
       ${it.kind === "up" ? `<span class="pips" title="level ${lvl} of ${it.max}">${[...Array(it.max)].map((_, k) => `<i class="${k < lvl ? "on" : ""}"></i>`).join("")}</span>` : ""}</span>
-      <button data-id="${it.id}" ${done || save.gold < cost ? "disabled" : ""}>${done ? (it.kind === "up" ? "Max" : "Owned ✓") : coin(16) + cost}</button></div>`;
+      ${done ? `<span class="stamp">${it.kind === "up" ? "Max" : "Owned"}</span>` : `<button data-id="${it.id}" ${short > 0 ? "disabled" : ""}>${short > 0 ? icon("lock", 16) : coin(16)}${cost}</button>`}</div>`;
   }).join("");
   for (const btn of $("shop").querySelectorAll("button")) btn.onclick = () => {
     const it = SHOP.find((s) => s.id === btn.dataset.id), cost = price(it);
@@ -1426,7 +1552,7 @@ $("oMusic").onclick = () => { save.opt.music = !save.opt.music; persist(); sound
 $("oPrivacy").onclick = () => platform.privacyChoices(); // the consent form where the region needs one, otherwise the privacy policy
 const openMarket = () => save.metPuddock ? (renderMarket(), show("market")) : talk(() => { renderMarket(); show("market"); });
 for (const b of document.querySelectorAll("#mktTabs button")) b.onclick = () => { mktTab = b.dataset.tab; renderMarket(); $("shop").animate([{ opacity: 0, transform: "translateX(14px)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" }); };
-$("campMem").onclick = $("tMem").onclick = () => replayMemories(() => { renderHome(); show(base); });
+$("campMem").onclick = $("tMem").onclick = () => replayMemories();
 $("hubMenu").onclick = () => show("optsSheet");
 $("tOpts").onclick = () => show("optsSheet");
 $("toTitle").onclick = () => { renderHome(); show("title"); };
@@ -1499,10 +1625,18 @@ function playScene(name) {
     else home();
   });
 }
-function replayMemories(back) {
-  const found = Object.values(MEMORIES).flat().filter((m) => save.story.mem.includes(m.id));
-  if (!found.length) return toast("No Amber Memories yet. They turn up in the mines, glowing.", 2200);
-  dialog(found.map((m) => ({ html: memoryArt(m.art, PANEL_W), say: `<i>${m.text}</i>` })), back, true);
+function replayMemories() { // the collection: a shelf per mine, found memories in amber, the rest as dark silhouettes; tap one to replay it
+  const found = save.story.mem;
+  $("memCount").textContent = `${found.length} of ${MEMORY_COUNT}`;
+  $("memShelf").innerHTML = BIOMES.filter((b) => MEMORIES[b.id] && (revealed(b) || MEMORIES[b.id].some((m) => found.includes(m.id)))).map((b) => {
+    const ms = MEMORIES[b.id], n = ms.filter((m) => found.includes(m.id)).length;
+    return `<div class="memMine"><h3 class="subHead">${b.name} · ${n}/${ms.length}</h3><div class="memGrid">${ms.map((m) => found.includes(m.id)
+      ? `<button class="memTile found" data-mem="${m.id}" aria-label="${m.text}">${memoryArt(m.art, 96)}</button>`
+      : `<span class="memTile unfound" role="img" aria-label="Not found yet">${memoryArt(m.art, 96)}</span>`).join("")}</div></div>`;
+  }).join("");
+  for (const t of $("memShelf").querySelectorAll("[data-mem]")) t.onclick = () => {
+    const m = memoryById(t.dataset.mem); dialog([{ html: memoryArt(m.art, PANEL_W), say: `<i>${m.text}</i>` }], () => show("memSheet")); };
+  show("memSheet");
 }
 
 // ---------- Dibble's Camp: every purchase shows up here ----------
@@ -1728,11 +1862,11 @@ for (const el of document.querySelectorAll(".vineSlot")) el.outerHTML = vine();
 $("flies").innerHTML = [...Array(14)].map((_, k) => `<i class="fly" style="left:${(k * 37) % 100}%;top:${20 + (k * 53) % 70}%;animation-delay:${-k * 0.7}s,${-k * 0.37}s"></i>`).join("");
 $("talkArt").innerHTML = puddock(120); $("puddockArtEnd").innerHTML = puddock(52); $("puddockArtMkt").innerHTML = puddock(60);
 $("hubMenu").innerHTML = icon("gear", 24);
-for (const el of document.querySelectorAll(".icoBack")) el.innerHTML = icon("back", 20);
+for (const el of document.querySelectorAll(".icoX")) el.innerHTML = brushX();
+document.querySelector(".icoCredits").innerHTML = icon("leaf", 22);
 for (const id of ["coinA", "coinB", "coinC"]) $(id).innerHTML = coin(22);
 $("coinHud").innerHTML = coin(26);
-$("icoExp").innerHTML = icon("vine", 26); $("icoCalm").innerHTML = icon("leaf", 26);
-$("icoDig").innerHTML = icon("pickaxe", 24);
+
 
 // ===== track 5 (trust and launch): Options extras, version, VoiceOver labels, reduced motion. Keep this block together. =====
 { // Options: Restore purchases (App Store rule for non-consumables), the privacy policy, the version
