@@ -4,7 +4,7 @@ import { mkdirSync, rmSync, copyFileSync, readFileSync, writeFileSync } from "no
 const out = "www";
 rmSync(out, { recursive: true, force: true });
 mkdirSync(`${out}/fonts`, { recursive: true });
-for (const f of ["game.js", "art.js", "platform.js", "music.js"]) copyFileSync(`proto/${f}`, `${out}/${f}`);
+for (const f of ["game.js", "art.js", "story.js", "platform.js", "music.js"]) copyFileSync(`proto/${f}`, `${out}/${f}`);
 copyFileSync("sim/generator.json", `${out}/generator.json`);
 const weights = [400, 600, 700];
 for (const w of weights) copyFileSync(`node_modules/@fontsource/fredoka/files/fredoka-latin-${w}-normal.woff2`, `${out}/fonts/fredoka-${w}.woff2`);

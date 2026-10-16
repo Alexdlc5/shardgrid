@@ -258,6 +258,118 @@
         }
       },
       "richness": 4.72
+    },
+    "cinder": {
+      "cost": 0,
+      "drain": 0.8,
+      "types": {
+        "ember": 2,
+        "garnet": 2,
+        "topaz": 2,
+        "moonstone": 1.5,
+        "heart": 0.03
+      },
+      "families": {
+        "fork": {
+          "weight": 1.5,
+          "art": [
+            "X.X",
+            ".X.",
+            ".X."
+          ]
+        }
+      },
+      "richness": 5.3
+    },
+    "roost": {
+      "cost": 80000,
+      "drain": 1.2,
+      "types": {
+        "moonstone": 2.5,
+        "glowcap": 1.6,
+        "sapphire": 1.5,
+        "jade": 1.5
+      },
+      "families": {
+        "wing": {
+          "weight": 1.5,
+          "art": [
+            "X..",
+            "XX.",
+            ".XX"
+          ]
+        }
+      },
+      "richness": 5.9
+    },
+    "loom": {
+      "cost": 120000,
+      "drain": 1.16,
+      "types": {
+        "moonstone": 2,
+        "frost": 1.5,
+        "sapphire": 2,
+        "topaz": 1.5,
+        "geode": 0.05
+      },
+      "families": {
+        "loom": {
+          "weight": 1,
+          "art": [
+            "X.X",
+            "X.X",
+            "XXX"
+          ]
+        }
+      },
+      "richness": 6.7
+    },
+    "wickhold": {
+      "cost": 170000,
+      "drain": 1.3,
+      "types": {
+        "amber": 2,
+        "glowcap": 1.5,
+        "ember": 1,
+        "frost": 1,
+        "topaz": 1.5,
+        "heart": 0.04
+      },
+      "families": {
+        "lantern": {
+          "weight": 1,
+          "art": [
+            ".X.",
+            "XXX",
+            "XXX"
+          ]
+        }
+      },
+      "richness": 7.5
+    },
+    "skywell": {
+      "cost": 0,
+      "drain": 1.24,
+      "types": {
+        "garnet": 1.5,
+        "moonstone": 1.5,
+        "sapphire": 1.5,
+        "frost": 1,
+        "topaz": 1.5,
+        "geode": 0.06,
+        "heart": 0.05
+      },
+      "families": {
+        "rubble": {
+          "weight": 1.2,
+          "art": [
+            "XX.",
+            "XXX",
+            ".XX"
+          ]
+        }
+      },
+      "richness": 8.4
     }
   },
   "target": {
@@ -318,11 +430,18 @@
       "grotto": 0.24,
       "frostpine": 0.24,
       "gulch": 0.3,
-      "heartwood": 0.34
+      "heartwood": 0.34,
+      "cinder": 0.36,
+      "roost": 0.5,
+      "loom": 0.38,
+      "wickhold": 0.3,
+      "skywell": 0.34
     },
     "max_alive": {
       "default": 1,
-      "heartwood": 2
+      "heartwood": 2,
+      "roost": 2,
+      "skywell": 2
     },
     "grace_placements": 6,
     "nibble_share": 0.08,
