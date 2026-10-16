@@ -7,11 +7,11 @@ const { AdMob, Purchases, FirebaseAnalytics, FirebaseRemoteConfig } = cap?.Plugi
 // Fill these from your accounts (docs/SETUP.md). The defaults are Google's public *test* ad units: safe to ship to
 // testers, never earn money. Empty RevenueCat key = purchases switched off.
 const KEYS = {
-  rewarded:     { android: "ca-app-pub-3940256099942544/5224354917", ios: "ca-app-pub-3940256099942544/1712485313" },
-  interstitial: { android: "ca-app-pub-3940256099942544/1033173712", ios: "ca-app-pub-3940256099942544/4411468910" },
-  banner:       { android: "ca-app-pub-3940256099942544/6300978111", ios: "ca-app-pub-3940256099942544/2934735716" },
+  rewarded:     { android: "ca-app-pub-3940256099942544/5224354917", ios: "ca-app-pub-2020120570370273/2608861706" },
+  interstitial: { android: "ca-app-pub-3940256099942544/1033173712", ios: "ca-app-pub-2020120570370273/7053794160" },
+  banner:       { android: "ca-app-pub-3940256099942544/6300978111", ios: "ca-app-pub-2020120570370273/1506698874" },
   revenuecat:   { android: "", ios: "" },
-  testAds: true, // flip to false only with your real ad unit IDs in place
+  testAds: true, // iOS units are real; keep test ads on for TestFlight, flip to false for the App Store build
 };
 export const NO_ADS = "no_ads"; // RevenueCat entitlement id
 
@@ -26,6 +26,10 @@ const ready = { rewarded: false, interstitial: false };
 const log = [];
 let noAds = false;
 try { noAds = localStorage.getItem("gw.noAds") === "1"; } catch {}
+
+// the banner's height as --ad on <html> (plus a hasAd class), so the camp and menus lift above it instead of hiding under it
+let adListening = false;
+const setAdHeight = (h) => { const px = Math.max(0, Math.round(+h || 0)); document.documentElement.style.setProperty("--ad", px + "px"); document.documentElement.classList.toggle("hasAd", px > 0); };
 
 async function load(kind) {
   if (!native || !AdMob) return;
@@ -107,8 +111,9 @@ export const platform = {
   async banner(show) { // menus only, never over the board
     if (!native || !AdMob) return;
     try {
+      if (!adListening) { adListening = true; AdMob.addListener?.("bannerAdSizeChanged", (s) => setAdHeight(s?.height)); AdMob.addListener?.("bannerAdFailedToLoad", () => setAdHeight(0)); }
       if (show && !noAds) await AdMob.showBanner({ adId: id("banner"), adSize: "ADAPTIVE_BANNER", position: "BOTTOM_CENTER", isTesting: KEYS.testAds });
-      else await AdMob.hideBanner();
+      else { await AdMob.hideBanner(); setAdHeight(0); }
     } catch {}
   },
 
