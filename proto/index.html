@@ -452,6 +452,7 @@
   <div class="sheetBody">
     <div class="tag">Today's crystals are the same for everyone. One dig a day; keep the streak going.</div>
     <div id="dailyInfo"></div>
+    <button id="dLb" class="alt" style="display:none">Leaderboards</button>
   </div>
   <div class="sheetFoot"><button id="daily"></button></div>
 </div></div></section>
@@ -470,7 +471,7 @@
   <div class="sheetBody">
     <div class="optList">
       <button id="oMusic" class="optRow"></button><button id="oSound" class="optRow"></button><button id="oVib" class="optRow"></button>
-      <button id="oGlyph" class="optRow"></button><button id="oPrivacy" class="optRow"></button>
+      <button id="oGlyph" class="optRow"></button><button id="oPrivacy" class="optRow"></button><button id="oLb" class="optRow" style="display:none"></button>
       <details class="optRow" id="oCredits"><summary><span class="icoCredits"></span><span class="lbl">Credits</span></summary>
         <p>Glimmerwood is made by Alex de la Chica.<br>Grandstander typeface by Tyler Finck; Fredoka typeface by Milena Brandão and Hafontia (both SIL Open Font License).<br>Music and sounds are synthesised in the game.</p></details>
       <div id="optsPlatform"></div>
@@ -1375,7 +1376,7 @@ function commit(i, r, c, from) {
     const br = breakCells(board, lines, isEmber), embers = br.embers, sb = stoneBreak(board, br.cells, isStone, cracked), cells = sb.cells, pure = pureVeinCells(board, lines, typeOf), before = board;
     const shooLoot = shooMoths(cells); freePets(cells, before); petHop = performance.now();
     for (const k of cells) { const mem = meta[before[k]]?.memory; if (mem && !save.story.mem.includes(mem)) { // an Amber Memory breaks open
-      save.story.mem.push(mem); newMem.push(mem); persist(); meta[before[k]].memory = null; track("memory_found", { id: mem });
+      save.story.mem.push(mem); newMem.push(mem); persist(); meta[before[k]].memory = null; track("memory_found", { id: mem }); platform.submitScore("memories_found", save.story.mem.length);
       pops.push({ text: "An Amber Memory!", life: 1.2, col: "#ffd27a" }); [659, 880, 1047, 1319].forEach((f, j) => tone(f, .5, "sine", .07, j * .09)); } }
     let gained = shooLoot;
     const inLine = new Set(lineCells(lines)), lens = .5 * save.up.lens, tongs = .25 * save.up.tongs;
@@ -1546,6 +1547,8 @@ function sell(mult) {
     else save.daily.best = Math.max(save.daily.best, haulValue());
   } else save.best[bestKey()] = Math.max(save.best[bestKey()] || 0, haulValue());
   persist();
+  if (!calm) platform.submitScore("best_haul", haulValue()); // Game Center keeps each player's best. Calm Grove has no clock, so it stays off the board
+  if (daily) platform.submitScore("daily_dig", save.daily.best); // a leaderboard that resets daily (docs/SETUP.md)
   state = "home"; renderHome(); show("home");
   track("haul_sold", { mine: biome.id, value: v, doubled: mult > 1 });
   platform.expeditionDone(); // interstitial, only when the pacing caps allow
@@ -1582,7 +1585,7 @@ function renderHome() {
     $(id).innerHTML = `${icon(ico, 22)}<span class="lbl">${label}</span>${on === undefined ? "" : `<span class="state">${on ? "On" : "Off"}</span>`}`;
     if (on !== undefined) { $(id).classList.toggle("on", on); $(id).setAttribute("aria-pressed", on); } };
   optRow("oMusic", "note", "Music", save.opt.music); optRow("oSound", save.opt.sound ? "soundOn" : "soundOff", "Sound", save.opt.sound);
-  optRow("oVib", "vibe", "Haptics", save.opt.vib); optRow("oGlyph", "symbols", "Colour-blind symbols", save.opt.glyph); optRow("oPrivacy", "lock", "Privacy choices");
+  optRow("oVib", "vibe", "Haptics", save.opt.vib); optRow("oGlyph", "symbols", "Colour-blind symbols", save.opt.glyph); optRow("oPrivacy", "lock", "Privacy choices"); optRow("oLb", "shatter", "Leaderboards");
   $("dibbleArt").innerHTML = titleHero(save.look, STILL);
   const mem = `Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}`;
   $("tMem").textContent = mem; $("campMem").textContent = mem;
@@ -2156,6 +2159,15 @@ $("coinHud").innerHTML = coin(26);
 
 if (platform.native) $("adNote").textContent = "Green buttons play a short video ad.";
 platform.init().then(() => renderHome());
+platform.gameCenter.then((ok) => { // Game Center leaderboards (iOS): the entries appear once it's available
+  if (!ok) return;
+  for (const id of ["dLb", "oLb"]) { $(id).style.display = ""; $(id).onclick = async () => (await platform.showLeaderboards()) || toast("Sign in to Game Center in Settings to see the leaderboards"); }
+  // scores from before sign-in (or before this update) reach the boards too; Game Center ignores ones below the player's best
+  const best = Math.max(0, ...Object.entries(save.best).filter(([k]) => !k.endsWith(":calm")).map(([, v]) => v));
+  if (best) platform.submitScore("best_haul", best);
+  if (save.story.mem.length) platform.submitScore("memories_found", save.story.mem.length);
+  if (save.daily.last === today()) platform.submitScore("daily_dig", save.daily.best);
+});
 $("logoSwash").innerHTML = logoSwash(); $("logo").innerHTML = logoLetters(); $("titleScene").innerHTML = titleScene(STILL);
 renderHome(); show("title"); layout(); document.fonts?.ready.then(layout);
 if (qs.has("scene")) sceneCheck(qs.get("scene"));

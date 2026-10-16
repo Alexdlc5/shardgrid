@@ -22,6 +22,7 @@ Ads = Google AdMob, purchases = RevenueCat, stats/crashes/remote tuning = Fireba
 | ✅ | A11. RevenueCat (iOS) | done 2026-10-16 | `appl_` key in the app; In-App Purchase key valid; `no_ads` (App Store + Test Store) → `no_ads` entitlement → current offering `default` |
 | ⬜ | A12. App Store listing, privacy labels, review | 1–2 days review | at launch |
 | ✅ | A13. Trademark check | decided 2026-10-16 | keeping **Glimmerwood** (an iOS game "Glimmerwood: Potion Sort" launched 2026-10-13) |
+| ⬜ | A14. Game Center leaderboards | 10 minutes | turn on Game Center, create 3 leaderboards, add them to the next version |
 | ⬜ | B. Google Play (later) | 14+ days of testing | after iOS launch |
 
 You need **an iPhone** (iOS 15 or newer) to play the TestFlight builds. You **don't** need a Mac: GitHub's Macs build and upload the app.
@@ -201,6 +202,34 @@ live game in the same niche. Apple may also refuse the bare name "Glimmerwood" i
 1. **Rename** before the App Store record (A3). This is the cheapest moment: only the title, the store text and the in-game logo change, and the bundle ID
    `io.github.alexdlc5.glimmerwood` can stay. Glimmeroak-based names look clear, but Claude should run them through this same check before you commit.
 2. **Keep Glimmerwood** with a subtitle (e.g. "Glimmerwood: Crystal Mines"). Ask a trademark attorney first: the other game shipped first.
+
+## A14. Game Center leaderboards (10 minutes, before the build that ships them)
+
+The app already signs in to Game Center quietly, submits scores and shows Apple's leaderboard screen (a **Leaderboards** button in
+the Daily Dig sheet and in Options). Apple hosts everything: no account, no server, free. You only create the boards.
+
+1. **developer.apple.com** → Certificates, IDs & Profiles → **Identifiers** → `io.github.alexdlc5.glimmerwood` → check **Game Center** is ticked
+   (it's on by default). The app's `App.entitlements` asks for it, and the CI build's automatic signing picks it up.
+2. **App Store Connect** → your app → **Game Center** (in the sidebar under Features or Services) → turn Game Center **on** for the app.
+3. **Leaderboards → +**, three times. The **Leaderboard ID** must match exactly and can never change. For all three: Score Format Type
+   **Integer**, Score Submission Type **Best Score**, Sort Order **High to Low**. Add a localization (English) with the display name below,
+   score format **Integer**.
+
+   | Type | Reference name | Leaderboard ID | Display name | Score suffix |
+   |---|---|---|---|---|
+   | **Recurring**: start at 00:00 UTC (the game's day turns over then), duration **1 day**, restarts every **1 day** | Daily Dig | **`daily_dig`** | Daily Dig | ` g` |
+   | Classic | Best Haul | **`best_haul`** | Best Haul | ` g` |
+   | Classic | Amber Memories | **`memories_found`** | Amber Memories | ` of 33` |
+
+   `best_haul` takes Expedition and Daily Dig hauls; Calm Grove has no clock, so its hauls stay off the board.
+4. **App Store** → the next version's page → **Game Center** section → tick it → **Leaderboards → Add** → select all three → Save.
+   They go live with that version. TestFlight builds can already use them before that.
+
+**Device test (Claude can't do these):** on the TestFlight build, signed in to Game Center on the iPhone,
+1. launch: a "Welcome back" banner, no prompt (signed out: no prompt either, and the game plays as before);
+2. finish a Daily Dig and sell: the haul shows under **Daily Dig** and **Best Haul**; break open a memory: **Amber Memories** goes up;
+3. tap **Leaderboards** in the Daily Dig sheet and in Options: Apple's screen opens and closes back to the game;
+4. signed out of Game Center: the button still shows and opens Apple's sign-in sheet.
 
 ---
 
