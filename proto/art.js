@@ -256,7 +256,7 @@ export function dibble(size = 96, look = {}) {
       <path d="M35 23 Q43 18 52 19" stroke="#ffffff" stroke-width="2" opacity=".22" fill="none" stroke-linecap="round"/>
       <g stroke="${fs}" stroke-width="1.1" fill="none" opacity=".6" stroke-linecap="round"><path d="M27 48 q3 -1 4 -4 M29 56 q3 0 5 -3 M71 48 q-3 -1 -4 -4 M70 56 q-3 0 -5 -3 M60 66 q-1 -3 1 -5"/></g>
     </g>
-    ${pieEye(41, 41, 5, 7.4, 1)}${pieEye(59, 41, 5, 7.4, 1)}
+    ${pieEye(42, 42, 4.3, 6.3, .8)}${pieEye(58, 42, 4.3, 6.3, .8)}
     <ellipse cx="31" cy="53" rx="5.6" ry="3.4" fill="url(#${id}k)"/><ellipse cx="69" cy="53" rx="5.6" ry="3.4" fill="url(#${id}k)"/>
     <ellipse cx="50" cy="56.4" rx="8.4" ry="6.6" fill="url(#${id}c)"/>
     <ellipse cx="50" cy="54.2" rx="3.3" ry="2.5" fill="url(#${id}n)" stroke="#8a4652" stroke-width="1.1"/><ellipse cx="49" cy="53.4" rx="1" ry=".6" fill="#fff" opacity=".8"/>
