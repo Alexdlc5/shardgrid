@@ -1,0 +1,39 @@
+{
+ "se": {
+  "osc": 113,
+  "opt": {
+   "music": false,
+   "sound": true,
+   "vib": true,
+   "glyph": false
+  }
+ },
+ "pro": {
+  "osc": 113,
+  "opt": {
+   "music": false,
+   "sound": true,
+   "vib": true,
+   "glyph": false
+  }
+ },
+ "max": {
+  "osc": 110,
+  "opt": {
+   "music": false,
+   "sound": true,
+   "vib": true,
+   "glyph": false
+  }
+ },
+ "tapFinish": {
+  "hiddenBefore": 122,
+  "hiddenAfter": 0,
+  "nextShown": false
+ },
+ "secondTapAdvances": true,
+ "soundOff": {
+  "osc": 0,
+  "typed": 54
+ }
+}
