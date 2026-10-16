@@ -1,8 +1,8 @@
-// Platform services: ads, purchases, analytics.
+// Platform services: ads, purchases, analytics, Game Center leaderboards.
 // In the Capacitor app the native plugins are reached through window.Capacitor.Plugins (no bundler needed);
 // in a plain browser everything is a harmless stand-in, so the prototype keeps working as before.
 const cap = window.Capacitor, native = !!cap?.isNativePlatform?.(), os = cap?.getPlatform?.() || "web";
-const { AdMob, Purchases, FirebaseAnalytics, FirebaseRemoteConfig, FirebaseCrashlytics, Preferences } = cap?.Plugins || {};
+const { AdMob, Purchases, FirebaseAnalytics, FirebaseRemoteConfig, FirebaseCrashlytics, Preferences, GameCenter } = cap?.Plugins || {}; // GameCenter: ios/App/App/GameCenterPlugin.swift
 export const VERSION = "dev"; // scripts/build-web.mjs writes "1.0 (build)" here
 const PRIVACY_URL = "https://alexdlc5.github.io/privacy.html";
 
@@ -26,7 +26,7 @@ let expeditions = 0, sinceInter = 0, lastInter = 0, watchedThisRun = false;
 const id = (k) => KEYS[k][os];
 const ready = { rewarded: false, interstitial: false };
 const log = [];
-let noAds = false, adsReady = false, privacyRequired = false;
+let noAds = false, adsReady = false, privacyRequired = false, leaderboards = false;
 try { noAds = localStorage.getItem("gw.noAds") === "1"; } catch {}
 
 // the banner's height as --ad on <html> (plus a hasAd class), so the camp and menus lift above it instead of hiding under it.
@@ -68,6 +68,7 @@ export const platform = {
   async init() {
     if (!native) return;
     remoteCaps(); // not awaited: a slow network never delays start-up
+    this.gameCenter = GameCenter ? GameCenter.signIn().then((r) => leaderboards = !!r?.available, () => false) : Promise.resolve(false); // quiet, never awaited here
     if (AdMob) {
       // GDPR/US consent (UMP) first, then the iOS tracking prompt, then the SDK. Each step is separate, so an offline or failed
       // form never switches ads off: the SDK then uses the consent saved last time.
@@ -179,6 +180,18 @@ export const platform = {
       setNoAds(!!customerInfo.entitlements.active[NO_ADS]); track("iap_restore", { found: noAds });
       return noAds;
     } catch (e) { track("iap_restore_failed", { error: String(e?.message || e).slice(0, 90) }); return null; }
+  },
+
+  // Game Center (iOS). gameCenter resolves true once the leaderboards can be shown (signed in, or a sign-in sheet is ready);
+  // a player who declines keeps playing as before. Leaderboard ids are set up in App Store Connect (docs/SETUP.md).
+  gameCenter: Promise.resolve(false),
+  get leaderboards() { return leaderboards; },
+  submitScore(board, value) {
+    if (leaderboards) GameCenter.submitScore({ board, value: Math.floor(value) }).catch((e) => track("gc_submit_failed", { board, error: String(e?.message || e).slice(0, 90) }));
+  },
+  async showLeaderboards() {
+    if (!leaderboards) return false;
+    try { return !!(await GameCenter.showLeaderboards())?.shown; } catch { return false; }
   },
 
   // The save lives in localStorage, which WebKit writes to disk lazily and iOS may clear when space runs low.

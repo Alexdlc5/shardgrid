@@ -469,6 +469,7 @@
   <div class="sheetBody">
     <div class="tag">Today's crystals are the same for everyone. One dig a day; keep the streak going.</div>
     <div id="dailyInfo"></div>
+    <button id="dLb" class="alt" style="display:none">Leaderboards</button>
   </div>
   <div class="sheetFoot"><button id="daily"></button></div>
 </div></div></section>
@@ -487,7 +488,7 @@
   <div class="sheetBody">
     <div class="optList">
       <button id="oMusic" class="optRow"></button><button id="oSound" class="optRow"></button><button id="oVib" class="optRow"></button>
-      <button id="oGlyph" class="optRow"></button><button id="oPrivacy" class="optRow"></button>
+      <button id="oGlyph" class="optRow"></button><button id="oPrivacy" class="optRow"></button><button id="oLb" class="optRow" style="display:none"></button>
       <details class="optRow" id="oCredits"><summary><span class="icoCredits"></span><span class="lbl">Credits</span></summary>
         <p>Glimmerwood is made by Alex de la Chica.<br>Grandstander typeface by Tyler Finck; Fredoka typeface by Milena Brandão and Hafontia (both SIL Open Font License).<br>Music and sounds are synthesised in the game.</p></details>
       <div id="optsPlatform"></div>
@@ -557,6 +558,7 @@ import { PROLOGUE, MEMORIES, MEMORY_COUNT, nextMemory, memoryById, mineOfMemory,
   CAMP_LINES, SCALE_NOTE, SCENES, nextScene, SITES, GIVEN, MAP_GATE, MURMURS, MURMURS_DEEP, MURMURS_AFTER, PETS, PET_HINT, PET_SHOP } from "./story.js";
 import { soundtrack, sfx } from "./music.js";
 import { platform, track } from "./platform.js";
+import { drawLife, lifeDig, lifeStop, lifeTap, campLife, campPrints } from "./ambient.js";
 import { curve, ring, limb, shape, stroke, rng as prng } from "./paint.js";
 
 // ---------- painted UI skins: plank, parchment and carved-recess shapes from paint.js, as 9-slice SVGs for CSS border-image (--p-*) ----------
@@ -751,6 +753,7 @@ function layout() {
   const sb = parseFloat(getComputedStyle($("safeProbe")).paddingBottom) || 0;
   cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px";
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  hudTop = $("hud").getBoundingClientRect().top;
   const top = $("hud").getBoundingClientRect().bottom + 30, bottom = H - sb - 8, GAP = 54, TR = 3.1; // 30: Rootline + leaves; GAP: Rootline + hint line
   cell = Math.floor(Math.min((W - 64) / N, (bottom - top - GAP) / (N + TR)));
   const spare = Math.max(0, bottom - top - GAP - cell * (N + TR));
@@ -760,6 +763,7 @@ function layout() {
   const hc = $("coinHud").getBoundingClientRect(); haulAt = [hc.left + hc.width / 2, hc.top + hc.height / 2];
   bgCache = null;
 }
+let hudTop = 0; // where ambient life may fly: from the HUD's top down to the board
 addEventListener("resize", layout);
 
 // ---------- color helpers ----------
@@ -827,6 +831,7 @@ function startDig(isDaily = false) {
   $("biomeName").textContent = daily ? `Daily Dig · ${today()}` : biome.name + (calm ? " · Calm" : "");
   $("comboTxt").textContent = ""; ending = null; tip = null; coins = []; pops = []; floats = []; parts = []; fx = []; shownHaul = 0; layout();
   track("round_start", { mine: biome.id, mode: daily ? "daily" : calm ? "calm" : "expedition" });
+  pawPrints = false; lifeDig(["fur", "hat", "scarf", "lantern"].map((p) => [p, Object.keys(LOOKS[p]).filter((v) => v !== "granny")]), !daily && Object.keys(save.best).length > 0);
 }
 const rawHaul = () => Object.entries(haul).reduce((s, [t, n]) => s + n * CRYSTALS[t].value, 0) + bonus;
 const haulValue = () => Math.max(0, Math.round((rawHaul() - stolen) * valueMult()));
@@ -1227,6 +1232,7 @@ function paintMine() {
 }
 function drawMine(now) { // the painted cave, plus motes drifting through it
   bgCache ??= paintMine(); ctx.drawImage(bgCache.mine, 0, 0, W, H);
+  if (state === "play") drawLife(ctx, now, { W, bx, by, bw: cell * N, top: hudTop, low: trayY, feature: look().feature, busy: !!drag }); // ambient.js: what passes, and the other lantern
   const [col, dir, n] = MOTES[look().feature] || MOTES.moss;
   if (calmMotion) return; ctx.fillStyle = col;
   for (let k = 0; k < n; k++) { const sp = 18 + (k * 7) % 23, y = (((k * 137) % 100) / 100 * H + dir * now / 1000 * sp) % H, yy = y < 0 ? y + H : y;
@@ -1357,6 +1363,8 @@ function trayRect(i) {
 // drag starts anywhere in a piece's third of the tray (the whole slot, down to the bottom of the screen)
 cv.addEventListener("pointerdown", (e) => {
   if (state !== "play" || !tray) return;
+  const said = lifeTap(e.clientX, e.clientY); // tapped the other lantern in time: a line, and a tally nobody shows you (yet)
+  if (said) { toast("", 2800); say($("toast"), said, "dibble"); save.lanterns = (save.lanterns || 0) + 1; persist(); return; }
   const i = Math.floor((e.clientX - trayX) / slotW);
   if (i < 0 || i > 2 || !tray[i] || e.clientY < trayY - 18) return;
   drag = { i, ...tray[i], x: e.clientX, y: e.clientY, touch: e.pointerType !== "mouse", at: performance.now(), from: trayRect(i) };
@@ -1393,7 +1401,7 @@ function commit(i, r, c, from) {
     const br = breakCells(board, lines, isEmber), embers = br.embers, sb = stoneBreak(board, br.cells, isStone, cracked), cells = sb.cells, pure = pureVeinCells(board, lines, typeOf), before = board;
     const shooLoot = shooMoths(cells); freePets(cells, before); petHop = performance.now();
     for (const k of cells) { const mem = meta[before[k]]?.memory; if (mem && !save.story.mem.includes(mem)) { // an Amber Memory breaks open
-      save.story.mem.push(mem); newMem.push(mem); persist(); meta[before[k]].memory = null; track("memory_found", { id: mem });
+      save.story.mem.push(mem); newMem.push(mem); persist(); meta[before[k]].memory = null; track("memory_found", { id: mem }); platform.submitScore("memories_found", save.story.mem.length);
       pops.push({ text: "An Amber Memory!", life: 1.2, col: "#ffd27a" }); [659, 880, 1047, 1319].forEach((f, j) => tone(f, .5, "sine", .07, j * .09)); } }
     let gained = shooLoot;
     const inLine = new Set(lineCells(lines)), lens = .5 * save.up.lens, tongs = .25 * save.up.tongs;
@@ -1440,7 +1448,7 @@ function commit(i, r, c, from) {
 function endRound(cause) {
   if (state === "play") track("round_end", { mine: biome.id, cause, value: haulValue(), seconds: Math.round(maxTime - time) });
   if (state !== "play") return;
-  state = "end"; endCause = cause; drag = null; ending = { cause, at: performance.now() };
+  state = "end"; endCause = cause; drag = null; ending = { cause, at: performance.now() }; lifeStop();
   pops.push({ text: cause === "time" ? "The roots closed in!" : "No room left!", life: 1.3, col: cause === "time" ? "#ff9d7a" : "#ffd27a" });
   sfx.thud(); buzz(40);
   // first a beat to see what happened, then the rescue offer (once per dig), then the haul
@@ -1564,6 +1572,8 @@ function sell(mult) {
     else save.daily.best = Math.max(save.daily.best, haulValue());
   } else save.best[bestKey()] = Math.max(save.best[bestKey()] || 0, haulValue());
   persist();
+  if (!calm) platform.submitScore("best_haul", haulValue()); // Game Center keeps each player's best. Calm Grove has no clock, so it stays off the board
+  if (daily) platform.submitScore("daily_dig", save.daily.best); // a leaderboard that resets daily (docs/SETUP.md)
   state = "home"; renderHome(); show("home");
   track("haul_sold", { mine: biome.id, value: v, doubled: mult > 1 });
   platform.expeditionDone(); // interstitial, only when the pacing caps allow
@@ -1600,7 +1610,7 @@ function renderHome() {
     $(id).innerHTML = `${icon(ico, 22)}<span class="lbl">${label}</span>${on === undefined ? "" : `<span class="state">${on ? "On" : "Off"}</span>`}`;
     if (on !== undefined) { $(id).classList.toggle("on", on); $(id).setAttribute("aria-pressed", on); } };
   optRow("oMusic", "note", "Music", save.opt.music); optRow("oSound", save.opt.sound ? "soundOn" : "soundOff", "Sound", save.opt.sound);
-  optRow("oVib", "vibe", "Haptics", save.opt.vib); optRow("oGlyph", "symbols", "Colour-blind symbols", save.opt.glyph); optRow("oPrivacy", "lock", "Privacy choices");
+  optRow("oVib", "vibe", "Haptics", save.opt.vib); optRow("oGlyph", "symbols", "Colour-blind symbols", save.opt.glyph); optRow("oPrivacy", "lock", "Privacy choices"); optRow("oLb", "shatter", "Leaderboards");
   $("dibbleArt").innerHTML = titleHero(save.look, STILL);
   const mem = `Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}`;
   $("tMem").textContent = mem; $("campMem").textContent = mem;
@@ -1927,9 +1937,18 @@ function drawCamp() {
   const stage = $("campStage"); if (!stage.clientHeight) return; // hidden: the ResizeObserver draws it once it shows
   const barBottom = document.querySelector(".hubBar").getBoundingClientRect().bottom - stage.getBoundingClientRect().top;
   $("campArt").innerHTML = camp({ ...campState(), daily: campDaily, view: [stage.clientWidth, stage.clientHeight, barBottom] }, gem, dibble(100, save.look));
+  const art = $("campArt").querySelector("svg"), pud = () => $("campArt").querySelector(".pud");
+  if (pawPrints && save.story.site === "stump") campPrints(art);
+  campLife(art, save.story.site === "skywell" && save.story.finale ? "sky" : save.story.site, { visible: () => $("home").classList.contains("show") && !["talk", ...SHEETS].some((id) => $(id).classList.contains("show")),
+    extra: pud() ? ["hum"] : [], hum: () => { const b = pud()?.getBoundingClientRect(), st = stage.getBoundingClientRect(); // Puddock hums a line of something old
+      if (b) campFx(Math.min(st.width - 100, b.left + b.width / 2 - st.left), b.top - st.top - 34, pick(["♪ Hm-hm… lanterns low… ♪", "♪ Hmm, hm-hm-hmm… ♪", "♪ …down she goes, hm… ♪"]), "campSay"); } });
   campPets(); setTimeout(campTips, 900);
 }
 new ResizeObserver(drawCamp).observe($("campStage"));
+// someone came by the stump while you were away (8h or more): small prints lead out of it, until your next dig
+let pawPrints = false;
+const cameBack = () => { pawPrints ||= Date.now() - (save.seenAt || Date.now()) > 8 * 3600e3; save.seenAt = Date.now(); persist(); };
+cameBack(); document.addEventListener("visibilitychange", () => { if (document.hidden) { save.seenAt = Date.now(); persist(); } else if (cameBack(), pawPrints) drawCamp(); });
 
 // ---------- the pets out at camp: they roam the open ground between the middle and front props, resting a lot ----------
 // Each pet is two pre-rendered images (eyes open, eyes shut) in its own element over the camp art, moved only with
@@ -2256,6 +2275,15 @@ $("coinHud").innerHTML = coin(26);
 
 if (platform.native) $("adNote").textContent = "Green buttons play a short video ad.";
 platform.init().then(() => renderHome());
+platform.gameCenter.then((ok) => { // Game Center leaderboards (iOS): the entries appear once it's available
+  if (!ok) return;
+  for (const id of ["dLb", "oLb"]) { $(id).style.display = ""; $(id).onclick = async () => (await platform.showLeaderboards()) || toast("Sign in to Game Center in Settings to see the leaderboards"); }
+  // scores from before sign-in (or before this update) reach the boards too; Game Center ignores ones below the player's best
+  const best = Math.max(0, ...Object.entries(save.best).filter(([k]) => !k.endsWith(":calm")).map(([, v]) => v));
+  if (best) platform.submitScore("best_haul", best);
+  if (save.story.mem.length) platform.submitScore("memories_found", save.story.mem.length);
+  if (save.daily.last === today()) platform.submitScore("daily_dig", save.daily.best);
+});
 $("logoSwash").innerHTML = logoSwash(); $("logo").innerHTML = logoLetters(); $("titleScene").innerHTML = titleScene(STILL);
 renderHome(); show("title"); layout(); document.fonts?.ready.then(layout);
 if (qs.has("scene")) sceneCheck(qs.get("scene"));
