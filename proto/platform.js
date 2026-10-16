@@ -10,7 +10,7 @@ const KEYS = {
   rewarded:     { android: "ca-app-pub-3940256099942544/5224354917", ios: "ca-app-pub-2020120570370273/2608861706" },
   interstitial: { android: "ca-app-pub-3940256099942544/1033173712", ios: "ca-app-pub-2020120570370273/7053794160" },
   banner:       { android: "ca-app-pub-3940256099942544/6300978111", ios: "ca-app-pub-2020120570370273/1506698874" },
-  revenuecat:   { android: "", ios: "" },
+  revenuecat:   { android: "", ios: "test_fRWfPrpwyJiNOGukUhqurTywrox" }, // RevenueCat Test Store key: simulated purchases for TestFlight. Swap in the appl_ key before the App Store build.
   testAds: true, // iOS units are real; keep test ads on for TestFlight, flip to false for the App Store build
 };
 export const NO_ADS = "no_ads"; // RevenueCat entitlement id

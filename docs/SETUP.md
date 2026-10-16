@@ -12,16 +12,16 @@ Ads = Google AdMob, purchases = RevenueCat, stats/crashes/remote tuning = Fireba
 | ✅ | Contact email | — | **pubshiftsupport@gmail.com** |
 | ✅ | Public website | — | **https://alexdlc5.github.io** (privacy, terms, app-ads.txt) |
 | ✅ | A1. Apple Developer Program | done 2026-10-16 | Individual enrollment |
-| ⬜ | A2. Agreements, tax, banking | ~1 day | after A1 |
+| ✅ | A2. Agreements, tax, banking | done 2026-10-16 | Paid Apps agreement Active |
 | ✅ | A3. Bundle ID + app record | done 2026-10-16 | app name **Glimmerwood** |
 | ✅ | A4–A6. CI key + GitHub secrets | done 2026-10-16 | iPhone registered under Devices; CI revokes its old development certificates each run |
 | ✅ | A7. First TestFlight build on your iPhone | done 2026-10-16 | internal group "Me"; run the **ios** workflow from main with "Sign and upload" ticked |
 | ✅ | A8. AdMob (iOS app) | done 2026-10-16 | App ID + 3 iOS units in the app; W-9 in review; link the store listing after launch |
-| ⬜ | A9. Firebase (iOS app) | minutes | any time (code side ready) |
+| ✅ | A9. Firebase (iOS app) | done 2026-10-16 | plist in the app; Crashlytics on; Remote Config v1 published (ad_grace 3, ad_every_n 2, ad_gap_s 90) |
 | ⬜ | A10. "Remove ads" product + sandbox tester | ~1 day | after A2 |
-| ⬜ | A11. RevenueCat (iOS) | minutes | after A10 |
+| ⏳ | A11. RevenueCat (iOS) | minutes | Test Store key in the app (simulated purchases); swap in the `appl_` key after A10 |
 | ⬜ | A12. App Store listing, privacy labels, review | 1–2 days review | at launch |
-| ⚠️ | A13. Trademark check | — | **name decision needed:** an iOS game "Glimmerwood: Potion Sort" launched 2026-10-13 |
+| ✅ | A13. Trademark check | decided 2026-10-16 | keeping **Glimmerwood** (an iOS game "Glimmerwood: Potion Sort" launched 2026-10-13) |
 | ⬜ | B. Google Play (later) | 14+ days of testing | after iOS launch |
 
 You need **an iPhone** (iOS 15 or newer) to play the TestFlight builds. You **don't** need a Mac: GitHub's Macs build and upload the app.
