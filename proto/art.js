@@ -499,7 +499,7 @@ export function mystery(w = 160, h = 96) {
     <rect width="160" height="96" fill="#141a16"/>
     <path d="M18 96 Q16 30 80 22 Q144 30 142 96 Z" fill="#070a08"/>
     ${[0, 1, 2].map((k) => `<ellipse cx="${40 + k * 40}" cy="${70 - k * 6}" rx="46" ry="10" fill="#cfd8c8" opacity=".07"><animate attributeName="cx" values="${30 + k * 40};${54 + k * 40};${30 + k * 40}" dur="${7 + k * 2}s" repeatCount="indefinite"/></ellipse>`).join("")}
-    <text x="80" y="66" font-size="40" font-weight="700" text-anchor="middle" fill="#ffd27a" opacity=".85" font-family="Fredoka, sans-serif">?<animate attributeName="opacity" values=".5;.95;.5" dur="2.6s" repeatCount="indefinite"/></text>
+    <text x="80" y="66" font-size="40" font-weight="700" text-anchor="middle" fill="#ffd27a" opacity=".85" font-family="Grandstander, Fredoka, sans-serif">?<animate attributeName="opacity" values=".5;.95;.5" dur="2.6s" repeatCount="indefinite"/></text>
   </svg>`;
 }
 
@@ -538,8 +538,8 @@ export function camp(st, gemFn, dibbleSvg) {
     w = Math.min(w + Math.min(0, x), W - Math.max(0, x)); x = Math.max(0, x); // and never off the sides
     return `<rect x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(h)}" fill="transparent"/>`; };
   // a wooden sign whose text is the same size on every phone (15px unless told), kept clear of the edges
-  const label = (x, y, text, f = F, c = "#8a5a32", wt = 600) => { const w = text.length * f * .56 + f * 1.3, h = f * 1.6; x = Math.max(w / 2 + 8, Math.min(W - 8 - w / 2, x));
-    return `${plank(x - w / 2, y - h / 2, w, h, c, r)}<text x="${f1(x)}" y="${f1(y + f * .36)}" font-size="${f1(f)}" text-anchor="middle" fill="#fff1d0" font-family="Fredoka, sans-serif" font-weight="${wt}">${text}</text>`; };
+  const label = (x, y, text, f = F, c = "#8a5a32", wt = 700) => { const w = text.length * f * .6 + f * 1.3, h = f * 1.6; x = Math.max(w / 2 + 8, Math.min(W - 8 - w / 2, x));
+    return `${plank(x - w / 2, y - h / 2, w, h, c, r)}<text x="${f1(x)}" y="${f1(y + f * .36)}" font-size="${f1(f)}" text-anchor="middle" fill="#fff1d0" font-family="Grandstander, Fredoka, sans-serif" font-weight="${wt}">${text}</text>`; };
 
   // ---- behind: the lantern line (one lantern per Lantern level), the gem shelf, the rack, the stump, the sapling ----
   const q = 1.5 * kf, sagX = (t) => 18 + t * 364, sagY = (t) => yL + Math.sin(t * Math.PI) * 30 * kf;
@@ -664,7 +664,7 @@ export function camp(st, gemFn, dibbleSvg) {
     ${plank(99, 373, 58, 3, "#8a5a32", r)}
     ${dy.done ? `<path d="M147 360 l3 3 l6 -8" stroke="${chalk}" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".85"/>`
       : `<circle cx="151" cy="362" r="8" fill="#9fe6c8" opacity=".3"><animate attributeName="opacity" values=".15;.4;.15" dur="2.2s" repeatCount="indefinite"/></circle>${shard(151, 371, 5, 11, -.1, "#5fc9a8", r, true)}`}`)}
-    <text x="${f1(PB.x(128))}" y="${f1(PB.y(340) + F * .36)}" font-size="${f1(F)}" text-anchor="middle" fill="${chalk}" font-family="Fredoka, sans-serif" font-weight="600" opacity=".95">Daily Dig</text>
+    <text x="${f1(PB.x(128))}" y="${f1(PB.y(340) + F * .36)}" font-size="${f1(F)}" text-anchor="middle" fill="${chalk}" font-family="Grandstander, Fredoka, sans-serif" font-weight="700" opacity=".95">Daily Dig</text>
     <text x="${f1(PB.x(101))}" y="${f1(PB.y(366) + 4.7 / s)}" font-size="${f1(13 / s)}" fill="${chalk}" font-family="Fredoka, sans-serif" opacity=".85">${dy.done ? `best ${dy.best || 0}g` : dy.streak ? `${dy.streak} day${dy.streak > 1 ? "s" : ""}` : "new today"}</text></g>`;
 
   const tier = (lv) => ["#9aa3ab", "#c6ccd2", "#f0c75a", "#9fe6ff"][Math.min(3, Math.floor(lv / 5))];
@@ -688,7 +688,7 @@ export function camp(st, gemFn, dibbleSvg) {
     <circle cx="394" cy="341" r="14" fill="url(#lanternGlow)"/>`)}
     ${!st.metPuddock && !st.firstRun ? place(338, 270, PSt.x(338), PSt.y(304), bk).g(`<g><animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0" dur="1.6s" repeatCount="indefinite"/>
       ${shape(curve([[312, 262], [338, 258.4], [364, 262], [367, 271.6], [362, 279.6], [346, 281], [339, 290], [335.4, 281], [316, 280], [309.6, 271.6]]), "#fff4dc", "#8a6a3a", [-.8, .7])}
-      <text x="338" y="274.6" font-size="11" text-anchor="middle" fill="#3a2410" font-family="Fredoka, sans-serif" font-weight="700">Psst!</text></g>`)
+      <text x="338" y="274.6" font-size="11" text-anchor="middle" fill="#3a2410" font-family="Grandstander, Fredoka, sans-serif" font-weight="700">Psst!</text></g>`)
       : label(PSt.x(338), PSt.y(304), st.packed ? "Back soon (probably)" : "Puddock's", st.packed ? 13 / s : F)}</g>`; // after the first haul (the signpost comes first), a Psst! hangs where his sign goes until you meet him
 
   // ---- the backdrop: sky, far layer, tall trees, the ground, ferns in front ----

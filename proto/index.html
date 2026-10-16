@@ -5,17 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Glimmerwood Prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Grandstander:wght@700&display=swap" rel="stylesheet">
 <!-- the native splash stays up until the title has painted (end of the module script); this hides it anyway if the game never boots -->
 <script>setTimeout(() => window.Capacitor?.Plugins?.SplashScreen?.hide(), 4000);</script>
 <style>
   :root { --forest: #0f2219; --forest2: #1d3b2a; --text: #efe6cf; --muted: #a9b79a; --amber: #f0b543;
     --red: #d6453d; --card: rgba(16, 32, 23, .92); --line: rgba(239, 230, 207, .14);
     /* type scale: every sheet and menu uses these four sizes (nothing under 13px) */
-    --fs-title: 26px; --fs-head: 18px; --fs-body: 16px; --fs-small: 14px; --adH: 0px; }
+    --fs-title: 26px; --fs-head: 18px; --fs-body: 16px; --fs-small: 14px; --adH: 0px;
+    /* two faces: a hand-lettered display face for titles, headings, buttons, tags and coin counts; Fredoka for reading text */
+    --font-display: Grandstander, Fredoka, system-ui, sans-serif; --font-body: Fredoka, system-ui, sans-serif; }
+  button small { font-family: var(--font-body); }
+  h1, h2, h3, .pill, .total, .stamp, .ribbon, .tabs, .custRow > span, .trialTag, .lockTag, .haulRow .v,
+    .mine .info b, .shopItem b, .iap b, .gift b, details.optRow summary { font-family: var(--font-display); }
   .hasAd { --adH: var(--ad); }
   html, body { margin: 0; height: 100%; overflow: hidden; touch-action: none; user-select: none; color: var(--text);
-    font: 16px/1.3 Fredoka, system-ui, sans-serif;
+    font: 16px/1.3 var(--font-body);
     background: radial-gradient(120% 70% at 50% 0%, #2b5a3c 0%, var(--forest2) 45%, var(--forest) 100%); }
   body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5;
     background: repeating-linear-gradient(105deg, transparent 0 90px, rgba(255, 240, 190, .035) 90px 150px, transparent 150px 260px); }
@@ -38,7 +43,7 @@
   .tag { color: var(--muted); margin: 6px 0 14px; }
   .gold { font-weight: 700; color: var(--amber); }
   button { display: block; width: 100%; margin-top: 10px; padding: 12px; border: 0; border-radius: 12px; cursor: pointer;
-    font: inherit; font-weight: 700; font-size: var(--fs-head); background: var(--amber); color: #2a1d06; min-height: 44px; }
+    font: inherit; font-family: var(--font-display); font-weight: 700; font-size: var(--fs-head); background: var(--amber); color: #2a1d06; min-height: 44px; }
   button:disabled { opacity: .4; cursor: default; }
   .row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
   .row:last-child { border-bottom: 0; }
@@ -227,7 +232,7 @@
   .talkBubble:empty { display: none; }
   .talkArt .granny, .talkArt .bidder { animation: bob 2.6s ease-in-out infinite; }
   .talkBubble .who { display: block; font-style: normal; font-size: var(--fs-small); letter-spacing: .6px; text-transform: uppercase; color: #8a5a32; margin-bottom: 2px; }
-  .chalkNote { font-family: Fredoka, sans-serif; font-size: 22px; text-align: center; color: #3a2418; letter-spacing: .5px; transform: rotate(-3deg); }
+  .chalkNote { font-family: var(--font-display); font-size: 22px; text-align: center; color: #3a2418; letter-spacing: .5px; transform: rotate(-3deg); }
   .wickHead { display: flex; align-items: center; gap: 6px; font-weight: 600; color: #ffd27a; margin: 4px 2px 6px; }
   .wickLamp { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
     background: radial-gradient(circle, rgba(255,214,122,calc(.25 + var(--g) * .6)), rgba(255,214,122,0) 70%); filter: drop-shadow(0 0 calc(var(--g) * 10px) #ffd27a); }
@@ -456,7 +461,7 @@
       <button id="oMusic" class="optRow"></button><button id="oSound" class="optRow"></button><button id="oVib" class="optRow"></button>
       <button id="oGlyph" class="optRow"></button><button id="oPrivacy" class="optRow"></button>
       <details class="optRow" id="oCredits"><summary><span class="icoCredits"></span><span class="lbl">Credits</span></summary>
-        <p>Glimmerwood is made by Alex de la Chica.<br>Fredoka typeface by Milena Brandão and Hafontia (SIL Open Font License).<br>Music and sounds are synthesised in the game.</p></details>
+        <p>Glimmerwood is made by Alex de la Chica.<br>Grandstander typeface by Tyler Finck; Fredoka typeface by Milena Brandão and Hafontia (both SIL Open Font License).<br>Music and sounds are synthesised in the game.</p></details>
       <div id="optsPlatform"></div>
     </div>
     <button id="campMem" class="alt"></button>

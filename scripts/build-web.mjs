@@ -10,7 +10,9 @@ const weights = [400, 600, 700];
 for (const w of weights) copyFileSync(`node_modules/@fontsource/fredoka/files/fredoka-latin-${w}-normal.woff2`, `${out}/fonts/fredoka-${w}.woff2`);
 
 let html = readFileSync("proto/index.html", "utf8");
-const font = weights.map((w) => `@font-face { font-family: Fredoka; font-weight: ${w}; font-display: swap; src: url(fonts/fredoka-${w}.woff2) format("woff2"); }`).join("\n");
+copyFileSync("node_modules/@fontsource/grandstander/files/grandstander-latin-700-normal.woff2", `${out}/fonts/grandstander-700.woff2`); // the hand-lettered display face
+const font = weights.map((w) => `@font-face { font-family: Fredoka; font-weight: ${w}; font-display: swap; src: url(fonts/fredoka-${w}.woff2) format("woff2"); }`).join("\n") +
+  `\n@font-face { font-family: Grandstander; font-weight: 700; font-display: swap; src: url(fonts/grandstander-700.woff2) format("woff2"); }`;
 html = html.replace(/<link rel="preconnect"[^>]*>\s*<link href="https:\/\/fonts\.googleapis\.com[^>]*>/, `<style>${font}</style>`);
 if (html.includes("fonts.googleapis.com")) throw new Error("Google Fonts link not replaced");
 if (!html.includes('"../sim/generator.json"')) throw new Error("config path not found");
