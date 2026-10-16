@@ -56,7 +56,7 @@ const hauling = (n, dur, wob) => ({ n, dur, sp: (e, k) => k % 2 ? "dot:" + e.lit
   return k % 2 ? { x, y: y + 7, s: .9, a: .9 } : { x, y, s: 1.2 * e.dir, sy: fl, a: .85 }; } });
 const KINDS = {
   birds: flyer("bird", 7, 13, 14, 140, 1.3), // a loose flock crossing the sky
-  owl: { n: 1, dur: 11, sp: () => "owl", run: (e, t, k, B, now) => ({ x: across(e, B, t, 50), y: B.y0 + 16 + t * 24 + Math.sin(t * 6) * 3, s: e.dir,
+  owl: { n: 1, dur: 11, sp: () => "owl", run: (e, t, k, B, now) => ({ x: across(e, B, t, 50), y: (B.y0 + B.y1) / 2 - 12 + t * 24 + Math.sin(t * 6) * 3, s: e.dir,
     sy: .82 + .18 * Math.cos(Math.max(0, Math.sin(now / 900)) ** 6 * 6), a: .9 }) },
   bat: { n: 1, dur: 4.5, sp: () => "bat", run: (e, t, k, B, now) => ({ x: across(e, B, t, 30), y: e.y + Math.sin(t * 9) * 14 + Math.sin(t * 23) * 4, s: .9 * e.dir, sy: .2 + .8 * Math.abs(Math.cos(now / 55)), a: .85 }) },
   deer: { n: 1, dur: 30, sp: () => "deer", run: (e, t, k, B, now) => { // walks, stops to look round, walks on
@@ -110,10 +110,10 @@ const mine = makeLife();
 // Flyers keep to the band above the board, walkers go along the Rootline at its top edge, eyes open in the dark below it.
 export function drawLife(ctx, now, G) {
   const ledge = G.by - 16, y1 = ledge - 24, gap = G.low - (G.by + G.bw + 28) > 60, B = { x0: 0, x1: G.W, y0: G.top, y1, ledge,
-    far: [[G.W * .36, G.top + 26], [G.W * .62, G.top + 18]], dark: gap ? [[22, G.by + G.bw + 36], [G.W - 22, G.by + G.bw + 30]] : [[G.W * .4, y1 - 10], [G.W * .6, y1 - 6]] };
+    far: [[G.W * .36, G.top + 26], [G.W * .62, G.top + 18]], dark: gap ? [[30, G.by + G.bw + 36], [G.W - 30, G.by + G.bw + 30]] : [[G.W * .4, y1 - 10], [G.W * .6, y1 - 6]] };
   if (peek && (peek.at || !G.busy)) return drawPeek(ctx, now, G, ledge); // never pops up mid-drag: it waits for the piece to land
   const list = mine(G.feature, B, now);
-  if (Array.isArray(list)) { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, G.W, ledge + 2); ctx.clip(); for (const m of list) put(ctx, m); ctx.restore(); }
+  if (Array.isArray(list)) for (const m of list) put(ctx, m); // the board, drawn next, hides whatever dips below the Rootline
 }
 function put(ctx, m) {
   const S = sprite(m.sp); ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, m.a ?? 1)); ctx.translate(m.x, m.y); if (m.r) ctx.rotate(m.r);
@@ -165,7 +165,7 @@ export function campLife(svg, site, hooks) {
   const far = svg.querySelector('[data-depth=".15"] > g'), tall = svg.querySelector('[data-depth=".22"]'), mid = svg.querySelector('[data-depth=".3"] > g'), shelf = svg.querySelector('[data-tip="shelf"]');
   if (!far || !tall || !mid) return;
   const T = far.transform.baseVal[0].matrix.f + 24, yH = mid.transform.baseVal[0].matrix.f + 180, top = shelf ? shelf.getBBox().y - 8 : yH - 90; // T: under the top bar; yH: the far edge of the clearing
-  const B = { x0: 0, x1: svg.viewBox.baseVal.width, y0: T - 40, y1: Math.max(T + 10, top), ledge: yH + 8, far: [[372, yH - 46], [374, yH - 84]] }; B.dark = B.far; // dark spots between the trees, right of the shelf
+  const B = { x0: 0, x1: svg.viewBox.baseVal.width, y0: T - 40, y1: Math.max(T + 10, top), ledge: yH + 8, far: [[330, yH - 40], [324, yH - 64]] }; B.dark = B.far; // the dark gap right of the shelf
   const layer = document.createElementNS("http://www.w3.org/2000/svg", "g"); layer.setAttribute("class", "life"); layer.dataset.depth = ".25"; tall.after(layer); // drifts with the parallax too
   const imgs = [];
   const loop = (now) => {

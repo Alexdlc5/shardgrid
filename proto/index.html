@@ -1345,7 +1345,7 @@ function trayRect(i) {
 cv.addEventListener("pointerdown", (e) => {
   if (state !== "play" || !tray) return;
   const said = lifeTap(e.clientX, e.clientY); // tapped the other lantern in time: a line, and a tally nobody shows you (yet)
-  if (said) { toast(said, 2400); save.lanterns = (save.lanterns || 0) + 1; persist(); return; }
+  if (said) { toast("", 2800); say($("toast"), said, "dibble"); save.lanterns = (save.lanterns || 0) + 1; persist(); return; }
   const i = Math.floor((e.clientX - trayX) / slotW);
   if (i < 0 || i > 2 || !tray[i] || e.clientY < trayY - 18) return;
   drag = { i, ...tray[i], x: e.clientX, y: e.clientY, touch: e.pointerType !== "mouse", at: performance.now(), from: trayRect(i) };
