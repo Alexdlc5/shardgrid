@@ -10,6 +10,8 @@ Store title: **Glimmerwood: Crystal Block Puzzle**. Generic genre words in the s
 
 ## Story, in three sentences a player never has to read
 
+*The full story (the Glimmeroak, the Pale Bidder, the Undermoon, the Wickway) is in [docs/STORY.md](docs/STORY.md).*
+
 Under the Glimmerwood, the great roots store sunlight as crystal. **Dibble**, a mole with a firefly lantern, mines them to sell to **Old Puddock**, the toad who runs the market under the stump. The roots slowly reclaim every tunnel, and only the light from crystal veins broken clean pushes them back.
 
 That last sentence *is* the timer:
