@@ -455,7 +455,7 @@ export function camp(st, gemFn, dibbleSvg) {
     ${dy.done ? `<path d="M142 371 l3 3 l6 -8" stroke="${chalk}" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".85"/>`
       : `<circle cx="148" cy="364" r="9" fill="#9fe6c8" opacity=".3"><animate attributeName="opacity" values=".15;.4;.15" dur="2.2s" repeatCount="indefinite"/></circle>${shard(148, 373, 6, 13, -.1, "#5fc9a8", r, true)}`}</g>`;
   const stumpSvg = st.stumpSvg ? st.stumpSvg.replace(/<path d="M0 80 Q150 70 300 80 V90 H0 Z" fill="#14241a"\/>/, "").replace(/<svg class="stumpArt" width="([\d.]+)" height="([\d.]+)"/, (m, w, h) => `<svg class="stumpArt" x="${220 - w / 2}" y="${408 - h}" width="${w}" height="${h}"`) : "";
-  const keep = `<g data-tap="memories"><rect x="168" y="350" width="104" height="78" fill="transparent"/>${stumpSvg || `<circle cx="220" cy="386" r="20" fill="#f0b543" opacity=".22"><animate attributeName="opacity" values=".12;.3;.12" dur="3s" repeatCount="indefinite"/></circle>
+  const keep = `<g data-tap="memories"><rect x="166" y="336" width="108" height="92" fill="transparent"/>${stumpSvg || `<circle cx="220" cy="386" r="20" fill="#f0b543" opacity=".22"><animate attributeName="opacity" values=".12;.3;.12" dur="3s" repeatCount="indefinite"/></circle>
       ${shape(curve([[210, 372], [230, 372], [234, 392], [229, 404], [211, 404], [206, 392]]), "#e8a84a", "#6a3a10", [-.8, .7], 'opacity=".9"')}${plank(209, 366, 22, 6, "#8a5a32", r)}
       <path d="M213 378 Q212 390 214 398" stroke="#fff3d0" stroke-width="1.2" fill="none" opacity=".6"/>`}
     ${st.memories != null ? tag(220, 420, `Memories ${st.memories}`, 66) : ""}</g>`;
