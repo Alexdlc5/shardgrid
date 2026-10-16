@@ -27,7 +27,7 @@
     background: rgba(8, 18, 12, .62); backdrop-filter: blur(2px); }
   .screen.show { display: flex; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px 22px 18px;
-    width: min(360px, calc(100vw - 32px)); max-height: calc(100vh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; box-sizing: border-box; }
+    width: min(440px, calc(100vw - 24px)); max-height: calc(100vh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; box-sizing: border-box; }
   h1 { margin: 0; font-size: 40px; line-height: 1; color: var(--amber); letter-spacing: .5px; }
   h2 { margin: 0 0 6px; font-size: 22px; }
   .tag { color: var(--muted); margin: 6px 0 14px; }
@@ -111,7 +111,7 @@
   body.playing .fly { display: none; }
   .screen { background: rgba(5, 12, 8, .35); backdrop-filter: none; align-items: flex-start; top: env(safe-area-inset-top, 0px); padding-top: max(28px, 4vh); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box; overflow-y: auto; }
   /* ===== signboards hanging from the roots ===== */
-  .hang { position: relative; width: min(372px, calc(100vw - 28px)); margin: 0 auto 24px; }
+  .hang { position: relative; width: min(440px, calc(100vw - 24px)); margin: 0 auto 24px; }
   .hang .rope { position: absolute; top: -40px; width: 5px; height: 48px; border-radius: 3px;
     background: repeating-linear-gradient(160deg, #9a7a4a 0 4px, #6b5030 4px 8px); }
   .hang .rope.l { left: 34px; } .hang .rope.r { right: 34px; }
@@ -276,7 +276,7 @@
   @media (prefers-reduced-motion: reduce) { svg.dibble, svg.puddock { filter: none; } body::after { animation: none; } #dust { display: none; } }
   /* ===== title screen and the camp hub ===== */
   .titleScr { align-items: center; padding-top: 0 !important; background: radial-gradient(ellipse at 50% 40%, rgba(5,12,8,.1), rgba(5,12,8,.55)); }
-  .titleWrap { width: min(340px, calc(100vw - 40px)); margin: auto; text-align: center; }
+  .titleWrap { width: min(400px, calc(100vw - 48px)); margin: auto; text-align: center; }
   .titleWrap .dibble { width: 150px; height: 150px; animation: bob 3s ease-in-out infinite; }
   .logo { font-size: min(56px, 14vw); margin: -6px 0 2px; }
   .tagline { color: #e8d6aa !important; margin: 0 0 14px; }
@@ -565,7 +565,7 @@ function layout() {
   const sa = getComputedStyle($("safeProbe")), st = parseFloat(sa.paddingTop) || 0, sb = parseFloat(sa.paddingBottom) || 0;
   cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px";
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  cell = Math.floor(Math.min((W - 52) / N, (H - st - sb - 118 - 40) / (N + 3.4)));
+  cell = Math.floor(Math.min((W - 40) / N, (H - st - sb - 118 - 40) / (N + 3.4)));
   bx = Math.round((W - cell * N) / 2); by = 118 + st; trayY = by + cell * N + 30;
 }
 addEventListener("resize", layout); layout();
@@ -1081,8 +1081,8 @@ function sell(mult) {
   track("haul_sold", { mine: biome.id, value: v, doubled: mult > 1 });
   platform.expeditionDone(); // interstitial, only when the pacing caps allow
   if (v) coinRain(v, save.gold - v);
-  if (!save.metPuddock) setTimeout(() => talk(() => { renderHome(); show("home"); }), 900); // first haul: meet the merchant
-  else { const sc = nextScene(save.story); if (sc) setTimeout(() => playScene(sc), 900); } // docs/STORY.md, in order
+  // before the first talk, the stall's "Psst!" bubble and the camp hint invite the player over (tapping the stall starts it)
+  if (save.metPuddock) { const sc = nextScene(save.story); if (sc) setTimeout(() => playScene(sc), 900); } // docs/STORY.md, in order
 }
 $("sell").onclick = () => sell(1);
 $("sell2").onclick = async () => (await platform.rewarded("double_deal")) ? sell(2) : toast("No ad ready, try again in a moment");
@@ -1123,7 +1123,7 @@ function renderHome() {
     <div class="note" style="margin-top:6px">${st ? `${st}-day streak` : "No streak yet"}${done ? ` · today's best ${save.daily.best}g` : ""}</div>`;
   $("daily").innerHTML = `<span class="btnrow">${icon("calendar", 22)}${done ? "Done for today. Come back tomorrow" : "Start today's dig"}</span>`;
   $("daily").disabled = done;
-  $("campHint").textContent = !save.metPuddock && !Object.keys(save.best).length ? "Tap the signpost to go mining ✦" : "Tap things around camp ✦";
+  $("campHint").textContent = !Object.keys(save.best).length ? "Tap the signpost to go mining ✦" : !save.metPuddock ? "Puddock's waving you over to his stall ✦" : "Tap things around camp ✦";
   renderMines(); renderCamp();
   $("campArt").innerHTML = camp({ ...campState(), daily: { done, streak: st, best: save.daily.best } }, gem, dibble(100, save.look));
 }
@@ -1288,7 +1288,7 @@ function replayMemories(back) {
 function campState() {
   const own = (id) => save.owned.includes(id) && !save.camp.hide.includes(id), S = save.story;
   const spare = (part) => Object.keys(LOOKS[part]).find((v) => v !== "none" && v !== save.look[part] && lookOwned(part, v));
-  const hub = { hub: true, stall: true, metPuddock: save.metPuddock, memories: S.mem.length || null, rackHat: spare("hat"), rackScarf: spare("scarf"),
+  const hub = { hub: true, stall: true, metPuddock: save.metPuddock, firstRun: !Object.keys(save.best).length, memories: S.mem.length || null, rackHat: spare("hat"), rackScarf: spare("scarf"),
     stumpSvg: S.site === "stump" ? stumpArt(Math.log10(save.light + 1) / 5.3, S.sprout, 340, S.finale) : "" };
   return { ...hub, ...save.up, mines: BIOMES.filter((b) => save.biomes.includes(b.id)).map((b) => b.pal.glow),
     found: GEMS.map((t) => save.found.includes(t) ? { color: CRYSTALS[t].color, cut: CRYSTALS[t].cut } : null),
@@ -1410,7 +1410,7 @@ function frame(now) {
       ctx.lineTo(t.x, t.y + r); ctx.lineTo(t.x - r * .25, t.y + r * .25); ctx.lineTo(t.x - r, t.y); ctx.lineTo(t.x - r * .25, t.y - r * .25); ctx.fill(); }
     tray.forEach((q, i) => { if (q && drag?.i !== i) { const t = trayRect(i); drawPiece(q, t.s, t.x, t.y, fitsAnywhere(board, q.piece) ? 1 : .3); } });
     if (!started && !calm && state === "play") { ctx.fillStyle = "rgba(239,230,207,.7)"; ctx.font = "600 15px Fredoka, sans-serif"; ctx.textAlign = "center";
-      ctx.fillText("Place a crystal to start the Rootline", bx + cell * N / 2, by - 30); }
+      ctx.fillText("Place a crystal to start the Rootline", bx + cell * N / 2, by - 26); }
     if (!calm && time / maxTime < T.warn && state === "play") { // red vignette when the roots close in
       const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .3, W / 2, H / 2, Math.max(W, H) * .7);
       g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, `rgba(150,30,20,${.25 + .12 * Math.sin(now / 150)})`);
