@@ -682,27 +682,46 @@ export function memoryArt(kind, w = 160) {
 // The old stump on the home screen. growth 0..1 (lifetime light released) brings moss, glowing roots and caps;
 // sprout = the first green shoot (all of Heartroot Deep's memories found).
 export function stumpArt(growth = 0, sprout = false, w = 300, tree = false) {
-  const g = Math.max(0, Math.min(1, growth)), id = "st" + uid++;
-  let s = 5; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-  const moss = [...Array(Math.round(g * 9))].map((_, k) => `<path d="${curve(ring(118 + r() * 64, 54 + r() * 20, 4 + r() * 4, 2 + r() * 2, 8, .25, k + 3))}" fill="${k % 2 ? "#4f7a3a" : "#5f9a45"}"/>`).join("");
-  const caps = [[96, 80], [206, 82], [194, 78]].slice(0, g > .35 ? Math.ceil((g - .35) * 5) : 0).map(([x, y]) =>
-    `<circle cx="${x}" cy="${y - 8}" r="8" fill="#9b7cf2" opacity=".18"/><path d="M${x} ${y} v-6" stroke="#d8cbb0" stroke-width="2"/>${shape(curve([[x - 5, y - 5.6], [x - 2.4, y - 10.6], [x + 2.2, y - 10.8], [x + 5, y - 5.8], [x, y - 7.4]]), "#9b7cf2", "#3a2458", [-.5, .5])}`).join("");
-  const oak = tree ? `<circle cx="150" cy="10" r="46" fill="#9be08a" opacity=".12"><animate attributeName="opacity" values=".08;.18;.08" dur="4s" repeatCount="indefinite"/></circle>
-    <path d="M146 47 Q147 30 144 16 M154 47 Q153 30 157 16 M150 30 Q140 22 130 22 M151 26 Q162 18 172 20" stroke="#6b4a2a" stroke-width="4" fill="none" stroke-linecap="round"/>
-    ${[[150, 2, 22], [128, 14, 16], [172, 12, 16], [138, -4, 14], [162, -4, 14]].map(([x, y, rr], k) => shape(curve(ring(x, y, rr, rr * .92, 12, .12, k + 20)), k ? "#558f40" : "#5f9a45", "#24451f", [-1.4, 1.2])).join("")}
-    <path d="${curve(ring(142, -6, 12, 9, 10, .2, 30))}" fill="#9bd47e" opacity=".45"/>${[[136, 6], [160, 0], [148, -10], [170, 14]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="#fff3a0"/>`).join("")}` : "";
-  const t = 8 + g * 10, shoot = sprout && !tree ? `<circle cx="150" cy="${40 - t}" r="${12 + g * 8}" fill="#9be08a" opacity=".16"><animate attributeName="opacity" values=".1;.24;.1" dur="3s" repeatCount="indefinite"/></circle>
-    <path d="M150 47 Q148 ${44 - t * .6} 151 ${44 - t * 1.4}" stroke="#5f9a45" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-    <path d="M150 ${44 - t * .8} Q140 ${40 - t * .8} 138 ${44 - t * .8} Q144 ${48 - t * .8} 150 ${44 - t * .8} Z M151 ${44 - t * 1.3} Q162 ${38 - t * 1.3} 164 ${42 - t * 1.3} Q158 ${47 - t * 1.3} 151 ${44 - t * 1.3} Z" fill="#9be08a"/>` : "";
+  const g = Math.max(0, Math.min(1, growth)), id = "st" + uid++, r = rng(5);
+  const bark = "#6b4a32", barkLine = "#22140c", wood = "#b08a62", O = [-1.4, 1.2];
+  // roots spread from the flared base and grip the ground; amber light creeps back into them as the wood heals
+  const roots = [[118, 77, 98, 82, 72, 87.5, 7.5], [128, 80, 118, 86, 102, 90, 5], [182, 77, 204, 82, 230, 87, 7.5], [170, 80, 180, 86, 194, 90.5, 5], [150, 82, 153, 87, 158, 91, 4]];
+  const rootSvg = roots.map(([x1, y1, cx, cy, x2, y2, wd]) => shape(limb(x1, y1, cx, cy, x2, y2, wd, .8), bark, barkLine, O)).join("") +
+    (g ? `<path d="${curve(ring(150, 85, 64, 7, 10, .2, 7))}" fill="#f0b543" opacity="${(g * .3).toFixed(2)}" filter="url(#${id}b)"/>` +
+      roots.map(([x1, y1, cx, cy, x2, y2, wd]) => `<path d="${limb(x1, y1 - 1, cx, cy - 1, x2, y2 - .5, wd * .3, .15)}" fill="#ffd27a" opacity="${(.25 + g * .6).toFixed(2)}"/>`).join("") : "");
+  // broken trunk: splinters behind, the pale cut face, then the front of the trunk with a ragged lip
+  const spl = (x, y, wd) => shape(`M${x - wd} 51 Q${x - wd * .4} ${(y + 51) / 2} ${x} ${y} Q${x + wd * .5} ${(y + 51) / 2 + 2} ${x + wd} 51 Z`, bark, barkLine, [-1, .9]);
+  const body = curve([[120, 48], [117, 60], [114, 72], [107, 82], [128, 85.5], [150, 86.5], [172, 85.5], [193, 82], [186, 72], [183, 60], [180, 48],
+    [174, 53], [166, 55.6], [158, 53.8], [151, 57], [144, 54.6], [136, 55.6], [128, 52.6]]);
+  const face = curve(ring(150, 49, 30, 6.4, 14, .04, 9));
+  const moss = [...Array(Math.round(g * 9))].map((_, k) => shape(curve(ring(118 + r() * 64, 64 + r() * 16, 4 + r() * 4, 2 + r() * 2, 8, .25, k + 3)), k % 2 ? "#4f7a3a" : "#5f9a45", "#24451f", [-.6, .5])).join("");
+  const caps = [[96, 84], [206, 85], [194, 81]].slice(0, g > .35 ? Math.ceil((g - .35) * 5) : 0).map(([x, y], k) =>
+    `<path d="${curve(ring(x, y - 8, 10, 8, 9, .2, 40 + k))}" fill="#9b7cf2" opacity=".25" filter="url(#${id}b)"/>${shape(limb(x, y, x - .4, y - 3, x, y - 6, 1.1, .9), "#d8cbb0", "#7a6e5a", [-.4, .4])}
+    ${shape(curve([[x - 5, y - 5.6], [x - 2.4, y - 10.6], [x + 2.2, y - 10.8], [x + 5, y - 5.8], [x, y - 7.4]]), "#9b7cf2", "#3a2458", [-.5, .5])}`).join("");
+  const oak = tree ? `<path d="${curve(ring(150, 8, 52, 46, 12, .12, 50))}" fill="#9be08a" opacity=".14" filter="url(#${id}b)"><animate attributeName="opacity" values=".08;.2;.08" dur="4s" repeatCount="indefinite"/></path>
+    ${[[147, 50, 146, 30, 144, 14, 3.2], [153, 50, 154, 30, 157, 14, 3], [149, 32, 140, 22, 128, 21, 1.8], [151, 27, 162, 18, 173, 20, 1.8]].map(([x1, y1, cx, cy, x2, y2, wd]) => shape(limb(x1, y1, cx, cy, x2, y2, wd, wd * .45), "#6b4a2a", "#2e1e12", [-1, .9])).join("")}
+    ${[[150, 2, 22], [128, 14, 16], [172, 12, 16], [138, -4, 14], [162, -4, 14]].map(([x, y, rr], k) => shape(curve(ring(x, y, rr, rr * .92, 12, .12, k + 20)), k ? "#558f40" : "#5f9a45", "#24451f", O)).join("")}
+    <path d="${curve(ring(142, -6, 12, 9, 10, .2, 30))}" fill="#9bd47e" opacity=".45"/>${[[136, 6], [160, 0], [148, -10], [170, 14]].map(([x, y], k) => `<path d="${curve(ring(x, y, 1.7, 1.4, 6, .25, 60 + k))}" fill="#fff3a0"/>`).join("")}` : "";
+  const t = 8 + g * 10, shoot = sprout && !tree ? `<path d="${curve(ring(150, 40 - t, 13 + g * 8, 12 + g * 7, 10, .15, 70))}" fill="#9be08a" opacity=".18" filter="url(#${id}b)"><animate attributeName="opacity" values=".1;.26;.1" dur="3s" repeatCount="indefinite"/></path>
+    ${shape(limb(150, 50, 148, 44 - t * .6, 151, 44 - t * 1.4, 1.4, .7), "#5f9a45", "#24451f", [-.5, .4])}
+    ${shape(`M150 ${44 - t * .8} Q140 ${40 - t * .8} 138 ${44 - t * .8} Q144 ${48 - t * .8} 150 ${44 - t * .8} Z`, "#9be08a", "#3f6a2f", [-.5, .4])}${shape(`M151 ${44 - t * 1.3} Q162 ${38 - t * 1.3} 164 ${42 - t * 1.3} Q158 ${47 - t * 1.3} 151 ${44 - t * 1.3} Z`, "#9be08a", "#3f6a2f", [-.5, .4])}` : "";
   return `<svg class="stumpArt" width="${w}" height="${w * (tree ? .46 : .3)}" viewBox="0 ${tree ? -48 : 0} 300 ${tree ? 138 : 90}" aria-hidden="true">
-    <defs><linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="#4a3422"/><stop offset=".5" stop-color="#6b4a32"/><stop offset="1" stop-color="#3a2618"/></linearGradient></defs>
     <path d="M0 80 Q150 70 300 80 V90 H0 Z" fill="#14241a"/>
-    <path d="M150 74 Q120 80 80 86 M150 74 Q180 82 226 86 M150 74 Q140 84 128 90 M150 74 Q166 84 176 90" stroke="#3a2618" stroke-width="5" fill="none" stroke-linecap="round"/>
-    ${g ? `<path d="M150 74 Q120 80 80 86 M150 74 Q180 82 226 86" stroke="#f0b543" stroke-width="1.4" fill="none" opacity="${(.15 + g * .5).toFixed(2)}"/>` : ""}
-    ${shape("M110 81 Q114 66 116 50 L124 54 L130 44 L138 52 L146 42 L154 50 L162 41 L170 52 L178 46 L184 54 Q186 68 190 81 Q150 85 110 81 Z", `url(#${id})`, "#22140c", [-1.6, 1.4])}
-    <path d="M118 56 Q117 68 116 79" stroke="#8a6650" stroke-width="1.6" fill="none" opacity=".45"/>
-    <ellipse cx="150" cy="47" rx="30" ry="5" fill="#8a6650" opacity=".5"/><path d="M134 47 Q150 43 166 47 M140 47 Q150 45 160 47" stroke="#5a3a2a" stroke-width="1" fill="none"/>
-    <path d="M128 60 L132 72 M170 58 L166 70" stroke="#2a1a10" stroke-width="1.4"/>${moss}${caps}${shoot}${oak}</svg>`;
+    <defs><filter id="${id}b" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
+      <filter id="${id}s" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.2"/></filter><clipPath id="${id}c"><path d="${body}"/></clipPath></defs>
+    <path d="${curve(ring(150, 86, 52, 4, 12, .2, 3))}" fill="#000" opacity=".35" filter="url(#${id}s)"/>
+    ${rootSvg}${spl(130, 36, 6)}${spl(153, 31, 7)}${spl(172, 39, 5)}
+    ${shape(face, wood, "#4a2e1a", [-1, .9])}
+    <g fill="none" stroke="#7a5638" stroke-width=".8" opacity=".7">${[22, 15, 8].map((rx, k) => `<path d="${curve(ring(151, 49.2, rx, rx * .2, 12, .06, 11 + k))}"/>`).join("")}</g>
+    ${stroke(152, 49, -2.9, 14, .7, "#4a2e1a", .6, .05)}
+    ${shape(body, bark, barkLine, O)}
+    <g clip-path="url(#${id}c)">
+      <path d="${curve(ring(122, 74, 22, 26, 10, .2, 13))}" fill="#2a2030" opacity=".55" filter="url(#${id}b)"/>
+      <path d="${curve(ring(180, 62, 14, 22, 10, .2, 14))}" fill="#d08850" opacity=".35" filter="url(#${id}b)"/>
+      ${[...Array(9)].map((_, k) => { const x = 117 + k * 8 + (r() - .5) * 3; return stroke(x, 57 + r() * 5, 1.57 + (x - 150) * .006, 18 + r() * 8, 1, barkLine, .45, .06); }).join("")}
+    </g>
+    <path d="${curve([[181, 50], [184, 62], [188, 74]], false)}" stroke="#ffc98a" stroke-width="1.6" fill="none" opacity=".45" stroke-linecap="round" filter="url(#${id}s)"/>
+    ${moss}${caps}${shoot}${oak}</svg>`;
 }
 
 // ---------- story pictures, Ring One ending onwards ----------

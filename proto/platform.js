@@ -26,6 +26,10 @@ const log = [];
 let noAds = false;
 try { noAds = localStorage.getItem("gw.noAds") === "1"; } catch {}
 
+// the banner's height as --ad on <html> (plus a hasAd class), so the camp and menus lift above it instead of hiding under it
+let adListening = false;
+const setAdHeight = (h) => { const px = Math.max(0, Math.round(+h || 0)); document.documentElement.style.setProperty("--ad", px + "px"); document.documentElement.classList.toggle("hasAd", px > 0); };
+
 async function load(kind) {
   if (!native || !AdMob) return;
   try {
@@ -94,8 +98,9 @@ export const platform = {
   async banner(show) { // menus only, never over the board
     if (!native || !AdMob) return;
     try {
+      if (!adListening) { adListening = true; AdMob.addListener?.("bannerAdSizeChanged", (s) => setAdHeight(s?.height)); AdMob.addListener?.("bannerAdFailedToLoad", () => setAdHeight(0)); }
       if (show && !noAds) await AdMob.showBanner({ adId: id("banner"), adSize: "ADAPTIVE_BANNER", position: "BOTTOM_CENTER", isTesting: KEYS.testAds });
-      else await AdMob.hideBanner();
+      else { await AdMob.hideBanner(); setAdHeight(0); }
     } catch {}
   },
 

@@ -297,6 +297,10 @@
   .hub .campHint { position: absolute; left: 0; right: 0; bottom: max(14px, env(safe-area-inset-bottom)); text-align: center; font-size: 13px;
     color: rgba(246,234,208,.8); text-shadow: 0 1px 3px #000; pointer-events: none; animation: hintPulse 3s ease-in-out infinite; }
   @keyframes hintPulse { 50% { opacity: .45; } }
+  /* a banner ad at the bottom (platform.js sets --ad): the camp and sheets end above it */
+  .hasAd .hub .campStage { height: calc(100dvh - var(--ad) - env(safe-area-inset-bottom, 0px)); }
+  .hasAd .hub .campHint { bottom: calc(var(--ad) + env(safe-area-inset-bottom, 0px) + 10px); }
+  .hasAd .screen:not(.hub) { padding-bottom: calc(var(--ad) + env(safe-area-inset-bottom, 0px)); }
   .sheet { background: rgba(5,12,8,.5); z-index: 6; }
   .wardHead { display: flex; align-items: center; gap: 10px; }
   .wardHead .dibble { flex: none; }
