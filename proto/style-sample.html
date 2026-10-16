@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glimmerwood Style Sample</title>
+<style>
+  body { margin: 0; background: #11140f; color: #e8dcc6; font: 15px/1.45 Georgia, serif; }
+  main { max-width: 520px; margin: 0 auto; padding: 14px 12px 30px; }
+  h1 { font-size: 20px; margin: 4px 0 10px; color: #f0d9a8; font-weight: normal; letter-spacing: .5px; }
+  .frame { border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Style sample: Dibble finds a crystal vein</h1>
+  <div class="frame" id="scene"></div>
+</main>
+<script type="module">
+import { sampleScene } from "./paint.js";
+document.getElementById("scene").innerHTML = sampleScene();
+</script>
+</body>
+</html>

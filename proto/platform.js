@@ -2,22 +2,23 @@
 // In the Capacitor app the native plugins are reached through window.Capacitor.Plugins (no bundler needed);
 // in a plain browser everything is a harmless stand-in, so the prototype keeps working as before.
 const cap = window.Capacitor, native = !!cap?.isNativePlatform?.(), os = cap?.getPlatform?.() || "web";
-const { AdMob, Purchases, FirebaseAnalytics } = cap?.Plugins || {};
+const { AdMob, Purchases, FirebaseAnalytics, FirebaseRemoteConfig } = cap?.Plugins || {};
 
 // Fill these from your accounts (docs/SETUP.md). The defaults are Google's public *test* ad units: safe to ship to
 // testers, never earn money. Empty RevenueCat key = purchases switched off.
 const KEYS = {
-  rewarded:     { android: "ca-app-pub-3940256099942544/5224354917", ios: "ca-app-pub-3940256099942544/1712485313" },
-  interstitial: { android: "ca-app-pub-3940256099942544/1033173712", ios: "ca-app-pub-3940256099942544/4411468910" },
-  banner:       { android: "ca-app-pub-3940256099942544/6300978111", ios: "ca-app-pub-3940256099942544/2934735716" },
+  rewarded:     { android: "ca-app-pub-3940256099942544/5224354917", ios: "ca-app-pub-2020120570370273/2608861706" },
+  interstitial: { android: "ca-app-pub-3940256099942544/1033173712", ios: "ca-app-pub-2020120570370273/7053794160" },
+  banner:       { android: "ca-app-pub-3940256099942544/6300978111", ios: "ca-app-pub-2020120570370273/1506698874" },
   revenuecat:   { android: "", ios: "" },
-  testAds: true, // flip to false only with your real ad unit IDs in place
+  testAds: true, // iOS units are real; keep test ads on for TestFlight, flip to false for the App Store build
 };
 export const NO_ADS = "no_ads"; // RevenueCat entitlement id
 
 // Interstitial pacing (SPEC §4): never in the first 3 expeditions, ≥2 expeditions and ≥90 s apart,
 // and skipped after any expedition where the player already watched a rewarded ad.
 const CAPS = { grace: 3, everyN: 2, gapS: 90 };
+// Firebase Remote Config can retune them without an app update: keys ad_grace, ad_every_n, ad_gap_s (docs/SETUP.md A9).
 let expeditions = 0, sinceInter = 0, lastInter = 0, watchedThisRun = false;
 
 const id = (k) => KEYS[k][os];
@@ -26,6 +27,10 @@ const log = [];
 let noAds = false;
 try { noAds = localStorage.getItem("gw.noAds") === "1"; } catch {}
 
+// the banner's height as --ad on <html> (plus a hasAd class), so the camp and menus lift above it instead of hiding under it
+let adListening = false;
+const setAdHeight = (h) => { const px = Math.max(0, Math.round(+h || 0)); document.documentElement.style.setProperty("--ad", px + "px"); document.documentElement.classList.toggle("hasAd", px > 0); };
+
 async function load(kind) {
   if (!native || !AdMob) return;
   try {
@@ -33,6 +38,17 @@ async function load(kind) {
                         : await AdMob.prepareInterstitial({ adId: id("interstitial"), isTesting: KEYS.testAds });
     ready[kind] = true;
   } catch (e) { track("ad_failed", { format: kind, error: String(e?.message || e).slice(0, 90) }); }
+}
+
+async function remoteCaps() {
+  if (!FirebaseRemoteConfig) return;
+  try {
+    await FirebaseRemoteConfig.fetchAndActivate();
+    for (const [cap, key] of [["grace", "ad_grace"], ["everyN", "ad_every_n"], ["gapS", "ad_gap_s"]]) {
+      const { value, source } = await FirebaseRemoteConfig.getNumber({ key });
+      if (source === "remote") CAPS[cap] = value; // unset keys keep the SPEC defaults
+    }
+  } catch {}
 }
 
 export function track(name, params = {}) {
@@ -47,6 +63,7 @@ export const platform = {
 
   async init() {
     if (!native) return;
+    remoteCaps(); // not awaited: a slow network never delays start-up
     if (AdMob) {
       try { // GDPR/UMP consent first, then (iOS) ATT, then the SDK
         const info = await AdMob.requestConsentInfo();
@@ -94,8 +111,9 @@ export const platform = {
   async banner(show) { // menus only, never over the board
     if (!native || !AdMob) return;
     try {
+      if (!adListening) { adListening = true; AdMob.addListener?.("bannerAdSizeChanged", (s) => setAdHeight(s?.height)); AdMob.addListener?.("bannerAdFailedToLoad", () => setAdHeight(0)); }
       if (show && !noAds) await AdMob.showBanner({ adId: id("banner"), adSize: "ADAPTIVE_BANNER", position: "BOTTOM_CENTER", isTesting: KEYS.testAds });
-      else await AdMob.hideBanner();
+      else { await AdMob.hideBanner(); setAdHeight(0); }
     } catch {}
   },
 

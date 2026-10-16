@@ -16,12 +16,19 @@ jobs:
   ios:
     runs-on: macos-15
     timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash # explicit bash adds -o pipefail, so a failing xcodebuild | tail fails the step
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
+      - name: Use the newest Xcode 26 (App Store Connect rejects older SDKs)
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -n 1)
+          sudo xcode-select -s "$X" && xcodebuild -version
       - run: npm ci
       - run: node proto/check.mjs
       - run: npm run build && npx cap sync ios
@@ -42,6 +49,8 @@ jobs:
           for v in TEAM KEY_ID ISSUER KEY_P8; do [ -n "${!v}" ] || { echo "missing secret for $v (docs/SETUP.md, part A6)"; exit 1; }; done
           KEY="$RUNNER_TEMP/AuthKey_$KEY_ID.p8"; printf '%s' "$KEY_P8" > "$KEY"
           AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$KEY" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER")
+          pip3 install --quiet --break-system-packages pyjwt cryptography
+          KEY="$KEY" KEY_ID="$KEY_ID" ISSUER="$ISSUER" python3 scripts/revoke-ci-dev-certs.py
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/Glimmerwood.xcarchive" DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}" "${AUTH[@]}" archive | tail -n 30
