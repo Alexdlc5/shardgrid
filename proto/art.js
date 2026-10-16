@@ -504,9 +504,10 @@ function petBody(kind, id, o = {}) {
     ${soft(32.6, 66, 4.6, 2.6, "#f08a9a", .55, 6, "b")}${soft(67.4, 66, 4.6, 2.6, "#f08a9a", .55, 7, "b")}
     ${N ? N.draw(id + "n") : ""}${H ? H.draw(id + "h") : ""}`;
   return `<defs>${blurDef(id + "s", 3)}${blurDef(id + "b", 1.2)}<clipPath id="${id}c"><path d="${d}"/></clipPath></defs>
-    <path d="${curve(ring(50, 92, 24, 3.2, 10, .2, seed + 5))}" fill="#0f0e0b" opacity=".4" filter="url(#${id}b)"/>${o.sleep ? body : bob(body, 2.8, 1.8)}`;
+    ${o.bare ? body : `<path d="${curve(ring(50, 92, 24, 3.2, 10, .2, seed + 5))}" fill="#0f0e0b" opacity=".4" filter="url(#${id}b)"/>${o.sleep ? body : bob(body, 2.8, 1.8)}`}`;
 }
-// a pet in a 100 box: o = { head, neck } clothes, sleep: curled up asleep (eyes shut, no bob) for the crystal it's found in
+// a pet in a 100 box: o = { head, neck } clothes, sleep: curled up asleep (eyes shut, no bob) for the crystal it's found in,
+// bare: no shadow and no bob (the camp hops it and draws its shadow)
 export const pet = (kind, size = 64, o = {}) => svg(size, "0 0 100 100", petBody(kind, "pet" + uid++, o), "pet");
 
 // cave scene per mine (menu postcards): layered rock, stalactites, rails into the dark, crystal clusters
@@ -738,10 +739,6 @@ export function camp(st, gemFn, dibbleSvg) {
 
   const db = 108 * kf, dx = 318 - db / 2, dyy = yM + 10 * kf - db;
   const dib = `<g data-tap="dibble" class="campDibble"><rect x="${f1(dx + db / 2 - Math.max(db * .3, MIN / 2))}" y="${f1(dyy + db * .1)}" width="${f1(Math.max(db * .6, MIN))}" height="${f1(db * .85)}" fill="transparent"/><svg x="${f1(dx)}" y="${f1(dyy)}" width="${f1(db)}" height="${f1(db)}" viewBox="0 0 100 100">${strip(dibbleSvg)}</svg></g>`;
-  // your pet sits at Dibble's lantern side, in front of the cart, with its own idle (index.html: tap it to make it hop)
-  const pz = 56 * kf, px = 370, py = yM + 18 * kf;
-  const petAt = st.petSvg ? `<g data-tap="pet"><rect x="${f1(px - Math.max(pz, MIN) / 2)}" y="${f1(py - Math.max(pz, MIN))}" width="${f1(Math.max(pz, MIN))}" height="${f1(Math.max(pz, MIN))}" fill="transparent"/>
-    <svg x="${f1(px - pz / 2)}" y="${f1(py - pz * .92)}" width="${f1(pz)}" height="${f1(pz)}" viewBox="0 0 100 100">${strip(st.petSvg)}</svg></g>` : "";
   // Puddock's spare cart (or, after the finale, his packed cart with him beside it), right of Dibble
   const PC = place(292, 276, 374, yM, .95 * kf), pb = 50 * kf;
   const cart = st.packed || d.cart ? `${PC.g(`<g transform="translate(270 240) scale(1.8)">${ICONS.cart}</g>`)}${st.packed && st.puddockSvg ? `<g data-tap="puddock"><svg x="${f1(366 - pb / 2)}" y="${f1(yM + 6 * kf - pb)}" width="${f1(pb)}" height="${f1(pb)}" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}` : "";
@@ -834,7 +831,12 @@ export function camp(st, gemFn, dibbleSvg) {
       <path d="${curve(ring(200, yM, 190, 40, 16, .08, 9))}" fill="${S.ground[2]}" opacity=".6" filter="url(#campBlur)"/>
       ${grass([[60, 260], [120, 282], [250, 276], [330, 268], [160, 292], [290, 290], [30, 286], [370, 284]], 254, yM)}
       ${grass([[20, 414], [90, 424], [170, 410], [250, 422], [300, 430], [370, 418], [130, 436], [230, 440]], 440, yF)}`;
-  return `<svg class="campArt" viewBox="0 0 ${W} ${f1(H)}" preserveAspectRatio="xMidYMax meet" aria-label="Dibble's camp">
+  // where the pets (index.html) may roam: feet on the ground between the middle and front rows, bodies clear of these boxes
+  // (Dibble, the fire, the Daily Dig board, the bench, the stall and its sign, and Puddock when he's out front)
+  const box = (P, x0, y0, x1, y1) => [P.x(x0), P.y(y0), P.x(x1), P.y(y1)];
+  const roam = [[dx + db * .18, dyy + db * .08, dx + db * .86, dyy + db * .95], box(PF, 162, 228, 204, 260), box(PB, 94, 326, 162, 404), box(PK, 300, 186, 388, 258), box(PSt, 280, 282, 400, 406),
+    ...(st.packed && st.puddockSvg ? [[366 - pb / 2, yM + 6 * kf - pb, 366 + pb / 2, yM + 6 * kf]] : [])].map((b) => b.map(f1).join(" ")).join(",");
+  return `<svg class="campArt" viewBox="0 0 ${W} ${f1(H)}" preserveAspectRatio="xMidYMax meet" aria-label="Dibble's camp" data-ground="${f1(yM + 10 * kf)} ${f1(yF)} ${kf.toFixed(3)}" data-keep="${roam}">
     <defs><linearGradient id="campSky" x1="0" y1="0" x2="0" y2="1">${S.sky.map((col, k) => `<stop offset="${[0, .6, 1][k]}" stop-color="${col}"/>`).join("")}</linearGradient>
       <radialGradient id="fireLight" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb15a" stop-opacity=".42"/><stop offset=".5" stop-color="#ff8a3d" stop-opacity=".12"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/></radialGradient>
       <radialGradient id="lanternGlow"><stop offset="0" stop-color="#ffd27a" stop-opacity=".55"/><stop offset="1" stop-color="#f0b543" stop-opacity="0"/></radialGradient>
@@ -848,7 +850,7 @@ export function camp(st, gemFn, dibbleSvg) {
     <g data-depth=".3"><g transform="translate(0 ${f1(yH - 180)})">${S.mid}</g></g>
     <g data-depth=".45"><g transform="translate(0 ${f1(yH - 180)})">${S.near}</g></g>
     <g data-depth=".6">${ground}${lanternLine}${hammock}${keep}${shelf}${rack}${jars}${grannyAt}${sapling}</g>
-    <g data-depth=".75">${fireLight}${tent}${sign}${fire}${cart}${dib}${petAt}${flies}</g>
+    <g data-depth=".75">${fireLight}${tent}${sign}${fire}${cart}${dib}${flies}</g>
     <g data-depth=".9">${board}${bench}${stall}</g>
     <g data-depth=".6">${memLabel}</g>
     <path d="${curve(ring(200, yM + 40 * kf, 230, 18, 14, .1, 11))}" fill="#cfe0d0" opacity=".06" filter="url(#campBlur)"/>
