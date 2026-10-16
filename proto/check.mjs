@@ -65,3 +65,17 @@ assert.equal(story.nextMemory("hollow", ["hollow1"]).id, "hollow2");
 assert.equal(story.nextMemory("hollow", ["hollow1", "hollow2", "hollow3"]), null);
 assert.ok(story.MEMORIES.gulch.some((m) => m.id === "receipt")); // the confession trigger
 console.log("story ok");
+// scenes play in story order, one per sale
+const all = (m) => story.MEMORIES[m].map((x) => x.id), st0 = { mem: [], site: "stump" };
+assert.equal(story.nextScene(st0), null);
+assert.equal(story.nextScene({ ...st0, mem: ["receipt"] }), "confession");
+assert.equal(story.nextScene({ ...st0, mem: all("heartwood") }), "sprout");
+assert.equal(story.nextScene({ ...st0, mem: all("heartwood"), sprout: true }), null);
+assert.equal(story.nextScene({ ...st0, mem: ["receipt", ...all("heartwood")], confessed: true }), "lead");
+assert.equal(story.nextScene({ ...st0, site: "underroot", mem: all("cinder"), confessed: true }), "ledge");
+assert.equal(story.nextScene({ ...st0, site: "underroot", ledge: true, mem: all("wickhold"), confessed: true }), "reunion");
+assert.equal(story.nextScene({ ...st0, site: "skywell", ledge: true, mem: all("skywell"), confessed: true }), "finale");
+assert.equal(story.nextScene({ ...st0, site: "skywell", ledge: true, finale: true, mem: all("skywell"), confessed: true }), null);
+assert.ok(story.MAP_GATE.loom({ mem: all("roost") }) && !story.MAP_GATE.loom({ mem: [] }));
+for (const sc of Object.values(story.SCENES)) for (const st of sc) assert.ok(st.who || st.art, "scene step needs a speaker or a picture");
+console.log("scenes ok");

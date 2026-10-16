@@ -151,11 +151,14 @@ Each Ring follows the same shape: **move camp (all items preserved) → three mi
 
 ## Where the story lives in the game (build checklist)
 
-**Phase 1 built 2026-10-15** (items 1, 2, 4, 5, 6, 7, 9, 10-confession): text in `proto/story.js`, pictures in `proto/art.js` (`memoryArt`, `stumpArt`).
-Notes: the stump sits in a panel on the home card (the forest backdrop is hidden behind the card on phones); tapping it replays memories, as does a button at camp.
-Each mine has 3 memories; captions and the Geode Gulch / Heartroot Deep Puddock lines and Gulch chalk not listed above were written to fill the set and are in `story.js` for review.
-The first green shoot appears once Heartroot Deep's last memory is found; the cart-packing line waits for phase 2 (camp moves).
-
+**Built 2026-10-15: the whole story, Ring One through the finale.** Text and story rules in `proto/story.js` (`SCENES`, `nextScene`, `MAP_GATE`); pictures in `proto/art.js` (`memoryArt` kinds, `stumpArt`, `granny`, `bidder`, `darkLantern`, three camp sites); mines in `sim/generator.json`.
+How it plays: every mine has 3 Amber Memories (33 in all), dealt rarely and in story order. After a sale, `nextScene` plays at most one scene: confession (receipt found) → sprout → lead + first camp move (Heartroot Deep done and confessed; Cinderthread Run is given) → ledge (Cinderthread done; Scalefall Roost map goes on sale) → Moonloom and Wickhold maps unlock as the previous mine's memories are found → reunion + second camp move (Wickhold done; the Skywell is given; Granny joins camp) → finale (Skywell done). After the finale, the mine list becomes the Wickway: every mine stays playable, each card's lantern glows with that mine's best haul, the last card is the dark toad-print lantern, and Puddock's cart is half-packed at camp.
+Notes:
+- The stump sits in a panel on the home card (the forest backdrop is hidden behind the card on phones); tap it, or the camp button, to replay memories.
+- Ring Two mines reuse the existing 12 gem types (the camp shelf holds 12) with new shapes, mixes and richer veins; each has its own chalk, Puddock lines and music key.
+- Not built: the Skywell's "rubble stone" special and digging visibly upward; the Skywell plays like the other mines with a rubble shape.
+- Ring Two map prices (80k / 120k / 170k gold) and timers were set with `python sim/sim.py --timed`; they have not been playtested by people.
+- Lines written beyond this document are all in `story.js` for review: the extra memory captions, the Geode Gulch, Heartroot, Wickhold and Skywell Puddock lines, the Gulch, Wickhold and Skywell chalk, Granny's camp lines, and the post-game lines.
 
 1. Prologue panels (first launch).
 2. Home screen: stump + growing sapling tied to lifetime light released.
