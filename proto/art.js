@@ -298,7 +298,8 @@ export function lookItem(part, val, size = 40) {
     ${shape(curve([[12.6, 20], [27.4, 19.6], [28, 26], [27.2, 32.2], [20, 33.4], [12.8, 32.2], [12, 26]]), f, line(f), [-.6, .55])}
     <path d="${curve(ring(16, 29, 4, 3, 8, .2, 3))}" fill="${mix(f, "#000000", .35)}" opacity=".4" filter="url(#${id}b)"/>
     <path d="${curve(ring(23.6, 23.6, 3.2, 2.4, 8, .2, 5))}" fill="${mix(f, "#ffffff", .45)}" opacity=".55" filter="url(#${id}b)"/>
-    ${shape(curve([[14, 8.4], [26, 8], [26.4, 13.6], [13.6, 14]]), "#a0703f", line("#a0703f"), [-.6, .55])}${stroke(14, 16, 1.62, 14, .7, "#ffffff", .55, .05)}`, "lookItem");
+    ${shape(curve([[14, 8.4], [26, 8], [26.4, 13.6], [13.6, 14]]), "#a0703f", line("#a0703f"), [-.6, .55])}${stroke(14, 16, 1.62, 14, .7, "#ffffff", .55, .05)}
+    ${val === "starfur" ? [[17, 24, 1.8, 2.4], [23.6, 29.6, 1.4, 3.1], [24.4, 22.6, 1.1, 1.9]].map(([x, y, s, dur], k) => `<g><animate attributeName="opacity" values=".2;1;.2" dur="${dur}s" begin="${-k}s" repeatCount="indefinite"/>${twinkle(x, y, s, "#f4f0ff")}</g>`).join("") : ""}`, "lookItem");
 }
 
 // Old Puddock: a wise travelling toad merchant. Straw hat, round spectacles, droopy white brows, patched indigo coat.
@@ -415,10 +416,145 @@ const CLOAKS = {
 // on Dibble: [behind, in front], both in body coords
 function wearLayers(look, id) {
   const T = TRINKETS[look.trinket], C = CLOAKS[look.cloak], head = (s) => `<g transform="translate(0 10) rotate(-9 150 236)">${s}</g>`;
-  return [C ? C.back(id + "cb") : "", (C ? C.front(id + "cb") : "") + (T ? (T.head ? head(T.draw(id + "tr")) : T.draw(id + "tr")) : "")];
+  return [C ? C.back(id + "cb") : "", (look.fur === "starfur" ? starSpecks() : "") + (C ? C.front(id + "cb") : "") + (T ? (T.head ? head(T.draw(id + "tr")) : T.draw(id + "tr")) : "")];
 }
 const wearTile = (part, val, id, size) => { const W = part === "trinket" ? TRINKETS[val] : CLOAKS[val];
   return W && svg(size, W.vb, part === "trinket" ? W.draw(id) : W.back(id) + W.front(id), "lookItem"); };
+
+// ---------- treasures: the Market's "Someday" shelf, very long-term goals (prices and lore in index.html TREASURES) ----------
+// Prestige wear is painted like the rest, plus one slow touch of magic each: a light that sweeps across now and then
+// (sheen), a soft pulse, or stars that twinkle in the fur.
+const sheen = (id, d, x0, x1, y0, y1, dur = 5, w = 7) => wClip(id, d, `<path d="M${x0 - w * 2} ${y1} L${x0 - w} ${y0} L${x0} ${y0} L${x0 - w} ${y1} Z" fill="#ffffff" opacity=".6">
+  <animateTransform attributeName="transform" type="translate" values="0 0;${x1 - x0 + w * 2} 0;${x1 - x0 + w * 2} 0" keyTimes="0;.28;1" dur="${dur}s" repeatCount="indefinite"/></path>`);
+// a four-point twinkle (concave star)
+const twinkle = (x, y, s, c = "#ffffff", op = 1) => `<path d="M${x} ${y - s} Q${x} ${y} ${x + s * .8} ${y} Q${x} ${y} ${x} ${y + s} Q${x} ${y} ${x - s * .8} ${y} Q${x} ${y} ${x} ${y - s} Z" fill="${c}" opacity="${op}"/>`;
+FUR.starfur = ["#3b3970", "#2a2856"];
+LANTERN_GLOW.golden = "#ffd36a";
+Object.assign(EXTRA_HATS, {
+  crown: (id) => { const gold = "#f0c75a", d = "M26 31.4 L28.6 9.6 L36 18.4 L43 5.6 L50 15.2 L57 5.6 L64 18.4 L71.4 9.6 L74 31.4 Q50 33.6 26 31.4 Z";
+    const tips = [[28.6, 9.6], [43, 5.6], [57, 5.6], [71.4, 9.6]];
+    return `<defs>${wBlur(id + "s", 2)}${wBlur(id + "g", 1.8)}</defs>` +
+      `<g><animate attributeName="opacity" values=".55;1;.55" dur="2.8s" repeatCount="indefinite"/>${tips.map(([x, y], k) => wSoft(id + "g", x, y - 1.6, 5.4, 5.4, "#ffd27a", .75, k)).join("")}</g>` +
+      wPart(d, gold, [-1, .9]) + wClip(id + "c", d, wSoft(id + "s", 34, 27, 14, 7, "#8a5a14", .55, 2) + wSoft(id + "s", 60, 13, 10, 7, "#fff2b8", .6, 3) +
+        [[36, 18.4], [50, 15.2], [64, 18.4]].map(([x, y]) => stroke(x, y + 1, -1.57, 9, .45, "#b07a1e", .55, .02)).join("")) +
+      sheen(id + "h", d, 24, 76, 4, 34) +
+      wPart(curve([[25, 25.4], [50, 23.6], [75, 25.4], [75.6, 31.4], [50, 33.6], [24.4, 31.4]]), "#d9a83a", [-.8, .7]) +
+      `<path d="${curve([[27, 27], [50, 25.4], [73, 27]], false)}" stroke="#fff0b8" stroke-width=".8" fill="none" opacity=".7" stroke-linecap="round"/>` +
+      [[37.4, 29.2, 2.1, "#8fd18b"], [62.6, 29.2, 2.1, "#d0507a"], [50, 28.6, 3.2, "#f0b543"]].map(([x, y, s, c], k) => shape(curve(ring(x, y, s, s * .9, 8, .08, 30 + k)), c, line(c), [-.4, .35]) +
+        `<path d="${curve(ring(x - s * .3, y - s * .35, s * .32, s * .24, 6, .1, k))}" fill="#ffffff" opacity=".85"/>`).join("") +
+      tips.map(([x, y], k) => shape(curve([[x, y - 5.4], [x + 1.7, y - 1.6], [x + 1.4, y + .4], [x - 1.4, y + .4], [x - 1.7, y - 1.6]]), "#ffcf6a", "#c0701e", [-.3, .3]) +
+        `<path d="${curve(ring(x, y - 1, .8, 1.2, 6, .1, k))}" fill="#fffbe6"/>`).join(""); },
+});
+Object.assign(EXTRA_LANTERNS, {
+  golden: (id) => { const gold = "#e8b84a", glass = curve([[74.6, 57.6], [85.4, 57.4], [86.4, 64.4], [85.4, 71.2], [74.6, 71.4], [73.6, 64.4]]);
+    const cap = "M74 58 Q74.6 53.6 80 51.4 Q85.4 53.6 86 58 Z";
+    return `<defs>${wBlur(id + "b", 1.4)}${wBlur(id + "g", 3)}</defs>` +
+      `<g><animate attributeName="opacity" values=".7;1;.7" dur="3.2s" repeatCount="indefinite"/>${wSoft(id + "g", 80, 64.4, 12, 12.6, "#ffd36a", .5, 3)}</g>` +
+      shape(glass, "#fff0b0", "#a8781c", [-.5, .5]) + wSoft(id + "b", 80.8, 63.4, 4.4, 5.4, "#ffffff", .9, 5) + wSoft(id + "b", 77, 68, 3, 2.6, "#f0a83a", .5, 6) +
+      [[75.4, 58, 74.4, 64.4, 75.4, 71], [84.6, 58, 85.6, 64.4, 84.6, 71], [80, 57.6, 80.3, 64.4, 80, 71.2]].map((a, k) => shape(limb(...a, k === 2 ? .45 : .7, k === 2 ? .45 : .7), gold, line(gold), [-.3, .3])).join("") +
+      wPart(cap, gold, [-.5, .5]) + wClip(id + "c", cap, wSoft(id + "b", 83, 54, 3, 2, "#fff2c0", .8, 7)) + sheen(id + "h", cap, 73, 87, 51, 58, 4.4, 3) +
+      shape(curve(ring(80, 50.4, 1.5, 1.4, 7, .1, 8)), gold, line(gold), [-.3, .3]) +
+      wPart(curve([[74.4, 70.8], [85.6, 70.6], [86.2, 73.4], [73.8, 73.6]]), gold, [-.5, .5]) + twinkle(83.6, 60.4, 1.6, "#ffffff", .9); },
+});
+Object.assign(TRINKETS, {
+  heartstone: { vb: "122 290 58 64", draw: (id) => { const c = "#ff4f7a", d = curve([[151, 347], [141.4, 337], [138.6, 329], [142.6, 323], [151, 326.6], [159.4, 323], [163.4, 329], [160.6, 337]]);
+    return `<defs>${wBlur(id + "s", 1.4)}${wBlur(id + "g", 3.4)}</defs>` + neckCord("#e8b84a") +
+      `<g><animate attributeName="opacity" values=".3;.95;.45;.85;.3;.3" keyTimes="0;.1;.2;.3;.55;1" dur="2.6s" repeatCount="indefinite"/>${wSoft(id + "g", 151, 334, 15, 15, "#ff8aa6", .6, 3)}</g>` +
+      wPart(d, c, [-.7, .6]) + wClip(id + "c", d, `<path d="M151 327 L163 329 L151 347 Z" fill="#b8204a" opacity=".45"/><path d="M151 327 L139 329 L146 334 Z" fill="#ffc0d0" opacity=".6"/>
+        <path d="M151 327 L146 334 L151 347 Z" fill="#ff8aa6" opacity=".35"/>` + wSoft(id + "s", 146, 330, 3, 2.4, "#ffe6ee", .9, 2)) +
+      shape(curve(ring(151, 323.4, 2.4, 2.2, 7, .1, 6)), "#e8b84a", "#7a5418", [-.3, .3]) + twinkle(156.6, 328.4, 2.2, "#ffffff", .9); } },
+});
+Object.assign(CLOAKS, {
+  moonsilk: { vb: "56 266 172 156", back: (id) => { const c = "#cbd4f2", r = rng(13);
+      const d = curve([[112, 290], [150, 296], [188, 288], [204, 330], [218, 396], [207, 411], [190, 405], [171, 417], [150, 409], [129, 417], [110, 405], [93, 411], [82, 396], [94, 330]]);
+      return `<defs>${wBlur(id + "s", 5)}</defs>` + `<g transform="translate(-2.4 2.6)">${shape(d, "#5a64a8", "#2a2c58", [0, 0])}</g>` + wPart(d, c, [-1.6, 1.4]) + wClip(id + "c", d, wSoft(id + "s", 92, 384, 30, 32, "#6a74b8", .6, 2) +
+        wSoft(id + "s", 190, 322, 20, 34, "#ffffff", .7, 3) + [[110, 405], [129, 417], [150, 409], [171, 417], [190, 405]].map(([x, y], k) => stroke(x, y + 2, -1.57 + (x - 150) * -.004, 96 + r() * 10, 2.2, k % 2 ? "#8a94cc" : "#f4f6ff", k % 2 ? .45 : .55, (k - 2) * .02)).join("") +
+        [[100, 344, 2.6], [120, 380, 2], [178, 366, 2.4], [196, 394, 1.8], [104, 398, 1.8], [194, 338, 1.6], [150, 392, 1.6]].map(([x, y, s]) => twinkle(x, y, s, "#ffffff", .9)).join("")) +
+        sheen(id + "h", d, 76, 224, 286, 420, 6, 18) +
+        `<path d="${curve([[82, 396], [93, 410], [110, 404], [129, 416], [150, 408], [171, 416], [190, 404], [207, 410], [218, 396]], false)}" stroke="#f4f6ff" stroke-width="1.8" fill="none" opacity=".75" stroke-linecap="round"/>`; },
+    front: (id) => { const c = "#dbe2f8", d = curve([[104, 292], [128, 302], [150, 306], [172, 302], [192, 290], [190, 302], [150, 318], [108, 304]]);
+      return wPart(d, c, [-.9, .8]) + wClip(id + "f", d, wSoft(id + "cs", 124, 308, 12, 6, "#7a86c0", .45, 4)) +
+        `<path d="${curve([[108, 297], [150, 311], [190, 295]], false)}" stroke="#ffffff" stroke-width="1" fill="none" opacity=".55"/>` +
+        shape(`M146 306 A6.4 6.4 0 1 0 157 312.6 A5 5 0 1 1 146 306 Z`, "#eef2fc", "#5a6488", [-.4, .4]) + twinkle(158, 304, 2, "#ffffff", .9); } },
+});
+// starfur: deep indigo fur with a few stars in it that come and go (on Dibble's body coords, over the fur, under clothes)
+const starSpecks = () => [[106, 336, 3.2, 2.6], [124, 374, 2.4, 3.4], [178, 322, 2.8, 3], [186, 362, 2.2, 2.2], [168, 386, 2.6, 3.8], [116, 252, 2.6, 2.8], [128, 274, 2, 3.6]]
+  .map(([x, y, s, dur], k) => `<g opacity=".3"><animate attributeName="opacity" values=".2;1;.2" dur="${dur}s" begin="${-k * .7}s" repeatCount="indefinite"/><circle cx="${x}" cy="${y}" r="${s * 2.4}" fill="#c8c0ff" opacity=".25"/>${twinkle(x, y, s * 1.7, "#fffbe8")}</g>`).join("");
+
+// camp builds, each in its own coords with its own defs; camp() sets them down, buildTile() shows one in the shop
+const glowDef = (id, c, op = .6) => `<radialGradient id="${id}"><stop offset="0" stop-color="${c}" stop-opacity="${op}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`;
+const BUILDS = {
+  // a Wickway lamp post: base at 0 0, the lamp hangs out toward dir (1 right, -1 left)
+  lamps: (id, dir = 1) => { const r = rng(31), x = 12 * dir, iron = "#3e3328";
+    return `<defs>${glowDef(id + "g", "#ffd27a")}</defs>
+      ${shape(curve(ring(0, 0, 8, 3, 9, .15, 4)), "#6a6458", "#24201a", [-.5, .4])}
+      ${shape(limb(0, 1, -.8, -40, 0, -80, 3, 2), iron, "#14100a", [-.7, .6])}${stroke(-1, -6, -1.6, 66, .5, "#8a7a62", .35, .02)}
+      ${shape(limb(0, -76, x * .5, -82, x, -79, 1.4, 1), iron, "#14100a", [-.4, .4])}${shape(curve(ring(0, -81, 2.4, 2.4, 7, .1, 5)), "#5a4a3a", "#14100a", [-.3, .3])}
+      <path d="M${x} -79 v4" stroke="${iron}" stroke-width=".9"/><circle cx="${x}" cy="-67" r="20" fill="url(#${id}g)"/>
+      ${shape(curve([[x - 4.4, -74.6], [x + 4.4, -74.6], [x + 5.2, -61], [x - 5.2, -61]]), "#f7d77a", "#8a5a24", [-.5, .5])}
+      <path d="${curve(ring(x + .8, -68, 2, 3, 7, .2, 6))}" fill="#fffbe0" opacity=".9"/><path d="M${x - 2} -73 v10 M${x + 2} -73 v10" stroke="#c08a3a" stroke-width=".6" opacity=".7"/>
+      ${plank(x - 5.8, -76.4, 11.6, 2.4, iron, r)}${plank(x - 6, -62, 12, 2, iron, r)}
+      ${[-6, -2, 3, 7].map((gx, k) => stroke(gx, 1, -1.3 - k * .15, 6, 1.2, k % 2 ? "#4f8a54" : "#3f7348", .8)).join("")}`; },
+  // the wall of names: a low dry-stone wall with an amber-wood board of carved names, base centre at 0 0 (the stump stands in front)
+  wall: (id) => { const r = rng(41), top = (x) => -58 + (x * x) / 400; // a gentle arch, 58 high in the middle, 49 at the ends
+    const d = curve([[-62, 1], [-61, top(-60)], [-40, top(-40) - 1], [0, top(0) - 1], [40, top(40) - 1], [61, top(60)], [62, 1]]);
+    const board = curve([[-52, -8], [-52, top(-50) + 7], [0, top(0) + 6], [52, top(50) + 7], [52, -8]]);
+    const stones = [...Array(5)].map((_, row) => [...Array(7)].map((_, k) => { const x = -54 + k * 18 + (row % 2) * 9 + (r() - .5) * 3, y = -4 - row * 10;
+      return y > top(x) + 4 && Math.abs(x) < 60 ? shape(curve(ring(x, y, 8.4, 4.6, 8, .2, row * 9 + k)), mix("#8a8276", "#5a544a", r()), "#2a2620", [-.6, .5]) : ""; }).join("")).join("");
+    const names = [...Array(5)].map((_, row) => { let x = -48 + r() * 4, o = ""; const y = top(0) + 15 + row * 8.6;
+      while (x < 44) { const n = 3 + Math.floor(r() * 3), lim = top(x + n * 1.7) + 9;
+        if (y > lim && !(row === 0 && Math.abs(x) < 10)) for (let k = 0; k < n; k++) o += stroke(x + k * 1.7, y + 1.6, -1.57 + (r() - .5) * .9, 2.6 + r(), .45, "#ffd27a", .75, (r() - .5) * .6);
+        x += n * 1.7 + 3.4 + r() * 2; }
+      return o; }).join("");
+    return `<defs>${glowDef(id + "g", "#ffd27a")}${wBlur(id + "s", 3)}</defs>${shape(d, "#6e675c", "#24201a", [-1.2, 1])}${wClip(id + "c", d, stones +
+        `<path d="${curve(ring(-34, -8, 34, 20, 9, .2, 2))}" fill="#2a2620" opacity=".45" filter="url(#${id}s)"/>`)}
+      ${shape(board, "#7a4a24", "#2a1608", [-.8, .7])}${wClip(id + "b", board, `<path d="${curve(ring(26, -40, 30, 10, 9, .2, 3))}" fill="#e8a050" opacity=".35" filter="url(#${id}s)"/>${names}`)}
+      <circle cx="0" cy="${top(0) + 2}" r="16" fill="url(#${id}g)"/>${shape(curve([[-3.4, top(0) - 3], [3.4, top(0) - 3], [4, top(0) + 7], [-4, top(0) + 7]]), "#f7d77a", "#6a3a10", [-.5, .5])}${plank(-4.6, top(0) - 5, 9.2, 2.2, "#3a2210", r)}`; },
+  // the moth roost: a crooked silver pole with a little moon of woven silk on top (moths steer by the moon); base 0 0, top at -h
+  roost: (id, h = 120) => { const r = rng(51), silk = "#ece6f6", t = -h;
+    const moth = (x, y, s, a = 0) => `<g transform="translate(${x} ${y}) rotate(${a}) scale(${s})">${shape(curve(ring(-3.6, 0, 3.8, 2.6, 8, .1, 1, -.4)), "#e6dcf4", "#5a4a70", [-.3, .3])}${shape(curve(ring(3.6, 0, 3.8, 2.6, 8, .1, 2, .4)), "#e6dcf4", "#5a4a70", [-.3, .3])}
+      <circle cx="-3.6" cy=".2" r=".9" fill="#8a76b4"/><circle cx="3.6" cy=".2" r=".9" fill="#8a76b4"/><path d="M0 -2 v4.4" stroke="#6a5a80" stroke-width="1.4" stroke-linecap="round"/></g>`;
+    const crescent = `M-8 ${t - 17} A20 20 0 1 0 15 ${t + 9} A18.5 18.5 0 0 1 -8 ${t - 17} Z`;
+    return `<defs>${glowDef(id + "g", "#e6dcff", .5)}</defs><circle cx="2" cy="${t}" r="34" fill="url(#${id}g)"/>
+      ${shape(limb(0, 0, -4, t * .5, 1, t + 10, 6, 3.4), "#c4bccc", "#3a3448", [-.9, .8])}${stroke(2, -8, -1.6, -t * .8, 1, "#ece6f6", .45, .02)}
+      ${[...Array(6)].map((_, k) => stroke(-3 + r() * 2, -10 + t * k * .14 - r() * 6, -.3 + r() * .2, 6, .7, "#4a4458", .5, .05)).join("")}
+      ${[.3, .55, .78].map((f) => `<path d="M-4 ${f1(t * f + 4)} Q1 ${f1(t * f - 2)} 5 ${f1(t * f - 6)}" stroke="${silk}" stroke-width="1.6" fill="none" opacity=".7"/>`).join("")}
+      ${shape(limb(-1, t * .62, 8, t * .66, 18, t * .64, 1.8, 1), "#a8a0b4", "#3a3448", [-.4, .4])}
+      ${[[9, t * .66 + 6, 2.6, 4.4], [15, t * .645 + 5, 2.2, 3.6]].map(([x, y, rx, ry], k) => `<path d="M${x} ${y - ry - 3} v3" stroke="${silk}" stroke-width=".6"/>${shape(curve(ring(x, y, rx, ry, 8, .12, 60 + k)), "#efe8f4", "#6a6080", [-.4, .4])}`).join("")}
+      ${shape(crescent, silk, "#5a5070", [-.9, .8])}${[...Array(5)].map((_, k) => stroke(-6 + k * 3, t - 14 + k * 6, .9 + k * .25, 8, .5, "#b8aed0", .6, .1)).join("")}
+      ${moth(-14, t - 2, 1, -30)}${moth(4, t + 18, .9, 20)}
+      ${[0, 1].map((k) => `<g><animateMotion dur="${7 + k * 2.4}s" begin="${-k * 3}s" repeatCount="indefinite" path="M${8 - k * 20} ${t - 10} q22 ${-10 - k * 6} 30 8 t-26 20 q-20 -6 -4 -28"/>${moth(0, 0, .75)}</g>`).join("")}`; },
+  // the lantern tower: stone and timber, a lit lantern room and a red roof; base centre 0 0, roof tip at -h
+  tower: (id, h = 220) => { const r = rng(61), t = -h, room = t + 20, gal = t + 46, stone = "#7a7366";
+    const body = curve([[-20, 0], [-18, t * .5], [-14, gal], [14, gal], [18, t * .5], [20, 0]]);
+    return `<defs>${glowDef(id + "g", "#ffd27a", .55)}${wBlur(id + "s", 4)}${wBlur(id + "b", 2)}</defs>
+      <circle cx="0" cy="${room + 12}" r="64" fill="url(#${id}g)"><animate attributeName="opacity" values=".75;1;.75" dur="3.4s" repeatCount="indefinite"/></circle>
+      ${shape(body, stone, "#24201a", [-1.4, 1.2])}${wClip(id + "c", body, `<path d="${curve(ring(-14, t * .4, 14, -t * .5, 9, .2, 2))}" fill="#3a3630" opacity=".55" filter="url(#${id}s)"/>
+        <path d="${curve(ring(14, gal + 30, 10, 40, 9, .2, 3))}" fill="#ffd8a0" opacity=".35" filter="url(#${id}s)"/>
+        ${[...Array(Math.floor(-gal / 12))].map((_, k) => { const y = -6 - k * 12; return [...Array(4)].map((_, j) => stroke(-22 + j * 12 + (k % 2) * 6, y, (r() - .5) * .06, 9, .6, "#3a3630", .45, .02)).join(""); }).join("")}`)}
+      ${[.18, .55].map((f) => plank(-21 + f * 4, t * f - 3, 42 - f * 8, 5, "#6b4a2a", r)).join("")}
+      ${[.36, .72].map((f) => `${shape(curve([[-4, t * f + 6], [4, t * f + 6], [4, t * f - 3], [0, t * f - 7], [-4, t * f - 3]]), "#f7d77a", "#3a2a1a", [-.5, .5])}<path d="M0 ${t * f - 6} v12" stroke="#5a3b24" stroke-width=".8"/>`).join("")}
+      ${[...Array(5)].map((_, k) => stroke(-16 + k * 3, -2, -1.2 - k * .1, 14 + r() * 16, 1.2, k % 2 ? "#4f8a54" : "#3f7348", .8, .2)).join("")}
+      ${plank(-22, gal - 1, 44, 5, "#5a3b24", r)}${[-19, -10, 0, 10, 19].map((x) => `<path d="M${x} ${gal - 1} v-7" stroke="#5a3b24" stroke-width="1.4"/>`).join("")}<path d="M-20 ${gal - 7.4} H20" stroke="#5a3b24" stroke-width="1.4"/>
+      ${shape(`M-12 ${gal - 1} L-12 ${room} L12 ${room} L12 ${gal - 1} Z`, "#ffe39a", "#5a3b24", [-.7, .6])}
+      <path d="${curve(ring(1, room + 13, 7, 8, 9, .2, 5))}" fill="#ffffff" opacity=".85" filter="url(#${id}b)"/><path d="M-4 ${room} V${gal - 1} M4 ${room} V${gal - 1}" stroke="#5a3b24" stroke-width="1.2"/>
+      ${shape(`M-16 ${room + 1} Q-8 ${room - 6} 0 ${t} Q8 ${room - 6} 16 ${room + 1} Z`, "#a8483a", "#4a1a12", [-.9, .8])}<path d="M-12 ${room - 1} Q-4 ${room - 7} 0 ${t + 2}" stroke="#d8705a" stroke-width="1" fill="none" opacity=".6"/>
+      ${shape(curve(ring(0, t - 2, 2, 2, 7, .1, 7)), "#f0c75a", "#7a5418", [-.3, .3])}`; },
+  // the moonlight mirror: a silver disc in a bronze frame, centre 0 0; h > 0 stands it on its own pillar down to y h
+  mirror: (id, h = 0) => { const r = rng(71), bronze = "#c8a050";
+    return `<defs><radialGradient id="${id}m" cx=".38" cy=".34" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#d8e2f6"/><stop offset="1" stop-color="#8a96b8"/></radialGradient>${glowDef(id + "g", "#f4f0ff", .55)}</defs>
+      ${h ? `${shape(curve(ring(0, h, 10, 3.4, 9, .15, 2)), "#6a6458", "#24201a", [-.5, .4])}${shape(limb(0, h, -1, h * .5 + 8, 0, 14, 4, 3), "#8a8478", "#2a2620", [-.8, .7])}${plank(-7, h * .4, 14, 3, "#6a6458", r)}` : ""}
+      <circle cx="0" cy="0" r="30" fill="url(#${id}g)"><animate attributeName="opacity" values=".6;1;.6" dur="4.6s" repeatCount="indefinite"/></circle>
+      ${shape(limb(-8, 14, 0, 18, 8, 14, 1.6, 1.6), bronze, line(bronze), [-.4, .4])}
+      ${shape(curve(ring(0, 0, 14, 14, 16, .02, 3)), bronze, line(bronze), [-.8, .7])}<circle r="11.4" fill="url(#${id}m)"/>
+      ${wClip(id + "c", curve(ring(0, 0, 11.4, 11.4, 16, 0, 4)), `<path d="M-2 -9 A8 8 0 1 0 7 4 A6 6 0 1 1 -2 -9 Z" fill="#fff6d8" opacity=".9"/>
+        <path d="M-14 6 L4 -14 L9 -14 L-9 6 Z" fill="#ffffff" opacity=".5"><animateTransform attributeName="transform" type="translate" values="-10 0;24 0;24 0" keyTimes="0;.3;1" dur="5.4s" repeatCount="indefinite"/></path>`)}
+      ${[0, 1, 2, 3].map((k) => { const a = k * Math.PI / 2 + .4; return shape(curve(ring(Math.cos(a) * 14, Math.sin(a) * 14, 2, 2, 7, .1, 10 + k)), "#e8c870", "#6a4a18", [-.3, .3]); }).join("")}`; },
+};
+export const BUILD_KINDS = Object.keys(BUILDS);
+const TILE_VB = { lamps: ["-34 -96 68 100", (id) => `<g transform="translate(-14 0)">${BUILDS.lamps(id + "a", -1)}</g><g transform="translate(14 0)">${BUILDS.lamps(id + "b", 1)}</g>`], wall: ["-66 -72 132 76", (id) => BUILDS.wall(id)], roost: ["-40 -134 74 138", (id) => BUILDS.roost(id, 104)],
+  tower: ["-70 -176 140 180", (id) => BUILDS.tower(id, 170)], mirror: ["-34 -34 68 74", (id) => BUILDS.mirror(id, 38)] };
+export const buildTile = (kind, size = 64) => svg(size, TILE_VB[kind][0], TILE_VB[kind][1]("bt" + uid++), "lookItem");
 
 // ---------- pets: small round creatures found asleep in crystals (docs/STORY.md, "Pets") ----------
 // Every pet is the same round body (100 box, centre 50 61, radius ~30, feet at y 92), painted like Dibble: a darker edge
@@ -683,7 +819,23 @@ export function camp(st, gemFn, dibbleSvg) {
     ${[...Array(5)].map(() => stroke(tx + (r() - .5) * crown * 1.2, ct - crown * (.1 + r() * .7), -1 - r(), crown * .22, crown * .05, "#2f5a2a", .4)).join("")}</g>`)}</g>`;
   const hammock = d.hammock ? place(340, 262, 352, yB - 4 * kf, .95 * kf).g(`${shape(limb(380, 262, 381, 214, 380, 168, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}${shape(limb(300, 262, 299, 224, 300, 186, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}<path d="M300 194 Q340 226 380 176" stroke="#e8d6aa" stroke-width="5.5" fill="none"/><path d="M302 196 Q340 222 378 179" stroke="#b8a678" stroke-width="1" fill="none" opacity=".6"/>`) : "";
   const jars = d.jars ? place(250, 258, 120, yB + 2 * kf, .9 * kf).g(`${plank(238, 246, 26, 12, "#6b4a2a", r)}<g transform="translate(236 222)">${ICONS.jar}</g><g transform="translate(252 226) scale(.8)">${ICONS.jar}</g>`) : "";
-  const gb = 60 * kf, grannyAt = st.grannySvg ? `<g data-tap="granny"><svg x="${f1(112 - gb / 2)}" y="${f1(yB + 6 * kf - gb)}" width="${f1(gb)}" height="${f1(gb)}" viewBox="0 0 100 100">${strip(st.grannySvg)}</svg></g>` : "";
+  // the treasures (Market, Someday): lamp posts flank the stump, the wall of names stands just behind it, the moth roost
+  // rises behind the rack and the lantern tower behind the sapling, both topping out under the lantern line; the moonlight
+  // mirror hangs on the tower (or stands on its own pillar there) and throws a pale beam over camp
+  const B = st.builds || {}, bld = (kind, P, box, body) => `<g data-tap="build-${kind}">${hit(P, ...box)}${body}</g>`;
+  const lamps = B.lamps ? [-1, 1].map((dir) => { const P = place(0, 0, 200 + dir * 64 * kf, yS - 2 * kf, 1.1 * kf);
+    return bld("lamps", P, [dir * 12 - 7, -84, dir * 12 + 7, -58], P.g(BUILDS.lamps("cbl" + dir, dir))); }).join("") : "";
+  const PWa = place(0, 0, 200, yS - 6 * kf, 1.1 * kf), wall = B.wall ? bld("wall", PWa, [-60, -60, 60, -36], PWa.g(BUILDS.wall("cbw"))) : "";
+  const kR = .85 * kf, PRo = place(0, 0, 24, yB - 6 * kf, kR), hR = (yB - 6 * kf - (yL + 30 * kf + 20 * kR)) / kR;
+  const roost = B.roost ? bld("roost", PRo, [-24, -hR - 24, 26, -hR + 22], PRo.g(BUILDS.roost("cbr", hR))) : "";
+  const kTw = kf, xTw = 376, PTw = place(0, 0, xTw, yB - 8 * kf, kTw), hTw = (yB - 8 * kf - (yL + 26 * kf)) / kTw + 20; // the room sits just under the last lanterns
+  const tower = B.tower ? bld("tower", PTw, [-20, -hTw, 20, -hTw + 50], PTw.g(BUILDS.tower("cbt", hTw))) : "";
+  const PMi = B.tower ? place(0, 0, xTw - 30 * kTw, PTw.y(-hTw + 34), .9 * kf) : place(0, 0, xTw, yL + 40 * kf, .9 * kf);
+  const mirror = B.mirror ? `<path d="M${f1(PMi.x(0) - 6)} ${f1(PMi.y(0) - 8)} L${f1(PMi.x(0) + 4)} ${f1(PMi.y(0) + 8)} L250 ${f1(yM + 30 * kf)} L120 ${f1(yM + 10 * kf)} Z" fill="#f4f0ff" opacity=".1" filter="url(#campBlur)">
+      <animate attributeName="opacity" values=".07;.14;.07" dur="6s" repeatCount="indefinite"/></path>
+    ${bld("mirror", PMi, [-16, -16, 16, 16], PMi.g(`${B.tower ? shape(limb(14, 2, 22, 0, 33, 2, 1.6, 1.4), "#5a3b24", "#2e1e12", [-.4, .4]) : ""}${BUILDS.mirror("cbm", B.tower ? 0 : (yB - 8 * kf - PMi.y(0)) / (.9 * kf))}`))}` : "";
+  const builds = { back: roost + tower + mirror, lamps: wall + lamps }, wash = B.tower ? `<ellipse cx="300" cy="${f1(yM)}" rx="260" ry="${f1(U * .5)}" fill="url(#lanternGlow)" opacity=".22"/>` : "";
+  const gb = 60 * kf, grannyAt =st.grannySvg ? `<g data-tap="granny"><svg x="${f1(112 - gb / 2)}" y="${f1(yB + 6 * kf - gb)}" width="${f1(gb)}" height="${f1(gb)}" viewBox="0 0 100 100">${strip(st.grannySvg)}</svg></g>` : "";
 
   // ---- the middle: the Go mining signpost (one arm per mine opened), the tent and banner, the fire, Dibble ----
   const PG = place(26, 264, 44, yM + 8 * kf, 1.45 * kf), goY = PG.y(152), GF = 17 / s;
@@ -849,7 +1001,7 @@ export function camp(st, gemFn, dibbleSvg) {
     <g data-depth=".22">${tall}</g>
     <g data-depth=".3"><g transform="translate(0 ${f1(yH - 180)})">${S.mid}</g></g>
     <g data-depth=".45"><g transform="translate(0 ${f1(yH - 180)})">${S.near}</g></g>
-    <g data-depth=".6">${ground}${lanternLine}${hammock}${keep}${shelf}${rack}${jars}${grannyAt}${sapling}</g>
+    <g data-depth=".6">${ground}${wash}${builds.back}${lanternLine}${hammock}${builds.lamps}${keep}${shelf}${rack}${jars}${grannyAt}${sapling}</g>
     <g data-depth=".75">${fireLight}${tent}${sign}${fire}${cart}${dib}${flies}</g>
     <g data-depth=".9">${board}${bench}${stall}</g>
     <g data-depth=".6">${memLabel}</g>
