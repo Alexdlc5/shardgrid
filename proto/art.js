@@ -1,5 +1,5 @@
 // Glimmerwood menu art: every picture is inline SVG drawn in code (no image files until the look is approved).
-import { dibbleBody, puddockBody, rng, curve, ring, shape, stroke, limb, shard, shardCluster, pieEye, leafCap, amberLantern } from "./paint.js";
+import { dibbleBody, puddockBody, rng, curve, ring, shape, stroke, limb, shard, shardCluster, pieEye, leafCap, amberLantern, furEdge, tuftLine } from "./paint.js";
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 const mix = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * t).toString(16).padStart(2, "0")).join("");
 let uid = 0;
@@ -420,6 +420,95 @@ function wearLayers(look, id) {
 const wearTile = (part, val, id, size) => { const W = part === "trinket" ? TRINKETS[val] : CLOAKS[val];
   return W && svg(size, W.vb, part === "trinket" ? W.draw(id) : W.back(id) + W.front(id), "lookItem"); };
 
+// ---------- pets: small round creatures found asleep in crystals (docs/STORY.md, "Pets") ----------
+// Every pet is the same round body (100 box, centre 50 61, radius ~30, feet at y 92), painted like Dibble: a darker edge
+// down-left instead of an outline, shading clipped inside (cool down-left, warm up-right), soft blobs for light, pie eyes
+// and a blush. Each adds its own ears, wings, spines or sprout, so clothes fit them all: o = { head, neck, sleep }.
+const PET_COL = { moss: "#7aa85a", ember: "#e0703c", glowcap: "#a28ae4", frost: "#e2edf7", pebble: "#cdbb9c", moth: "#e4d8f2", geode: "#a87c5c" };
+const PET_X = { // per pet: back (behind the body), edge (tufts on the silhouette), skin (clipped inside), top (on the body)
+  moss: (id, r, soft, pts) => ({
+    edge: [pts.filter((_, k) => k > 8 && k < 16 || k < 2), ["#7aa85a", "#8fbf68", "#62904a"], 3, 4.5, 2.8],
+    skin: [...Array(14)].map(() => stroke(26 + r() * 48, 40 + r() * 44, -2 + (r() - .5) * 1.4, 3 + r() * 3, .8, r() < .5 ? "#a6d07c" : "#4f7a38", .55, .2)).join(""),
+    top: shape(limb(50, 33, 48.6, 27, 51, 21.6, 1.2, .7), "#5f8a44", "#2e4a22", [-.4, .4]) + leafAt(51, 22.6, -2.5, 8.6, 3, "#8fbf68") + leafAt(51, 22.4, -.5, 9.4, 3.2, "#a6d07c") }),
+  ember: (id, r, soft) => ({
+    back: soft(50, 60, 40, 38, "#ff8a3d", .32, 2),
+    skin: soft(50, 52, 14, 10, "#ffb15a", .4, 3) + [[33, 54], [66, 50], [60, 80], [38, 79], [71, 68]].map(([x, y], k) => soft(x, y, 2.4, 2.2, "#ffd27a", .9, k + 9, "b")).join(""),
+    top: `<g><animateTransform attributeName="transform" type="rotate" values="-4 50 33;4 50 33;-4 50 33" dur="1.3s" repeatCount="indefinite"/>${
+      [[50, 34, 15, "#ff8a3d", 0], [44, 35, 9, "#ff6a3d", -.4], [56, 35, 10, "#ff6a3d", .4], [50, 34, 8, "#ffd27a", .1]].map(([x, y, h, c, a]) =>
+        shape(curve([[x - 3.6, y], [x - 3.2 + a * 6, y - h * .55], [x + a * 10, y - h], [x + 3 + a * 6, y - h * .5], [x + 3.6, y]]), c, mix(c, "#5a1a08", .5), [-.5, .4])).join("")}</g>` }),
+  glowcap: (id, r, soft) => ({
+    back: soft(50, 58, 36, 34, "#c9b6ff", .25, 4),
+    skin: [[36, 46, 4], [64, 44, 3], [70, 70, 3.4], [30, 72, 2.6]].map(([x, y, s], k) => `<path d="${curve(ring(x, y, s, s * .85, 8, .15, k + 20))}" fill="#e6dcff" opacity=".45"/>`).join(""),
+    top: [[43, 35, 36, 25, 33, 16, -1], [57, 35, 64, 25, 67, 16, 1]].map(([x1, y1, cx, cy, x2, y2, s], k) => soft(x2, y2 - 1, 7, 6, "#e6dcff", .7, k + 30, "b") +
+      shape(limb(x1, y1, cx, cy, x2, y2, 1.4, .9), "#8a72d0", "#3a2a68", [-.4, .4]) +
+      shape(curve([[x2 - 5, y2 + .6], [x2 - 3, y2 - 3.6], [x2 + s, y2 - 4.6], [x2 + 4.6, y2 - 1.6], [x2 + 5, y2 + .8], [x2, y2 - .2]]), "#d9ccff", "#4a3488", [-.4, .4]) +
+      `<path d="${curve(ring(x2 - 1, y2 - 2.2, 1.2, .9, 6, .1, k))}" fill="#ffffff" opacity=".8"/>`).join("") }),
+  frost: (id, r, soft, pts) => ({
+    back: [[40, 41, 32, 24, 33, 7], [60, 41, 68, 24, 67, 7]].map(([x1, y1, cx, cy, x2, y2], k) => shape(limb(x1, y1, cx, cy, x2, y2, 5.6, 3.4), "#e2edf7", line("#c0d4e4"), [-1, .9]) +
+      `<path d="${limb(x1 + (k ? -.4 : .4), y1 - 2, cx, cy + 1, x2, y2 + 4, 2.6, 1.2)}" fill="#f2b8c6" opacity=".8"/>`).join(""),
+    edge: [pts.filter((_, k) => [0, 1, 6, 7, 8, 15].includes(k)), ["#e2edf7", "#f6fbff"], 5, 4, 2.6],
+    skin: soft(32, 78, 16, 12, "#9ab8d4", .45, 6) + [...Array(8)].map(() => stroke(30 + r() * 40, 44 + r() * 36, -2 + r() * .6, 3 + r() * 2, .6, "#a8c0d8", .5, .2)).join("") }),
+  pebble: (id, r, soft) => { const sh = "#6e7c8c", d = curve([[20.6, 60], [22, 46], [32, 35], [50, 31], [68, 35], [78, 46], [79.4, 60], [66, 54.6], [50, 53], [34, 54.6]]);
+    return { top: shape(d, sh, line(sh), [-1.2, 1.1]) + `<clipPath id="${id}sh"><path d="${d}"/></clipPath><g clip-path="url(#${id}sh)">` + soft(30, 54, 14, 10, "#2e3a48", .55, 7) + soft(64, 38, 12, 8, "#c8d8e8", .5, 8) +
+      [[34, 44, 3.4], [44, 37, 2.6], [61, 41, 3.8], [70, 50, 2.6], [40, 49, 2.2], [56, 48, 2.4]].map(([x, y, s], k) => shape(curve(ring(x, y, s, s * .8, 7, .25, k + 40)), mix(sh, "#e8e0d0", .45), mix(sh, "#1a1a22", .4), [-.4, .35])).join("") + "</g>" +
+      `<path d="M50 32 Q51 43 50 53" stroke="${mix(sh, "#1a1a22", .5)}" stroke-width="1.2" fill="none"/>` + `<path d="M26 47 Q36 36 50 33.6" stroke="#e8f0f8" stroke-width="1.2" fill="none" opacity=".5" stroke-linecap="round"/>` +
+      [[44, 33, 38, 24, 33, 22], [56, 33, 62, 24, 67, 22]].map(([x1, y1, cx, cy, x2, y2], k) => shape(limb(x1, y1, cx, cy, x2, y2, 1, .7), "#4a4a54", "#1a1a20", [-.3, .3]) +
+        shape(curve(ring(x2, y2, 2.4, 2.2, 7, .1, k + 50)), "#5a5a66", "#1a1a20", [-.3, .3])).join("") }; },
+  moth: (id, r, soft, pts) => { const w = "#d4c4ec", wl = mix(w, "#2a1a3a", .5);
+    const wing = (pts2, ex, ey, k) => shape(curve(pts2), k % 2 ? "#e6dcf6" : w, wl, [-.9, .8]) + shape(curve(ring(ex, ey, 3.6, 3.2, 8, .1, k + 60)), "#9a84c4", wl, [-.3, .3]) + `<path d="${curve(ring(ex + .5, ey - .6, 1.2, 1, 6, .1, k))}" fill="#fff6dc"/>`;
+    return { back:
+        wing([[34, 52], [18, 36], [6, 32], [4, 44], [12, 58], [28, 62]], 14, 44, 0) + wing([[66, 52], [82, 36], [94, 32], [96, 44], [88, 58], [72, 62]], 86, 44, 1) +
+        wing([[32, 66], [16, 70], [10, 80], [20, 84], [32, 76]], 19, 76, 2) + wing([[68, 66], [84, 70], [90, 80], [80, 84], [68, 76]], 81, 76, 3),
+      edge: [pts.filter((_, k) => [3, 4, 5].includes(k)), ["#fff6e6", "#f4ead8"], 9, 4, 3],
+      top: [[45, 34, 40, 22, 32, 16, -1], [55, 34, 60, 22, 68, 16, 1]].map(([x1, y1, cx, cy, x2, y2, s]) => shape(limb(x1, y1, cx, cy, x2, y2, .9, .6), wl, "#2a1a3a", [-.3, .3]) +
+        [.3, .5, .7, .9].map((t) => { const u = 1 - t, x = u * u * x1 + 2 * u * t * cx + t * t * x2, y = u * u * y1 + 2 * u * t * cy + t * t * y2; return stroke(x, y, -1.57 - s * .5, 3.4, .45, wl, .8, .1) + stroke(x, y, -1.57 + s * 1.6, 3, .45, wl, .8, .1); }).join("")).join("") }; },
+  geode: (id, r, soft) => ({
+    back: [...Array(9)].map((_, k) => { const t = -Math.PI * (.96 - k * .115), x = 50 + Math.cos(t) * 24, y = 61 + Math.sin(t) * 22;
+      return shard(x, y, 7.4, 15 + (k % 2) * 4, t + Math.PI / 2, k % 2 ? "#c99ae8" : "#9a5ccc", r, k === 4); }).join(""),
+    skin: shape(curve(ring(50, 71, 19, 15, 12, .06, 70)), "#f0dcc0", "#b89878", [-.6, .5]) + soft(44, 77, 10, 6, "#c8a888", .4, 71),
+    top: shape(curve(ring(50, 63.4, 2.6, 1.9, 8, .1, 72)), "#3a2418", "#1a0f08", [-.3, .3]) + `<path d="${curve(ring(49.4, 62.8, .8, .5, 6, .1, 73))}" fill="#ffffff" opacity=".7"/>` }),
+};
+// clothes, drawn on the shared body: head items over the top, neck items round the middle
+const PET_WEAR = {
+  bow: { slot: "head", draw: (id) => `<g transform="translate(35 36) scale(.44) translate(-120 -202)">${TRINKETS.bow.draw(id)}</g>` },
+  leaf: { slot: "head", draw: (id) => `<defs>${blurDef(id + "blur2", 2.4)}</defs><g transform="translate(50 37.6) scale(.4) translate(-150 -208)">${leafCap(id)}</g>` },
+  acorn: { slot: "head", draw: (id) => `<g transform="translate(50 38) scale(.7) translate(-50 -31)">${hatArt("acorn", id)}</g>` },
+  goggles: { slot: "head", draw: (id) => `<g transform="translate(50 41) rotate(8) scale(.46) translate(-158 -206)">${TRINKETS.goggles.draw(id)}</g>` },
+  crown: { slot: "head", draw: (id) => { const g = "#f0c75a", d = curve([[37, 35.6], [36, 23], [42.6, 28.6], [50, 19], [57.4, 28.6], [64, 23], [63, 35.6], [50, 37]]);
+    return `<defs>${blurDef(id + "s", 1.4)}</defs><g transform="rotate(-8 50 30)">${shape(d, g, line(g), [-.8, .7])}<clipPath id="${id}c"><path d="${d}"/></clipPath>
+      <g clip-path="url(#${id}c)"><path d="${curve(ring(42, 34, 8, 4, 8, .2, 2))}" fill="#a8761a" opacity=".5" filter="url(#${id}s)"/><path d="${curve(ring(57, 26, 6, 5, 8, .2, 3))}" fill="#fff6c8" opacity=".7" filter="url(#${id}s)"/></g>
+      ${shape(curve([[37.4, 31.6], [50, 33], [62.6, 31.6], [62.8, 34.6], [50, 36], [37.2, 34.6]]), "#e0a83a", line(g), [-.4, .4])}
+      ${[[36, 22.4, "#ff6a8a"], [50, 18.4, "#9fe6ff"], [64, 22.4, "#ff6a8a"]].map(([x, y, c], k) => shape(curve(ring(x, y, 1.9, 1.8, 7, .1, k + 4)), c, line(c), [-.3, .3])).join("")}
+      ${shape(curve(ring(50, 30, 2.4, 2.6, 8, .08, 7)), "#d0507a", line("#d0507a"), [-.4, .4])}<path d="M48.8 28.8 l1.2 -1" stroke="#fff" stroke-width=".7" stroke-linecap="round"/></g>`; } },
+  scarf: { slot: "neck", draw: (id) => { const c = "#c8553d", band = curve([[23, 71], [36, 76.4], [50, 78], [64, 76.4], [77, 71], [78.4, 76.4], [65, 83], [50, 84.6], [35, 83], [21.6, 76.4]]);
+    return shape(limb(64, 79, 68, 86, 72.6, 92, 3.6, 3), mix(c, "#1a0f08", .12), line(c), [-.6, .5]) + [70.6, 72.6, 74.6].map((x, k) => stroke(x, 91.4 - k * .4, 1.75 - k * .2, 3, .55, c, 1, .1)).join("") +
+      shape(band, c, line(c), [-.8, .7]) + `<path d="${curve([[26, 74.6], [50, 81.4], [74, 74.6]], false)}" stroke="${mix(c, "#ffffff", .35)}" stroke-width=".9" stroke-dasharray="1.4 2.4" fill="none" opacity=".6"/>`; } },
+  bell: { slot: "neck", draw: (id) => { const c = "#3f7fc8", gold = "#f0c75a";
+    return shape(curve([[23.6, 72.6], [50, 79], [76.4, 72.6], [77, 76.4], [50, 83], [23, 76.4]]), c, line(c), [-.6, .5]) +
+      shape(curve(ring(50, 84.4, 5, 4.8, 10, .05, 9)), gold, line(gold), [-.6, .55]) + `<path d="M46.6 86.6 Q50 88.4 53.4 86.6" stroke="${line(gold)}" stroke-width=".9" fill="none"/>` +
+      shape(curve(ring(50, 87.4, 1.2, 1, 6, .1, 10)), "#6a4a14", "#2a1a08", [-.2, .2]) + `<path d="${curve(ring(48.2, 82.6, 1.6, 1.1, 6, .1, 11))}" fill="#fffbe8" opacity=".85"/>`; } },
+};
+export const PET_KINDS = Object.keys(PET_COL), PET_WEAR_SLOT = Object.fromEntries(Object.entries(PET_WEAR).map(([k, v]) => [k, v.slot]));
+function petBody(kind, id, o = {}) {
+  const c = PET_COL[kind] || PET_COL.moss, ln = line(c), seed = kind.length * 11 + 3, r = rng(seed), pts = ring(50, 61, 30, 28, 16, .05, seed), d = curve(pts);
+  const soft = (x, y, rx, ry, col, op, k = 1, fl = "s") => `<path d="${curve(ring(x, y, rx, ry, 9, .2, k))}" fill="${col}" opacity="${op}" filter="url(#${id}${fl})"/>`;
+  const X = PET_X[kind]?.(id, r, soft, pts) || {}, E = X.edge, H = PET_WEAR[o.head], N = PET_WEAR[o.neck];
+  const eyes = o.sleep ? [41, 59].map((x) => `<path d="M${x - 4.4} 58.6 Q${x} 62.4 ${x + 4.4} 58.6" stroke="#241812" stroke-width="1.7" fill="none" stroke-linecap="round"/>`).join("")
+    : pieEye(41, 57.6, seed + 1, 4.2, 4.8, 6.4, "#241812", 1) + pieEye(59, 57.2, seed + 2, 4.6, 4.8, 6.4, "#241812", 1);
+  const feet = [41, 59].map((x, k) => shape(curve(ring(x, 89, 6, 3.6, 9, .1, seed + k)), mix(c, "#3a2418", .22), ln, [-.6, .5])).join("");
+  const body = `${X.back || ""}${E ? tuftLine(E[0], 50, 61, ln, E[2], E[3], E[4], [-1.4, 1.3]) : ""}${shape(d, c, ln, [-1.4, 1.3])}${E ? furEdge(E[0], 50, 61, E[1], E[2], E[3], E[4]) : ""}
+    <g clip-path="url(#${id}c)">${soft(34, 76, 22, 18, mix(c, "#2a3048", .45), .55, 3)}${soft(68, 46, 16, 14, mix(c, "#ffd8a0", .5), .55, 4)}${soft(40, 42, 12, 7, "#ffffff", .3, 5)}${X.skin || ""}</g>
+    <path d="${curve(pts.slice(13).concat(pts.slice(0, 3)), false)}" stroke="#ffc98a" stroke-width="1.6" fill="none" opacity=".45" stroke-linecap="round" filter="url(#${id}b)"/>
+    ${feet}${X.top || ""}${eyes}
+    <path d="M46.4 66.2 Q48.2 68.4 50 66.4 Q51.8 68.4 53.6 66.2" stroke="#3a2418" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+    ${soft(32.6, 66, 4.6, 2.6, "#f08a9a", .55, 6, "b")}${soft(67.4, 66, 4.6, 2.6, "#f08a9a", .55, 7, "b")}
+    ${N ? N.draw(id + "n") : ""}${H ? H.draw(id + "h") : ""}`;
+  return `<defs>${blurDef(id + "s", 3)}${blurDef(id + "b", 1.2)}<clipPath id="${id}c"><path d="${d}"/></clipPath></defs>
+    <path d="${curve(ring(50, 92, 24, 3.2, 10, .2, seed + 5))}" fill="#0f0e0b" opacity=".4" filter="url(#${id}b)"/>${o.sleep ? body : bob(body, 2.8, 1.8)}`;
+}
+// a pet in a 100 box: o = { head, neck } clothes, sleep: curled up asleep (eyes shut, no bob) for the crystal it's found in
+export const pet = (kind, size = 64, o = {}) => svg(size, "0 0 100 100", petBody(kind, "pet" + uid++, o), "pet");
+
 // cave scene per mine (menu postcards): layered rock, stalactites, rails into the dark, crystal clusters
 // with halos, a hanging lantern, and one environment feature per mine with drifting motes.
 const motes = (n, col, r, dir, seed) => [...Array(n)].map((_, k) => {
@@ -649,6 +738,10 @@ export function camp(st, gemFn, dibbleSvg) {
 
   const db = 108 * kf, dx = 318 - db / 2, dyy = yM + 10 * kf - db;
   const dib = `<g data-tap="dibble" class="campDibble"><rect x="${f1(dx + db / 2 - Math.max(db * .3, MIN / 2))}" y="${f1(dyy + db * .1)}" width="${f1(Math.max(db * .6, MIN))}" height="${f1(db * .85)}" fill="transparent"/><svg x="${f1(dx)}" y="${f1(dyy)}" width="${f1(db)}" height="${f1(db)}" viewBox="0 0 100 100">${strip(dibbleSvg)}</svg></g>`;
+  // your pet sits at Dibble's lantern side, in front of the cart, with its own idle (index.html: tap it to make it hop)
+  const pz = 56 * kf, px = 370, py = yM + 18 * kf;
+  const petAt = st.petSvg ? `<g data-tap="pet"><rect x="${f1(px - Math.max(pz, MIN) / 2)}" y="${f1(py - Math.max(pz, MIN))}" width="${f1(Math.max(pz, MIN))}" height="${f1(Math.max(pz, MIN))}" fill="transparent"/>
+    <svg x="${f1(px - pz / 2)}" y="${f1(py - pz * .92)}" width="${f1(pz)}" height="${f1(pz)}" viewBox="0 0 100 100">${strip(st.petSvg)}</svg></g>` : "";
   // Puddock's spare cart (or, after the finale, his packed cart with him beside it), right of Dibble
   const PC = place(292, 276, 374, yM, .95 * kf), pb = 50 * kf;
   const cart = st.packed || d.cart ? `${PC.g(`<g transform="translate(270 240) scale(1.8)">${ICONS.cart}</g>`)}${st.packed && st.puddockSvg ? `<g data-tap="puddock"><svg x="${f1(366 - pb / 2)}" y="${f1(yM + 6 * kf - pb)}" width="${f1(pb)}" height="${f1(pb)}" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}` : "";
@@ -755,7 +848,7 @@ export function camp(st, gemFn, dibbleSvg) {
     <g data-depth=".3"><g transform="translate(0 ${f1(yH - 180)})">${S.mid}</g></g>
     <g data-depth=".45"><g transform="translate(0 ${f1(yH - 180)})">${S.near}</g></g>
     <g data-depth=".6">${ground}${lanternLine}${hammock}${keep}${shelf}${rack}${jars}${grannyAt}${sapling}</g>
-    <g data-depth=".75">${fireLight}${tent}${sign}${fire}${cart}${dib}${flies}</g>
+    <g data-depth=".75">${fireLight}${tent}${sign}${fire}${cart}${dib}${petAt}${flies}</g>
     <g data-depth=".9">${board}${bench}${stall}</g>
     <g data-depth=".6">${memLabel}</g>
     <path d="${curve(ring(200, yM + 40 * kf, 230, 18, 14, .1, 11))}" fill="#cfe0d0" opacity=".06" filter="url(#campBlur)"/>

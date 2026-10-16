@@ -135,6 +135,18 @@ export const CAMP_LINES = {
   puddockPost: ["The cart? Half-packed. Just in case. No reason.", "Back soon (probably). That's what the sign says.", "A whole sky. Still can't get used to it."],
   granny: ["Eat something. Then dig.", "I counted the lanterns twice that night. Now I count one more.", "You hold that lantern just like I did. Too high.", "Puddock's been fussing over that cart for forty years."],
 };
+// Pets: small round creatures that fell asleep inside crystals (docs/STORY.md, "Pets"). home: the mines they turn up in most.
+export const PETS = {
+  moss: { name: "Moss Puff", home: ["hollow"], line: "Sat on a crystal so long it grew moss. Then it was the moss." },
+  ember: { name: "Ember Mite", home: ["ember", "cinder", "heartwood"], line: "A spark that cooled into somebody. Still warm." },
+  glowcap: { name: "Glowcap Sprite", home: ["grotto", "wickhold"], line: "Its antennae light up when it's happy. They're always lit." },
+  frost: { name: "Frost Bun", home: ["frostpine", "loom"], line: "Fell asleep in a snowdrift and woke up in a crystal. Still sleepy." },
+  pebble: { name: "Pebble Beetle", home: ["gulch", "skywell"], line: "Carries its house on its back, and a few spare pebbles." },
+  moth: { name: "Tiny Moth", home: ["roost", "loom", "skywell"], line: "Too small to fly in circles. Flies in little loops instead." },
+  geode: { name: "Geode Hedgehog", home: ["gulch", "heartwood"], line: "Amethyst spines. Doesn't like hugs. Allows them." },
+};
+export const PET_HINT = "Crystals keep things, little mole. Sometimes they keep someone."; // Puddock
+export const PET_SHOP = "Tiny clothes for tiny friends. Everything fits. They're all round.";
 export const SCALE_NOTE = "A pale scale. Warm to the touch. Faintly humming.";
 
 // Scenes. who: "puddock" | "granny" | "bidder" | null (a picture with mysterious text). art: memoryArt kind.
