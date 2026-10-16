@@ -7,11 +7,11 @@ const { AdMob, Purchases, FirebaseAnalytics } = cap?.Plugins || {};
 // Fill these from your accounts (docs/SETUP.md). The defaults are Google's public *test* ad units: safe to ship to
 // testers, never earn money. Empty RevenueCat key = purchases switched off.
 const KEYS = {
-  rewarded:     { android: "ca-app-pub-3940256099942544/5224354917", ios: "ca-app-pub-3940256099942544/1712485313" },
-  interstitial: { android: "ca-app-pub-3940256099942544/1033173712", ios: "ca-app-pub-3940256099942544/4411468910" },
-  banner:       { android: "ca-app-pub-3940256099942544/6300978111", ios: "ca-app-pub-3940256099942544/2934735716" },
+  rewarded:     { android: "ca-app-pub-3940256099942544/5224354917", ios: "ca-app-pub-2020120570370273/2608861706" },
+  interstitial: { android: "ca-app-pub-3940256099942544/1033173712", ios: "ca-app-pub-2020120570370273/7053794160" },
+  banner:       { android: "ca-app-pub-3940256099942544/6300978111", ios: "ca-app-pub-2020120570370273/1506698874" },
   revenuecat:   { android: "", ios: "" },
-  testAds: true, // flip to false only with your real ad unit IDs in place
+  testAds: true, // iOS units are real; keep test ads on for TestFlight, flip to false for the App Store build
 };
 export const NO_ADS = "no_ads"; // RevenueCat entitlement id
 

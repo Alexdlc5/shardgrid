@@ -16,7 +16,7 @@ Ads = Google AdMob, purchases = RevenueCat, stats/crashes/remote tuning = Fireba
 | ⬜ | A3. Bundle ID + app record | minutes | after A1 |
 | ⬜ | A4–A6. CI key + GitHub secrets | minutes | after A1 |
 | ⬜ | A7. First TestFlight build on your iPhone | ~30 min | after A6 |
-| ⬜ | A8. AdMob (iOS app) | 1–3 days review | start today |
+| ✅ | A8. AdMob (iOS app) | done 2026-10-16 | App ID + 3 iOS units in the app; W-9 in review; link the store listing after launch |
 | ⬜ | A9. Firebase (iOS app) | minutes | any time |
 | ⬜ | A10. "Remove ads" product + sandbox tester | ~1 day | after A2 |
 | ⬜ | A11. RevenueCat (iOS) | minutes | after A10 |
