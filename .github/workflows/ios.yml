@@ -16,6 +16,9 @@ jobs:
   ios:
     runs-on: macos-15
     timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash # explicit bash adds -o pipefail, so a failing xcodebuild | tail fails the step
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -43,8 +46,10 @@ jobs:
           KEY="$RUNNER_TEMP/AuthKey_$KEY_ID.p8"; printf '%s' "$KEY_P8" > "$KEY"
           AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$KEY" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER")
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' \
-            -archivePath "$RUNNER_TEMP/Glimmerwood.xcarchive" DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
-            CURRENT_PROJECT_VERSION="${{ github.run_number }}" "${AUTH[@]}" archive | tail -n 30
+            -archivePath "$RUNNER_TEMP/Glimmerwood.xcarchive" DEVELOPMENT_TEAM="$TEAM" CODE_SIGNING_ALLOWED=NO \
+            CURRENT_PROJECT_VERSION="${{ github.run_number }}" archive | tail -n 30
+          # archive unsigned: a signed archive wants a development profile, which needs a registered device.
+          # The export below signs for App Store distribution, which doesn't.
           cat > "$RUNNER_TEMP/export.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
