@@ -16,6 +16,15 @@ if (html.includes("fonts.googleapis.com")) throw new Error("Google Fonts link no
 if (!html.includes('"../sim/generator.json"')) throw new Error("config path not found");
 html = html.replace('"../sim/generator.json"', '"./generator.json"');
 writeFileSync(`${out}/index.html`, html);
+// version shown in Options: MARKETING_VERSION from the Xcode project plus the CI build number (GW_BUILD)
+// GW_APPSTORE=1 (the ios workflow's "appstore" input) turns test ads off; every other build keeps them
+const appstore = process.env.GW_APPSTORE === "1";
+const ver = readFileSync("ios/App/App.xcodeproj/project.pbxproj", "utf8").match(/MARKETING_VERSION = ([\d.]+);/)?.[1] || "0";
+let plat = readFileSync(`${out}/platform.js`, "utf8");
+const swap = (a, b) => { if (!plat.includes(a)) throw new Error(`platform.js: "${a}" not found`); plat = plat.replace(a, b); };
+swap('export const VERSION = "dev";', `export const VERSION = ${JSON.stringify(`${ver} (${process.env.GW_BUILD || "dev"})${appstore ? "" : " · test ads"}`)};`);
+if (appstore) swap("testAds: true,", "testAds: false,");
+writeFileSync(`${out}/platform.js`, plat);
 // every relative import in the bundle must resolve, or the app boots to a blank screen on the phone
 for (const f of readdirSync(out).filter((f) => /\.(js|html)$/.test(f)))
   for (const [, dep] of readFileSync(`${out}/${f}`, "utf8").matchAll(/from\s+"\.\/([^"]+)"/g))
