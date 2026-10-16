@@ -507,7 +507,7 @@ export function camp(st, gemFn, dibbleSvg) {
   const stripe = (k) => { const x = 282 + k * 19.3; return shape(curve([[x, 312], [x + 19.3, 312], [x + 19.3, 328], [x + 9.6, 334], [x, 328]]), k % 2 ? "#f1e4c4" : "#c8553d", k % 2 ? "#a08a60" : "#5a1e14", [-.6, .6]); };
   const stall = `<g data-tap="market"><rect x="278" y="282" width="122" height="124" fill="transparent"/>
     ${shape(limb(288, 404, 287, 360, 288, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}${shape(limb(388, 404, 389, 360, 388, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}
-    ${st.stall && st.metPuddock && st.puddockSvg && !st.packed ? `<svg x="306" y="312" width="64" height="64" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg>` : ""}
+    ${st.stall && st.puddockSvg && !st.packed ? `<svg x="306" y="312" width="64" height="64" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg>` : ""}
     ${[0, 1, 2, 3, 4, 5].map(stripe).join("")}${plank(300, 298, 76, 13, "#8a5a32", r)}
     <text x="338" y="307.4" font-size="8" text-anchor="middle" fill="#fff1d0" font-family="Fredoka, sans-serif" font-weight="600">${st.packed ? "Back soon (probably)" : "Puddock's"}</text>
     ${plank(282, 366, 112, 9, "#8a5a32", r)}${plank(286, 375, 104, 26, "#6b4a2a", r)}
@@ -515,7 +515,9 @@ export function camp(st, gemFn, dibbleSvg) {
     <g transform="translate(290 350) scale(.7)">${ICONS.jar}</g>${shard(352, 367, 5, 11, .2, "#9b7cf2", r)}${shard(360, 367, 4, 8, -.3, "#5fa99b", r)}
     <path d="M394 326 Q395 332 394 336" stroke="#4a3a2a" stroke-width=".9" fill="none"/>${shape(curve([[390.6, 336], [397.4, 336], [397.8, 345], [390.2, 345]]), "#f7d77a", "#6a4a24", [-.5, .5])}
     <circle cx="394" cy="341" r="14" fill="url(#lanternGlow)"/>
-    ${st.metPuddock ? "" : tag(338, 283, "Market?", 50)}</g>`;
+    ${st.metPuddock ? "" : `<g><animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0" dur="1.6s" repeatCount="indefinite"/>
+      ${shape(curve([[312, 262], [338, 258.4], [364, 262], [367, 271.6], [362, 279.6], [346, 281], [339, 290], [335.4, 281], [316, 280], [309.6, 271.6]]), "#fff4dc", "#8a6a3a", [-.8, .7])}
+      <text x="338" y="274.6" font-size="11" text-anchor="middle" fill="#3a2410" font-family="Fredoka, sans-serif" font-weight="700">Psst!</text></g>`}</g>`; // first visit: Puddock beckons
   const OFF = 250, H2 = 730;
   const bough = (x, y, dir, len) => { let o = shape(limb(x, y, x + dir * len * .5, y + len * .12, x + dir * len, y + len * .3, 5, 1), "#07130c", "#07130c", [0, 0]);
     for (let k = 1; k < 9; k++) { const t = k / 9, px = x + dir * len * t, py = y + len * .3 * t * t; o += stroke(px, py, Math.PI / 2 + dir * .5, 22 * (1 - t * .5), 3.4 * (1 - t * .4), "#07130c") + stroke(px, py, Math.PI / 2 - dir * .2, 16 * (1 - t * .5), 3 * (1 - t * .4), "#091710"); }
@@ -553,13 +555,16 @@ export function camp(st, gemFn, dibbleSvg) {
       ${d.hammock ? `${shape(limb(380, 262, 381, 214, 380, 168, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}${shape(limb(300, 262, 299, 224, 300, 186, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}<path d="M300 194 Q340 226 380 176" stroke="#e8d6aa" stroke-width="5.5" fill="none"/><path d="M302 196 Q340 222 378 179" stroke="#b8a678" stroke-width="1" fill="none" opacity=".6"/>` : ""}
       ${plank(306, 230, 76, 7, "#5a3b24", r)}${shape(limb(310, 237, 306, 246, 303, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${shape(limb(378, 237, 382, 246, 385, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${picks}
       ${st.lens ? `<g transform="translate(330 214) scale(.9)">${ICONS.lens}</g>` : ""}${st.tongs ? `<g transform="translate(352 212) scale(.9)">${ICONS.tongs}</g>` : ""}${st.sieve ? `<g transform="translate(98 156) scale(.9)">${ICONS.sieve}</g>` : ""}
-      ${fire}<g data-tap="mines"><rect x="-10" y="146" width="78" height="122" fill="transparent"/>${sign}</g>
+      ${fire}<g data-tap="mines"><rect x="-10" y="112" width="84" height="156" fill="transparent"/>
+        ${st.hub ? `<path d="${curve(ring(30, 206, 42, 64, 10, .15, 91))}" fill="#ffd27a" opacity=".16" filter="url(#campBlur)"><animate attributeName="opacity" values=".1;.26;.1" dur="2.4s" repeatCount="indefinite"/></path>` : ""}${sign}
+        ${st.hub ? plank(2, 144, 62, 17, "#b07a3a", r) : ""}${st.hub ? `<text x="33" y="156" font-size="10" text-anchor="middle" fill="#fff4d6" font-family="Fredoka, sans-serif" font-weight="700">Go mining</text>` : ""}
+        ${st.hub && st.firstRun ? `<g><animateTransform attributeName="transform" type="translate" values="0 0;0 5;0 0" dur="1.1s" repeatCount="indefinite"/>${shape("M28 114 Q33 113 38 114 L38 126 L45 126 L33 139 L21 126 L28 126 Z", "#ffd27a", "#8a5a1a", [-.7, .6])}</g>` : ""}</g>
       ${d.mushrooms ? [[106, 268, 8], [120, 273, 6], [94, 276, 5]].map(([x, y, s]) => `<path d="${curve(ring(x, y + s * .3, s * .2, s * .6, 6, .1, x))}" fill="#e2d8f0"/>
         ${shape(curve([[x - s, y - .5], [x - s * .5, y - s * 1.1], [x + s * .4, y - s * 1.15], [x + s, y - .6], [x, y - s * .3]]), "#9b7cf2", "#3a2458", [-.6, .6])}
         <circle cx="${x}" cy="${y - s * .6}" r="${s * 1.6}" fill="#9b7cf2" opacity=".2"><animate attributeName="opacity" values=".1;.3;.1" dur="${2.4 + s * .1}s" repeatCount="indefinite"/></circle>`).join("") : ""}
       ${d.jars ? `${plank(238, 246, 26, 12, "#6b4a2a", r)}<g transform="translate(236 222) scale(1)">${ICONS.jar}</g><g transform="translate(252 226) scale(.8)">${ICONS.jar}</g>` : ""}
       ${grannyAt}${puddockAt}${packed}${d.cart && !st.packed ? `<g transform="translate(270 240) scale(1.8)">${ICONS.cart}</g>${st.puddockSvg && !st.stall ? `<g data-tap="puddock"><svg x="252" y="208" width="42" height="42" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}` : ""}
-      ${st.hub ? rack + board + keep + stall + tag(26, 156, "Mines", 40) : ""}
+      ${st.hub ? rack + board + keep + stall : ""}
       <g data-tap="dibble" class="campDibble"><svg x="190" y="196" width="68" height="68" viewBox="0 0 100 100">${strip(dibbleSvg)}</svg></g>
       ${flies}
     </g>
