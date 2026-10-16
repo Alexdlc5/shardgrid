@@ -1023,7 +1023,7 @@ export function titleScene(still = false) {
     `<linearGradient id="ts1fog" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a8c8c0" stop-opacity="0"/><stop offset=".6" stop-color="#a8c8c0" stop-opacity=".1"/><stop offset="1" stop-color="#a8c8c0" stop-opacity="0"/></linearGradient>`);
   const mid = layer(2, `${pine(14, 700, 470, "#102a1f", "#8fb0c0")}${pine(-34, 712, 380, "#0e251b", "#8fb0c0")}${pine(372, 700, 450, "#102a1f", "#8fb0c0")}${pine(420, 716, 360, "#0e251b", "#8fb0c0")}
     <path d="${curve([[-20, 690], [70, 660], [160, 672], [260, 656], [420, 668], [420, 820], [-20, 820]])}" fill="#0e2017"/>`);
-  const crystals = [[62, 716, 34, ["#5fa99b", "#6fb4a3", "#4e978c"], 71], [344, 708, 26, ["#9b7cf2", "#b49af6", "#7f62d8"], 73], [118, 752, 16, ["#f0b543", "#e8a52f"], 75]];
+  const crystals = [[58, 750, 34, ["#5fa99b", "#6fb4a3", "#4e978c"], 71], [346, 744, 26, ["#9b7cf2", "#b49af6", "#7f62d8"], 73], [112, 776, 16, ["#f0b543", "#e8a52f"], 75]];
   const near = layer(3, `<path d="${curve([[-20, 720], [90, 690], [200, 704], [310, 686], [420, 700], [420, 820], [-20, 820]])}" fill="#0a1710"/>
     <path d="${curve(ring(200, 760, 120, 70, 10, .1, 7))}" fill="#f0b543" opacity=".22" ${B(3)}/>
     <path d="${curve([[122, 820], [124, 744], [152, 694], [200, 676], [250, 696], [278, 746], [280, 820]])}" fill="#1a2a1e"/>
@@ -1032,7 +1032,7 @@ export function titleScene(still = false) {
     ${shape(limb(150, 818, 148, 768, 151, 716, 7, 6), "#5a3b24", "#2a1a10", [-2, 1.6])}${shape(limb(250, 818, 252, 768, 249, 716, 7, 6), "#5a3b24", "#2a1a10", [-2, 1.6])}
     ${shape(limb(134, 718, 200, 708, 266, 714, 6, 6), "#4a2f1c", "#22140a", [-2, 1.6])}<path d="M140 713 Q200 704 260 709" stroke="#8a6040" stroke-width="1.6" fill="none" opacity=".55"/>
     ${crystals.map(([x, y, s, cols, seed]) => `<path d="${curve(ring(x, y - s * .4, s * 1.5, s * .9, 9, .2, seed))}" fill="${cols[0]}" opacity=".22" ${B(3)}/>` + shardCluster(x, y, s, cols, "#22301f", seed)).join("")}
-    ${glint(66, 690, 4, 4.2, -1)}${glint(349, 688, 3.4, 5.4, -3)}${glint(120, 742, 2.6, 3.6, -2)}${glint(52, 700, 2.4, 6, -4)}
+    ${glint(62, 724, 4, 4.2, -1)}${glint(351, 724, 3.4, 5.4, -3)}${glint(114, 766, 2.6, 3.6, -2)}${glint(48, 734, 2.4, 6, -4)}
     <g ${b(3)} opacity=".95">${fern(-14, 818, -1.15, 130, "#040a06")}${fern(28, 826, -1.45, 96, "#06100a")}${fern(414, 818, -2.0, 130, "#040a06")}${fern(374, 826, -1.7, 92, "#06100a")}</g>`);
   return sky + far + mid + near;
 }
