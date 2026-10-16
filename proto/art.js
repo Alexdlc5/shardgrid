@@ -1,5 +1,5 @@
 // Glimmerwood menu art: every picture is inline SVG drawn in code (no image files until the look is approved).
-import { dibbleBody, puddockBody, rng, curve, ring, shape, stroke, limb, shard, shardCluster } from "./paint.js";
+import { dibbleBody, puddockBody, rng, curve, ring, shape, stroke, limb, shard, shardCluster, pieEye } from "./paint.js";
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 const mix = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * t).toString(16).padStart(2, "0")).join("");
 let uid = 0;
@@ -143,8 +143,8 @@ const blink = (cx, cy, dur, delay, body) => `<g transform="translate(${cx} ${cy}
 const bob = (body, dur = 3.2, amt = 1.4) => `<g><animateTransform attributeName="transform" type="translate" values="0 0;0 -${amt};0 0" dur="${dur}s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/>${body}</g>`;
 
 // Dibble's wardrobe. Every part is swappable; the Market's Wardrobe tab sells the rest.
-export const FUR = { cocoa: ["#8a5a44", "#6b4232"], sand: ["#c49a6c", "#a07a50"], slate: ["#7a7584", "#5c5866"], snow: ["#eee6dc", "#cbbfb1"], rosewood: ["#a86a5e", "#87504a"] };
-export const LANTERN_GLOW = { amber: "#f0b543", crystal: "#9fe6ff", jar: "#fff3a0", paper: "#ff9a7a" };
+export const FUR = { silver: ["#b8aea4", "#958a80"], cocoa: ["#8a5a44", "#6b4232"], sand: ["#c49a6c", "#a07a50"], slate: ["#7a7584", "#5c5866"], snow: ["#eee6dc", "#cbbfb1"], rosewood: ["#a86a5e", "#87504a"] };
+export const LANTERN_GLOW = { amber: "#f0b543", granny: "#e8f0a0", crystal: "#9fe6ff", jar: "#fff3a0", paper: "#ff9a7a" };
 export const DEFAULT_LOOK = { fur: "cocoa", hat: "leaf", scarf: "none", lantern: "amber" };
 
 function lanternArt(kind, id) {
@@ -161,6 +161,9 @@ function lanternArt(kind, id) {
   if (kind === "paper") return `<defs>${defs}<radialGradient id="${id}p" cx=".45" cy=".45"><stop offset="0" stop-color="#ffd2b8"/><stop offset=".6" stop-color="#f08a6a"/><stop offset="1" stop-color="#b8503a"/></radialGradient></defs>
     <ellipse cx="80" cy="63.5" rx="7.2" ry="8.6" fill="url(#${id}p)" stroke="#8a3424" stroke-width="1.2"/><path d="M73.4 60.6 Q80 59 86.6 60.6 M73 64.6 Q80 63.4 87 64.6 M73.6 68.4 Q80 67.4 86.4 68.4" stroke="#a8432f" stroke-width=".7" fill="none" opacity=".7"/>
     ${frame(76.8, 53.6, 6.4, 2.6)}${frame(76.8, 71.4, 6.4, 2.6)}<ellipse cx="77.6" cy="60.6" rx="1.8" ry="2.6" fill="#fff" opacity=".35"/>`;
+  if (kind === "granny") return `<defs>${defs}<radialGradient id="${id}g"><stop offset="0" stop-color="#fbffe6"/><stop offset=".55" stop-color="#e2ea9a"/><stop offset="1" stop-color="#9aa84a"/></radialGradient></defs>
+    <path d="M74.6 57.5 Q80 54.5 85.4 57.5 V70 H74.6 Z" fill="url(#${id}g)" stroke="${ml}" stroke-width="1.2"/>${frame(73.2, 53.6, 13.6, 3.2)}${frame(73.8, 70, 12.4, 2.6)}
+    <path d="M77.2 57 V70 M80 56 V70 M82.8 57 V70" stroke="${ml}" stroke-width=".7" opacity=".6"/><circle cx="80" cy="63.4" r="2" fill="#fff"/><path d="M84 66 l-1.2 1.6 M83.4 64.6 q1 .8 0 1.6" stroke="#fff" stroke-width=".5" opacity=".6"/>`;
   return `<defs>${defs}<radialGradient id="${id}a"><stop offset="0" stop-color="#fffbe6"/><stop offset=".5" stop-color="#f7d77a"/><stop offset="1" stop-color="#d99a2b"/></radialGradient></defs>
     <rect x="75" y="56.5" width="10" height="14.5" rx="3" fill="url(#${id}a)" stroke="${ml}" stroke-width="1.2"/>${frame(73.6, 54, 12.8, 3)}${frame(74.2, 70.4, 11.6, 2.4)}
     <path d="M77.6 57 V70.4 M82.4 57 V70.4" stroke="${ml}" stroke-width=".8" opacity=".7"/><circle cx="80" cy="63.6" r="2.2" fill="#fff"/><path d="M76.4 59 V64" stroke="#fff" stroke-width=".9" opacity=".7" stroke-linecap="round"/>`;
@@ -190,32 +193,6 @@ function hatArt(kind, id) {
     default: return `<path d="M44 20 Q46 13 49 19 Q51 11 54 19 Q57 14 57 21" stroke="${INK}" stroke-width="1.2" fill="none" stroke-linecap="round"/>`; // a little tuft
   }
 }
-// ---- rubber-hose hybrid toolkit: bold ink, fluffy scalloped silhouettes, pie-cut eyes ----
-export const INK2 = "#1d120c";
-// a fluffy outline: scallops around an ellipse (cx, cy, rx, ry), n bumps, bump depth d
-export function fluff(cx, cy, rx, ry, n, d, seed = 3) {
-  let p = "", r = seed;
-  const rnd = () => ((r = (r * 16807) % 2147483647) / 2147483647);
-  const pts = [...Array(n)].map((_, k) => (k + (rnd() - .5) * .45) / n * Math.PI * 2); // uneven spacing
-  pts.push(pts[0] + Math.PI * 2);
-  pts.forEach((a, k) => {
-    const x = cx + Math.cos(a) * rx, y = cy + Math.sin(a) * ry;
-    if (!k) { p += `M${x.toFixed(2)} ${y.toFixed(2)}`; return; }
-    const am = (pts[k - 1] + a) / 2 + (rnd() - .5) * .08, dd = d * (.45 + rnd() * 1.1); // tufts of different sizes, slightly swept
-    p += ` Q${(cx + Math.cos(am) * (rx + dd)).toFixed(2)} ${(cy + Math.sin(am) * (ry + dd)).toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)}`;
-  });
-  return p + " Z";
-}
-// pie-cut eye: white oval, big black pupil with a pie-slice glint cut from its upper right; blinks
-export function pieEye(cx, cy, w, h, look = 0, dur = 4.4) {
-  const pw = w * .78, ph = h * .8, px = look * .6, py = h * .12, a0 = -Math.PI * .42, a1 = -Math.PI * .08;
-  const wedge = `M${px} ${py} L${px + Math.cos(a0) * pw} ${py + Math.sin(a0) * ph} A${pw} ${ph} 0 0 1 ${px + Math.cos(a1) * pw} ${py + Math.sin(a1) * ph} Z`;
-  return `<g transform="translate(${cx} ${cy})"><g>
-    <animateTransform attributeName="transform" type="scale" values="1 1;1 1;1 .1;1 1" keyTimes="0;.94;.97;1" dur="${dur}s" repeatCount="indefinite"/>
-    <ellipse rx="${w}" ry="${h}" fill="#fffaf0" stroke="${INK2}" stroke-width="2.1"/>
-    <ellipse cx="${px}" cy="${py}" rx="${pw}" ry="${ph}" fill="${INK2}"/><path d="${wedge}" fill="#fffaf0"/></g></g>`;
-}
-const noodle = (d, c, w = 7) => `<path d="${d}" stroke="${INK2}" stroke-width="${w}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="${c}" stroke-width="${w - 3}" fill="none" stroke-linecap="round"/>`;
 
 // Dibble in the approved painterly style (proto/paint.js), fitted into the 100x100 box everything else expects.
 export function dibble(size = 96, look = {}) {
@@ -281,6 +258,18 @@ export function scene(colors, pal, w = 160, h = 96) {
       <path d="M108 32 Q112 50 102 66 M108 32 Q118 44 126 40" stroke="#5a2a20" stroke-width="2.4" fill="none" stroke-linecap="round"/>
       ${shape("M108 60 C95 51 93 43 98 38 C103 34 107 37 108 40 C109 37 113 34 118 38 C123 43 121 51 108 60 Z", pal.glow, "#6a2020", [-.8, .7])}
       <path d="M100 41 q2 -3 5 -2" stroke="#ffd0d8" stroke-width="1" fill="none" opacity=".8" stroke-linecap="round"/>${motes(8, "#ff9db5", .9, "up", 9)}`,
+    scorch: `<path d="M8 40 L22 70 L18 56 Z M152 40 L138 70 L142 56 Z M30 30 L40 52 L36 44 Z M130 30 L120 52 L124 44 Z" fill="#ff6a3d" opacity=".55"/>
+      ${motes(9, "#ffb15a", 1, "down", 13)}`,
+    scales: `${[[30, 60, 20], [128, 56, -20], [80, 40, 0]].map(([x, y, r]) => `<g transform="translate(${x} ${y}) rotate(${r})" fill="#efe6fb" stroke="#3a2418" stroke-width=".6"><path d="M0 0 Q-7 -7 -10 -2 Q-9 2 0 1 Z M0 0 Q7 -7 10 -2 Q9 2 0 1 Z"/><ellipse cy="1" rx="1.3" ry="3"/></g>`).join("")}
+      ${motes(16, "#f4f0ff", .8, "down", 17)}`,
+    loom: `<circle cx="80" cy="30" r="20" fill="#f4f0ff" opacity=".15"/><circle cx="80" cy="30" r="10" fill="#f4f0ff"/>
+      <path d="M70 30 L30 96 M90 30 L130 96 M80 40 V96 M74 36 L54 96 M86 36 L106 96" stroke="#f4f0ff" stroke-width=".6" opacity=".45"/>${motes(8, "#f4f0ff", .7, "up", 19)}`,
+    lanterns: `${[...Array(8)].map((_, k) => { const a = k / 8 * Math.PI * 2, x = 80 + Math.cos(a) * 46, y = 44 + Math.sin(a) * 12;
+      return `<circle cx="${x}" cy="${y}" r="6" fill="#f0b543" opacity=".25"/>${shape(curve([[x - 2.2, y - 3.4], [x + 2.2, y - 3.4], [x + 2.5, y + 3.4], [x - 2.5, y + 3.4]]), "#f7d77a", "#6a4a24", [-.4, .4])}`; }).join("")}
+      <circle cx="80" cy="44" r="9" fill="#f4f0ff" opacity=".9"/>${motes(6, "#ffd27a", .8, "up", 23)}`,
+    shaft: `<path d="M70 0 H90 L104 96 H56 Z" fill="#f4f0ff" opacity=".2"/><circle cx="80" cy="6" r="7" fill="#f4f0ff"/>
+      ${[[40, 70, 14, 8], [104, 74, 16, 9], [62, 86, 12, 7]].map(([x, y, w, h]) => shape(curve(ring(x + w / 2, y + h / 2, w / 2, h / 2, 9, .12, x)), "#4a4a58", "#1a1a22", [-.7, .6])).join("")}
+      ${motes(8, "#f4f0ff", .8, "down", 29)}`,
   }[f] || "";
   return `<svg class="scene" width="${w}" height="${h}" viewBox="0 0 160 96" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs><linearGradient id="${id}bg" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="${lit}"/><stop offset="1" stop-color="${mix(pal.bg, "#000000", .2)}"/></linearGradient>
@@ -396,7 +385,7 @@ export function camp(st, gemFn, dibbleSvg) {
     ${st.found.map((g, k) => { const x = 257 + (k % 6) * 20.5, y = k < 6 ? 108 : 138;
       return `<g data-tap="gem-${k}"><rect x="${x - 1}" y="${y - 1}" width="20" height="21" fill="transparent"/><svg x="${x}" y="${y}" width="18" height="18" viewBox="0 0 24 24">${g ? strip(gemFn(g.color, 24, "", g.cut)) : `<path d="${curve(ring(12, 13, 6, 6, 8, .1, k))}" fill="#000" opacity=".3"/><text x="12" y="16" font-size="9" text-anchor="middle" fill="#8a7a5a">?</text>`}</svg></g>`; }).join("")}`;
   const sign = `${shape(limb(26, 264, 25, 220, 26, 170, 2.6, 2), "#6b4a2a", "#2e1e12", [-.8, .7])}${st.mines.map((col, k) => {
-    const y = 176 + k * 12, right = k % 2 === 0;
+    const y = 176 + k * Math.min(12, 70 / Math.max(1, st.mines.length - 1)), right = k % 2 === 0;
     return `${shape(curve(right ? [[26, y], [56, y + .4], [62, y + 5], [56, y + 10], [26, y + 9.6]] : [[26, y], [-2, y + .4], [-8, y + 5], [-2, y + 10], [26, y + 9.6]]), "#a0703f", "#3a2418", [-.7, .6])}
       <path d="${curve(ring(right ? 46 : 6, y + 5, 2.8, 2.8, 8, .08, k))}" fill="${col}"/>`; }).join("")}`;
   const flag = `<path fill="${st.banner}" stroke="${mix(st.banner, "#1a0f08", .5)}" stroke-width=".8" d="M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z">
@@ -408,25 +397,55 @@ export function camp(st, gemFn, dibbleSvg) {
   const fern = (x, y, a, sz, col) => { let o = ""; for (let k = 0; k < 8; k++) { const t = k / 8, px = x + Math.cos(a) * sz * t, py = y + Math.sin(a) * sz * t;
     o += stroke(px, py, a - 1.1, sz * .32 * (1 - t * .6), 3 * (1 - t * .5), col) + stroke(px, py, a + 1.1, sz * .3 * (1 - t * .6), 2.8 * (1 - t * .5), col); }
     return o + stroke(x, y, a, sz, 2.4, col, 1, .05); };
+  const pine = (x, y, h, col) => paintPine(x, y, h, col, col === "#10261a" ? null : "#3a6a48", r);
+  const moonSky = `${stars}<circle cx="320" cy="46" r="34" fill="url(#moonGlow)"/><path d="${curve(ring(320, 46, 13, 13, 14, .02, 5))}" fill="#fff6d8"/>
+      <path d="${curve(ring(315, 43, 3, 2.6, 8, .2, 6))}" fill="#e8dcb8" opacity=".6"/><path d="${curve(ring(325, 51, 2, 1.8, 8, .2, 7))}" fill="#e8dcb8" opacity=".6"/>
+      <path d="${curve(ring(120, 70, 60, 7, 12, .2, 8))}" fill="#cfd8c8" opacity=".06" filter="url(#campBlur)"/>`;
+  const drift = (n, col, seed) => [...Array(n)].map((_, k) => { const x = (k * 71 + seed) % 400, d = 9 + (k % 5) * 2;
+    return `<ellipse cx="${x}" rx="1.6" ry="1" fill="${col}"><animate attributeName="cy" values="-10;200" dur="${d}s" begin="${-k * 1.3}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.8;0" dur="${d}s" begin="${-k * 1.3}s" repeatCount="indefinite"/></ellipse>`; }).join("");
+  const rootPillar = (x, w, col) => `<path d="M${x - w} 200 Q${x - w * .6} 120 ${x - w * 1.4} 0 H${x + w * 1.4} Q${x + w * .6} 120 ${x + w} 200 Z" fill="${col}"/><path d="M${x - w * .3} 190 Q${x} 110 ${x - w * .6} 10" stroke="#ff8a3d" stroke-width="1.2" fill="none" opacity=".35"/>`;
+  const rock = (x, h, col) => `<path d="M${x - h * .3} 200 L${x - h * .2} ${200 - h} L${x} ${200 - h * 1.1} L${x + h * .22} ${200 - h * .9} L${x + h * .32} 200 Z" fill="${col}"/>`;
+  const open = st.sky; // the Skywell, after the finale
+  const S = {
+    stump: { sky: ["#0a1510", "#173022", "#1d3b2a"], ground: ["#2a5434", "#16301e", "#2f5a36"], far: moonSky,
+      mid: [10, 60, 300, 350, 395].map((x, k) => pine(x, 172, 110 + (k % 3) * 18, "#10261a")).join(""),
+      near: `${pine(18, 190, 150, "#173322")}${pine(380, 190, 160, "#173322")}${pine(46, 186, 96, "#1b3a26")}${pine(352, 186, 100, "#1b3a26")}` },
+    underroot: { sky: ["#0c0705", "#1e120b", "#2a1a10"], ground: ["#4a3424", "#22160e", "#5a4030"],
+      far: `<path d="M0 0 H400 V40 Q300 70 200 50 Q100 70 0 40 Z" fill="#140c07"/>${[40, 120, 210, 290, 360].map((x, k) => `<path d="M${x} 40 Q${x + 6} ${70 + k * 6} ${x - 4} ${96 + k * 5}" stroke="#2a1a10" stroke-width="5" fill="none" stroke-linecap="round"/>`).join("")}
+        <circle cx="200" cy="140" r="120" fill="#f4f0ff" opacity=".05"/>${drift(18, "#f4f0ff", 17)}`,
+      mid: `${rootPillar(30, 16, "#1c120b")}${rootPillar(370, 18, "#1c120b")}${rootPillar(300, 10, "#24170e")}`,
+      near: `${rootPillar(8, 22, "#2a1b11")}${rootPillar(392, 22, "#2a1b11")}` },
+    skywell: { sky: open ? ["#0c1024", "#1a1f3a", "#262a40"] : ["#08080c", "#15151f", "#22222e"], ground: ["#3a3a4a", "#1c1c26", "#45455a"],
+      far: open ? `${stars}<path d="M150 0 H250 L300 300 H100 Z" fill="#f4f0ff" opacity=".1"/><circle cx="200" cy="34" r="40" fill="url(#moonGlow)"/><circle cx="200" cy="34" r="16" fill="#fff6d8"/>
+          <path d="M0 0 H150 Q170 60 140 120 Q100 150 0 130 Z M400 0 H250 Q230 60 260 120 Q300 150 400 130 Z" fill="#101018"/>${drift(10, "#f4f0ff", 5)}`
+        : `<path d="M0 0 H400 V120 Q300 150 200 130 Q100 150 0 120 Z" fill="#101018"/>${[[160, 40, 28, 16], [190, 30, 30, 18], [222, 44, 26, 15], [176, 60, 34, 16]].map(([x, y, w, h]) => shape(curve(ring(x + w / 2, y + h / 2, w / 2, h / 2, 10, .1, x)), "#24242e", "#0a0a10", [-1, .9])).join("")}
+          <path d="M201 0 L198 30 L203 48 L199 76" stroke="#f4f0ff" stroke-width="1" opacity=".5"/>`,
+      mid: `${rock(30, 120, "#16161e")}${rock(90, 70, "#1a1a24")}${rock(320, 90, "#1a1a24")}${rock(380, 130, "#16161e")}`,
+      near: `${rock(10, 150, "#20202a")}${rock(394, 160, "#20202a")}` },
+  }[st.site || "stump"];
+  const puddockAt = st.puddockHere && !st.packed && !st.decor.cart && st.puddockSvg ? `<g data-tap="puddock"><svg x="262" y="206" width="46" height="46" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : "";
+  const grannyAt = st.grannySvg ? `<g data-tap="granny"><svg x="112" y="206" width="54" height="54" viewBox="0 0 100 100">${strip(st.grannySvg)}</svg></g>` : "";
+  const packed = st.packed ? `<g transform="translate(278 236) scale(1.8)">${ICONS.cart}</g>
+      ${st.puddockSvg ? `<g data-tap="puddock"><svg x="246" y="208" width="42" height="42" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}
+      <g transform="translate(336 204) rotate(-4)"><path d="M0 4 V26" stroke="#5a3b24" stroke-width="2"/><rect x="-38" y="-10" width="76" height="15" rx="2" fill="#e8d6aa" stroke="#3a2418" stroke-width="1"/>
+      <text x="0" y=".2" font-size="6.6" text-anchor="middle" fill="#3a2418" font-family="Fredoka, sans-serif" font-weight="600">Back soon (probably)</text></g>` : "";
   return `<svg class="campArt" viewBox="0 0 ${W} ${H}" width="100%" aria-label="Dibble's camp">
-    <defs><linearGradient id="campSky" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#0d1a14"/><stop offset=".6" stop-color="#1a3326"/><stop offset="1" stop-color="#20402e"/></linearGradient>
+    <defs><linearGradient id="campSky" x1="0" y1="0" x2="0" y2="1">${S.sky.map((c, k) => `<stop offset="${[0, .6, 1][k]}" stop-color="${c}"/>`).join("")}</linearGradient>
       <radialGradient id="fireLight" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb15a" stop-opacity=".42"/><stop offset=".5" stop-color="#ff8a3d" stop-opacity=".12"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/></radialGradient>
       <radialGradient id="lanternGlow"><stop offset="0" stop-color="#ffd27a" stop-opacity=".55"/><stop offset="1" stop-color="#f0b543" stop-opacity="0"/></radialGradient>
       <radialGradient id="moonGlow"><stop offset="0" stop-color="#fff6d8" stop-opacity=".5"/><stop offset="1" stop-color="#fff6d8" stop-opacity="0"/></radialGradient>
       <filter id="campBlur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
       <filter id="campBlur1" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.4"/></filter></defs>
     <rect width="${W}" height="${H}" fill="url(#campSky)"/>
-    <g data-depth=".15">${stars}<circle cx="320" cy="46" r="34" fill="url(#moonGlow)"/><path d="${curve(ring(320, 46, 13, 13, 14, .02, 5))}" fill="#fff6d8"/>
-      <path d="${curve(ring(315, 43, 3, 2.6, 8, .2, 6))}" fill="#e8dcb8" opacity=".6"/><path d="${curve(ring(325, 51, 2, 1.8, 8, .2, 7))}" fill="#e8dcb8" opacity=".6"/>
-      <path d="${curve(ring(120, 70, 60, 7, 12, .2, 8))}" fill="#cfd8c8" opacity=".06" filter="url(#campBlur)"/></g>
-    <g data-depth=".3">${[10, 60, 300, 350, 395].map((x, k) => paintPine(x, 172, 110 + (k % 3) * 18, "#10261a", null, r)).join("")}</g>
-    <g data-depth=".5">${paintPine(18, 190, 150, "#173322", "#3a6a48", r)}${paintPine(380, 190, 160, "#173322", "#3a6a48", r)}${paintPine(46, 186, 96, "#1b3a26", "#3a6a48", r)}${paintPine(352, 186, 100, "#1b3a26", "#3a6a48", r)}
+    <g data-depth=".15">${S.far}</g>
+    <g data-depth=".3">${S.mid}</g>
+    <g data-depth=".5">${S.near}
       <path d="M${sagX(0)} ${sagY(0)} ${[...Array(29)].map((_, k) => `L${sagX((k + 1) / 29)} ${sagY((k + 1) / 29)}`).join(" ")}" stroke="#5a4a3a" stroke-width="1.3" fill="none"/>${lanterns}</g>
     <g data-depth=".75">
-      <defs><linearGradient id="campGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a5434"/><stop offset="1" stop-color="#16301e"/></linearGradient>
+      <defs><linearGradient id="campGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${S.ground[0]}"/><stop offset="1" stop-color="${S.ground[1]}"/></linearGradient>
         <radialGradient id="campVig" cx=".5" cy=".55" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></radialGradient></defs>
       <path d="${curve([[-10, 196], [60, 182], [140, 176], [220, 172], [300, 178], [410, 192], [410, 310], [-10, 310]])}" fill="url(#campGround)"/>
-      <path d="${curve(ring(200, 254, 190, 40, 16, .08, 9))}" fill="#2f5a36" opacity=".6" filter="url(#campBlur)"/>
+      <path d="${curve(ring(200, 254, 190, 40, 16, .08, 9))}" fill="${S.ground[2]}" opacity=".6" filter="url(#campBlur)"/>
       ${[[60, 260], [120, 282], [250, 276], [330, 268], [160, 292], [290, 290], [30, 286], [370, 284]].map(([x, y]) => stroke(x, y, -1.4 - r() * .4, 6 + r() * 4, 1.4, r() < .5 ? "#3f7348" : "#4f8a54", .7)).join("")}
       <ellipse cx="183" cy="246" rx="120" ry="58" fill="url(#fireLight)"><animate attributeName="rx" values="112;128;116;112" dur="1.3s" repeatCount="indefinite"/></ellipse>
       ${tree}${shelf}<g data-tap="tent">${tents}</g>
@@ -439,7 +458,7 @@ export function camp(st, gemFn, dibbleSvg) {
         ${shape(curve([[x - s, y - .5], [x - s * .5, y - s * 1.1], [x + s * .4, y - s * 1.15], [x + s, y - .6], [x, y - s * .3]]), "#9b7cf2", "#3a2458", [-.6, .6])}
         <circle cx="${x}" cy="${y - s * .6}" r="${s * 1.6}" fill="#9b7cf2" opacity=".2"><animate attributeName="opacity" values=".1;.3;.1" dur="${2.4 + s * .1}s" repeatCount="indefinite"/></circle>`).join("") : ""}
       ${d.jars ? `${plank(238, 246, 26, 12, "#6b4a2a", r)}<g transform="translate(236 222) scale(1)">${ICONS.jar}</g><g transform="translate(252 226) scale(.8)">${ICONS.jar}</g>` : ""}
-      ${d.cart ? `<g transform="translate(270 240) scale(1.8)">${ICONS.cart}</g>${st.puddockSvg ? `<g data-tap="puddock"><svg x="252" y="208" width="42" height="42" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}` : ""}
+      ${grannyAt}${puddockAt}${packed}${d.cart && !st.packed ? `<g transform="translate(270 240) scale(1.8)">${ICONS.cart}</g>${st.puddockSvg ? `<g data-tap="puddock"><svg x="252" y="208" width="42" height="42" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}` : ""}
       <g data-tap="dibble" class="campDibble"><svg x="190" y="196" width="68" height="68" viewBox="0 0 100 100">${strip(dibbleSvg)}</svg></g>
       ${flies}
     </g>
@@ -495,4 +514,233 @@ export function vine(w = 360) {
   let d = `M0 8`; for (let x = 0; x <= w; x += 10) d += ` L${x} ${8 + Math.sin(x / 30) * 3}`;
   return `<svg class="vineTrim" width="100%" height="20" viewBox="0 0 ${w} 20" preserveAspectRatio="none" aria-hidden="true">
     <path d="${d}" stroke="#4f7d3a" stroke-width="3" fill="none"/>${leaves}</svg>`;
+}
+
+// ---------- story pictures (docs/STORY.md) ----------
+// Amber Memories and the prologue: small scenes seen through old amber (warm, sepia, one glowing thing).
+const AM = { ink: "#2a1606", mid: "#5a3410", glow: "#ffe6a0", hot: "#ff7a3a", ice: "#cfefff" };
+const lan = (x, y, s = 1, o = 1) => `<g opacity="${o}"><circle cx="${x}" cy="${y}" r="${7 * s}" fill="${AM.glow}" opacity=".25"/><rect x="${x - 2 * s}" y="${y - 3 * s}" width="${4 * s}" height="${6 * s}" rx="${s}" fill="${AM.glow}" stroke="${AM.ink}" stroke-width="${.8 * s}"/></g>`;
+const oakSil = (x, y, s = 1, glow = 0) => `${glow ? `<circle cx="${x}" cy="${y - 34 * s}" r="${40 * s}" fill="${AM.glow}" opacity="${glow}"/>` : ""}
+  <path d="M${x - 5 * s} ${y} L${x - 3 * s} ${y - 24 * s} L${x + 3 * s} ${y - 24 * s} L${x + 5 * s} ${y} Z" fill="${AM.ink}"/>
+  ${[[0, -38, 20], [-16, -30, 14], [16, -30, 14], [-8, -46, 13], [10, -46, 12]].map(([dx, dy, r]) => `<circle cx="${x + dx * s}" cy="${y + dy * s}" r="${r * s}" fill="${AM.ink}"/>`).join("")}`;
+const toadSil = (x, y, s = 1, flip = 1) => `<g transform="translate(${x} ${y}) scale(${flip * s} ${s})"><ellipse cx="0" cy="-6" rx="10" ry="7" fill="${AM.ink}"/><circle cx="-5" cy="-13" r="3.2" fill="${AM.ink}"/><circle cx="4" cy="-13" r="3.2" fill="${AM.ink}"/><path d="M-9 -2 L-13 1 M8 -2 L12 1" stroke="${AM.ink}" stroke-width="2.4" stroke-linecap="round"/></g>`;
+const moleSil = (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="-8" rx="9" ry="9" fill="${AM.ink}"/><circle cx="0" cy="-19" r="6.5" fill="${AM.ink}"/><ellipse cx="0" cy="-24" rx="7" ry="2.4" fill="${AM.mid}"/></g>`;
+const ground = (y = 78) => `<path d="M0 ${y} Q40 ${y - 3} 80 ${y} T160 ${y} V100 H0 Z" fill="${AM.ink}"/>`;
+const MEM = {
+  oak: () => `${ground()}${oakSil(80, 78, 1.05, .35)}${[[60, 30], [98, 26], [88, 44], [66, 48]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.4" fill="${AM.glow}"/>`).join("")}`,
+  leaf: () => `<path d="M-4 14 Q50 22 104 8 M44 19 Q52 26 50 32" stroke="${AM.ink}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M50 32 v4" stroke="${AM.ink}" stroke-width="1.4"/>
+    <circle cx="86" cy="52" r="26" fill="${AM.glow}" opacity=".3"/><g transform="translate(86 52) rotate(-25)"><path d="M0 -14 Q10 -4 0 14 Q-10 -4 0 -14 Z" fill="${AM.glow}"/><path d="M0 -12 V12" stroke="${AM.mid}" stroke-width="1"/></g>
+    <path d="M70 34 q4 6 0 10" stroke="${AM.glow}" stroke-width="1" fill="none" opacity=".6"/>${ground(86)}`,
+  dawn: () => `<rect y="56" width="160" height="22" fill="${AM.glow}" opacity=".35"/>${ground()}
+    <path d="M58 78 L60 60 L64 64 L68 57 L72 63 L76 58 L78 78 Z" fill="${AM.ink}"/><ellipse cx="68" cy="60" rx="9" ry="2.6" fill="${AM.mid}"/>
+    <rect x="100" y="62" width="24" height="12" rx="2" fill="${AM.ink}"/><circle cx="106" cy="76" r="4" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="1.5"/><circle cx="120" cy="76" r="4" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="1.5"/>${toadSil(134, 78, .9)}`,
+  smoke: () => `${ground(72)}${oakSil(122, 72, .5)}${[40, 64, 88].map((x, k) => `<path d="M${x} 72 q-6 -10 2 -18 q8 -8 0 -18 q-6 -8 2 -16" stroke="${AM.glow}" stroke-width="${4 - k}" fill="none" opacity=".45" stroke-linecap="round"/>`).join("")}
+    <path d="M30 72 l6 6 M60 72 l-4 8 M90 72 l5 7" stroke="${AM.hot}" stroke-width="1.2" opacity=".7"/>`,
+  thaw: () => `<path d="M0 70 Q80 64 160 70 V100 H0 Z" fill="${AM.ink}"/><path d="M0 70 Q80 64 160 70 V74 Q80 68 0 74 Z" fill="#fff6e6" opacity=".9"/>
+    <ellipse cx="80" cy="69" rx="24" ry="4" fill="${AM.mid}"/><circle cx="80" cy="86" r="16" fill="${AM.hot}" opacity=".25"/>
+    <path d="M80 80 Q70 88 52 92 M80 80 Q92 90 112 94 M80 80 Q78 92 74 100" stroke="${AM.hot}" stroke-width="2.4" fill="none" opacity=".7" stroke-linecap="round"/>
+    ${[[20, 20], [50, 34], [120, 24], [140, 44], [96, 40]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="#fff6e6"/>`).join("")}`,
+  rootglow: () => `${ground(60)}${oakSil(80, 60, .8)}<circle cx="80" cy="84" r="30" fill="${AM.hot}" opacity=".35"/>
+    <path d="M80 60 Q66 74 40 82 M80 60 Q96 76 124 84 M80 60 Q80 80 76 98 M58 74 Q44 86 26 90" stroke="${AM.hot}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`,
+  lanterns: () => `${ground(40)}<path d="M64 40 Q80 36 96 40 L92 100 H68 Z" fill="#160b03"/>${[[80, 46, 1.2, 1], [78, 58, 1, .9], [82, 70, .85, .7], [79, 81, .7, .5], [81, 91, .55, .3]].map((a) => lan(...a)).join("")}
+    ${moleSil(52, 40, .8)}${lan(60, 30, .8)}`,
+  count: () => `${ground()}${moleSil(30, 78, 1.1)}${[52, 70, 88, 106, 124, 142].map((x, k) => lan(x, 70, .9, k < 4 ? 1 : .35)).join("")}
+    <path d="M38 62 Q46 58 50 64" stroke="${AM.glow}" stroke-width="1" fill="none" opacity=".7"/>`,
+  caps: () => `${ground()}<path d="M40 78 L44 60 L52 62 L54 78 Z M104 78 L108 56 L118 58 L118 78 Z" fill="#1a0d04"/>
+    ${[[50, 64, 8], [62, 70, 6], [100, 66, 7], [120, 60, 9], [88, 72, 5]].map(([x, y, r]) => `<circle cx="${x}" cy="${y - r * .3}" r="${r * 1.8}" fill="${AM.glow}" opacity=".18"/><path d="M${x} 78 V${y}" stroke="${AM.mid}" stroke-width="2"/><path d="M${x - r} ${y} Q${x} ${y - r * 1.4} ${x + r} ${y} Z" fill="${AM.glow}"/>`).join("")}`,
+  toad: () => `${ground()}<path d="M20 78 V40 Q20 14 60 14 Q100 14 100 40 V78 Z" fill="#160b03"/><circle cx="96" cy="58" r="16" fill="${AM.glow}" opacity=".3"/>
+    ${toadSil(102, 72, 1.2, -1)}<circle cx="94" cy="60" r="4" fill="${AM.glow}"/><path d="M118 58 h14 M120 66 h18 M116 50 h10" stroke="${AM.glow}" stroke-width="1.2" opacity=".6" stroke-linecap="round"/>`,
+  frost: () => `<rect width="160" height="100" fill="${AM.ink}" opacity=".35"/><path d="M0 60 Q40 50 80 62 T160 58" stroke="${AM.ink}" stroke-width="10" fill="none"/>
+    <path d="M0 60 Q40 50 80 62 T160 58" stroke="${AM.hot}" stroke-width="2" fill="none" opacity=".5"/>
+    ${[[30, 52], [58, 54], [86, 60], [114, 58], [140, 54]].map(([x, y], k) => `<polygon points="${x},${y - 12} ${x + 5},${y} ${x},${y + 6} ${x - 5},${y}" fill="${AM.ice}" opacity="${1 - k * .12}"/>`).join("")}${moleSil(72, 92, .7)}${lan(84, 82, .7)}`,
+  deeper: () => `<rect width="160" height="100" fill="#160b03" opacity=".55"/><path d="M64 0 Q60 50 70 100 H92 Q100 50 96 0 Z" fill="${AM.mid}" opacity=".5"/>
+    <path d="M80 0 Q76 30 82 60 Q86 80 80 100" stroke="${AM.glow}" stroke-width="9" fill="none" opacity=".15"/>
+    <path d="M80 0 Q76 30 82 60 Q86 80 80 100" stroke="${AM.glow}" stroke-width="2.2" fill="none" opacity=".85"/>${lan(70, 40, .6, .5)}${lan(90, 70, .5, .35)}`,
+  receipt: () => `<g transform="rotate(-6 80 50)"><rect x="40" y="16" width="80" height="66" rx="3" fill="#f3e6c4" stroke="${AM.ink}" stroke-width="1.5"/>
+    ${[28, 36, 44, 52].map((y, k) => `<path d="M48 ${y} H${112 - k * 9}" stroke="${AM.mid}" stroke-width="1.6" stroke-linecap="round"/>`).join("")}
+    <path d="M86 66 q6 -8 10 0 q4 6 10 -2" stroke="${AM.ink}" stroke-width="1.4" fill="none"/><text x="52" y="72" font-size="9" font-style="italic" fill="${AM.ink}">P.B.</text></g>`,
+  coin: () => `<path d="M10 100 Q30 70 70 66 Q96 64 104 74 Q90 80 70 82 Q40 86 30 100 Z" fill="${AM.ink}"/><circle cx="86" cy="52" r="20" fill="#f6f1ff" opacity=".25"/>
+    <circle cx="86" cy="52" r="12" fill="#efe8f7" stroke="${AM.ink}" stroke-width="1.4"/><path d="M86 52 Q78 44 76 50 Q78 56 86 52 Q94 44 96 50 Q94 56 86 52" stroke="#a89ac0" stroke-width="1" fill="none"/>`,
+  heart: () => `<rect width="160" height="100" fill="#160b03" opacity=".55"/><circle cx="80" cy="54" r="38" fill="${AM.hot}" opacity=".22"/>
+    <path d="M80 82 L54 54 Q44 40 56 32 Q68 26 80 40 Q92 26 104 32 Q116 40 106 54 Z" fill="${AM.hot}" stroke="${AM.ink}" stroke-width="2"/>
+    <path d="M93 36 L101 44 L93 50 L88 42 Z" fill="#160b03"/><path d="M62 40 Q66 34 72 38" stroke="#ffd2b0" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+};
+export function memoryArt(kind, w = 160) {
+  const id = "am" + uid++;
+  return `<svg class="memArt" width="${w}" height="${w * .625}" viewBox="0 0 160 100" aria-hidden="true">
+    <defs><radialGradient id="${id}" cx=".5" cy=".45" r=".75"><stop offset="0" stop-color="#c98a2c"/><stop offset=".7" stop-color="#7a4a14"/><stop offset="1" stop-color="#3a2208"/></radialGradient>
+      <clipPath id="${id}c"><ellipse cx="80" cy="50" rx="78" ry="48"/></clipPath>
+      <radialGradient id="${id}v" cx=".5" cy=".5" r=".6"><stop offset=".62" stop-color="#1a0d04" stop-opacity="0"/><stop offset="1" stop-color="#1a0d04" stop-opacity=".7"/></radialGradient>
+      <filter id="${id}n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 .85  0 0 0 0 .55  0 0 0 1.4 -.5"/></filter></defs>
+    <g clip-path="url(#${id}c)"><rect width="160" height="100" fill="url(#${id})"/>${(MEM[kind] || MEM.leaf)()}
+      <rect width="160" height="100" fill="url(#${id}v)"/><rect width="160" height="100" filter="url(#${id}n)" opacity=".1"/>
+      <ellipse cx="54" cy="24" rx="38" ry="10" fill="#fff" opacity=".08" transform="rotate(-12 54 24)"/></g>
+    <ellipse cx="80" cy="50" rx="78" ry="48" fill="none" stroke="#3a2208" stroke-width="3"/><ellipse cx="80" cy="50" rx="74" ry="44.5" fill="none" stroke="#ffd27a" stroke-width=".8" opacity=".35"/></svg>`;
+}
+
+// The old stump on the home screen. growth 0..1 (lifetime light released) brings moss, glowing roots and caps;
+// sprout = the first green shoot (all of Heartroot Deep's memories found).
+export function stumpArt(growth = 0, sprout = false, w = 300, tree = false) {
+  const g = Math.max(0, Math.min(1, growth)), id = "st" + uid++;
+  let s = 5; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  const moss = [...Array(Math.round(g * 9))].map((_, k) => `<path d="${curve(ring(118 + r() * 64, 54 + r() * 20, 4 + r() * 4, 2 + r() * 2, 8, .25, k + 3))}" fill="${k % 2 ? "#4f7a3a" : "#5f9a45"}"/>`).join("");
+  const caps = [[96, 80], [206, 82], [194, 78]].slice(0, g > .35 ? Math.ceil((g - .35) * 5) : 0).map(([x, y]) =>
+    `<circle cx="${x}" cy="${y - 8}" r="8" fill="#9b7cf2" opacity=".18"/><path d="M${x} ${y} v-6" stroke="#d8cbb0" stroke-width="2"/>${shape(curve([[x - 5, y - 5.6], [x - 2.4, y - 10.6], [x + 2.2, y - 10.8], [x + 5, y - 5.8], [x, y - 7.4]]), "#9b7cf2", "#3a2458", [-.5, .5])}`).join("");
+  const oak = tree ? `<circle cx="150" cy="10" r="46" fill="#9be08a" opacity=".12"><animate attributeName="opacity" values=".08;.18;.08" dur="4s" repeatCount="indefinite"/></circle>
+    <path d="M146 47 Q147 30 144 16 M154 47 Q153 30 157 16 M150 30 Q140 22 130 22 M151 26 Q162 18 172 20" stroke="#6b4a2a" stroke-width="4" fill="none" stroke-linecap="round"/>
+    ${[[150, 2, 22], [128, 14, 16], [172, 12, 16], [138, -4, 14], [162, -4, 14]].map(([x, y, rr], k) => shape(curve(ring(x, y, rr, rr * .92, 12, .12, k + 20)), k ? "#558f40" : "#5f9a45", "#24451f", [-1.4, 1.2])).join("")}
+    <path d="${curve(ring(142, -6, 12, 9, 10, .2, 30))}" fill="#9bd47e" opacity=".45"/>${[[136, 6], [160, 0], [148, -10], [170, 14]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="#fff3a0"/>`).join("")}` : "";
+  const t = 8 + g * 10, shoot = sprout && !tree ? `<circle cx="150" cy="${40 - t}" r="${12 + g * 8}" fill="#9be08a" opacity=".16"><animate attributeName="opacity" values=".1;.24;.1" dur="3s" repeatCount="indefinite"/></circle>
+    <path d="M150 47 Q148 ${44 - t * .6} 151 ${44 - t * 1.4}" stroke="#5f9a45" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M150 ${44 - t * .8} Q140 ${40 - t * .8} 138 ${44 - t * .8} Q144 ${48 - t * .8} 150 ${44 - t * .8} Z M151 ${44 - t * 1.3} Q162 ${38 - t * 1.3} 164 ${42 - t * 1.3} Q158 ${47 - t * 1.3} 151 ${44 - t * 1.3} Z" fill="#9be08a"/>` : "";
+  return `<svg class="stumpArt" width="${w}" height="${w * (tree ? .46 : .3)}" viewBox="0 ${tree ? -48 : 0} 300 ${tree ? 138 : 90}" aria-hidden="true">
+    <defs><linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="#4a3422"/><stop offset=".5" stop-color="#6b4a32"/><stop offset="1" stop-color="#3a2618"/></linearGradient></defs>
+    <path d="M0 80 Q150 70 300 80 V90 H0 Z" fill="#14241a"/>
+    <path d="M150 74 Q120 80 80 86 M150 74 Q180 82 226 86 M150 74 Q140 84 128 90 M150 74 Q166 84 176 90" stroke="#3a2618" stroke-width="5" fill="none" stroke-linecap="round"/>
+    ${g ? `<path d="M150 74 Q120 80 80 86 M150 74 Q180 82 226 86" stroke="#f0b543" stroke-width="1.4" fill="none" opacity="${(.15 + g * .5).toFixed(2)}"/>` : ""}
+    ${shape("M110 81 Q114 66 116 50 L124 54 L130 44 L138 52 L146 42 L154 50 L162 41 L170 52 L178 46 L184 54 Q186 68 190 81 Q150 85 110 81 Z", `url(#${id})`, "#22140c", [-1.6, 1.4])}
+    <path d="M118 56 Q117 68 116 79" stroke="#8a6650" stroke-width="1.6" fill="none" opacity=".45"/>
+    <ellipse cx="150" cy="47" rx="30" ry="5" fill="#8a6650" opacity=".5"/><path d="M134 47 Q150 43 166 47 M140 47 Q150 45 160 47" stroke="#5a3a2a" stroke-width="1" fill="none"/>
+    <path d="M128 60 L132 72 M170 58 L166 70" stroke="#2a1a10" stroke-width="1.4"/>${moss}${caps}${shoot}${oak}</svg>`;
+}
+
+// ---------- story pictures, Ring One ending onwards ----------
+const PALE = "#f4f0ff";
+const mothSil = (x, y, s = 1, col = AM.ink, op = 1, rot = 0) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})" opacity="${op}" fill="${col}">
+  <path d="M0 0 Q-9 -10 -14 -3 Q-13 3 0 1 Z M0 0 Q9 -10 14 -3 Q13 3 0 1 Z"/><path d="M0 1 Q-8 9 -10 4 Q-7 1 0 1 Z M0 1 Q8 9 10 4 Q7 1 0 1 Z"/>
+  <ellipse cy="1" rx="1.8" ry="4.4"/><path d="M-.6 -3 Q-3 -9 -6 -9 M.6 -3 Q3 -9 6 -9" stroke="${col}" stroke-width="1" fill="none"/></g>`;
+const hole = (x, y, r) => `<path d="M0 0 H160 V${y + r * .3} Q${x + r * 1.6} ${y + r * 1.4} ${x + r} ${y} A${r} ${r * .55} 0 0 0 ${x - r} ${y} Q${x - r * 1.6} ${y + r * 1.4} 0 ${y + r * .3} Z" fill="${AM.ink}"/>`;
+const moonDisc = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r * 2.4}" fill="${PALE}" opacity=".18"/><circle cx="${x}" cy="${y}" r="${r}" fill="${PALE}"/><circle cx="${x - r * .3}" cy="${y - r * .2}" r="${r * .22}" fill="#d9d2ec" opacity=".7"/>`;
+const stones = (rows) => rows.map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h * .4}" fill="${AM.ink}" stroke="${AM.mid}" stroke-width="1"/>`).join("");
+Object.assign(MEM, {
+  market: () => `${ground()}<path d="M30 78 Q28 30 46 8 L114 8 Q132 30 130 78 Z" fill="${AM.ink}"/><path d="M58 78 V50 Q80 30 102 50 V78 Z" fill="#160b03"/>
+    <circle cx="80" cy="62" r="20" fill="${AM.glow}" opacity=".25"/><path d="M62 52 H98 L94 58 H66 Z" fill="${AM.glow}"/><path d="M66 52 v6 M74 52 v6 M82 52 v6 M90 52 v6" stroke="${AM.mid}" stroke-width="1.2"/>
+    ${toadSil(80, 78, .9)}<circle cx="70" cy="66" r="2" fill="${AM.glow}"/><circle cx="91" cy="68" r="1.6" fill="${PALE}"/>`,
+  pull: () => `<rect width="160" height="100" fill="#160b03" opacity=".55"/>${[-60, -30, 0, 30, 60].map((dx) => `<path d="M${80 + dx} 0 Q${80 + dx * .6} 50 80 92" stroke="${AM.glow}" stroke-width="1.6" fill="none" opacity=".55"/>`).join("")}
+    <circle cx="80" cy="92" r="14" fill="${AM.glow}" opacity=".3"/><circle cx="80" cy="92" r="3.5" fill="${PALE}"/>`,
+  scorch: () => `<rect width="160" height="100" fill="#1c0e04" opacity=".55"/><path d="M0 0 Q40 50 60 100 H0 Z M160 0 Q120 50 100 100 H160 Z" fill="${AM.ink}"/>
+    ${[[20, 10], [34, 30], [22, 52], [138, 14], [124, 36], [136, 58]].map(([x, y]) => `<path d="M${x} ${y} l${x < 80 ? 10 : -10} 22 l${x < 80 ? -4 : 4} -14 Z" fill="${AM.hot}" opacity=".6"/>`).join("")}
+    <ellipse cx="80" cy="98" rx="26" ry="10" fill="${AM.hot}" opacity=".35"/><path d="M80 20 V84" stroke="${AM.glow}" stroke-width="1" stroke-dasharray="2 5" opacity=".6"/>`,
+  wings: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><circle cx="96" cy="34" r="22" fill="${AM.hot}" opacity=".28"/>
+    <path d="M80 30 Q56 40 50 100 H110 Q104 40 80 30 Z" fill="${AM.ink}" stroke="${AM.mid}" stroke-width="1.2"/><path d="M80 34 Q66 60 62 100 M80 34 Q94 60 98 100" stroke="${AM.mid}" stroke-width=".8" fill="none"/>
+    <circle cx="80" cy="26" r="9" fill="${AM.ink}"/><path d="M76 19 Q66 4 56 6 M84 19 Q94 4 104 6" stroke="${AM.ink}" stroke-width="1.6" fill="none"/>
+    <path d="M90 42 Q96 36 96 30" stroke="${AM.ink}" stroke-width="3" stroke-linecap="round"/><polygon points="96,22 101,30 96,38 91,30" fill="${AM.hot}" stroke="${AM.ink}" stroke-width="1"/>`,
+  carriers: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/>${[...Array(14)].map((_, k) => { const x = 10 + k * 10.5, y = 12 + k * 5.6 + (k % 3) * 6;
+    return `<circle cx="${x}" cy="${y + 6}" r="3.2" fill="${AM.glow}" opacity=".35"/><circle cx="${x}" cy="${y + 6}" r="1.2" fill="${AM.glow}"/>${mothSil(x, y, .42, PALE, .85, 20)}`; }).join("")}`,
+  spirals: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><circle cx="80" cy="54" r="16" fill="${AM.glow}" opacity=".3"/><polygon points="80,42 87,54 80,66 73,54" fill="${AM.glow}"/>
+    <path d="M80 54 m-26 0 a26 18 0 1 1 52 0 a30 22 0 1 1 -60 4 a36 26 0 1 1 72 -4" stroke="${PALE}" stroke-width=".8" stroke-dasharray="2 3" fill="none" opacity=".6"/>
+    ${[[54, 54, -90], [106, 50, 90], [80, 32, 0], [44, 66, -120], [118, 70, 120], [70, 82, 180]].map(([x, y, r]) => mothSil(x, y, .5, PALE, .9, r)).join("")}`,
+  scalefall: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/>${[...Array(26)].map((_, k) => `<ellipse cx="${(k * 37) % 160}" cy="${(k * 23) % 80}" rx="1.8" ry="1.1" fill="${PALE}" opacity="${.35 + (k % 4) * .15}" transform="rotate(${k * 33} ${(k * 37) % 160} ${(k * 23) % 80})"/>`).join("")}
+    ${ground(86)}${[[40, 84, 10], [70, 85, -14], [104, 83, 22], [128, 85, -8]].map(([x, y, r]) => mothSil(x, y, .55, PALE, .9, r)).join("")}
+    <path d="M30 70 q8 -10 2 -16 q-8 -6 2 -12 M118 66 q-8 -8 -2 -14 q8 -6 -2 -14" stroke="${PALE}" stroke-width=".7" stroke-dasharray="1.5 2.5" fill="none" opacity=".6"/>`,
+  circling: () => `${ground()}${moleSil(64, 78, 1.2)}<path d="M76 56 L82 48" stroke="${AM.ink}" stroke-width="3" stroke-linecap="round"/>${lan(84, 46, 1.4)}
+    <ellipse cx="84" cy="46" rx="26" ry="14" stroke="${PALE}" stroke-width=".8" stroke-dasharray="2 3" fill="none" opacity=".7"/>${mothSil(108, 44, .6, PALE, .95, 70)}`,
+  skyhole: () => `<rect width="160" height="100" fill="#2a1606" opacity=".55"/>${moonDisc(80, 10, 7)}${hole(80, 14, 22)}
+    <path d="M62 14 L98 14 L120 100 H40 Z" fill="${PALE}" opacity=".16"/>${[[70, 50, -10], [92, 38, 15], [80, 70, 0]].map(([x, y, r]) => mothSil(x, y, .5, AM.ink, .9, r)).join("")}${ground(92)}`,
+  cavein: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/>${hole(80, 12, 20)}${stones([[66, 4, 14, 9], [80, 0, 16, 10], [58, 26, 12, 8], [86, 32, 14, 9], [72, 50, 10, 7], [94, 62, 12, 8], [60, 74, 14, 8]])}
+    ${[...Array(10)].map((_, k) => `<circle cx="${50 + k * 7}" cy="${20 + (k * 17) % 60}" r="1" fill="${AM.glow}" opacity=".4"/>`).join("")}${ground(92)}`,
+  bracket: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><circle cx="40" cy="50" r="62" fill="${PALE}" opacity=".12"/><circle cx="20" cy="50" r="56" fill="${PALE}" opacity=".85"/>
+    <path d="M58 22 Q72 30 76 50 Q72 70 58 78" stroke="#c9bfe0" stroke-width="1" fill="none"/><path d="M74 36 H96 V64 H74" stroke="${AM.ink}" stroke-width="5" fill="none" stroke-linejoin="round"/>
+    <path d="M74 36 H96 V64 H74" stroke="#c8a46a" stroke-width="2" fill="none"/>${[[90, 36], [90, 64], [96, 50]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#c8a46a" stroke="${AM.ink}" stroke-width=".8"/>`).join("")}${lan(110, 50, 1)}`,
+  village: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><circle cx="80" cy="40" r="34" fill="${PALE}" opacity=".14"/><circle cx="80" cy="40" r="18" fill="${PALE}"/>
+    <path d="M70 34 Q80 28 90 34 M66 44 Q80 52 94 44" stroke="#d9d2ec" stroke-width="1" fill="none"/>
+    ${[...Array(10)].map((_, k) => { const a = k / 10 * Math.PI * 2; return lan(80 + Math.cos(a) * 34, 40 + Math.sin(a) * 14, .7); }).join("")}${ground(84)}
+    ${[[34, 84], [118, 84], [58, 84]].map(([x, y]) => `<path d="M${x - 8} ${y} V${y - 9} L${x} ${y - 16} L${x + 8} ${y - 9} V${y} Z" fill="${AM.ink}"/><rect x="${x - 2}" y="${y - 8}" width="4" height="4" fill="${AM.glow}"/>`).join("")}`,
+  window: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><rect x="44" y="20" width="72" height="60" rx="4" fill="${AM.ink}"/><circle cx="80" cy="50" r="24" fill="${AM.glow}" opacity=".3"/>
+    <rect x="62" y="34" width="36" height="32" fill="#3a1e08"/><path d="M80 34 V66 M62 50 H98" stroke="${AM.ink}" stroke-width="2.4"/>${lan(80, 56, 1.3)}<path d="M58 66 H102" stroke="${AM.mid}" stroke-width="3"/>`,
+  rubble: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><path d="M70 0 H90 V6 H70 Z" fill="${PALE}" opacity=".35"/>${stones([[50, 8, 22, 12], [72, 6, 20, 13], [92, 10, 18, 11], [44, 22, 18, 12], [62, 21, 26, 14], [88, 24, 24, 12],
+    [48, 38, 24, 13], [72, 37, 18, 12], [90, 39, 22, 13], [44, 54, 20, 12], [64, 52, 26, 14], [90, 55, 22, 12], [50, 69, 24, 13], [74, 68, 22, 13]])}
+    <path d="M0 0 H44 V100 H0 Z M116 0 H160 V100 H116 Z" fill="${AM.ink}"/>${moleSil(82, 98, .7)}${lan(92, 88, .6)}`,
+  listening: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><path d="M0 0 H160 V44 Q120 52 80 46 Q40 52 0 44 Z" fill="${AM.ink}"/>
+    ${[[36, 52, 180], [62, 54, 170], [92, 52, 190], [120, 54, 180]].map(([x, y, r]) => mothSil(x, y, .7, PALE, .9, r)).join("")}
+    ${[...Array(5)].map((_, k) => `<path d="M${30 + k * 24} 40 q4 -4 8 0" stroke="${PALE}" stroke-width=".7" fill="none" opacity=".4"/>`).join("")}${ground(92)}`,
+  thread: () => `<rect width="160" height="100" fill="${AM.ink}"/>${stones([[30, 6, 30, 18], [62, 4, 34, 20], [98, 8, 30, 18], [26, 28, 36, 20], [66, 30, 28, 18], [96, 30, 36, 20], [34, 54, 30, 20], [68, 52, 34, 22], [104, 56, 28, 18], [30, 78, 36, 18], [70, 78, 30, 20], [102, 80, 32, 18]])}
+    <path d="M82 0 L78 22 L84 40 L79 58 L83 76 L80 100" stroke="${PALE}" stroke-width="5" fill="none" opacity=".2"/><path d="M82 0 L78 22 L84 40 L79 58 L83 76 L80 100" stroke="${PALE}" stroke-width="1.4" fill="none"/>`,
+  sprout: () => `<rect y="50" width="160" height="30" fill="${AM.glow}" opacity=".25"/>${ground()}<path d="M60 78 L62 58 L66 62 L70 55 L74 61 L78 56 L82 61 L86 54 L90 60 L96 57 L98 78 Z" fill="${AM.ink}"/>
+    <circle cx="80" cy="44" r="16" fill="${AM.glow}" opacity=".35"/><path d="M80 57 Q78 48 81 38" stroke="${AM.glow}" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M80 48 Q72 44 70 48 Q75 52 80 48 Z M81 41 Q89 36 91 40 Q86 45 81 41 Z" fill="${AM.glow}"/>`,
+  cart: () => `<rect width="160" height="100" fill="#2a1606" opacity=".55"/><path d="M110 92 V40 Q110 20 135 20 Q160 20 160 40 V92 Z" fill="#120801"/>${ground(92)}
+    <rect x="36" y="58" width="50" height="22" rx="3" fill="${AM.ink}"/><path d="M40 58 L52 34 L64 58 Z" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="1.2"/><rect x="64" y="42" width="18" height="16" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="1"/>
+    <path d="M48 30 V44 M48 30 L58 33 L48 36" stroke="${AM.ink}" stroke-width="1.2" fill="${AM.glow}"/><path d="M36 54 Q60 46 86 54" stroke="${AM.ink}" stroke-width=".8" fill="none"/>${[42, 52, 62, 72, 82].map((x) => `<circle cx="${x}" cy="${53 - Math.sin((x - 36) / 50 * Math.PI) * 4}" r="1.6" fill="${AM.glow}"/>`).join("")}
+    <circle cx="46" cy="84" r="7" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="2"/><circle cx="76" cy="84" r="7" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="2"/>
+    <path d="M86 66 L98 70" stroke="${AM.ink}" stroke-width="2.4"/>${toadSil(102, 92, 1)}${moleSil(122, 92, .8)}${lan(130, 80, .8)}`,
+  undermoon: () => `<rect width="160" height="100" fill="#120801" opacity=".55"/><circle cx="104" cy="72" r="40" fill="${PALE}" opacity=".12"/><circle cx="104" cy="72" r="20" fill="${PALE}" opacity=".9"/>
+    <path d="M90 66 Q104 60 118 66 M88 76 Q104 84 120 76" stroke="#d9d2ec" stroke-width="1" fill="none"/>${[...Array(8)].map((_, k) => mothSil(70 + (k * 19) % 70, 40 + (k * 13) % 50, .25, PALE, .7, k * 40)).join("")}
+    <path d="M0 40 H54 Q60 40 58 48 L50 100 H0 Z" fill="${AM.ink}"/>${moleSil(30, 40, .8)}${lan(40, 30, .7)}${toadSil(14, 40, .8)}`,
+  moonbeam: () => `<rect width="160" height="100" fill="#160b03" opacity=".55"/>${moonDisc(80, 8, 8)}<path d="M66 0 H94 L128 100 H32 Z" fill="${PALE}" opacity=".3"/>
+    <path d="M0 0 H62 L40 100 H0 Z M160 0 H98 L120 100 H160 Z" fill="${AM.ink}"/>${stones([[22, 30, 16, 9], [126, 46, 14, 9], [14, 62, 18, 10]])}${ground(94)}`,
+  straight: () => `<rect width="160" height="100" fill="#160b03" opacity=".55"/><path d="M66 0 H94 L128 100 H32 Z" fill="${PALE}" opacity=".22"/>
+    ${[...Array(12)].map((_, k) => mothSil(48 + (k % 4) * 21, 88 - Math.floor(k / 4) * 28 - (k % 4) * 4, .5, PALE, .95)).join("")}
+    ${[...Array(4)].map((_, k) => `<path d="M${48 + k * 21} 98 V10" stroke="${PALE}" stroke-width=".6" stroke-dasharray="2 4" opacity=".5"/>`).join("")}`,
+  wickway: () => `<rect width="160" height="100" fill="#120801" opacity=".55"/>${(() => { const pts = [[20, 20], [50, 34], [86, 18], [124, 30], [146, 56], [110, 66], [74, 54], [40, 70], [16, 88], [60, 90], [100, 92], [140, 86]];
+    const links = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 1], [6, 7], [7, 8], [7, 9], [9, 10], [10, 5], [10, 11], [11, 4]];
+    return links.map(([a, b]) => `<path d="M${pts[a][0]} ${pts[a][1]} L${pts[b][0]} ${pts[b][1]}" stroke="${PALE}" stroke-width="1.2" opacity=".55"/>`).join("") + pts.map(([x, y]) => lan(x, y, .8)).join(""); })()}`,
+  youngoak: () => `<rect y="40" width="160" height="40" fill="${AM.glow}" opacity=".3"/>${ground()}<path d="M64 78 L66 64 L72 60 L80 64 L88 59 L94 64 L96 78 Z" fill="${AM.ink}"/>${oakSil(80, 62, .7, .4)}
+    ${[[62, 30], [96, 26], [84, 18], [70, 22]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.4" fill="${AM.glow}"/>`).join("")}${moleSil(120, 78, .8)}${toadSil(138, 78, .8)}`,
+});
+
+// Granny Burr: Dibble's grandmother, keeper of the Lantern Moles. Built on Dibble so she reads as family:
+// silver fur, a plum shawl, a bun with a knitting needle, round spectacles, her old lantern.
+export function granny(size = 96) {
+  const id = "gr" + uid++, glow = LANTERN_GLOW.granny, line = "#4a4038";
+  // hat-hook coordinates (the old 100-box head): eyes sit at about (50, 37.5) and (63.3, 36.6)
+  const over = `${shape(curve(ring(47, 19, 7.4, 5.6, 12, .06, 3)), "#d9d2c8", "#7a7066", [-.7, .7])}<path d="M43 17 Q47 14.4 51 16" stroke="#fff" stroke-width=".8" opacity=".5" fill="none"/>
+    ${shape(limb(38.6, 13.4, 47, 18, 56, 23.4, .7, .6), "#8a5a32", "#3a2418", [-.4, .4])}${shape(curve(ring(38.4, 13.2, 1.4, 1.4, 8, .05, 5)), "#c8553d", "#5a1e14", [-.3, .3])}
+    <g fill="#cfefff" fill-opacity=".14" stroke="#b8902e" stroke-width=".9"><path d="${curve(ring(50, 37.6, 4.8, 4.8, 12, .02, 7))}"/><path d="${curve(ring(63.3, 36.7, 4.8, 4.8, 12, .02, 9))}"/></g>
+    <path d="M54.8 37.2 Q56.6 35.8 58.5 37" stroke="#b8902e" stroke-width=".8" fill="none"/><path d="M45.2 37 L41.4 35.4 M68.1 36.4 L71.6 34.6" stroke="#b8902e" stroke-width=".7"/>
+    <path d="M47 34.6 q1.2 -.9 2.6 -.6 M60.4 33.8 q1.2 -.9 2.6 -.6" stroke="#fff" stroke-width=".5" opacity=".7" fill="none"/>
+    <path d="M45.6 31.4 Q49.6 29.6 53.4 31 M59.4 30.4 Q63.2 28.8 66.8 30.4" stroke="${line}" stroke-width=".9" fill="none" stroke-linecap="round"/>`;
+  const D = dibbleBody(id, { fur: FUR.silver[0], scarf: "#8a5a8a", hat: over, lantern: lanternArt("granny", id + "L") });
+  return svg(size, "0 0 100 100", `
+    <defs><radialGradient id="${id}g"><stop offset="0" stop-color="${glow}" stop-opacity=".6"/><stop offset="1" stop-color="${glow}" stop-opacity="0"/></radialGradient>${D.defs}</defs>
+    <circle cx="75" cy="77" r="20" fill="url(#${id}g)"><animate attributeName="r" values="18;21;18" dur="2.6s" repeatCount="indefinite"/></circle>
+    ${bob(`<g transform="translate(2 2) scale(.37) translate(-34 -158)">${D.body}</g>`, 3.8, 1.2)}
+  `, "granny");
+}
+
+// The Pale Bidder: an old moth, wings folded into a cloak, holding the heart-shard up like a candle.
+export function bidder(size = 96, shard = true) {
+  const id = "pb" + uid++, wing = "#eee6fb", fur = "#d8cdf2", wl = mix(wing, "#2a1a3a", .55), fl = mix(fur, "#2a1a3a", .6), O = [-.8, .7];
+  const cloak = curve([[50, 44], [36, 50], [24, 68], [18, 96], [50, 98], [82, 96], [76, 68], [64, 50]]);
+  return svg(size, "0 0 100 100", `
+    <defs><radialGradient id="${id}g"><stop offset="0" stop-color="#ff9db5" stop-opacity=".75"/><stop offset="1" stop-color="#ff4f7a" stop-opacity="0"/></radialGradient>
+      <filter id="${id}s" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4"/></filter>
+      <filter id="${id}b" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".8"/></filter><clipPath id="${id}c"><path d="${cloak}"/></clipPath></defs>
+    <path d="${curve(ring(50, 97, 30, 2.8, 12, .2, 3))}" fill="#000" opacity=".28" filter="url(#${id}b)"/>
+    ${bob(`
+    ${shape(cloak, wing, wl, O)}
+    <g clip-path="url(#${id}c)"><path d="${curve(ring(30, 84, 16, 22, 9, .2, 5))}" fill="#a897c8" opacity=".5" filter="url(#${id}s)"/>
+      <path d="${curve(ring(70, 62, 9, 16, 9, .2, 7))}" fill="#ffffff" opacity=".6" filter="url(#${id}s)"/></g>
+    ${[[50, 48, 1.92, 48], [50, 48, 1.2, 50], [50, 48, 1.57, 48]].map(([x, y, a, l]) => stroke(x, y, a, l, .45, "#a897c8", .6, .03)).join("")}
+    ${[30, 70].map((x) => `<path d="${curve(ring(x, 86, 4, 4, 9, .1, x))}" fill="#b9a8d8" opacity=".55"/><path d="${curve(ring(x, 86, 1.6, 1.6, 7, .1, x + 1))}" fill="#fff6d8" opacity=".9"/>`).join("")}
+    <path d="M22 92 Q50 98 78 92" stroke="#8f7cb8" stroke-width="1" fill="none" stroke-dasharray="2 2.5"/>
+    ${shape(curve(ring(50, 52, 20, 9, 14, .12, 6)), "#fff8ea", mix("#fff8ea", "#3a2a1a", .45), O)}
+    ${[...Array(7)].map((_, k) => stroke(34 + k * 5.4, 57 + (k % 2), 1.57 + (k - 3) * .12, 3.4, .9, "#e6dccb", .9, .1)).join("")}
+    <path d="M41 23 Q34 8 22 7 M59 23 Q66 8 78 7" stroke="${fl}" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <g stroke="${fl}" stroke-width=".8" stroke-linecap="round">${[.2, .4, .6, .8].map((t) => { const x = 41 - 19 * t, y = 23 - 16 * t + 10 * t * t;
+      return `<path d="M${x} ${y} l-3 -3 M${100 - x} ${y} l3 -3"/>`; }).join("")}</g>
+    ${shape(curve(ring(50, 34, 17, 15, 14, .08, 4)), fur, fl, O)}
+    <path d="${curve(ring(42, 40, 9, 6, 9, .2, 8))}" fill="#a897c8" opacity=".5" filter="url(#${id}s)"/>
+    ${pieEye(43, 34, 11, 6.5, 4.4, 5.4, fl, 1)}${pieEye(57, 34, 13, 6.9, 4.4, 5.4, fl, 1)}
+    <path d="M38 29.4 Q43 27.4 48 29.4 M52 29.4 Q57 27.4 62 29.4" stroke="${fl}" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+    <path d="M47 42 Q50 43.6 53 42" stroke="${fl}" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+    <path d="${curve(ring(36, 40, 4, 2.2, 8, .2, 9))}" fill="#ff8fa3" opacity=".28" filter="url(#${id}b)"/><path d="${curve(ring(64, 40, 4, 2.2, 8, .2, 10))}" fill="#ff8fa3" opacity=".28" filter="url(#${id}b)"/>
+    ${shard ? `<circle cx="50" cy="66" r="16" fill="url(#${id}g)"><animate attributeName="r" values="14;18;14" dur="2.4s" repeatCount="indefinite"/></circle>
+      ${shape("M50 56 L56 66 L50 76 L44 66 Z", "#ff6f8f", "#7a2a3a", [-.6, .5])}<path d="M50 58 L53 66 L50 66 Z" fill="#fff" opacity=".7"/>` : ""}
+    ${shape(curve([[40, 70], [43, 65], [46, 68], [45, 72.6], [41, 72.4]]), fur, fl, [-.5, .5])}${shape(curve([[60, 70], [57, 65], [54, 68], [55, 72.6], [59, 72.4]]), fur, fl, [-.5, .5])}
+    ${[...Array(5)].map((_, k) => `<circle cx="${26 + k * 12}" cy="${60 + (k % 2) * 8}" r=".9" fill="#fff"><animate attributeName="opacity" values="0;1;0" dur="${2 + k * .4}s" begin="${-k * .5}s" repeatCount="indefinite"/></circle>`).join("")}
+    `, 3.8, 1.2)}`, "bidder");
+}
+
+// The one Wickway lantern nobody has lit yet: dark glass, a little toad print on the frame (the next Ring).
+export function darkLantern(w = 160, h = 96) {
+  return `<svg class="scene" width="${w}" height="${h}" viewBox="0 0 160 96" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="160" height="96" fill="#14100c"/><path d="${curve(ring(80, 52, 40, 40, 12, .1, 3))}" fill="#f4f0ff" opacity=".04"/>
+    <path d="M80 8 Q81 14 80 20" stroke="#4a3a2a" stroke-width="2" fill="none"/><path d="M70 22 Q80 14 90 22" stroke="#6b5a40" stroke-width="2" fill="none"/>
+    ${shape(curve([[64, 24.6], [96, 24.4], [96.4, 31.6], [63.6, 31.8]]), "#5b4630", "#2a1d12", [-1, .9])}
+    ${shape(curve([[67, 32], [93, 32], [94, 52], [93, 72], [67, 72], [66, 52]]), "#26201a", "#0e0a06", [-1.2, 1])}<path d="M73 33 V71 M87 33 V71" stroke="#3a3026" stroke-width="1.4"/>
+    <path d="M70 38 V52" stroke="#fff" stroke-width="1.2" opacity=".12" stroke-linecap="round"/>
+    ${shape(curve([[62, 72.4], [98, 72.2], [98.4, 79.6], [61.6, 79.8]]), "#5b4630", "#2a1d12", [-1, .9])}
+    <g fill="#9fbf6a" opacity=".85" transform="translate(80 76)"><path d="${curve(ring(0, 1, 3, 2, 8, .1, 1))}"/>${[[-3.6, -2.4], [0, -3.4], [3.6, -2.4]].map(([x, y], k) => `<path d="${curve(ring(x, y, 1.1, 1.1, 6, .1, k + 2))}"/>`).join("")}</g>
+  </svg>`;
 }

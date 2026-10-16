@@ -18,6 +18,9 @@ const TRACKS = {
   gulch:     { root: 48, bpm: 80, scale: PENTA,    chords: [[0, 4, 7, 9], [-3, 0, 4, 7], [5, 9, 12, 14], [7, 11, 14, 17]], seed: 79, voice: "marimba", amb: "drips", bright: .85 },
   heartwood: { root: 52, bpm: 68, scale: MINPENTA, chords: [[0, 3, 7, 10], [-4, 0, 3, 8], [-7, -3, 0, 5], [-2, 2, 5, 10]], seed: 97, voice: "kalimba", amb: "drips", bright: .9 },
 };
+// the Underroot and the Skywell reuse a mine's voice in a new key and tempo
+Object.assign(TRACKS, { cinder: { ...TRACKS.ember, root: 48, bpm: 64, seed: 113 }, roost: { ...TRACKS.grotto, root: 59, bpm: 62, seed: 127 },
+  loom: { ...TRACKS.frostpine, root: 55, bpm: 58, seed: 131 }, wickhold: { ...TRACKS.hollow, root: 53, bpm: 70, seed: 137 }, skywell: { ...TRACKS.frostpine, root: 60, bpm: 66, seed: 139 } });
 
 function rng(seed) { let a = seed; return () => { a = (a * 16807) % 2147483647; return a / 2147483647; }; }
 
