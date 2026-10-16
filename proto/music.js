@@ -248,6 +248,32 @@ function air(when, dur, vol, from, to) { // a soft breath of filtered noise (she
   noise(when, dur, vol, from, .8, sfxBus);
   if (to) noise(when + dur * .3, dur * .7, vol * .7, to, .8, sfxBus);
 }
+// talking blips: one short syllable per letter or two, a voice per speaker, each a little off-pitch so it sounds alive.
+// f: pitch (Hz), wave, lp: lowpass, dur, vol, bend: starts at f*bend and slides to f, wob: vibrato [Hz, depth],
+// croak: chance of a low rasp after the blip, air: breath noise level, shine: faint high partial
+const VOICES = {
+  dibble:  { f: 640, wave: "square",   lp: 2400, dur: .04, vol: .026, bend: 1.18 },
+  puddock: { f: 128, wave: "sawtooth", lp: 720,  dur: .1,  vol: .05,  bend: .82, wob: [9, .06], croak: .18 },
+  granny:  { f: 300, wave: "triangle", lp: 1500, dur: .075, vol: .05, bend: 1.06, wob: [6, .035] },
+  bidder:  { f: 880, wave: "sine",     lp: 3000, dur: .085, vol: .01, bend: 1.02, air: .035, shine: .006 },
+};
+function blip(v, t) {
+  const f = v.f * (1 + (Math.random() * 2 - 1) * .08), o = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain();
+  o.type = v.wave; o.frequency.setValueAtTime(f * v.bend, t); o.frequency.exponentialRampToValueAtTime(f, t + .025);
+  if (v.wob) { const l = ctx.createOscillator(), d = ctx.createGain(); l.frequency.value = v.wob[0]; d.gain.value = f * v.wob[1]; l.connect(d).connect(o.frequency); l.start(t); l.stop(t + v.dur + .03); }
+  lp.frequency.value = v.lp;
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v.vol, t + .006); g.gain.exponentialRampToValueAtTime(.0001, t + v.dur);
+  o.connect(lp).connect(g).connect(sfxBus); o.start(t); o.stop(t + v.dur + .03);
+  if (v.air) noise(t, v.dur * 1.3, v.air, f * 2.2, .9, sfxBus);
+  if (v.shine) tine(f * 2.76, t + .01, v.shine, .2, .7);
+  if (!v.croak || Math.random() > v.croak) return false;
+  const w = t + v.dur * .6, c = ctx.createOscillator(), cl = ctx.createBiquadFilter(), cg = ctx.createGain(); // the croak: a low pitch-drop with a rasp
+  c.type = "sawtooth"; c.frequency.setValueAtTime(f * .62, w); c.frequency.exponentialRampToValueAtTime(f * .42, w + .11); cl.frequency.value = 520;
+  cg.gain.setValueAtTime(.0001, w); cg.gain.exponentialRampToValueAtTime(v.vol * .9, w + .01); cg.gain.exponentialRampToValueAtTime(.0001, w + .12);
+  c.connect(cl).connect(cg).connect(sfxBus); c.start(w); c.stop(w + .14);
+  noise(w, .1, v.vol * .4, 380, 2.5, sfxBus);
+  return true;
+}
 const on = () => sfx.isOn();
 export const sfx = {
   isOn: () => true, // index.html points this at the Sound option
@@ -282,5 +308,7 @@ export const sfx = {
   buy() { if (!on()) return; const t = bus(); [1318.51, 1760, 2093].forEach((f, k) => tine(f, t + k * .05, .045, .3, .35)); knock(300, t, .05, .05); },
   whoosh() { if (!on()) return; air(bus(), .22, .025, 900, 1600); },
   chirp() { if (!on()) return; const t = bus(); tine(1567.98, t, .04, .12, .2); tine(2093, t + .08, .035, .16, .2); },
+  // one talking blip in a speaker's voice (null: narration, a soft high chime); true when Puddock croaked (for a haptic tick)
+  voice(who) { if (!on()) return false; const t = bus(); if (VOICES[who]) return blip(VOICES[who], t); tine(PENT[5 + Math.floor(Math.random() * 5)], t, .012, .22, .5); return false; },
   chime() { if (!on()) return; const t = bus(); [1046.5, 1318.51, 1567.98, 2093].forEach((f, k) => tine(f, t + k * .12, .045, .9, .7)); },
 };

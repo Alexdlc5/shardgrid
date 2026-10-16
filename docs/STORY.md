@@ -145,6 +145,24 @@ Finishing it:
 - Puddock, reading the moths' map: "Dimmest one's near my cousin's shop. Course it is." Puddock's cousin has been mentioned since the first haul screen ("Finer than my cousin's, anyway"). The cousin stays **unnamed** until the next Ring.
 - Visual hints that stay at camp: Puddock's cart **half-packed**, a sign on it reading *Back soon (probably)*; one **dark lantern** in the Wickway ring marked with a little toad print. Tapping it: *"Not lit yet. Puddock keeps 'meaning to write'."*
 
+## Pets: who the crystals kept
+
+*"Crystals keep things, little mole. Sometimes they keep someone."* (Puddock)
+
+When the Glimmeroak's light leaked into the ground, it cooled into crystal around whatever was nearby, and a few small round creatures were curled up asleep at the time. They're still asleep. Now and then a crystal in the tray has one faintly visible inside; clear the line through its cell and the crystal cracks, the pet pops out, and it's yours. If the dig ends first, the crystal goes back to the mine with it still asleep.
+
+| Pet | Turns up most in | Line |
+|---|---|---|
+| Moss Puff | Mossy Hollow | Sat on a crystal so long it grew moss. Then it was the moss. |
+| Ember Mite | Cinderroot, Cinderthread, Heartroot | A spark that cooled into somebody. Still warm. |
+| Glowcap Sprite | Gloamcap Grotto, Wickhold | Its antennae light up when it's happy. They're always lit. |
+| Frost Bun | Frostpine Deep, the Moonloom | Fell asleep in a snowdrift and woke up in a crystal. Still sleepy. |
+| Pebble Beetle | Geode Gulch, the Skywell | Carries its house on its back, and a few spare pebbles. |
+| Tiny Moth | Scalefall Roost, the Moonloom, the Skywell | Too small to fly in circles. Flies in little loops instead. |
+| Geode Hedgehog | Geode Gulch, Heartroot | Amethyst spines. Doesn't like hugs. Allows them. |
+
+The pet you pick in the wardrobe sits beside Dibble at camp and watches from the corner of the board while you dig. Puddock sells tiny clothes for them in a Pets tab ("Tiny clothes for tiny friends. Everything fits. They're all round."). The pets are never explained further: they're a small mercy the fire left behind, not a plot thread. Names, lines and home mines live in `proto/story.js` (`PETS`), the art in `proto/art.js` (`pet`), the odds in `petFor` in `proto/index.html`.
+
 ## Expanding later (Ring Three and on)
 
 Each Ring follows the same shape: **move camp (all items preserved) → three mines → one final cave → light a new lantern in the Wickway.** Dark lanterns in the ring are the visible roadmap. Open threads: the other buyers, the dimming hearts, Puddock's cousin.
@@ -174,3 +192,4 @@ Notes:
 12. New mines: Cinderthread Run, Scalefall Roost, Moonloom, Wickhold, Skywell.
 13. Wickway lantern ring: portal to all mines, best-haul glow, dark "coming soon" lanterns.
 14. Post-finale tease: Bidder's line, moth map, half-packed cart, toad-print lantern.
+15. Pets asleep in crystals; freed by clearing their line; wardrobe Pet section, camp, Puddock's Pets tab.

@@ -231,7 +231,15 @@
   .memCard small, .memTag { display: block; font-size: var(--fs-small); color: var(--muted); }
   .talkBubble:empty { display: none; }
   .talkArt .granny, .talkArt .bidder { animation: bob 2.6s ease-in-out infinite; }
-  .talkBubble .who { display: block; font-style: normal; font-size: var(--fs-small); letter-spacing: .6px; text-transform: uppercase; color: #8a5a32; margin-bottom: 2px; }
+  .talkBubble .who { display: block; font-family: var(--font-display); font-style: normal; font-size: var(--fs-small); letter-spacing: .6px; text-transform: uppercase; color: #8a5a32; margin-bottom: 2px; }
+  /* talking: letters wait invisible in place; the portrait bobs while it talks; a little arrow nudges once the line is done */
+  .tw { opacity: 0; }
+  #talkNext { transition: opacity .2s; } #talkNext.wait { opacity: 0; pointer-events: none; }
+  .talkArt.talking > svg:is(.puddock, .granny, .bidder) { animation: chat .32s ease-in-out infinite; }
+  @keyframes chat { 50% { transform: translateY(-3px) scaleY(1.015); } }
+  .talkBubble.done::after { content: ""; position: absolute; right: 8px; bottom: 3px; border: 5px solid transparent; border-top: 6px solid #8a5a32; border-bottom: 0;
+    animation: nudge .9s ease-in-out infinite; }
+  @keyframes nudge { 50% { transform: translateY(3px); } }
   .chalkNote { font-family: var(--font-display); font-size: 22px; text-align: center; color: #3a2418; letter-spacing: .5px; transform: rotate(-3deg); }
   .wickHead { display: flex; align-items: center; gap: 6px; font-weight: 600; color: #ffd27a; margin: 4px 2px 6px; }
   .wickLamp { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
@@ -378,6 +386,9 @@
   .sheet { background: rgba(5,12,8,.5); z-index: 6; }
   .wardHead { display: flex; align-items: center; gap: 10px; }
   .wardHead .dibble { flex: none; }
+  .wardPet { display: inline-block; margin-left: -18px; vertical-align: bottom; }
+  .petChip { padding-left: 4px; } .petChip svg { margin: -6px -2px; }
+  #newPet .ico { margin: -8px 4px -6px -6px; }
   .subHead { margin: 12px 0 0; font-size: var(--fs-small); letter-spacing: .6px; text-transform: uppercase; color: #ffd27a; }
 </style>
 </head>
@@ -488,6 +499,7 @@
       <div class="total"><span>Haul value</span><span class="gold" id="haulTotalWrap"><span id="coinB"></span><span id="haulTotal">0g</span></span></div></div>
     <div id="newBest" class="ribbon">New best haul!</div>
     <div id="newGem" class="ribbon"></div>
+    <div id="newPet" class="ribbon"></div>
   </div>
   <div class="sheetFoot" id="endFoot">
     <button id="sell2" class="ad"></button>
@@ -502,7 +514,7 @@
     <div class="speech"><span id="puddockArtMkt"></span><div class="bubble">"Shiny rocks, shiny coins. Fair trade, little mole."</div></div>
     <div class="pill"><span id="coinC"></span><span id="mktGold">0</span></div>
     <div id="iapRow"></div>
-    <div class="tabs" id="mktTabs"><button data-tab="tools">Tools</button><button data-tab="wardrobe">Wardrobe</button><button data-tab="camp">Camp</button><button data-tab="maps">Maps</button></div>
+    <div class="tabs" id="mktTabs"><button data-tab="tools">Tools</button><button data-tab="wardrobe">Wardrobe</button><button data-tab="camp">Camp</button><button data-tab="maps">Maps</button><button data-tab="pets" id="petTab">Pets</button></div>
     <div id="shop"></div>
   </div>
 </div></div></section>
@@ -523,9 +535,9 @@
 import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, fitsAnywhere, deal,
   rescueCells, breakCells, pureVeinCells, stoneBreak } from "./game.js";
 
-import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, lookItem, DEFAULT_LOOK, FUR, memoryArt, stumpArt, granny, bidder, darkLantern, logoSwash, titleScene, titleHero, logoLetters } from "./art.js";
+import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, lookItem, DEFAULT_LOOK, FUR, memoryArt, stumpArt, granny, bidder, darkLantern, logoSwash, titleScene, titleHero, logoLetters, pet, PET_KINDS, PET_WEAR_SLOT } from "./art.js";
 import { PROLOGUE, MEMORIES, MEMORY_COUNT, nextMemory, memoryById, mineOfMemory, mineDone, CHALK, PUDDOCK_BY_MINE, PUDDOCK_AFTER, PUDDOCK_POSTGAME,
-  CAMP_LINES, SCALE_NOTE, SCENES, nextScene, SITES, GIVEN, MAP_GATE, MURMURS, MURMURS_DEEP, MURMURS_AFTER } from "./story.js";
+  CAMP_LINES, SCALE_NOTE, SCENES, nextScene, SITES, GIVEN, MAP_GATE, MURMURS, MURMURS_DEEP, MURMURS_AFTER, PETS, PET_HINT, PET_SHOP } from "./story.js";
 import { soundtrack, sfx } from "./music.js";
 import { platform, track } from "./platform.js";
 import { drawLife, lifeDig, lifeStop, lifeTap, campLife, campPrints } from "./ambient.js";
@@ -632,6 +644,10 @@ const WARDROBE = [
   ["lantern", "rose", 26000, "Cut by Puddock's cousin. Don't tell him it's lovely."],
   ["cloak", "mothwing", 45000, "Spun from fallen scales by the Bidder's kin. A thank-you.", (st) => st.site === "skywell"], // after the reunion
 ].sort((a, b) => a[2] - b[2]);
+// pet clothes: one head and one neck item per pet; every item fits every pet (Market Pets tab, once you own a pet)
+const PET_WEAR = [["bow", "Little bow", 500, "Granny tied one on every lantern. This one's smaller."], ["leaf", "Mini leaf cap", 900, "Just like Dibble's. Matching is the whole point."],
+  ["scarf", "Tiny scarf", 1400, "Knitted on two pine needles"], ["bell", "Bell collar", 2200, "So you can hear them hop"], ["goggles", "Tiny goggles", 3500, "For very small explorers"],
+  ["acorn", "Acorn cap", 5000, "The smallest acorn Puddock could find. He looked for a week."], ["crown", "Tiny crown", 9000, "Puddock says it's real gold. Puddock says a lot of things."]];
 const SHOP = [
   // Tools: permanent upgrades, price ×1.6 per level
   { id: "lantern", tab: "tools", icon: "lantern", kind: "up", name: "Lantern", desc: "+5s of Rootline", base: 150, max: 15 },
@@ -654,6 +670,7 @@ const SHOP = [
   { id: "decor:hammock", tab: "camp", icon: "hammock", kind: "camp", name: "Moss hammock", desc: "For naps between digs", price: 9000 },
   { id: "decor:cart", tab: "camp", icon: "cart", kind: "camp", name: "Puddock's spare cart", desc: "He says it's a loan. It isn't.", price: 60000 },
   { id: "fireflies", tab: "camp", icon: "fireflies", kind: "once", name: "Firefly roots", desc: "Fireflies drift along your Rootline while you dig", price: 600 },
+  ...PET_WEAR.map(([val, name, price, desc]) => ({ id: "pet:" + val, tab: "pets", kind: "petwear", slot: PET_WEAR_SLOT[val], val, name, desc, price })),
   // Maps
   ...BIOMES.slice(1).filter((b) => !GIVEN[b.id]).map((b) => ({ id: "biome:" + b.id, tab: "maps", icon: "map", kind: "biome", name: `Map to ${b.name}`, desc: b.blurb, price: b.cost })),
 ];
@@ -664,9 +681,10 @@ const store = { get(k, d) { try { return JSON.parse(localStorage.getItem("gw." +
 const DEFAULTS = { look: { ...DEFAULT_LOOK, trinket: "none", cloak: "none" }, gold: 0, up: { lantern: 0, pick: 0, charm: 0, lens: 0, tongs: 0, sieve: 0 }, owned: [], biomes: ["hollow"], best: {}, sel: "hollow",
   mode: "exp", opt: { music: true, sound: true, vib: true, glyph: false }, daily: { last: "", streak: 0, best: 0 },
   metPuddock: false, trial: [], found: [], camp: { tent: "canvas", banner: "#5fa04e", fire: "ring", hide: [] },
-  story: { prologue: false, mem: [], confessed: false, sprout: false, site: "stump", ledge: false, finale: false, scale: false } };
+  story: { prologue: false, mem: [], confessed: false, sprout: false, site: "stump", ledge: false, finale: false, scale: false },
+  pets: { owned: [], active: "none", wear: {} } }; // wear: { [pet]: { head, neck } }
 const stored = store.get("save", {}); if (stored.opt && stored.opt.music === undefined) stored.opt.music = true;
-const save = { ...DEFAULTS, ...stored, up: { ...DEFAULTS.up, ...stored.up }, look: { ...DEFAULTS.look, ...stored.look }, camp: { ...DEFAULTS.camp, ...stored.camp }, story: { ...DEFAULTS.story, ...stored.story } };
+const save = { ...DEFAULTS, ...stored, up: { ...DEFAULTS.up, ...stored.up }, look: { ...DEFAULTS.look, ...stored.look }, camp: { ...DEFAULTS.camp, ...stored.camp }, story: { ...DEFAULTS.story, ...stored.story }, pets: { ...DEFAULTS.pets, ...stored.pets } };
 save.light ??= save.gold; // lifetime gold sold: the light Dibble has given back to the roots (grows the stump)
 const CALM_MULT = 0.6;
 const PUDDOCK = ["\"Fine rocks. Finer than my cousin's, anyway.\"", "\"Every vein you break, the roots grow kinder.\"",
@@ -738,7 +756,7 @@ const lerpHex = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i
 
 // ---------- round state ----------
 let biome, cat, board, meta, tray, uid, combo, miss, rescueUsed, state = "home", endCause, calm = false, daily = false, rng = Math.random;
-let newMem = [];
+let newMem = [], newPets = [], frees = [], petHop = 0; // pets freed this dig, their release animations, the peeking pet's last hop
 let cracked = new Set(); // rubble stone cells with one crack
 let stolen = 0, moths = [], placedN = 0, mothRng = Math.random, bonus = 0, frozenUntil = 0, time, maxTime, started, haul, floats = [], parts = [];
 function catalogFor(b) {
@@ -758,8 +776,20 @@ const dealTray = () => {
   // ponytail: one memory in play at a time, ~1 in 7 trays after a few placements; separate RNG so dealing stays untouched
   const next = !daily && biome && nextMemory(biome.id, save.story.mem), inPlay = Object.values(meta || {}).some((m) => m.memory) || tray?.some((q) => q?.memory);
   if (next && !inPlay && placedN >= 3 && Math.random() < .15) Object.assign(t[Math.floor(Math.random() * 3)], { type: "amber", memory: next.id });
+  // a pet asleep in one cell of a crystal: one at a time, same separate RNG; the crystal keeps its own type
+  const petIn = Object.values(meta || {}).some((m) => m.pet) || tray?.some((q) => q?.pet), kind = !daily && biome && !petIn && placedN >= 3 && petFor(biome.id);
+  const slots = kind ? t.filter((q) => !q.memory && !CRYSTALS[q.type].stone) : [];
+  if (slots.length) { const q = slots[Math.floor(Math.random() * slots.length)]; Object.assign(q, { pet: kind, petCell: Math.floor(q.piece.cells.length / 2) }); }
   return t;
 };
+// which pet (if any) sleeps in this tray: ~6% of trays with every pet still to find, ~2% with one left, none once all are found;
+// a mine's own pets are 6x likelier there. Odds in docs/STORY.md ("Pets").
+function petFor(mine) {
+  const left = PET_KINDS.filter((k) => !save.pets.owned.includes(k));
+  if (!left.length || Math.random() >= .015 + .045 * left.length / PET_KINDS.length) return null;
+  const w = left.map((k) => (PETS[k].home.includes(mine) ? 6 : 1)); let x = Math.random() * w.reduce((a, b) => a + b);
+  return left.find((_, i) => (x -= w[i]) < 0);
+}
 const typeOf = (u) => (u === -1 ? drag?.type : meta[u]?.type);
 const isEmber = (u) => !!CRYSTALS[typeOf(u)]?.ember;
 const isStone = (u) => !!CRYSTALS[typeOf(u)]?.stone;
@@ -773,7 +803,7 @@ function startDig(isDaily = false) {
     save.trial = save.trial.filter((x) => x !== biome.id); persist();
     setTimeout(() => toast("Puddock's old map crumbles as you step inside.<br><small>One dig, make it count!</small>", 2600), 300);
   }
-  bonus = 0; stolen = 0; moths = []; placedN = 0; newMem = []; meta = {}; tray = null;
+  bonus = 0; stolen = 0; moths = []; placedN = 0; newMem = []; newPets = []; frees = []; meta = {}; tray = null;
   mothRng = daily ? mulberry(+today().replaceAll("-", "") + 777) : Math.random; // daily: same moths for everyone
   board = Array(64).fill(0); cracked = new Set(); meta = {}; uid = 1; combo = 0; miss = 0; rescueUsed = false;
   haul = {}; frozenUntil = 0; maxTime = T.max_time + 5 * save.up.lantern; time = maxTime; started = false;
@@ -959,13 +989,53 @@ function drawStone(cells, size, ox, oy, alpha, isCracked = () => false) { // fal
   }
   ctx.restore();
 }
-function drawPiece({ piece, type, memory }, size, ox, oy, alpha) {
+function drawPiece({ piece, type, memory, pet: p, petCell }, size, ox, oy, alpha) {
   if (CRYSTALS[type].stone) return drawStone(piece.cells, size, ox, oy, alpha);
   const em = CRYSTALS[type].ember ? .6 + .3 * Math.sin(performance.now() / 120) : .35;
   if (memory) memoryHalo(ox + piece.w * size / 2, oy + piece.h * size / 2, Math.max(piece.w, piece.h) * size);
   drawCrystal(piece.cells, CRYSTALS[type].color, { r: 0, c: 0, h: piece.h, w: piece.w }, size, ox, oy, alpha, em, CRYSTALS[type].glyph, CRYSTALS[type].cut);
   if (memory) fossil(piece.cells.map(([r, c]) => [r, c]), size, ox, oy);
   else special(type, piece.cells, size, ox, oy, alpha);
+  if (p) { const [r, c] = piece.cells[petCell]; sleeper(p, ox + c * size, oy + r * size, size, alpha); }
+}
+// ---------- pets on the canvas: each look painted once into an image ----------
+const petImgs = {}, wearOf = (k) => save.pets.wear[k] || {};
+const petImg = (k, o = wearOf(k)) => petImgs[k + JSON.stringify(o)] ??= Object.assign(new Image(),
+  { src: "data:image/svg+xml;charset=utf-8," + encodeURIComponent(pet(k, 96, o).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')) });
+function sleeper(k, x, y, s, a = 1) { // curled up asleep in a crystal cell, faintly visible through the stone, breathing
+  const im = petImg(k, { sleep: true }), now = performance.now(), b = calmMotion ? 1 : 1 + .04 * Math.sin(now / 600), z = s * .96 * b;
+  const g = ctx.createRadialGradient(x + s / 2, y + s / 2, 0, x + s / 2, y + s / 2, s * .7); g.addColorStop(0, `rgba(255,240,248,${.32 + .1 * Math.sin(now / 500)})`); g.addColorStop(1, "rgba(255,240,248,0)");
+  ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = g; ctx.fillRect(x - s * .2, y - s * .2, s * 1.4, s * 1.4);
+  if (im.complete) { ctx.globalAlpha = a * .7; ctx.drawImage(im, x + (s - z) / 2, y + (s - z) / 2 + s * .02, z, z); }
+  ctx.restore();
+}
+const aName = (k) => (/^[AEIOU]/.test(PETS[k].name) ? "an " : "a ") + PETS[k].name;
+function freePets(cells, before) { // a clear through a pet's cell wakes it: it's yours, and it pops out
+  for (const k of cells) { const m = meta[before[k]]; if (!m?.pet || m.petAt !== k) continue;
+    const kind = m.pet, P = save.pets; m.pet = null;
+    if (!P.owned.includes(kind)) { P.owned.push(kind); if (P.active === "none") P.active = kind; persist(); }
+    newPets.push(kind); track("pet_found", { pet: kind, mine: biome.id });
+    const x = bx + (k % N + .5) * cell, y = by + (Math.floor(k / N) + .5) * cell; frees.push({ kind, x, y, at: performance.now() }); starBurst(x, y, 12, "#ffd2e2");
+    pops.push({ text: `${PETS[kind].name}!`, life: 1.4, col: "#ffd2e2" }); [784, 988, 1175, 1568, 1976].forEach((f, j) => tone(f, .3, "sine", .06, j * .07)); buzz(25); }
+}
+function drawFrees(now) { // the crystal cracks, then the pet pops out and bounces three times
+  frees = frees.filter((f) => now - f.at < 2000);
+  for (const f of frees) {
+    const t = (now - f.at) / 2000;
+    if (t < .1) { const k = t / .1; ctx.save(); ctx.strokeStyle = "#fffaf0"; ctx.lineWidth = 2.4; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.globalAlpha = 1 - k * .4; ctx.beginPath();
+      for (let j = 0; j < 6; j++) { const a = j * 1.05 + .3, l = cell * .62 * k; ctx.moveTo(f.x, f.y); ctx.lineTo(f.x + Math.cos(a + .3) * l * .5, f.y + Math.sin(a + .3) * l * .5); ctx.lineTo(f.x + Math.cos(a) * l, f.y + Math.sin(a) * l); }
+      ctx.stroke(); ctx.restore(); continue; }
+    const u = (t - .1) / .9, im = petImg(f.kind); if (!im.complete) continue;
+    const hop = calmMotion ? 0 : Math.abs(Math.sin(u * Math.PI * 3)) * cell * 1.4 * (1 - u) ** 1.2, land = calmMotion ? 0 : Math.max(0, 1 - hop / (cell * .2)) * (1 - u);
+    const s = cell * 1.35 * (u < .12 ? .25 + .75 * easeBack(u / .12) : 1);
+    ctx.save(); ctx.globalAlpha = Math.min(1, (1 - u) * 6); ctx.translate(f.x, f.y + cell * .45 - hop); ctx.scale(1 + .2 * land, 1 - .18 * land); ctx.drawImage(im, -s / 2, -s * .92, s, s); ctx.restore();
+  }
+}
+function drawPeek(now) { // your pet sits on the Rootline's bottom-right corner, watching, and hops when a line clears
+  const k = save.pets.active; if (k === "none" || frees.length) return;
+  const im = petImg(k); if (!im.complete) return;
+  const s = cell * 1.15, h = calmMotion ? 0 : Math.max(0, Math.sin(Math.min(1, (now - petHop) / 420) * Math.PI)) * cell * .55;
+  ctx.drawImage(im, bx + cell * N + 12 - s / 2, by + cell * N + 21 - s * .92 - h, s, s); // centred on the frame's edge, clear of the cells
 }
 // ---------- special crystals: each wears its power, so it reads at a glance (and in the tray) ----------
 const MARK = {
@@ -1000,13 +1070,13 @@ function special(type, cells, size, ox, oy, alpha = 1, now = performance.now()) 
 // the first time each special turns up, one line under the board says what it does
 const TIPS = { ember: "Ember Shard: shatters its neighbours too", glowcap: "Gloamcap: each one feeds the Rootline +1s",
   frost: "Frostspar: freezes the Rootline a moment", geode: "Geode: rare, and worth a small fortune", heart: "Rootheart: the rarest crystal of all",
-  rubble: "Skystone: two clears beside it crack it open", moth: "Pilfermoth: clear a line through it!", memory: "Amber Memory: clear its line to open it" };
+  rubble: "Skystone: two clears beside it crack it open", moth: "Pilfermoth: clear a line through it!", memory: "Amber Memory: clear its line to open it", pet: "Someone's asleep in there! Clear its line" };
 save.seen ??= [];
 let tip = null;
 function drawHint(now) {
   if (!tip && state === "play") { // a new special in the tray (or a moth on the board) gets its line
-    const k = [...(tray || []).filter(Boolean).map((q) => (q.memory ? "memory" : q.type)), ...(moths.length ? ["moth"] : [])].find((k) => TIPS[k] && !save.seen.includes(k));
-    if (k) { tip = { k, at: now }; save.seen.push(k); persist(); }
+    const k = [...(tray || []).filter(Boolean).map((q) => (q.pet ? "pet" : q.memory ? "memory" : q.type)), ...(moths.length ? ["moth"] : [])].find((k) => TIPS[k] && !save.seen.includes(k));
+    if (k) { tip = { k, at: now, pet: tray.find((q) => q?.pet)?.pet }; save.seen.push(k); persist(); }
   }
   let text = null, a = 1;
   if (tip) { const t = (now - tip.at) / 4500; if (t >= 1) tip = null; else { text = TIPS[tip.k]; a = Math.min(1, t * 8, (1 - t) * 6); } }
@@ -1018,7 +1088,7 @@ function drawHint(now) {
   const tw = ctx.measureText(text).width, sw = tip ? 26 : 0, x = (W - tw - sw) / 2;
   if (tip) { const s = 18, y = hintY - s / 2 - 1, tp = tip.k === "memory" ? "amber" : tip.k;
     if (tip.k === "moth") { ctx.fillStyle = "#c9b6ff"; ctx.beginPath(); ctx.arc(x + s / 2, hintY, s * .4, 0, 7); ctx.fill(); }
-    else { drawPiece({ piece: { cells: [[0, 0]], w: 1, h: 1 }, type: tp, memory: tip.k === "memory" }, s, x, y, a); ctx.globalAlpha = a; } }
+    else { drawPiece({ piece: { cells: [[0, 0]], w: 1, h: 1 }, type: tip.k === "pet" ? "moonstone" : tp, memory: tip.k === "memory", pet: tip.k === "pet" && tip.pet, petCell: 0 }, s, x, y, a); ctx.globalAlpha = a; } }
   ctx.lineWidth = 4; ctx.lineJoin = "round"; ctx.strokeStyle = "rgba(20,12,6,.7)"; ctx.strokeText(text, x + sw, hintY);
   ctx.fillStyle = tip ? "#ffe9b0" : "rgba(239,230,207,.8)"; ctx.fillText(text, x + sw, hintY);
   ctx.restore();
@@ -1300,7 +1370,8 @@ function target() {
 // ---------- a placement ----------
 function commit(i, r, c, from) {
   const { piece, type } = tray[i], id = uid++;
-  meta[id] = { type, r, c, h: piece.h, w: piece.w, at: performance.now(), memory: tray[i].memory, // `at` drives the landing: glide into the cell, squash, settle
+  const pc = tray[i].pet && piece.cells[tray[i].petCell]; // the sleeping pet's cell, as a board index
+  meta[id] = { type, r, c, h: piece.h, w: piece.w, at: performance.now(), memory: tray[i].memory, pet: tray[i].pet, petAt: pc ? (r + pc[0]) * N + c + pc[1] : -1, // `at` drives the landing: glide into the cell, squash, settle
     ox: from ? from.x - (bx + c * cell) : 0, oy: from ? from.y - (by + r * cell) : 0 };
   board = place(board, piece, r, c, id);
   started = true; placedN++;
@@ -1309,7 +1380,7 @@ function commit(i, r, c, from) {
   if (n) {
     combo++; miss = 0;
     const br = breakCells(board, lines, isEmber), embers = br.embers, sb = stoneBreak(board, br.cells, isStone, cracked), cells = sb.cells, pure = pureVeinCells(board, lines, typeOf), before = board;
-    const shooLoot = shooMoths(cells);
+    const shooLoot = shooMoths(cells); freePets(cells, before); petHop = performance.now();
     for (const k of cells) { const mem = meta[before[k]]?.memory; if (mem && !save.story.mem.includes(mem)) { // an Amber Memory breaks open
       save.story.mem.push(mem); newMem.push(mem); persist(); meta[before[k]].memory = null; track("memory_found", { id: mem });
       pops.push({ text: "An Amber Memory!", life: 1.2, col: "#ffd27a" }); [659, 880, 1047, 1319].forEach((f, j) => tone(f, .5, "sine", .07, j * .09)); } }
@@ -1381,7 +1452,8 @@ function showHaul() {
     $("endTitle").textContent = cause === "time" ? "The roots closed the tunnel" : "No room left to dig";
     $("endSub").innerHTML = (cause === "time" && !daily ? `<i>${pick(save.story.finale ? MURMURS_AFTER : save.story.site === "stump" ? MURMURS : MURMURS_DEEP)}</i><br>` : "") + "Dibble climbs out with the haul. Nothing is lost.";
     $("memCard").innerHTML = newMem.map((id) => { const m = memoryById(id), mine = mineOfMemory(id), k = MEMORIES[mine].indexOf(m) + 1;
-      return `<div class="memCard">${memoryArt(m.art, 200)}<div class="memCap">${m.text}</div><small>Amber Memory · ${BIOMES.find((b) => b.id === mine).name} ${k}/${MEMORIES[mine].length}</small></div>`; }).join("");
+      return `<div class="memCard">${memoryArt(m.art, 200)}<div class="memCap">${m.text}</div><small>Amber Memory · ${BIOMES.find((b) => b.id === mine).name} ${k}/${MEMORIES[mine].length}</small></div>`; }).join("") +
+      newPets.map((k) => `<div class="memCard">${pet(k, 104, wearOf(k))}<div class="memCap">${PETS[k].line}</div><small>${PETS[k].name} · waiting at camp</small></div>`).join("");
     clearTimeout(tallyHaul.t);
     $("causeIco").innerHTML = cause === "time" ? icon("vine", 34) : icon("board", 34);
     $("rescue").innerHTML = `<span class="btnrow">${icon(cause === "time" ? "regrow" : "shatter", 22)}${cause === "time" ? `Roots regrow +${T.rescue_time}s` : "Shatter the 3 fullest veins"}</span>`;
@@ -1408,7 +1480,7 @@ function tallyHaul(rows, best, fresh) {
   const els = [...$("haulList").querySelectorAll(".haulRow")], total = $("ledger").querySelector(".total"), foot = $("endFoot");
   let k = 0, sum = 0, done = false;
   const reveal = (el) => { const b = $("endBody"), d = el.getBoundingClientRect().bottom - b.getBoundingClientRect().bottom + 6; if (d > 0) b.scrollTop += d; }; // scroll the ledger only, never the page
-  for (const id of ["newBest", "newGem"]) $(id).style.display = "none";
+  for (const id of ["newBest", "newGem", "newPet"]) $(id).style.display = "none";
   total.classList.remove("land"); foot.classList.add("wait");
   const countTo = (from, to) => { const t0 = performance.now(), f = (now) => { if (done) return; const p = Math.min(1, (now - t0) / 280);
     $("haulTotal").textContent = Math.max(0, Math.round(from + (to - from) * p)) + "g"; if (p < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); };
@@ -1419,6 +1491,7 @@ function tallyHaul(rows, best, fresh) {
     const moments = [];
     if (best) moments.push($("newBest"));
     if (fresh.length) { $("newGem").textContent = `New on the shelf: ${fresh.map((t) => CRYSTALS[t].name).join(", ")}`; moments.push($("newGem")); }
+    if (newPets.length) { $("newPet").innerHTML = newPets.map((k) => `${pet(k, 30, wearOf(k))}Found ${aName(k)}!`).join("<br>"); moments.push($("newPet")); }
     for (const el of moments) el.style.display = "block";
     if (moments.length) setTimeout(() => { for (const el of moments) sparkleAt(el); [1047, 1319, 1568, 2093].forEach((f, j) => tone(f, .3, "sine", .06, j * .07)); buzz(20); }, 120);
     reveal(moments.at(-1) || total);
@@ -1440,7 +1513,7 @@ $("rescueGo").onclick = async () => {
   if (endCause === "time") time = Math.min(maxTime, T.rescue_time);
   else {
     const cells = rescueCells(board, 3), before = board;
-    shooMoths(cells);
+    shooMoths(cells); freePets(cells, before);
     shatter(cells, (k) => CRYSTALS[typeOf(before[k])]?.color || "#c9b6ff", 5);
     board = clearCells(board, cells); cells.forEach((k) => cracked.delete(k)); tray = dealTray();
     if (time < T.rescue_time) time = T.rescue_time;
@@ -1572,13 +1645,15 @@ async function renderIap() {
 function renderMarket() {
   renderIap();
   $("mktGold").textContent = save.gold;
+  const pets = save.pets.owned, shown = save.pets.active !== "none" ? save.pets.active : pets[0];
+  $("petTab").style.display = pets.length ? "" : "none"; if (mktTab === "pets" && !pets.length) mktTab = "tools";
   for (const b of document.querySelectorAll("#mktTabs button")) b.classList.toggle("on", b.dataset.tab === mktTab);
-  $("shop").innerHTML = (mktTab === "tools" && !save.story.confessed ? `<div class="shopItem"><span class="tile">${lookItem("lantern", "granny", 40)}</span>
+  $("shop").innerHTML = (mktTab === "pets" ? `<div class="puddock">"${PET_SHOP}"</div>` : "") + (mktTab === "tools" && !save.story.confessed ? `<div class="shopItem"><span class="tile">${lookItem("lantern", "granny", 40)}</span>
     <span class="grow"><b>An old lantern</b><small>"Not for sale. Not that one."</small></span><span class="stamp no">Not for sale</span></div>` : "") + SHOP.filter((it) => it.tab === mktTab && mapShown(it.id.split(":")[1] || "") && (!it.gate || it.gate(save.story))).map((it) => {
     const lvl = it.kind === "up" ? save.up[it.id] : 0;
     const done = it.kind === "up" ? lvl >= it.max : it.kind === "biome" ? save.biomes.includes(it.id.split(":")[1]) : save.owned.includes(it.id);
     const cost = price(it), short = cost - save.gold; // owned: a stamp; can't afford yet: locked tag and how far to go
-    return `<div class="shopItem"><span class="tile" ${it.color ? `style="color:${it.color}"` : ""}>${it.kind === "biome" ? mapTile(it.id.split(":")[1]) : it.kind === "look" ? lookItem(it.part, it.val, 40) : icon(it.icon, 34)}</span><span class="grow"><b>${it.name}</b><small>${it.desc}</small>
+    return `<div class="shopItem"><span class="tile" ${it.color ? `style="color:${it.color}"` : ""}>${it.kind === "biome" ? mapTile(it.id.split(":")[1]) : it.kind === "look" ? lookItem(it.part, it.val, 40) : it.kind === "petwear" ? pet(shown, 46, { [it.slot]: it.val }) : icon(it.icon, 34)}</span><span class="grow"><b>${it.name}</b><small>${it.desc}</small>
       ${!done && short > 0 ? `<small class="need">${short}g more to go</small>` : ""}
       ${it.kind === "up" ? `<span class="pips" title="level ${lvl} of ${it.max}">${[...Array(it.max)].map((_, k) => `<i class="${k < lvl ? "on" : ""}"></i>`).join("")}</span>` : ""}</span>
       ${done ? `<span class="stamp">${it.kind === "up" ? "Max" : "Owned"}</span>` : `<button data-id="${it.id}" ${short > 0 ? "disabled" : ""}>${short > 0 ? icon("lock", 16) : coin(16)}${cost}</button>`}</div>`;
@@ -1591,6 +1666,7 @@ function renderMarket() {
     if (it.kind === "up") save.up[it.id]++;
     else if (it.kind === "look") { save.owned.push(it.id); save.look[it.part] = it.val; } // put it on straight away
     else if (it.kind === "biome") { const b = it.id.split(":")[1]; save.biomes.push(b); save.sel = b; }
+    else if (it.kind === "petwear") { save.owned.push(it.id); (save.pets.wear[shown] ??= {})[it.slot] = it.val; } // on your pet straight away
     else {
       save.owned.push(it.id);
       const [grp, val] = it.id.split(":");
@@ -1622,22 +1698,64 @@ const INTRO = [
 ];
 const home = () => { renderHome(); show("home"); };
 // steps: [{ say, html (picture, default Puddock), gift, btn }]; skip shows a Skip link (prologue, replays)
+// voice: who is talking (see say()); the line types out, and Go on… shows once it's all there
 function dialog(steps, then, skip = false, k = 0) {
-  const step = () => {
+  const next = $("talkNext"), line = $("talkLine"), art = $("talkArt"), step = () => {
     const st = steps[k], lastStep = k === steps.length - 1;
-    $("talkArt").innerHTML = st.html || puddock(120);
-    $("talkLine").innerHTML = (st.name && st.say ? `<b class="who">${st.name}</b>` : "") + (st.say || "");
+    art.innerHTML = st.html || puddock(120);
+    line.innerHTML = st.say ? (st.name ? `<b class="who">${st.name}</b>` : "") + `<div id="talkText"></div>` : "";
     $("talkGift").innerHTML = st.gift || "";
-    $("talkNext").innerHTML = st.btn || (lastStep ? "Back" : "Go on…");
+    next.innerHTML = st.btn || (lastStep ? "Back" : "Go on…");
     $("talkSkip").style.display = skip ? "block" : "none";
     tone(220 + k * 40, .12, "triangle", .07); tone(180 + k * 30, .1, "triangle", .05, .1);
+    const text = $("talkText"), shown = () => { next.classList.remove("wait"); line.classList.add("done"); art.classList.remove("talking"); };
+    next.classList.add("wait"); line.classList.remove("done"); art.classList.add("talking");
+    text ? say(text, st.say, st.voice).then(() => text.isConnected && shown()) : shown();
   };
-  $("talkNext").onclick = () => { if (++k < steps.length) return step(); then(); };
-  $("talkSkip").onclick = then;
+  next.onclick = () => { if (typing) return typing.finish(); if (++k < steps.length) return step(); then(); };
+  $("talkSkip").onclick = () => { typing?.finish(); then(); };
   step(); show("talk");
 }
+// tap anywhere while a line types: show it all; tap again: go on. Only taps that start here count: the camp stall opens a talk
+// on pointerdown, and that tap's click must not skip the first line.
+let talkPress = false;
+$("talk").addEventListener("pointerdown", () => { talkPress = true; });
+$("talk").addEventListener("click", (e) => { if (talkPress && !e.target.closest("button")) typing ? typing.finish() : $("talkNext").click(); talkPress = false; });
+
+// ---------- talking: lines type out a letter at a time, with a little voice blip (music.js VOICES) ----------
+// say(el, html, voice) types html into el (tags stay whole, only the text types) and resolves once it's all shown.
+// voice: "dibble" | "puddock" | "granny" | "bidder" | null (narration: a soft chime). Also on window, for scripted sequences.
+// Reduced motion and the fit check (?scene=) get the whole line at once.
+const PAUSE = { ",": 120, ";": 120, ":": 120, "—": 160, ".": 280, "!": 280, "?": 300, "…": 350 };
+const CPS = { dibble: 40, puddock: 28, granny: 32, bidder: 30 }; // letters a second; narration 36
+let typing = null; // the line typing now: { finish }
+function say(el, html, voice = null) {
+  typing?.finish();
+  el.innerHTML = html;
+  const blip = () => { try { if (sfx.voice(voice)) buzz(4); } catch {} };
+  if (calmMotion || qs.has("scene")) { blip(); return Promise.resolve(); }
+  const chars = [], wrap = (n) => [...n.childNodes].forEach((c) => {
+    if (c.nodeType !== 3) return wrap(c);
+    const f = document.createDocumentFragment();
+    for (const ch of c.data) { const s = f.appendChild(document.createElement("span")); s.className = "tw"; s.textContent = ch; chars.push(s); }
+    c.replaceWith(f);
+  });
+  wrap(el); // every letter in place but invisible, so the line never reflows as it types
+  return new Promise((done) => {
+    let i = 0, n = 0, timer;
+    const finish = () => { clearTimeout(timer); el.innerHTML = html; if (typing === me) typing = null; done(); }, me = { finish };
+    const tick = () => {
+      const s = chars[i++]; if (!s) return finish();
+      const ch = s.textContent, after = chars[i]?.textContent; s.className = "";
+      if (/[\p{L}\p{N}]/u.test(ch) && n++ % (voice ? 2 : 3) === 0) blip(); // spaces and stops are silent
+      timer = setTimeout(tick, 1000 / (CPS[voice] || 36) + (PAUSE[ch] && (ch === "…" || !after || /\s/.test(after)) ? PAUSE[ch] : 0));
+    };
+    typing = me; tick();
+  });
+}
+window.say = say;
 function talk(then) {
-  dialog(INTRO.map((say, k) => k < INTRO.length - 1 ? { say } : { say, btn: `<span class="btnrow">${icon("map", 22)}Take the map</span>`,
+  dialog(INTRO.map((say, k) => k < INTRO.length - 1 ? { say, voice: "puddock" } : { say, voice: "puddock", btn: `<span class="btnrow">${icon("map", 22)}Take the map</span>`,
     gift: `<div class="gift">${mapTile("ember")}<div><b>Puddock's old map</b><small>Cinderroot Caverns · good for one dig</small></div>${icon("ticket", 28)}</div>` }), () => {
     save.metPuddock = true; track("met_puddock"); if (!save.biomes.includes("ember") && !save.trial.includes("ember")) save.trial.push("ember");
     persist(); [784, 988, 1175, 1568].forEach((f, j) => tone(f, .18, "triangle", .08, j * .07)); then();
@@ -1674,7 +1792,8 @@ function playScene(name, start = 0) {
     const [gift, btn = k === all.length - 1 ? "Continue" : null] = st.gift ? GIFTS[st.gift]() : [];
     const html = st.who ? SPEAKER[st.who]() : memoryArt(st.art, PANEL_W);
     const say = st.letter ? `<div class="letter">${st.letter}</div>` : st.chalk ? `<div class="chalkNote">${st.chalk}</div>` : st.say;
-    return { html, say, gift, name: NAMES[st.who], btn: btn && `<span class="btnrow">${btn}</span>` };
+    const voice = st.who || (st.chalk ? "dibble" : st.letter ? "granny" : null); // the chalk is Dibble's, the letter Granny's
+    return { html, say, gift, voice, name: NAMES[st.who], btn: btn && `<span class="btnrow">${btn}</span>` };
   }), () => {
     AFTER[name]?.(save.story); persist(); track("story_" + name);
     [523, 659, 784, 1047].forEach((f, j) => tone(f, .4, "sine", .07, j * .12));
@@ -1747,17 +1866,18 @@ function campState() {
     found: GEMS.map((t) => save.found.includes(t) ? { color: CRYSTALS[t].color, cut: CRYSTALS[t].cut } : null),
     tent: save.camp.tent, banner: save.camp.banner, fire: save.camp.fire,
     site: save.story.site, sky: save.story.finale, packed: save.story.finale, puddockHere: save.story.site !== "stump",
-    grannySvg: save.story.site === "skywell" ? granny(60) : "", puddockSvg: puddock(60), decor: { mushrooms: own("decor:mushrooms"), jars: own("decor:jars"), hammock: own("decor:hammock"), cart: own("decor:cart"), flies: save.owned.includes("fireflies") } };
+    grannySvg: save.story.site === "skywell" ? granny(60) : "", puddockSvg: puddock(60), petSvg: save.pets.active !== "none" ? pet(save.pets.active, 100, wearOf(save.pets.active)) : "", decor: { mushrooms: own("decor:mushrooms"), jars: own("decor:jars"), hammock: own("decor:hammock"), cart: own("decor:cart"), flies: save.owned.includes("fireflies") } };
 }
 function campProgress() {
-  const ups = SHOP.filter((i) => i.kind === "up"), extras = SHOP.filter((i) => i.kind !== "up");
+  const ups = SHOP.filter((i) => i.kind === "up"), extras = SHOP.filter((i) => i.kind !== "up" && i.kind !== "petwear");
   const have = ups.reduce((s, i) => s + save.up[i.id], 0) + extras.filter((i) => i.kind === "biome" ? save.biomes.includes(i.id.split(":")[1]) : save.owned.includes(i.id)).length + save.found.length;
   const total = ups.reduce((s, i) => s + i.max, 0) + extras.length + GEMS.length;
   return have / total;
 }
 function renderCamp() {
   $("campTitle").textContent = `Dibble's Camp · ${SITES[save.story.site]}`;
-  $("wardDibble").innerHTML = dibble(84, save.look);
+  const P = save.pets, pw = wearOf(P.active);
+  $("wardDibble").innerHTML = dibble(84, save.look) + (P.active !== "none" ? `<span class="wardPet">${pet(P.active, 44, pw)}</span>` : "");
   const pc = campProgress();
   $("campProg").innerHTML = `<div class="bar"><i style="width:${(pc * 100).toFixed(1)}%"></i></div><small>Camp ${Math.round(pc * 100)}% grown · ${save.found.length}/${GEMS.length} gems on the shelf</small>`;
   const chip = (grp, val, label, swatch) => `<button class="chip ${save.camp[grp] === val ? "on" : ""}" data-grp="${grp}" data-val="${val}">${swatch || ""}${label}</button>`;
@@ -1768,12 +1888,20 @@ function renderCamp() {
   $("campCustom").innerHTML = `
     <h3 class="subHead">Dibble</h3>${["hat", "trinket", "scarf", "cloak", "lantern", "fur"].map((part) => `<div class="custRow"><span>${{ hat: "Hat", trinket: "Trinket", scarf: "Scarf", cloak: "Cloak", lantern: "Lantern", fur: "Fur" }[part]}</span>${Object.keys(LOOKS[part]).filter((v) => lookOwned(part, v))
       .map((v) => `<button class="chip ${save.look[part] === v ? "on" : ""}" data-look="${part}" data-val="${v}">${part === "scarf" && v !== "none" ? `<i class="sw" style="background:${v}"></i>` : part === "fur" ? `<i class="sw" style="background:${FUR[v][0]}"></i>` : ""}${v === "none" ? "None" : LOOKS[part][v].replace(/ (fur|scarf|lantern|cloak)$/i, "")}</button>`).join("")}</div>`).join("")}
+    ${P.owned.length ? `<h3 class="subHead">Pet · ${P.owned.length} of ${PET_KINDS.length} found</h3>
+      <div class="custRow"><span>Pet</span>${["none", ...P.owned].map((k) => `<button class="chip petChip ${P.active === k ? "on" : ""}" data-pet="${k}">${k === "none" ? "None" : pet(k, 32, wearOf(k)) + PETS[k].name}</button>`).join("")}</div>
+      ${P.active === "none" ? "" : [["head", "Head"], ["neck", "Neck"]].map(([slot, lbl]) => { const have = PET_WEAR.filter(([v]) => PET_WEAR_SLOT[v] === slot && save.owned.includes("pet:" + v));
+        return have.length ? `<div class="custRow"><span>${lbl}</span>${[["none", "None"], ...have].map(([v, n]) => `<button class="chip ${(pw[slot] || "none") === v ? "on" : ""}" data-pwear="${slot}" data-val="${v}">${n}</button>`).join("")}</div>` : ""; }).join("")}
+      <div class="note">${P.owned.length < PET_KINDS.length ? "More are asleep in the mines. " : ""}Tiny clothes at Old Puddock's, in the Pets tab.</div>`
+    : `<h3 class="subHead">Pet</h3><div class="note">"${PET_HINT}" Some crystals in the mines have someone asleep inside. Clear the line to wake them.</div>`}
     <h3 class="subHead">Camp</h3><div class="custRow"><span>Tent</span>${tents.map(([v, l]) => chip("tent", v, l)).join("")}</div>
     <div class="custRow"><span>Banner</span>${banners.map(([c, l]) => chip("banner", c, "", `<i class="sw" style="background:${c}" title="${l}"></i>`)).join("")}</div>
     <div class="custRow"><span>Fire</span>${fires.map(([v, l]) => chip("fire", v, l)).join("")}</div>
     ${decor.length ? `<div class="custRow"><span>Decor</span>${decor.map((i) => `<button class="chip ${save.camp.hide.includes(i.id) ? "" : "on"}" data-hide="${i.id}">${i.name}</button>`).join("")}</div>` : ""}
     <div class="note">Lanterns = Lantern level · tool rack = Pickaxe · the sapling = Root Charm · signpost = mines opened · shelf = gem types found. More in Old Puddock's Camp tab.</div>`;
   for (const b of $("campCustom").querySelectorAll("[data-look]")) b.onclick = () => { save.look[b.dataset.look] = b.dataset.val; persist(); renderHome(); ui.chirp(); };
+  for (const b of $("campCustom").querySelectorAll("[data-pet]")) b.onclick = () => { P.active = b.dataset.pet; persist(); renderHome(); ui.chirp(); };
+  for (const b of $("campCustom").querySelectorAll("[data-pwear]")) b.onclick = () => { (P.wear[P.active] ??= {})[b.dataset.pwear] = b.dataset.val; persist(); renderHome(); ui.chirp(); };
   for (const b of $("campCustom").querySelectorAll("[data-grp]")) b.onclick = () => { save.camp[b.dataset.grp] = b.dataset.val; persist(); renderHome(); tone(660, .08, "triangle", .06); };
   for (const b of $("campCustom").querySelectorAll("[data-hide]")) b.onclick = () => {
     const h = save.camp.hide, id = b.dataset.hide; save.camp.hide = h.includes(id) ? h.filter((x) => x !== id) : [...h, id]; persist(); renderHome(); };
@@ -1820,10 +1948,12 @@ $("campStage").addEventListener("pointerdown", (e) => {
   const t = e.target.closest("[data-tap]"), st = $("campStage").getBoundingClientRect(), x = e.clientX - st.left, y = e.clientY - st.top;
   if (!t) return;
   const what = t.dataset.tap;
-  if (what !== "dibble") for (const g of $("campArt").querySelectorAll(`[data-tap="${what}"]`)) // every prop answers a press: a little squash and glow
+  if (what !== "dibble" && what !== "pet") for (const g of $("campArt").querySelectorAll(`[data-tap="${what}"]`)) // every prop answers a press: a little squash and glow
     g.animate([{ transform: "scale(1)" }, { transform: "scale(1.06, .93)", filter: "brightness(1.35)", offset: .35 }, { transform: "scale(.98, 1.03)", offset: .7 }, { transform: "scale(1)" }], { duration: 300, easing: "ease-out" });
   if (what === "dibble") { t.animate([{ transform: "translateY(0)" }, { transform: "translateY(-12px)" }, { transform: "translateY(0)" }, { transform: "translateY(-4px)" }, { transform: "translateY(0)" }], { duration: 520, easing: "ease-out" });
     ui.chirp(); campFx(x, y - 10, "♪"); buzz(10); }
+  else if (what === "pet") { t.animate([{ transform: "translateY(0)" }, { transform: "translateY(-14px) scale(.94, 1.06)" }, { transform: "translateY(0) scale(1.1, .9)" }, { transform: "translateY(-5px)" }, { transform: "translateY(0)" }], { duration: 560, easing: "ease-out" });
+    tone(1320, .08, "sine", .05); tone(1760, .1, "sine", .04, .07); campFx(x, y - 10, "♪"); buzz(8); }
   else if (what === "fire") { for (let k = 0; k < 5; k++) setTimeout(() => campFx(x + (Math.random() - .5) * 30, y, "✦", "campSpark"), k * 40); for (let k = 0; k < 4; k++) tone(2000 + Math.random() * 2000, .03, "square", .02, k * .03); buzz(15); }
   else if (what === "lanterns") { [523, 659, 784].forEach((f, k) => tone(f * 2, .3, "sine", .05, k * .07)); campFx(x, y, "✧"); }
   else if (what.startsWith("gem-")) { soundtrack.chime(+what.slice(4)); campFx(x, y, "✦", "campSpark"); }
@@ -1865,6 +1995,7 @@ function frame(now) {
   if (onBoard) {
     ctx.drawImage(bgCache.board, bgCache.x, bgCache.y, bgCache.w, bgCache.w);
     if (!calm) drawRootline(now);
+    drawPeek(now);
     const groups = {}, dim = state === "end" ? 1 - .55 * endT : 1;
     board.forEach((u, i) => { if (u) (groups[u] ??= []).push([Math.floor(i / N), i % N]); });
     for (const u in groups) {
@@ -1878,6 +2009,7 @@ function frame(now) {
       if (cr.stone) drawStone(groups[u], cell, bx, by, dim, (r, c) => cracked.has(r * N + c));
       else drawCrystal(groups[u], cr.color, m, cell, bx, by, dim, cr.ember ? .6 + .3 * Math.sin(now / 120 + +u) : .3, cr.glyph, cr.cut);
       if (m.memory) fossil(groups[u], cell, bx, by); else special(m.type, groups[u], cell, bx, by, dim, now);
+      if (m.pet && board[m.petAt] === +u) sleeper(m.pet, bx + (m.petAt % N) * cell, by + Math.floor(m.petAt / N) * cell, cell, dim);
       if (moved) ctx.restore();
     }
     const t = drag && target();
@@ -1951,6 +2083,7 @@ function frame(now) {
     ctx.beginPath(); ctx.moveTo(f.x, f.y - r); ctx.lineTo(f.x + r * .3, f.y - r * .3); ctx.lineTo(f.x + r, f.y); ctx.lineTo(f.x + r * .3, f.y + r * .3);
     ctx.lineTo(f.x, f.y + r); ctx.lineTo(f.x - r * .3, f.y + r * .3); ctx.lineTo(f.x - r, f.y); ctx.lineTo(f.x - r * .3, f.y - r * .3); ctx.fill(); ctx.globalAlpha = 1;
   }
+  if (onBoard) drawFrees(now);
   ctx.restore(); // end screen shake
   if (onBoard) drawHint(now);
   pops = pops.filter((p) => p.life > 0).slice(-2); // newest two only
@@ -2018,7 +2151,7 @@ $("coinHud").innerHTML = coin(26);
 }
 { // VoiceOver: camp props are painted SVG, so give them a role and a name; mine cards act as buttons
   const NAMES = { mines: "Go mining", daily: "Daily Dig", wardrobe: "Wardrobe", tent: "Wardrobe", market: "Puddock's market", memories: "Amber Memories",
-    dibble: "Dibble", fire: "Campfire", lanterns: "Lanterns", puddock: "Old Puddock", granny: "Granny Burr" };
+    dibble: "Dibble", pet: "Your pet", fire: "Campfire", lanterns: "Lanterns", puddock: "Old Puddock", granny: "Granny Burr" };
   const name = (t) => { const gem = t.startsWith("gem-") && GEMS[+t.slice(4)]; return gem ? (save.found.includes(gem) ? CRYSTALS[gem].name : "Empty gem slot") : NAMES[t] || t; };
   const label = () => {
     document.querySelectorAll('#campArt [data-tap="lanterns"]').forEach((g, k) => k && g.setAttribute("aria-hidden", "true")); // one string of lanterns, read once
