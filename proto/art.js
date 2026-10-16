@@ -499,11 +499,11 @@ export function camp(st, gemFn, dibbleSvg) {
     ${plank(99, 373, 58, 3, "#8a5a32", r)}
     ${dy.done ? `<path d="M142 371 l3 3 l6 -8" stroke="${chalk}" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".85"/>`
       : `<circle cx="148" cy="364" r="9" fill="#9fe6c8" opacity=".3"><animate attributeName="opacity" values=".15;.4;.15" dur="2.2s" repeatCount="indefinite"/></circle>${shard(148, 373, 6, 13, -.1, "#5fc9a8", r, true)}`}</g>`;
-  const stumpSvg = st.stumpSvg ? st.stumpSvg.replace(/<path d="M0 80 Q150 70 300 80 V90 H0 Z" fill="#14241a"\/>/, "").replace(/<svg class="stumpArt" width="([\d.]+)" height="([\d.]+)"/, (m, w, h) => `<svg class="stumpArt" x="${220 - w / 2}" y="${372 - h}" width="${w}" height="${h}"`) : "";
-  const keep = `<g data-tap="memories"><rect x="166" y="300" width="108" height="92" fill="transparent"/>${stumpSvg || `<circle cx="220" cy="386" r="20" fill="#f0b543" opacity=".22"><animate attributeName="opacity" values=".12;.3;.12" dur="3s" repeatCount="indefinite"/></circle>
+  const stumpSvg = st.stumpSvg ? st.stumpSvg.replace(/<path d="M0 80 Q150 70 300 80 V90 H0 Z" fill="#14241a"\/>/, "").replace(/<svg class="stumpArt" width="([\d.]+)" height="([\d.]+)"/, (m, w, h) => `<svg class="stumpArt" x="${228 - w / 2}" y="${360 - h}" width="${w}" height="${h}"`) : "";
+  const keep = `<g data-tap="memories"><rect x="172" y="288" width="112" height="92" fill="transparent"/>${stumpSvg || `<circle cx="220" cy="386" r="20" fill="#f0b543" opacity=".22"><animate attributeName="opacity" values=".12;.3;.12" dur="3s" repeatCount="indefinite"/></circle>
       ${shape(curve([[210, 372], [230, 372], [234, 392], [229, 404], [211, 404], [206, 392]]), "#e8a84a", "#6a3a10", [-.8, .7], 'opacity=".9"')}${plank(209, 366, 22, 6, "#8a5a32", r)}
       <path d="M213 378 Q212 390 214 398" stroke="#fff3d0" stroke-width="1.2" fill="none" opacity=".6"/>`}
-    ${st.memories != null ? tag(220, 384, `Memories ${st.memories}`, 66) : ""}</g>`;
+    ${st.memories != null ? tag(228, 372, `Memories ${st.memories}`, 66) : ""}</g>`;
   const stripe = (k) => { const x = 282 + k * 19.3; return shape(curve([[x, 312], [x + 19.3, 312], [x + 19.3, 328], [x + 9.6, 334], [x, 328]]), k % 2 ? "#f1e4c4" : "#c8553d", k % 2 ? "#a08a60" : "#5a1e14", [-.6, .6]); };
   const stall = `<g data-tap="market"><rect x="278" y="282" width="122" height="124" fill="transparent"/>
     ${shape(limb(288, 404, 287, 360, 288, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}${shape(limb(388, 404, 389, 360, 388, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}
@@ -685,7 +685,7 @@ export function stumpArt(growth = 0, sprout = false, w = 300, tree = false) {
   const g = Math.max(0, Math.min(1, growth)), id = "st" + uid++, r = rng(5);
   const bark = "#6b4a32", barkLine = "#22140c", wood = "#b08a62", O = [-1.4, 1.2];
   // roots spread from the flared base and grip the ground; amber light creeps back into them as the wood heals
-  const roots = [[118, 77, 98, 82, 72, 87.5, 7.5], [128, 80, 118, 86, 102, 90, 5], [182, 77, 204, 82, 230, 87, 7.5], [170, 80, 180, 86, 194, 90.5, 5], [150, 82, 153, 87, 158, 91, 4]];
+  const roots = [[118, 77, 106, 82, 94, 87, 7], [128, 80, 121, 86, 112, 90, 5], [182, 77, 194, 82, 206, 87, 7], [172, 80, 179, 86, 188, 90.5, 5], [150, 82, 153, 87, 158, 91, 4]];
   const rootSvg = roots.map(([x1, y1, cx, cy, x2, y2, wd]) => shape(limb(x1, y1, cx, cy, x2, y2, wd, .8), bark, barkLine, O)).join("") +
     (g ? `<path d="${curve(ring(150, 85, 64, 7, 10, .2, 7))}" fill="#f0b543" opacity="${(g * .3).toFixed(2)}" filter="url(#${id}b)"/>` +
       roots.map(([x1, y1, cx, cy, x2, y2, wd]) => `<path d="${limb(x1, y1 - 1, cx, cy - 1, x2, y2 - .5, wd * .3, .15)}" fill="#ffd27a" opacity="${(.25 + g * .6).toFixed(2)}"/>`).join("") : "");
