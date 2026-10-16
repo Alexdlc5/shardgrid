@@ -761,7 +761,7 @@ const MEM = {
       brush([[x - r * .7, y], [x, y - r * .2], [x + r * .8, y + .3]], AM.mid, .5, .6)).join("")}`,
   toad: () => `${ground(78, 10, -2)}${S(curve([[8, 82], [12, 46], [24, 28], [46, 22], [66, 30], [78, 50], [82, 82]]), AM.deep, [-1.4, 1.2])}
     ${S(curve([[24, 82], [27, 58], [40, 44], [56, 46], [66, 60], [68, 82]]), "#0e0602", [-.8, .6])}${blob(92, 60, 18, 14, AM.glow, .45, 11)}
-    ${toadSil(104, 73, 1.2, -1)}${S(curve(ring(93, 60, 3.6, 4, 8, .2, 12)), AM.glow, AM.mid)}
+    ${toadSil(104, 73, 1.2, -1)}${shape(curve(ring(93, 60, 3.6, 4, 8, .2, 12)), AM.glow, AM.mid, [-.9, .8])}
     ${[[118, 56, 12], [122, 64, 16], [116, 48, 8]].map(([x, y, l]) => stroke(x, y, 0, l, .6, AM.glow, .6, .03)).join("")}`,
   frost: () => { const r = rng(13); return `${wash(.35, 90, AM.ink)}${brush([[-6, 60], [30, 52], [60, 58], [96, 62], [130, 55], [168, 58]], AM.ink, 10)}
     ${brush([[-6, 60], [30, 52], [60, 58], [96, 62], [130, 55], [168, 58]], AM.hot, 2, .5, `filter="url(#${F}b)"`)}${blob(120, 60, 30, 8, AM.hot, .25, 14)}
@@ -987,3 +987,71 @@ export function darkLantern(w = 160, h = 96) {
     <g fill="#9fbf6a" opacity=".85" transform="translate(80 76)"><path d="${curve(ring(0, 1, 3, 2, 8, .1, 1))}"/>${[[-3.6, -2.4], [0, -3.4], [3.6, -2.4]].map(([x, y], k) => `<path d="${curve(ring(x, y, 1.1, 1.1, 6, .1, k + 2))}"/>`).join("")}</g>
   </svg>`;
 }
+
+// ---------- title screen ----------
+// The Glimmerwood at night behind the title, in four depth layers (index.html drifts them a few px for parallax):
+// sky with the moon top-left (the cool light), a far tree line in mist, tall pines framing the sides, and the near
+// ground with a glowing mine mouth and crystals glinting in the earth (the warm light).
+export function titleScene(still = false) {
+  const r = rng(61), layer = (k, body, defs = "") => `<div class="tsLayer ts${k}"><svg viewBox="0 0 400 800" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs><filter id="ts${k}B" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="7"/></filter>
+    <filter id="ts${k}b" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2"/></filter>${defs}</defs>${body}</svg></div>`;
+  const B = (k) => `filter="url(#ts${k}B)"`, b = (k) => `filter="url(#ts${k}b)"`;
+  const pines = (y, n, h, col, edge, x0 = -10, w = 420) => [...Array(n)].map((_, k) => paintPine(x0 + (k + .5) * (w / n) + (r() - .5) * 18, y + r() * 10, h * (.75 + r() * .35), col, edge, r)).join("");
+  // a near pine painted as tiers of drooping boughs, each with a darker edge and a cool moonlit rim on its upper left
+  const pine = (x, y, h, col, moon) => { let o = shape(limb(x, y + 10, x + 1, y - h * .5, x, y - h * .9, h * .022, h * .008), mix(col, "#3a2618", .5), mix(col, "#000000", .5), [-1.4, 1.2]);
+    for (let k = 0; k < 7; k++) { const t = k / 6, top = y - h + t * h * .82, w = h * (.07 + t * .2) * (1 + (r() - .5) * .12), bot = top + h * .2, dr = h * .03;
+      const pts = [[x, top], [x - w * .5, top + (bot - top) * .5], [x - w, bot + dr], [x - w * .55, bot - h * .015], [x, bot + h * .01], [x + w * .55, bot - h * .015], [x + w, bot + dr], [x + w * .5, top + (bot - top) * .5]];
+      o += shape(curve(pts), mix(col, "#000000", t * .12), mix(col, "#000000", .55), [-1.6, 1.4]) + `<path d="${curve(pts.slice(0, 3), false)}" stroke="${moon}" stroke-width="${f1(h * .006)}" fill="none" opacity=".35" stroke-linecap="round"/>`; }
+    return o; };
+  const glint = (x, y, s, dur, delay) => still ? "" : `<path d="M${x} ${y - s} Q${x + s * .18} ${y - s * .18} ${x + s} ${y} Q${x + s * .18} ${y + s * .18} ${x} ${y + s} Q${x - s * .18} ${y + s * .18} ${x - s} ${y} Q${x - s * .18} ${y - s * .18} ${x} ${y - s} Z" fill="#f4fff8" opacity="0">
+    <animate attributeName="opacity" values="0;0;.95;0" keyTimes="0;.7;.8;1" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/></path>`;
+  const fern = (x, y, a, sz, col) => { let o = ""; for (let k = 0; k < 8; k++) { const t = k / 8, px = x + Math.cos(a) * sz * t, py = y + Math.sin(a) * sz * t;
+    o += stroke(px, py, a - 1.1, sz * .32 * (1 - t * .6), 4 * (1 - t * .5), col) + stroke(px, py, a + 1.1, sz * .3 * (1 - t * .6), 3.6 * (1 - t * .5), col); }
+    return o + stroke(x, y, a, sz, 3, col, 1, .05); };
+  const sky = layer(0, `<rect width="400" height="800" fill="url(#ts0sky)"/>
+    <path d="${curve(ring(78, 250, 92, 86, 12, .1, 3))}" fill="#bcd4ea" opacity=".16" ${B(0)}/><path d="${curve(ring(78, 250, 40, 38, 12, .1, 9))}" fill="#dce8f4" opacity=".2" ${B(0)}/>
+    ${[...Array(22)].map(() => { const x = r() * 400, y = 20 + r() * 380, s = .6 + r() * 1.1; return `<path d="${curve(ring(x, y, s, s, 6, .3, x | 0))}" fill="#e6eef8" opacity="${(.25 + r() * .5).toFixed(2)}"/>`; }).join("")}
+    ${shape(curve(ring(78, 250, 22, 22, 14, .03, 4)), "#eef2f4", "#8a98aa", [-1.6, 1.4])}
+    <path d="${curve(ring(71, 244, 6.4, 4.6, 8, .3, 5))}" fill="#c9d3dc" opacity=".7" ${b(0)}/><path d="${curve(ring(86, 257, 4.6, 3.7, 8, .3, 6))}" fill="#c9d3dc" opacity=".6" ${b(0)}/>
+    <path d="M58 266 L100 266 L330 800 L214 800 Z" fill="url(#ts0ray)" ${B(0)}/>`,
+    `<linearGradient id="ts0sky" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#0c1824"/><stop offset=".5" stop-color="#14302a"/><stop offset="1" stop-color="#0b1c14"/></linearGradient>
+     <linearGradient id="ts0ray" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d6e6f4" stop-opacity=".12"/><stop offset="1" stop-color="#d6e6f4" stop-opacity="0"/></linearGradient>`);
+  const far = layer(1, `${pines(440, 22, 110, "#22403c", "#8fb0c0")}${pines(500, 16, 150, "#1b352f", "#7f9fb0")}
+    <path d="${curve([[-20, 494], [80, 476], [200, 488], [320, 472], [420, 484], [420, 820], [-20, 820]])}" fill="#13291f"/>
+    <rect y="380" width="400" height="160" fill="url(#ts1fog)"/>`,
+    `<linearGradient id="ts1fog" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a8c8c0" stop-opacity="0"/><stop offset=".6" stop-color="#a8c8c0" stop-opacity=".1"/><stop offset="1" stop-color="#a8c8c0" stop-opacity="0"/></linearGradient>`);
+  const mid = layer(2, `${pine(14, 700, 470, "#102a1f", "#8fb0c0")}${pine(-34, 712, 380, "#0e251b", "#8fb0c0")}${pine(372, 700, 450, "#102a1f", "#8fb0c0")}${pine(420, 716, 360, "#0e251b", "#8fb0c0")}
+    <path d="${curve([[-20, 690], [70, 660], [160, 672], [260, 656], [420, 668], [420, 820], [-20, 820]])}" fill="#0e2017"/>`);
+  const crystals = [[62, 716, 34, ["#5fa99b", "#6fb4a3", "#4e978c"], 71], [344, 708, 26, ["#9b7cf2", "#b49af6", "#7f62d8"], 73], [118, 752, 16, ["#f0b543", "#e8a52f"], 75]];
+  const near = layer(3, `<path d="${curve([[-20, 720], [90, 690], [200, 704], [310, 686], [420, 700], [420, 820], [-20, 820]])}" fill="#0a1710"/>
+    <path d="${curve(ring(200, 760, 120, 70, 10, .1, 7))}" fill="#f0b543" opacity=".22" ${B(3)}/>
+    <path d="${curve([[122, 820], [124, 744], [152, 694], [200, 676], [250, 696], [278, 746], [280, 820]])}" fill="#1a2a1e"/>
+    <path d="${curve([[146, 820], [146, 748], [166, 708], [200, 696], [236, 710], [254, 750], [254, 820]])}" fill="#070c09"/>
+    <path d="${curve([[162, 820], [178, 776], [200, 760], [222, 776], [238, 820]])}" fill="#f0b543" opacity=".14" ${b(3)}/>
+    ${shape(limb(150, 818, 148, 768, 151, 716, 7, 6), "#5a3b24", "#2a1a10", [-2, 1.6])}${shape(limb(250, 818, 252, 768, 249, 716, 7, 6), "#5a3b24", "#2a1a10", [-2, 1.6])}
+    ${shape(limb(134, 718, 200, 708, 266, 714, 6, 6), "#4a2f1c", "#22140a", [-2, 1.6])}<path d="M140 713 Q200 704 260 709" stroke="#8a6040" stroke-width="1.6" fill="none" opacity=".55"/>
+    ${crystals.map(([x, y, s, cols, seed]) => `<path d="${curve(ring(x, y - s * .4, s * 1.5, s * .9, 9, .2, seed))}" fill="${cols[0]}" opacity=".22" ${B(3)}/>` + shardCluster(x, y, s, cols, "#22301f", seed)).join("")}
+    ${glint(66, 690, 4, 4.2, -1)}${glint(349, 688, 3.4, 5.4, -3)}${glint(120, 742, 2.6, 3.6, -2)}${glint(52, 700, 2.4, 6, -4)}
+    <g ${b(3)} opacity=".95">${fern(-14, 818, -1.15, 130, "#040a06")}${fern(28, 826, -1.45, 96, "#06100a")}${fern(414, 818, -2.0, 130, "#040a06")}${fern(374, 826, -1.7, 92, "#06100a")}</g>`);
+  return sky + far + mid + near;
+}
+
+// Dibble on the title: on a mossy mound, leaning in to peer at a crystal cluster that lights his face from the right.
+export function titleHero(look = {}, still = false) {
+  const L = { ...DEFAULT_LOOK, ...look }, [f] = FUR[L.fur] || FUR.cocoa, id = "th" + uid++, glow = LANTERN_GLOW[L.lantern] || LANTERN_GLOW.amber;
+  const D = dibbleBody(id, { fur: f, scarf: L.scarf, hat: L.hat === "leaf" ? null : hatArt(L.hat, id + "t"), lantern: L.lantern === "amber" ? null : lanternArt(L.lantern, id + "L") });
+  return `<svg class="titleHero" viewBox="60 150 320 290" aria-hidden="true"><defs>${D.defs}</defs>
+    <path d="${curve(ring(316, 380, 70, 52, 10, .2, 3))}" fill="#7fd6c2" opacity=".2" filter="url(#${id}soft)"/>
+    <path d="${curve(ring(232, 362, 42, 40, 10, .2, 4))}" fill="${glow}" opacity=".28" filter="url(#${id}soft)"/>
+    ${shape(curve([[78, 432], [96, 414], [150, 406], [230, 408], [300, 414], [352, 424], [366, 440], [70, 442]]), "#22311f", "#0e160c", [-1.8, 1.6])}
+    ${[...Array(12)].map((_, k) => stroke(96 + k * 22 + (k % 3) * 4, 414 + (k % 2) * 3, -1.57 + (k % 5 - 2) * .2, 6 + (k % 3) * 3, 1.6, k % 2 ? "#4f7a3a" : "#5f9a45", .9)).join("")}
+    <path d="${curve([[104, 412], [180, 404], [260, 406], [330, 416]], false)}" stroke="#9fd8c8" stroke-width="2" fill="none" opacity=".25" stroke-linecap="round" filter="url(#${id}blur2)"/>
+    <g class="peer">${D.body}</g>
+    ${shardCluster(316, 418, 46, ["#5fa99b", "#6fb4a3", "#4e978c"], "#22311f", 31)}
+    ${still ? "" : `<path d="M318 360 Q319.6 364.4 324 366 Q319.6 367.6 318 372 Q316.4 367.6 312 366 Q316.4 364.4 318 360 Z" fill="#f4fff8" opacity="0"><animate attributeName="opacity" values="0;0;1;0" keyTimes="0;.62;.7;.8" dur="7s" repeatCount="indefinite"/></path>`}</svg>`;
+}
+
+// The logo, lettered by hand: each letter its own painted piece, tilted and bounced a little off the baseline.
+export const logoLetters = (word = "Glimmerwood") => { const r = rng(7);
+  return [...word].map((c, k) => `<span aria-hidden="true" style="--r:${((r() - .5) * 7).toFixed(1)}deg;--y:${((k % 2 ? -1 : 1) * (1 + r() * 2)).toFixed(1)}px">${c}</span>`).join(""); };

@@ -281,19 +281,29 @@
   /* ===== title screen and the camp hub ===== */
   .titleScr { align-items: center; padding-top: 0 !important; background: radial-gradient(ellipse at 50% 40%, rgba(5,12,8,.1), rgba(5,12,8,.55)); }
   .titleWrap { width: min(400px, calc(100vw - 48px)); margin: auto; text-align: center; }
+  /* the night wood behind the title (art.js titleScene): four layers drifting a few px apart for depth; transforms only */
+  .titleScene { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .titleScene::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 72% 44% at 50% 46%, rgba(5,12,8,.5), rgba(5,12,8,0)); }
+  .tsLayer { position: absolute; inset: 0 -18px; will-change: transform; animation: tsDrift 24s ease-in-out infinite alternate; }
+  .tsLayer svg { display: block; width: 100%; height: 100%; }
+  .ts0 { animation: none; } .ts1 { --dx: 3px; } .ts2 { --dx: 7px; } .ts3 { --dx: 12px; }
+  @keyframes tsDrift { from { transform: translateX(calc(var(--dx) * -1)); } to { transform: translateX(var(--dx)); } }
+  .titleWrap { position: relative; z-index: 1; }
+  /* Dibble leans in to peer at the crystals, then straightens up */
   #dibbleArt { display: block; height: 150px; }
-  /* Dibble breathes: a little squash at the bottom of each bob, a stretch at the top */
-  .titleWrap .dibble { width: 150px; height: 150px; transform-origin: 50% 96%; animation: titleIdle 3.4s ease-in-out infinite; }
-  @keyframes titleIdle { 0%, 100% { transform: scale(1.025, .975); } 50% { transform: translateY(-5px) scale(.99, 1.012); } }
+  .titleHero { display: block; width: 166px; height: 150px; margin: 0 auto; overflow: visible; }
+  .titleHero .peer { transform-box: view-box; transform-origin: 150px 415px; animation: peer 7s ease-in-out infinite; }
+  @keyframes peer { 0%, 22% { transform: none; } 40%, 64% { transform: rotate(5deg); } 82%, 100% { transform: none; } }
   /* painted lettering: lit pale gold at the top right, deep amber down-left, brush grain, a darker edge peeking out down-left */
-  .logo { font-size: min(54px, 13.2vw); margin: 0; padding: 0 6px; color: #ffd27a; text-shadow: none;
-    background: linear-gradient(170deg, #ffe7a8 10%, #ffd27a 40%, #f0b04a 68%, #c97f24 96%); -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent; filter: url(#logoPaint) drop-shadow(-2px 2.2px 0 #5a3410) drop-shadow(0 5px 7px rgba(0,0,0,.45)); }
+  .logo { font-size: min(54px, 13.2vw); margin: 0; padding: 0 6px; color: #ffd27a; text-shadow: none; white-space: nowrap;
+    filter: url(#logoPaint) drop-shadow(-2px 2.2px 0 #5a3410) drop-shadow(0 5px 7px rgba(0,0,0,.45)); }
+  .logo span { display: inline-block; transform: translateY(var(--y)) rotate(var(--r));
+    background: linear-gradient(170deg, #ffe7a8 10%, #ffd27a 40%, #f0b04a 68%, #c97f24 96%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   #logoSwash { display: block; } .logoSwash { display: block; width: 58%; height: auto; margin: 0 auto 4px; }
   .tagline { color: #e8d6aa !important; margin: 0 0 10px; text-wrap: balance; }
   .titleWrap button { font-size: 19px; padding: 13px; }
   .titleWrap .note { color: rgba(246,234,208,.66); font-size: 13px; }
-  @media (prefers-reduced-motion: reduce) { .titleWrap .dibble { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .tsLayer, .titleHero .peer { animation: none; } }
   .hub { top: 0; padding: 0 !important; background: #0b1510; align-items: stretch; justify-content: center; overflow: hidden; }
   .hub .campStage { width: min(100vw, 480px); height: 100vh; height: 100dvh; margin: 0 auto; box-shadow: none; }
   .hub #campArt, .hub .campArt { display: block; width: 100%; height: 100%; }
@@ -334,14 +344,14 @@
 </div>
 <div id="toast"></div>
 
-<section id="title" class="screen titleScr show"><div class="titleWrap">
+<section id="title" class="screen titleScr show"><div class="titleScene" id="titleScene" aria-hidden="true"></div><div class="titleWrap">
   <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="logoPaint" x="-6%" y="-15%" width="112%" height="140%">
     <feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="4" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="2.2" result="d"/>
     <feTurbulence type="fractalNoise" baseFrequency=".012 .2" numOctaves="3" seed="2" result="b"/>
     <feColorMatrix in="b" values="0 0 0 0 .55  0 0 0 0 .34  0 0 0 0 .12  0 0 0 .32 -.08" result="bb"/><feComposite in="bb" in2="d" operator="in" result="bi"/>
     <feBlend in="d" in2="bi" mode="multiply"/></filter></svg>
   <span id="dibbleArt"></span>
-  <h1 class="logo" id="logo">Glimmerwood</h1><span id="logoSwash"></span>
+  <h1 class="logo" id="logo" aria-label="Glimmerwood">Glimmerwood</h1><span id="logoSwash"></span>
   <div class="tag tagline" id="tagline">Mine glowing crystals before the roots close in.</div>
   <button id="tPlay">Play</button>
   <button id="tOpts" class="alt">Options</button>
@@ -428,7 +438,7 @@
 import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, fitsAnywhere, deal,
   rescueCells, breakCells, pureVeinCells, stoneBreak } from "./game.js";
 
-import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, lookItem, DEFAULT_LOOK, FUR, memoryArt, stumpArt, granny, bidder, darkLantern, logoSwash } from "./art.js";
+import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, lookItem, DEFAULT_LOOK, FUR, memoryArt, stumpArt, granny, bidder, darkLantern, logoSwash, titleScene, titleHero, logoLetters } from "./art.js";
 import { PROLOGUE, MEMORIES, MEMORY_COUNT, nextMemory, memoryById, mineOfMemory, mineDone, CHALK, PUDDOCK_BY_MINE, PUDDOCK_AFTER, PUDDOCK_POSTGAME,
   CAMP_LINES, SCALE_NOTE, SCENES, nextScene, SITES, GIVEN, MAP_GATE, MURMURS, MURMURS_DEEP, MURMURS_AFTER } from "./story.js";
 import { soundtrack } from "./music.js";
@@ -549,6 +559,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const mulberry = (a) => () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a);
   t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const qs = new URLSearchParams(location.search);
+const STILL = matchMedia("(prefers-reduced-motion: reduce)").matches; // the title paints its glints only when motion is welcome
 if (qs.has("gold")) save.gold = +qs.get("gold"); // ?gold=5000 to try the market quickly
 const persist = () => store.set("save", save);
 const price = (it) => it.kind === "up" ? Math.round(it.base * 1.6 ** save.up[it.id]) : it.price;
@@ -1132,7 +1143,7 @@ function renderHome() {
   $("oGlyph").innerHTML = icon("symbols", 20) + "Symbols";
   $("oPrivacy").innerHTML = icon("lock", 20) + "Privacy";
   $("oMusic").innerHTML = icon("note", 20) + "Music"; $("oMusic").classList.toggle("on", save.opt.music);
-  $("dibbleArt").innerHTML = dibble(150, save.look);
+  $("dibbleArt").innerHTML = titleHero(save.look, STILL);
   const mem = `<span class="btnrow">${icon("lantern", 22)}Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}</span>`;
   $("tMem").innerHTML = mem; $("campMem").innerHTML = mem;
   const done = save.daily.last === today(), st = save.daily.last === today() || save.daily.last === new Date(Date.now() - 864e5).toISOString().slice(0, 10) ? save.daily.streak : 0;
@@ -1539,7 +1550,7 @@ $("icoDig").innerHTML = icon("pickaxe", 24);
 
 if (platform.native) $("adNote").textContent = "Green buttons play a short video ad.";
 platform.init().then(() => renderHome());
-$("logoSwash").innerHTML = logoSwash();
+$("logoSwash").innerHTML = logoSwash(); $("logo").innerHTML = logoLetters(); $("titleScene").innerHTML = titleScene(STILL);
 renderHome(); show("title");
 if (qs.has("scene")) sceneCheck(qs.get("scene"));
 requestAnimationFrame(() => requestAnimationFrame(() => window.Capacitor?.Plugins?.SplashScreen?.hide())); // the title has painted
