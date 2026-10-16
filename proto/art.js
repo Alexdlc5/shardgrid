@@ -518,63 +518,226 @@ export function vine(w = 360) {
 
 // ---------- story pictures (docs/STORY.md) ----------
 // Amber Memories and the prologue: small scenes seen through old amber (warm, sepia, one glowing thing).
-const AM = { ink: "#2a1606", mid: "#5a3410", glow: "#ffe6a0", hot: "#ff7a3a", ice: "#cfefff" };
-const lan = (x, y, s = 1, o = 1) => `<g opacity="${o}"><circle cx="${x}" cy="${y}" r="${7 * s}" fill="${AM.glow}" opacity=".25"/><rect x="${x - 2 * s}" y="${y - 3 * s}" width="${4 * s}" height="${6 * s}" rx="${s}" fill="${AM.glow}" stroke="${AM.ink}" stroke-width="${.8 * s}"/></g>`;
-const oakSil = (x, y, s = 1, glow = 0) => `${glow ? `<circle cx="${x}" cy="${y - 34 * s}" r="${40 * s}" fill="${AM.glow}" opacity="${glow}"/>` : ""}
-  <path d="M${x - 5 * s} ${y} L${x - 3 * s} ${y - 24 * s} L${x + 3 * s} ${y - 24 * s} L${x + 5 * s} ${y} Z" fill="${AM.ink}"/>
-  ${[[0, -38, 20], [-16, -30, 14], [16, -30, 14], [-8, -46, 13], [10, -46, 12]].map(([dx, dy, r]) => `<circle cx="${x + dx * s}" cy="${y + dy * s}" r="${r * s}" fill="${AM.ink}"/>`).join("")}`;
-const toadSil = (x, y, s = 1, flip = 1) => `<g transform="translate(${x} ${y}) scale(${flip * s} ${s})"><ellipse cx="0" cy="-6" rx="10" ry="7" fill="${AM.ink}"/><circle cx="-5" cy="-13" r="3.2" fill="${AM.ink}"/><circle cx="4" cy="-13" r="3.2" fill="${AM.ink}"/><path d="M-9 -2 L-13 1 M8 -2 L12 1" stroke="${AM.ink}" stroke-width="2.4" stroke-linecap="round"/></g>`;
-const moleSil = (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="-8" rx="9" ry="9" fill="${AM.ink}"/><circle cx="0" cy="-19" r="6.5" fill="${AM.ink}"/><ellipse cx="0" cy="-24" rx="7" ry="2.4" fill="${AM.mid}"/></g>`;
-const ground = (y = 78) => `<path d="M0 ${y} Q40 ${y - 3} 80 ${y} T160 ${y} V100 H0 Z" fill="${AM.ink}"/>`;
+// Painted with the paint.js toolkit in the 160x100 box: hand-built silhouettes with a darker edge peeking out
+// down-left, a warm rim where the light catches, soft blurred blobs for every glow.
+const AM = { ink: "#2a1606", mid: "#5a3410", glow: "#ffe6a0", hot: "#ff7a3a", ice: "#cfefff", deep: "#160b03" };
+const PALE = "#f4f0ff";
+let F = "am"; // filter prefix of the picture being painted (set by memoryArt)
+const S = (d, c = AM.ink, o = [-.9, .8]) => shape(d, c, mix(c, "#000000", .55), o);
+const blob = (x, y, rx, ry, c, op, seed = 1, f = "s") => `<path d="${curve(ring(x, y, rx, ry, 9, .25, seed))}" fill="${c}" opacity="${op}" filter="url(#${F}${f})"/>`;
+const rim = (pts, op = .5, w = 1.2, c = AM.glow) => `<path d="${curve(pts, false)}" stroke="${c}" stroke-width="${w}" fill="none" opacity="${op}" stroke-linecap="round" filter="url(#${F}b)"/>`;
+const wash = (op = .55, x = 80, c = AM.deep) => `<path d="${curve(ring(x, 50, 120, 86, 10, .08, 5))}" fill="${c}" opacity="${op}"/>`;
+const spark = (x, y, s = 1.4, c = AM.glow, op = 1) => `<g opacity="${op}">${blob(x, y, s * 2.6, s * 2.6, c, .4, x | 0, "b")}<path d="${curve(ring(x, y, s, s * .8, 6, .35, (x * 7 + y) | 0))}" fill="${c}"/></g>`;
+const brush = (pts, c, w, op = 1, extra = "") => `<path d="${curve(pts, false)}" stroke="${c}" stroke-width="${w}" fill="none" opacity="${op}" stroke-linecap="round" ${extra}/>`;
+// a glowing thread or root: wide soft halo, tapered body, bright core
+const glowLimb = (x1, y1, cx, cy, x2, y2, w, c = AM.hot) => `<path d="${limb(x1, y1, cx, cy, x2, y2, w * 2.6, w * .8)}" fill="${c}" opacity=".3" filter="url(#${F}s)"/>
+  <path d="${limb(x1, y1, cx, cy, x2, y2, w, w * .2)}" fill="${c}"/><path d="${limb(x1, y1, cx, cy, x2, y2, w * .35, .1)}" fill="${AM.glow}" opacity=".8"/>`;
+const wisp = (x, y, h, w, seed, c = AM.glow, op = .45) => { const r = rng(seed), pts = [...Array(6)].map((_, k) => [x + Math.sin(k * 1.3 + r() * 2) * (2 + k * .9), y - k * h / 5]);
+  return brush(pts, c, w * 2.6, op * .4, `filter="url(#${F}s)"`) + brush(pts, c, w, op, `filter="url(#${F}b)"`); };
+// uneven ground with a lit lip, grass tufts and a pebble or two; tilt lifts the right side
+const ground = (y = 78, seed = 1, tilt = -3) => { const r = rng(seed), at = (x) => y + ((x + 10) / 180 - .5) * tilt;
+  const top = [...Array(7)].map((_, k) => [-10 + k * 30, at(-10 + k * 30) + (r() - .5) * 3]);
+  return S(curve([...top, [172, 106], [-12, 106]])) + rim(top.slice(1, 6).map(([x, yy]) => [x, yy + .4]), .22, 1) +
+    [...Array(9)].map(() => { const x = 6 + r() * 148; return stroke(x, at(x) + 1.5, -1.57 + (r() - .5) * .9, 2.5 + r() * 3, .7, AM.ink); }).join("") +
+    [...Array(2)].map((_, k) => { const x = 20 + r() * 120; return S(curve(ring(x, at(x) + 5 + r() * 6, 2.4, 1.4, 7, .3, seed + k)), AM.mid, [-.5, .4]); }).join(""); };
+// a tree in the old style of the wood: tapered trunk and boughs, a crown of lumpy lobes, light on the upper right
+const oakSil = (x, y, s = 1, glow = 0, seed = 3) => { const P = (dx, dy) => [x + dx * s, y + dy * s];
+  const lobes = [[-2, -40, 19, 14], [-16, -31, 12, 10], [15, -33, 13, 11], [-8, -49, 12, 9], [9, -48, 12, 9], [25, -27, 7, 6], [-25, -25, 6, 5]];
+  return (glow ? blob(x + 4 * s, y - 38 * s, 44 * s, 38 * s, AM.glow, glow, seed) : "") +
+    [[-3, -1, -9, 0, -15, 2.5], [3, -1, 9, .5, 14, 2], [0, -1, -2, 1, -6, 3]].map(([a, b, c, d, e, f]) => S(limb(...P(a, b), ...P(c, d), ...P(e, f), 2.4 * s, .4 * s))).join("") +
+    S(limb(...P(0, 0), ...P(-2.5, -14), ...P(1.5, -30), 5.8 * s, 2.6 * s)) +
+    [[1, -22, -8, -28, -16, -33], [2, -25, 10, -29, 16, -36], [1.5, -28, 0, -38, -4, -46]].map(([a, b, c, d, e, f]) => S(limb(...P(a, b), ...P(c, d), ...P(e, f), 2 * s, .6 * s))).join("") +
+    lobes.map(([dx, dy, rx, ry], k) => S(curve(ring(...P(dx, dy), rx * s, ry * s, 11, .14, seed * 10 + k, (k - 3) * .2)), k % 3 ? AM.ink : mix(AM.ink, AM.mid, .3))).join("") +
+    blob(...P(10, -46), 12 * s, 7 * s, AM.mid, .55, seed + 1) + rim([P(-4, -58), P(8, -58), P(19, -52), P(26, -42), P(31, -30)], .45, 1.3 * s); };
+// stump with a jagged, broken top
+const stumpSil = (x, y, s = 1, seed = 5) => { const r = rng(seed), P = (dx, dy) => [x + dx * s, y + dy * s];
+  const top = [-9, -6, -3, 0, 3, 6, 9].map((dx, k) => P(dx, -15 - (k % 2 ? 4 + r() * 3 : r() * 2) + (dx < 0 ? 2 : 0)));
+  return [[-8, -2, -13, 0, -17, 2], [8, -3, 12, 0, 16, 2]].map(([a, b, c, d, e, f]) => S(limb(...P(a, b), ...P(c, d), ...P(e, f), 2.6 * s, .5 * s))).join("") +
+    S(curve([P(-10, 1), P(-10.5, -9), ...top, P(10.5, -8), P(11, 1)])) + S(curve(ring(...P(1, -16), 8.5 * s, 2.2 * s, 9, .2, seed)), AM.mid, [-.4, .3]) +
+    brush([P(-6, -12), P(-7, -6), P(-6.5, 0)], AM.mid, .7 * s, .7) + rim([P(4, -18), P(9, -14), P(10.5, -4)], .35, .9); };
+// Dibble's kin: round body, head turned right, pointed snout, leaf cap
+const moleSil = (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})">
+  ${S(curve(ring(-4, -.6, 3.6, 1.8, 7, .1, 3)))}${S(curve(ring(4.4, -.6, 3.4, 1.8, 7, .1, 4)))}
+  ${S(curve(ring(0, -8.4, 9, 9.6, 12, .08, 7, -.1, (a) => a > 0 && a < Math.PI ? 1.05 : .97)))}
+  ${S(curve(ring(2, -19, 6.6, 6, 10, .06, 9, -.2)))}${S(curve([[5, -22], [10.4, -19.6], [12.6, -17.6], [9, -15.4], [4.6, -15.8]]))}
+  ${S(curve([[-6.6, -23.4], [-2, -27.6], [5, -28.2], [10.4, -24.6], [3, -23.6]]), AM.mid, [-.6, .5])}${stroke(1.6, -27.6, -1.1, 4.2, .8, AM.mid)}
+  ${rim([[-2, -24.6], [5, -25.4], [9, -22], [7, -16.4]], .3, .8)}${rim([[4, -11], [8.6, -6], [8, 0]], .25, .8)}</g>`;
+// toad side-on, facing right (flip -1 faces left): squat body, folded back leg, two eye bumps
+const toadSil = (x, y, s = 1, flip = 1) => `<g transform="translate(${x} ${y}) scale(${flip * s} ${s})">
+  ${S(limb(-6, -4, -14, -3, -11, 0, 3.4, 1.4))}${S(curve(ring(0, -6.4, 11, 7, 12, .07, 11, -.08, (a) => a > 0 && a < Math.PI ? .9 : 1.04)))}
+  ${S(limb(6, -4, 9, -1, 11.6, .2, 2.2, 1.1))}${S(curve(ring(-3, -12, 3.2, 3, 8, .08, 13)))}${S(curve(ring(5, -12.6, 3.4, 3.2, 8, .08, 15)))}
+  ${brush([[2, -6], [7, -5.2], [11, -7]], AM.mid, .6, .8)}${rim([[-1, -13], [5, -16], [9, -12.6], [11, -7]], .3, .7)}</g>`;
+// moth: two forewings and hindwings (left a touch bigger than right), tapered body, feathery antennae
+const mothSil = (x, y, s = 1, col = AM.ink, op = 1, rot = 0) => { const l = mix(col, AM.ink, .55), o = [-.7, .6];
+  return `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})" opacity="${op}">
+  ${shape(curve([[0, -.6], [-6, -9], [-12.6, -9.4], [-15, -4.6], [-11, -.4], [-4, 1.2]]), col, l, o)}${shape(curve([[0, -.6], [5.6, -8.4], [12, -8.8], [14, -4.4], [10.6, -.2], [4, 1.2]]), col, l, o)}
+  ${shape(curve([[0, 1], [-6, 2.6], [-10.6, 6.6], [-6.4, 8.8], [-1, 4.6]]), col, l, o)}${shape(curve([[0, 1], [5.6, 2.4], [9.8, 6.2], [6, 8.2], [1, 4.4]]), col, l, o)}
+  <path d="${curve(ring(-9, -5, 2.2, 1.6, 7, .3, 3))}" fill="${l}" opacity=".35"/><path d="${curve(ring(8.4, -4.6, 1.8, 1.4, 7, .3, 4))}" fill="${l}" opacity=".35"/>
+  ${shape(limb(0, -4.4, .6, 1, 0, 6.4, 1.9, .8), col, l, o)}${stroke(-.4, -4, -2.1, 6.4, .45, col)}${stroke(.4, -4, -1.05, 6.4, .45, col)}</g>`; };
+// a little hand-made lantern: cap, glowing glass, base, bail
+const lan = (x, y, s = 1, o = 1) => `<g opacity="${o}">${blob(x, y, 8 * s, 8 * s, AM.glow, .32, x | 0)}
+  ${brush([[x - 1.6 * s, y - 3.8 * s], [x, y - 6 * s], [x + 1.6 * s, y - 3.8 * s]], AM.ink, .6 * s)}
+  ${shape(curve([[x - 2.3 * s, y - 2.6 * s], [x + 2.2 * s, y - 2.8 * s], [x + 2.5 * s, y + 2.7 * s], [x - 2.2 * s, y + 2.9 * s]]), AM.glow, AM.mid, [-.5 * s, .4 * s])}
+  ${S(curve([[x - 2.9 * s, y - 3.8 * s], [x + 2.8 * s, y - 4 * s], [x + 3 * s, y - 2.5 * s], [x - 3.1 * s, y - 2.4 * s]]), AM.ink, [-.3, .3])}
+  ${S(curve([[x - 2.8 * s, y + 2.6 * s], [x + 3 * s, y + 2.5 * s], [x + 2.8 * s, y + 3.9 * s], [x - 2.7 * s, y + 4 * s]]), AM.ink, [-.3, .3])}</g>`;
+// a rock ceiling with one ragged opening (centre x, y, half-width r)
+const hole = (x, y, r) => `<path d="${curve([[-12, -12], [172, -12], [172, y + r * .3], [x + r * 1.7, y + r * 1.1], [x + r * .6, y + r * .95], [x - r * .5, y + r * 1.05], [x - r * 1.5, y + r * 1.4], [-12, y + r * .5]])} ${curve(ring(x, y, r, r * .55, 11, .14, r | 0).reverse())}"
+  fill="${AM.ink}" fill-rule="evenodd"/>${rim(ring(x, y, r, r * .55, 11, .14, r | 0).slice(0, 5), .35, 1, PALE)}`;
+const moonDisc = (x, y, r) => `${blob(x, y, r * 2.6, r * 2.4, PALE, .28, 2)}<path d="${curve(ring(x, y, r, r, 12, .04, 4))}" fill="${PALE}"/>
+  ${blob(x - r * .3, y - r * .2, r * .3, r * .24, "#cfc6e6", .7, 6, "b")}${blob(x + r * .35, y + r * .3, r * .2, r * .16, "#cfc6e6", .6, 8, "b")}`;
+const stones = (rows, c = AM.ink) => rows.map(([x, y, w, h], k) => S(curve(ring(x + w / 2, y + h / 2, w / 2, h / 2, 9, .16, k + 31, (k % 3 - 1) * .08)), c) +
+  brush([[x + w * .25, y + h * .3], [x + w * .55, y + h * .18], [x + w * .8, y + h * .3]], AM.mid, .9, .7)).join("");
+// cart: a planked box on two spoked wheels, w wide, top-left at (x, y)
+const wagon = (x, y, w = 50) => { const h = w * .4, R = w * .15;
+  return S(curve([[x, y + 1.4], [x + 2, y], [x + w - 2, y - .6], [x + w, y + 1], [x + w - .4, y + h - 1], [x + w - 2, y + h], [x + 2, y + h + .4], [x + .3, y + h - 1]])) +
+    brush([[x + 3, y + h * .45], [x + w - 3, y + h * .4]], AM.mid, .8, .7) + [w * .2, w * .78].map((dx, k) => S(curve(ring(x + dx, y + h + R * .6, R, R, 11, .05, 40 + k)), AM.mid) +
+    [0, 1, 2].map((j) => brush([[x + dx + Math.cos(j + k) * R * .85, y + h + R * .6 + Math.sin(j + k) * R * .85], [x + dx - Math.cos(j + k) * R * .85, y + h + R * .6 - Math.sin(j + k) * R * .85]], AM.ink, .8)).join("") +
+    S(curve(ring(x + dx, y + h + R * .6, R * .25, R * .25, 6, .1, 42 + k)))).join(""); };
 const MEM = {
-  oak: () => `${ground()}${oakSil(80, 78, 1.05, .35)}${[[60, 30], [98, 26], [88, 44], [66, 48]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.4" fill="${AM.glow}"/>`).join("")}`,
-  leaf: () => `<path d="M-4 14 Q50 22 104 8 M44 19 Q52 26 50 32" stroke="${AM.ink}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M50 32 v4" stroke="${AM.ink}" stroke-width="1.4"/>
-    <circle cx="86" cy="52" r="26" fill="${AM.glow}" opacity=".3"/><g transform="translate(86 52) rotate(-25)"><path d="M0 -14 Q10 -4 0 14 Q-10 -4 0 -14 Z" fill="${AM.glow}"/><path d="M0 -12 V12" stroke="${AM.mid}" stroke-width="1"/></g>
-    <path d="M70 34 q4 6 0 10" stroke="${AM.glow}" stroke-width="1" fill="none" opacity=".6"/>${ground(86)}`,
-  dawn: () => `<rect y="56" width="160" height="22" fill="${AM.glow}" opacity=".35"/>${ground()}
-    <path d="M58 78 L60 60 L64 64 L68 57 L72 63 L76 58 L78 78 Z" fill="${AM.ink}"/><ellipse cx="68" cy="60" rx="9" ry="2.6" fill="${AM.mid}"/>
-    <rect x="100" y="62" width="24" height="12" rx="2" fill="${AM.ink}"/><circle cx="106" cy="76" r="4" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="1.5"/><circle cx="120" cy="76" r="4" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="1.5"/>${toadSil(134, 78, .9)}`,
-  smoke: () => `${ground(72)}${oakSil(122, 72, .5)}${[40, 64, 88].map((x, k) => `<path d="M${x} 72 q-6 -10 2 -18 q8 -8 0 -18 q-6 -8 2 -16" stroke="${AM.glow}" stroke-width="${4 - k}" fill="none" opacity=".45" stroke-linecap="round"/>`).join("")}
-    <path d="M30 72 l6 6 M60 72 l-4 8 M90 72 l5 7" stroke="${AM.hot}" stroke-width="1.2" opacity=".7"/>`,
-  thaw: () => `<path d="M0 70 Q80 64 160 70 V100 H0 Z" fill="${AM.ink}"/><path d="M0 70 Q80 64 160 70 V74 Q80 68 0 74 Z" fill="#fff6e6" opacity=".9"/>
-    <ellipse cx="80" cy="69" rx="24" ry="4" fill="${AM.mid}"/><circle cx="80" cy="86" r="16" fill="${AM.hot}" opacity=".25"/>
-    <path d="M80 80 Q70 88 52 92 M80 80 Q92 90 112 94 M80 80 Q78 92 74 100" stroke="${AM.hot}" stroke-width="2.4" fill="none" opacity=".7" stroke-linecap="round"/>
-    ${[[20, 20], [50, 34], [120, 24], [140, 44], [96, 40]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="#fff6e6"/>`).join("")}`,
-  rootglow: () => `${ground(60)}${oakSil(80, 60, .8)}<circle cx="80" cy="84" r="30" fill="${AM.hot}" opacity=".35"/>
-    <path d="M80 60 Q66 74 40 82 M80 60 Q96 76 124 84 M80 60 Q80 80 76 98 M58 74 Q44 86 26 90" stroke="${AM.hot}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`,
-  lanterns: () => `${ground(40)}<path d="M64 40 Q80 36 96 40 L92 100 H68 Z" fill="#160b03"/>${[[80, 46, 1.2, 1], [78, 58, 1, .9], [82, 70, .85, .7], [79, 81, .7, .5], [81, 91, .55, .3]].map((a) => lan(...a)).join("")}
-    ${moleSil(52, 40, .8)}${lan(60, 30, .8)}`,
-  count: () => `${ground()}${moleSil(30, 78, 1.1)}${[52, 70, 88, 106, 124, 142].map((x, k) => lan(x, 70, .9, k < 4 ? 1 : .35)).join("")}
-    <path d="M38 62 Q46 58 50 64" stroke="${AM.glow}" stroke-width="1" fill="none" opacity=".7"/>`,
-  caps: () => `${ground()}<path d="M40 78 L44 60 L52 62 L54 78 Z M104 78 L108 56 L118 58 L118 78 Z" fill="#1a0d04"/>
-    ${[[50, 64, 8], [62, 70, 6], [100, 66, 7], [120, 60, 9], [88, 72, 5]].map(([x, y, r]) => `<circle cx="${x}" cy="${y - r * .3}" r="${r * 1.8}" fill="${AM.glow}" opacity=".18"/><path d="M${x} 78 V${y}" stroke="${AM.mid}" stroke-width="2"/><path d="M${x - r} ${y} Q${x} ${y - r * 1.4} ${x + r} ${y} Z" fill="${AM.glow}"/>`).join("")}`,
-  toad: () => `${ground()}<path d="M20 78 V40 Q20 14 60 14 Q100 14 100 40 V78 Z" fill="#160b03"/><circle cx="96" cy="58" r="16" fill="${AM.glow}" opacity=".3"/>
-    ${toadSil(102, 72, 1.2, -1)}<circle cx="94" cy="60" r="4" fill="${AM.glow}"/><path d="M118 58 h14 M120 66 h18 M116 50 h10" stroke="${AM.glow}" stroke-width="1.2" opacity=".6" stroke-linecap="round"/>`,
-  frost: () => `<rect width="160" height="100" fill="${AM.ink}" opacity=".35"/><path d="M0 60 Q40 50 80 62 T160 58" stroke="${AM.ink}" stroke-width="10" fill="none"/>
-    <path d="M0 60 Q40 50 80 62 T160 58" stroke="${AM.hot}" stroke-width="2" fill="none" opacity=".5"/>
-    ${[[30, 52], [58, 54], [86, 60], [114, 58], [140, 54]].map(([x, y], k) => `<polygon points="${x},${y - 12} ${x + 5},${y} ${x},${y + 6} ${x - 5},${y}" fill="${AM.ice}" opacity="${1 - k * .12}"/>`).join("")}${moleSil(72, 92, .7)}${lan(84, 82, .7)}`,
-  deeper: () => `<rect width="160" height="100" fill="#160b03" opacity=".55"/><path d="M64 0 Q60 50 70 100 H92 Q100 50 96 0 Z" fill="${AM.mid}" opacity=".5"/>
-    <path d="M80 0 Q76 30 82 60 Q86 80 80 100" stroke="${AM.glow}" stroke-width="9" fill="none" opacity=".15"/>
-    <path d="M80 0 Q76 30 82 60 Q86 80 80 100" stroke="${AM.glow}" stroke-width="2.2" fill="none" opacity=".85"/>${lan(70, 40, .6, .5)}${lan(90, 70, .5, .35)}`,
-  receipt: () => `<g transform="rotate(-6 80 50)"><rect x="40" y="16" width="80" height="66" rx="3" fill="#f3e6c4" stroke="${AM.ink}" stroke-width="1.5"/>
-    ${[28, 36, 44, 52].map((y, k) => `<path d="M48 ${y} H${112 - k * 9}" stroke="${AM.mid}" stroke-width="1.6" stroke-linecap="round"/>`).join("")}
-    <path d="M86 66 q6 -8 10 0 q4 6 10 -2" stroke="${AM.ink}" stroke-width="1.4" fill="none"/><text x="52" y="72" font-size="9" font-style="italic" fill="${AM.ink}">P.B.</text></g>`,
-  coin: () => `<path d="M10 100 Q30 70 70 66 Q96 64 104 74 Q90 80 70 82 Q40 86 30 100 Z" fill="${AM.ink}"/><circle cx="86" cy="52" r="20" fill="#f6f1ff" opacity=".25"/>
-    <circle cx="86" cy="52" r="12" fill="#efe8f7" stroke="${AM.ink}" stroke-width="1.4"/><path d="M86 52 Q78 44 76 50 Q78 56 86 52 Q94 44 96 50 Q94 56 86 52" stroke="#a89ac0" stroke-width="1" fill="none"/>`,
-  heart: () => `<rect width="160" height="100" fill="#160b03" opacity=".55"/><circle cx="80" cy="54" r="38" fill="${AM.hot}" opacity=".22"/>
-    <path d="M80 82 L54 54 Q44 40 56 32 Q68 26 80 40 Q92 26 104 32 Q116 40 106 54 Z" fill="${AM.hot}" stroke="${AM.ink}" stroke-width="2"/>
-    <path d="M93 36 L101 44 L93 50 L88 42 Z" fill="#160b03"/><path d="M62 40 Q66 34 72 38" stroke="#ffd2b0" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+  oak: () => `${oakSil(28, 80, .3, .12, 9)}${oakSil(134, 80, .36, .14, 7)}${ground(80, 2)}${oakSil(70, 80, 1.05, .38)}
+    ${[[48, 30], [96, 24], [104, 46], [86, 16], [58, 52], [122, 34], [132, 60], [26, 50]].map(([x, y], k) => spark(x, y, 1 + (k % 3) * .3)).join("")}`,
+  leaf: () => `${blob(92, 54, 30, 26, AM.glow, .45, 3)}${S(limb(-6, 10, 36, 22, 102, 6, 3.4, .6))}${S(limb(40, 20, 54, 24, 62, 34, 1.4, .5))}
+    ${[[22, 15, -1.9], [76, 13, -1.2], [88, 10, -2.3]].map(([x, y, a]) => stroke(x, y, a, 4, .8, AM.ink)).join("")}
+    <g transform="rotate(-28 90 52)">${shape(curve([[90, 36], [97, 44], [98.6, 54], [92, 66], [89.4, 68], [84, 56], [84.6, 44]]), AM.glow, AM.mid, [-.9, .8])}
+    ${brush([[90, 38], [90.6, 52], [90, 67]], AM.mid, .8, .8)}${[[90.4, 46, -.6], [90.6, 53, -.7], [90.4, 60, -2.5], [90.6, 49, -2.4]].map(([x, y, a]) => stroke(x, y, a, 5, .4, AM.mid, .6, .1)).join("")}</g>
+    ${brush([[62, 34], [70, 40], [76, 46]], AM.glow, .5, .4, `stroke-dasharray="1.5 2.5"`)}${ground(88, 3, 4)}
+    ${[[30, 88, .4], [118, 87, -.3], [44, 90, 2.6]].map(([x, y, a]) => `<g transform="rotate(${a * 40} ${x} ${y})">${S(curve([[x - 4, y], [x, y - 1.6], [x + 4.4, y], [x, y + 1.2]]), AM.mid, [-.4, .3])}</g>`).join("")}`,
+  dawn: () => `${blob(30, 66, 70, 10, AM.glow, .55, 4)}${blob(18, 64, 16, 12, "#fff3cf", .6, 5)}${ground(78, 4, -2)}
+    ${stumpSil(56, 79, 1.1)}${wagon(92, 62, 28)}${brush([[120, 68], [130, 70.6]], AM.ink, 1.2)}${toadSil(141, 78, .9)}`,
+  smoke: () => `${ground(72, 5, -4)}${oakSil(124, 71, .5, 0, 5)}${[[38, 72, 54, 3.4, 1], [62, 71, 46, 2.4, 2], [88, 70, 40, 1.6, 3]].map(([x, y, h, w, s]) => wisp(x, y, h, w, s)).join("")}
+    ${blob(60, 76, 40, 6, AM.hot, .3, 6)}${[[34, 73, .8], [58, 72, 2.1], [86, 71, 1.1], [72, 74, .3]].map(([x, y, a]) => stroke(x, y, a, 7, 1, AM.hot, .8, .3)).join("")}`,
+  thaw: () => `${blob(78, 90, 34, 16, AM.hot, .35, 7)}${S(curve([[-12, 72], [40, 67], [80, 66], [120, 69], [172, 70], [172, 106], [-12, 106]]))}
+    ${[[-12, 66, 62], [98, 64, 76]].map(([x0, y, x1], k) => S(curve([[x0, y + 2], [(x0 + x1) / 2, y - 1.5], [x1, y + 3.4], [x1 - 4, y + 5], [(x0 + x1) / 2, y + 3], [x0, y + 6]]), "#fff6e6", [-.6, .8])).join("")}
+    ${S(curve(ring(80, 69, 16, 3.4, 9, .2, 9)), AM.mid, [-.5, .4])}${wisp(74, 66, 16, 1, 9, "#fff6e6", .4)}${wisp(86, 66, 12, .8, 10, "#fff6e6", .3)}
+    ${glowLimb(80, 76, 66, 86, 46, 92, 1.8)}${glowLimb(80, 76, 94, 88, 116, 94, 1.6)}${glowLimb(79, 76, 80, 90, 72, 104, 1.4)}
+    ${[[20, 22], [48, 36], [118, 20], [140, 42], [98, 38], [66, 14]].map(([x, y]) => spark(x, y, 1, "#fff6e6", .9)).join("")}`,
+  rootglow: () => `${blob(76, 82, 40, 20, AM.hot, .4, 8)}${ground(60, 6, 3)}${oakSil(74, 60, .8, 0, 4)}
+    ${[[74, 61, 62, 72, 38, 80, 2.2], [75, 61, 92, 76, 126, 82, 2.2], [74, 62, 76, 80, 70, 100, 1.8], [62, 70, 46, 86, 24, 90, 1.4], [96, 74, 106, 86, 112, 98, 1.2]].map((a) => glowLimb(...a)).join("")}`,
+  lanterns: () => `${ground(40, 7, 2)}${S(curve([[60, 36], [72, 40], [88, 39], [100, 42], [96, 64], [92, 106], [66, 106], [64, 66]]), AM.deep, [-1.2, 1])}
+    ${blob(80, 70, 12, 30, AM.glow, .12, 9)}${[[79, 47, 1.15, 1], [82, 57, 1, .9], [78, 66, .85, .75], [81, 74, .72, .6], [79, 81, .6, .5], [81, 87, .5, .38], [80, 92, .4, .28]].map((a) => lan(...a)).join("")}
+    ${moleSil(48, 41, .8)}${brush([[54, 30], [58, 24]], AM.ink, 1.6)}${lan(60, 28, .8)}`,
+  count: () => `${ground(78, 8, -4)}${moleSil(28, 79, 1.1)}${brush([[36, 64], [44, 58], [50, 63]], AM.glow, .9, .7, `filter="url(#${F}b)"`)}
+    ${[[54, 72], [71, 70], [88, 71], [105, 69], [122, 70], [139, 68]].map(([x, y], k) => lan(x, y, .85 + (k % 2) * .08, k < 4 ? 1 : .35)).join("")}
+    ${[54, 71, 88, 105].map((x, k) => stroke(x - 1.4, 60 - (k % 2), -1.3, 3, .5, AM.glow, .6)).join("")}`,
+  caps: () => `${ground(78, 9, 3)}${S(limb(44, 80, 42, 66, 48, 54, 4.6, 2), "#1a0d04")}${S(limb(46, 60, 52, 56, 56, 50, 1.4, .4), "#1a0d04")}${S(limb(112, 80, 114, 64, 108, 52, 5, 2.2), "#1a0d04")}
+    ${[[52, 68, 8], [64, 74, 5.5], [100, 70, 7], [124, 62, 9.5], [88, 76, 4.4], [136, 74, 5]].map(([x, y, r], k) => blob(x, y - r * .4, r * 1.9, r * 1.3, AM.glow, .35, k + 10) +
+      S(limb(x - .6, 80, x + (k % 2 ? 1 : -1), (y + 80) / 2, x, y, r * .22, r * .16), mix(AM.glow, AM.mid, .5), [-.5, .4]) +
+      shape(curve([[x - r, y + .6], [x - r * .7, y - r * .6], [x, y - r * 1.05], [x + r * .8, y - r * .5], [x + r * 1.05, y + .8], [x, y - r * .1]]), AM.glow, AM.mid, [-.7, .6]) +
+      brush([[x - r * .7, y], [x, y - r * .2], [x + r * .8, y + .3]], AM.mid, .5, .6)).join("")}`,
+  toad: () => `${ground(78, 10, -2)}${S(curve([[8, 82], [12, 46], [24, 28], [46, 22], [66, 30], [78, 50], [82, 82]]), AM.deep, [-1.4, 1.2])}
+    ${S(curve([[24, 82], [27, 58], [40, 44], [56, 46], [66, 60], [68, 82]]), "#0e0602", [-.8, .6])}${blob(92, 60, 18, 14, AM.glow, .45, 11)}
+    ${toadSil(104, 73, 1.2, -1)}${S(curve(ring(93, 60, 3.6, 4, 8, .2, 12)), AM.glow, AM.mid)}
+    ${[[118, 56, 12], [122, 64, 16], [116, 48, 8]].map(([x, y, l]) => stroke(x, y, 0, l, .6, AM.glow, .6, .03)).join("")}`,
+  frost: () => { const r = rng(13); return `${wash(.35, 90, AM.ink)}${brush([[-6, 60], [30, 52], [60, 58], [96, 62], [130, 55], [168, 58]], AM.ink, 10)}
+    ${brush([[-6, 60], [30, 52], [60, 58], [96, 62], [130, 55], [168, 58]], AM.hot, 2, .5, `filter="url(#${F}b)"`)}${blob(120, 60, 30, 8, AM.hot, .25, 14)}
+    ${[[26, 54, .9], [52, 57, -.2], [82, 61, .3], [108, 59, -.4], [140, 56, .2]].map(([x, y, a], k) => blob(x, y - 8, 9, 9, AM.ice, .25 - k * .03, k + 3) + shard(x, y + 2, 9 - k * .6, 18 - k * 1.4, a * .4, AM.ice, r, k === 0)).join("")}
+    ${moleSil(66, 94, .7)}${brush([[73, 82], [78, 80]], AM.ink, 1.2)}${lan(82, 80, .7)}`; },
+  deeper: () => `${wash(.55, 70)}${S(curve([[62, -6], [70, 30], [64, 56], [72, 80], [68, 106], [96, 106], [92, 74], [100, 44], [94, 10], [98, -6]]), AM.mid, [-1.4, 1])}
+    ${blob(82, 50, 14, 50, AM.glow, .16, 15)}${brush([[80, -2], [77, 22], [84, 44], [80, 66], [86, 84], [82, 104]], AM.glow, 7, .2, `filter="url(#${F}s)"`)}
+    ${brush([[80, -2], [77, 22], [84, 44], [80, 66], [86, 84], [82, 104]], AM.glow, 2, .9, `filter="url(#${F}b)"`)}${brush([[80, -2], [77, 22], [84, 44], [80, 66], [86, 84], [82, 104]], "#fffaf0", .7)}
+    ${lan(70, 38, .6, .5)}${lan(92, 70, .5, .35)}${lan(74, 90, .4, .2)}`,
+  receipt: () => `${blob(84, 56, 50, 34, AM.deep, .45, 16)}<g transform="rotate(-6 80 50)">
+    ${shape(curve([[40, 16], [80, 15], [120, 16.4], [121, 50], [119.4, 80], [110, 82], [100, 79.6], [88, 82.4], [76, 79.4], [62, 82.6], [50, 80], [40.6, 82]]), "#f3e6c4", "#8a6a3a", [-1.2, 1.1])}
+    ${blob(108, 26, 14, 8, "#fffaf0", .55, 17)}${blob(50, 70, 16, 10, "#c9a46a", .35, 18)}
+    ${[28, 36, 44, 52].map((y, k) => stroke(47, y + (k % 2) * .4, .01 * (k - 1), 58 - k * 9, .9, AM.mid, .85, .02)).join("")}
+    ${brush([[84, 68], [88, 62], [92, 67], [96, 70], [100, 64], [106, 66]], AM.ink, 1.1)}${brush([[50, 70], [62, 69.4]], AM.mid, .5, .5)}
+    <text x="52" y="68" font-size="9" font-style="italic" fill="${AM.ink}">P.B.</text>${S(curve([[112, 16.6], [120, 16.4], [120.6, 25], [114, 22]]), "#d9c49a", [-.6, .5])}</g>`,
+  coin: () => `${blob(90, 50, 26, 24, PALE, .3, 19)}${S(limb(-6, 104, 26, 84, 62, 72, 12, 7))}
+    ${[[60, 66, 74, 60, 86, 64], [62, 70, 78, 68, 92, 72], [60, 74, 74, 78, 86, 80], [56, 76, 62, 84, 70, 86]].map(([a, b, c, d, e, f], k) => S(limb(a, b, c, d, e, f, 3.4 - k * .3, 2))).join("")}
+    ${rim([[30, 80], [50, 72], [70, 62], [86, 63]], .3, 1)}<g transform="rotate(-14 88 52)">${shape(curve(ring(88, 52, 12, 11, 14, .03, 21)), "#efe8f7", "#8f82aa", [-1, .9])}
+    ${brush([[88, 52], [81, 45], [77, 50], [81, 55], [88, 52], [95, 45], [99, 50], [95, 55], [88, 52]], "#a89ac0", .9)}${blob(84, 46, 4, 3, "#ffffff", .7, 22, "b")}</g>`,
+  market: () => `${ground(80, 11, -3)}${S(curve([[24, 82], [28, 50], [34, 20], [48, 2], [116, 4], [128, 26], [132, 56], [138, 82]]))}${S(limb(30, 78, 18, 80, 8, 84, 4, .6))}${S(limb(132, 78, 144, 80, 156, 86, 4, .6))}
+    ${S(curve([[56, 82], [56, 56], [66, 40], [84, 36], [100, 44], [106, 60], [106, 82]]), AM.deep, [-1, .8])}${blob(82, 64, 22, 18, AM.glow, .4, 23)}
+    ${shape(curve([[58, 52], [70, 50], [84, 49], [104, 52], [101, 57], [96, 55], [90, 58], [84, 55], [78, 58], [72, 55], [66, 58], [60, 56]]), AM.glow, AM.mid, [-.7, .6])}
+    ${toadSil(80, 80, .9)}${spark(68, 68, 1.6)}${spark(92, 70, 1.2, PALE)}${rim([[116, 8], [126, 28], [130, 54]], .35, 1.2)}`,
+  heart: () => `${wash(.55, 90)}${blob(80, 54, 40, 36, AM.hot, .3, 24)}
+    ${shape(`${curve([[80, 84], [66, 72], [52, 58], [46, 44], [52, 32], [64, 28], [74, 33], [80, 40], [84, 32], [92, 28], [103, 30], [111, 40], [108, 54], [96, 70]])}`, AM.hot, "#7a2a10", [-1.4, 1.2])}
+    ${S(curve([[92, 36], [101, 41], [98, 50], [91, 52], [88, 44]]), AM.deep, [.6, -.6])}${blob(64, 64, 14, 12, "#a83a14", .5, 25)}
+    ${rim([[54, 40], [60, 33], [70, 33]], .8, 1.6, "#ffd2b0")}${[[90, 54], [97, 51.6]].map(([x, y]) => stroke(x, y, 1.9, 4, .4, AM.deep, .7)).join("")}`,
+  pull: () => `${wash(.55, 80)}${[-64, -36, -12, 14, 40, 66].map((dx, k) => brush([[80 + dx, -4], [80 + dx * .72 + (k % 2 ? 3 : -2), 34], [80 + dx * .3, 70], [80, 92]], AM.glow, .9 + (k % 3) * .4, .5 + (k % 2) * .2)).join("")}
+    ${[[30, 20], [104, 40], [62, 52], [118, 16], [92, 66]].map(([x, y]) => spark(x, y, .8, AM.glow, .8)).join("")}${blob(80, 90, 16, 12, AM.glow, .45, 26)}${spark(80, 92, 3.2, PALE)}`,
+  scorch: () => { const r = rng(27), trail = [...Array(9)].map((_, k) => [80 + Math.sin(k * 1.4) * 3, 18 + k * 8]);
+    return `${wash(.55, 80, "#1c0e04")}${S(curve([[-12, -12], [36, -12], [50, 30], [58, 70], [64, 106], [-12, 106]]))}${S(curve([[172, -12], [118, -12], [112, 40], [100, 76], [96, 106], [172, 106]]))}
+    ${[[22, 12], [36, 34], [42, 58], [132, 16], [120, 40], [112, 64]].map(([x, y]) => { const a = x < 80 ? 1.2 : 1.94; return stroke(x, y, a, 14 + r() * 8, 2.2, AM.hot, .7, .3) + stroke(x + 2, y + 4, a, 8, 1, AM.glow, .5, .3); }).join("")}
+    ${blob(80, 100, 30, 12, AM.hot, .5, 28)}${trail.map(([x, y], k) => spark(x, y, .5 + k * .08, AM.glow, .4 + k * .06)).join("")}`; },
+  wings: () => `${wash(.55, 90, "#1a0d04")}${blob(98, 34, 22, 20, AM.hot, .38, 29)}
+    ${S(curve([[80, 30], [68, 36], [58, 56], [52, 80], [48, 106], [114, 106], [108, 76], [100, 50], [92, 36]]))}
+    ${brush([[78, 36], [68, 62], [62, 104]], AM.mid, .8, .8)}${brush([[84, 36], [92, 62], [98, 104]], AM.mid, .8, .8)}
+    ${S(curve(ring(80, 25, 9, 8.4, 11, .06, 30)))}${S(limb(77, 19, 70, 6, 56, 6, 1, .3))}${S(limb(84, 19, 92, 5, 106, 7, 1, .3))}
+    ${S(limb(90, 46, 98, 42, 96, 34, 2.6, 1.6))}${shape(curve([[96, 21], [101, 29], [96.6, 38], [91.4, 30]]), AM.hot, "#7a2a10", [-.6, .5])}${blob(97, 27, 2, 3, "#ffd2b0", .9, 31, "b")}
+    ${rim([[86, 18], [89, 24], [90, 32]], .45, .8)}`,
+  carriers: () => `${wash(.55, 80, "#1a0d04")}${[...Array(14)].map((_, k) => { const x = 10 + k * 10.5 + Math.sin(k * 2.1) * 3, y = 12 + k * 5.4 + Math.sin(k * 1.3) * 5;
+    return spark(x + 1, y + 6.6, 1.1, AM.glow) + mothSil(x, y, .38 + (k % 3) * .04, PALE, .85, 14 + Math.sin(k) * 14); }).join("")}`,
+  spirals: () => `${wash(.55, 80, "#1a0d04")}${blob(80, 54, 18, 16, AM.glow, .45, 32)}${shard(80, 64, 10, 22, .08, AM.glow, rng(33), true)}
+    ${brush([...Array(22)].map((_, k) => { const a = k * .55, R = 14 + k * 1.6; return [80 + Math.cos(a) * R * 1.3, 54 + Math.sin(a) * R * .8]; }), PALE, .7, .55, `stroke-dasharray="2 3"`)}
+    ${[[52, 56, -96], [108, 48, 84], [80, 30, -6], [42, 70, -124], [120, 72, 120], [66, 84, 176]].map(([x, y, a], k) => mothSil(x, y, .44 + (k % 2) * .1, PALE, .9, a)).join("")}`,
+  scalefall: () => `${wash(.55, 80, "#1a0d04")}${[...Array(26)].map((_, k) => { const x = (k * 37) % 160, y = (k * 23) % 80;
+    return `<path d="${curve(ring(x, y, 1.9, 1.1, 6, .2, k, k * .6))}" fill="${PALE}" opacity="${.35 + (k % 4) * .15}"/>`; }).join("")}
+    ${ground(86, 12, -3)}${[[40, 84, 10], [70, 85, -14], [104, 83, 22], [128, 84, -8]].map(([x, y, a], k) => mothSil(x, y, .5 + (k % 2) * .08, PALE, .9, a)).join("")}
+    ${brush([[30, 72], [36, 62], [30, 54], [36, 44]], PALE, .7, .6, `stroke-dasharray="1.5 2.5"`)}${brush([[118, 70], [112, 60], [120, 52], [114, 42]], PALE, .7, .6, `stroke-dasharray="1.5 2.5"`)}`,
+  circling: () => `${ground(78, 13, -3)}${moleSil(60, 79, 1.2)}${S(limb(70, 58, 78, 54, 82, 46, 2.4, 1.6))}${lan(86, 42, 1.4)}
+    <path d="${curve(ring(88, 44, 28, 13, 12, .08, 34, -.15))}" stroke="${PALE}" stroke-width=".8" stroke-dasharray="2 3" fill="none" opacity=".7"/>${mothSil(114, 40, .6, PALE, .95, 70)}`,
+  skyhole: () => `${wash(.55, 80, AM.ink)}${moonDisc(84, 10, 7)}${hole(80, 14, 22)}
+    <path d="${curve([[62, 16], [98, 16], [124, 106], [36, 106]])}" fill="${PALE}" opacity=".16" filter="url(#${F}s)"/>${[[70, 50, -10], [94, 38, 15], [84, 70, 4]].map(([x, y, a], k) => mothSil(x, y, .46 + k * .04, AM.ink, .9, a)).join("")}${ground(92, 14)}`,
+  cavein: () => `${wash(.55, 80, "#1a0d04")}${hole(80, 12, 20)}${stones([[66, 4, 14, 9], [82, 1, 16, 10], [58, 26, 12, 8], [88, 32, 14, 9], [72, 50, 10, 7], [96, 62, 12, 8], [60, 74, 14, 8]])}
+    ${[...Array(10)].map((_, k) => spark(50 + k * 7, 20 + (k * 17) % 60, .6, AM.glow, .5)).join("")}${ground(92, 15)}`,
+  bracket: () => `${wash(.55, 90, "#1a0d04")}${blob(34, 50, 60, 56, PALE, .2, 35)}<path d="${curve(ring(18, 50, 56, 54, 16, .02, 36))}" fill="${PALE}" opacity=".85"/>
+    ${brush([[58, 22], [72, 34], [76, 50], [72, 68], [58, 78]], "#c9bfe0", 1)}${blob(40, 40, 14, 12, "#cfc6e6", .6, 37)}
+    ${[["#2a1606", 5.4], ["#c8a46a", 2]].map(([c, w]) => brush([[74, 36], [88, 35.4], [96.6, 37], [97, 50], [96, 63.6], [86, 64.6], [74, 64]], c, w, 1, `stroke-linejoin="round"`)).join("")}
+    ${[[90, 35.6], [89, 64.4], [96.8, 50]].map(([x, y], k) => shape(curve(ring(x, y, 2.2, 2, 8, .1, k + 38)), "#c8a46a", AM.ink, [-.5, .4])).join("")}${brush([[97, 50], [106, 48], [110, 45]], AM.ink, 1)}${lan(112, 52, 1)}`,
+  village: () => `${wash(.55, 80, "#1a0d04")}${moonDisc(80, 38, 17)}${brush([[70, 32], [80, 27], [90, 32]], "#d9d2ec", 1, .8)}${brush([[66, 44], [80, 51], [94, 44]], "#d9d2ec", 1, .8)}
+    ${[...Array(10)].map((_, k) => { const a = k / 10 * Math.PI * 2 + .2; return lan(80 + Math.cos(a) * 36, 38 + Math.sin(a) * 15 + Math.cos(a * 2) * 2, .62 + (k % 3) * .06); }).join("")}${ground(84, 16, -4)}
+    ${[[30, 85, 1], [58, 84, .8], [120, 84, 1.15]].map(([x, y, s]) => S(curve([[x - 8 * s, y + 1], [x - 8.4 * s, y - 9 * s], [x - 1.4 * s, y - 17 * s], [x - .2 * s, y - 17.4 * s], [x + 9 * s, y - 9.4 * s], [x + 8 * s, y + 1]])) +
+      shape(curve([[x - 2 * s, y - 8 * s], [x + 2 * s, y - 8.2 * s], [x + 2.2 * s, y - 4 * s], [x - 2 * s, y - 3.8 * s]]), AM.glow, AM.mid, [-.4, .3]) + blob(x, y - 6 * s, 5 * s, 4 * s, AM.glow, .4, x | 0, "b")).join("")}`,
+  window: () => `${wash(.55, 70, "#1a0d04")}${S(curve([[40, 18], [82, 15], [120, 20], [118, 50], [121, 82], [80, 84], [42, 81], [44, 50]]))}${blob(80, 50, 26, 22, AM.glow, .4, 39)}
+    ${shape(curve([[62, 33], [80, 31], [99, 34], [98, 50], [99, 66], [80, 66.6], [61, 65.4], [62, 50]]), "#3a1e08", "#120801", [-1, .8])}${blob(84, 54, 12, 10, AM.glow, .3, 40)}
+    ${lan(82, 55, 1.3)}${brush([[80.6, 32], [80, 48], [80.4, 66]], AM.ink, 2.2)}${brush([[62, 49], [80, 50], [98, 49.6]], AM.ink, 2.2)}
+    ${S(curve([[56, 65], [104, 64], [106, 69], [55, 70]]), AM.mid)}${rim([[86, 64.6], [104, 64.2]], .5, .8)}`,
+  rubble: () => `${wash(.55, 80, "#1a0d04")}${blob(80, 0, 14, 8, PALE, .45, 41)}${stones([[50, 8, 22, 12], [72, 6, 20, 13], [92, 10, 18, 11], [44, 22, 18, 12], [62, 21, 26, 14], [88, 24, 24, 12],
+    [48, 38, 24, 13], [72, 37, 18, 12], [90, 39, 22, 13], [44, 54, 20, 12], [64, 52, 26, 14], [90, 55, 22, 12], [50, 69, 24, 13], [74, 68, 22, 13]])}
+    ${S(curve([[-12, -12], [42, -12], [46, 30], [40, 70], [46, 106], [-12, 106]]))}${S(curve([[172, -12], [116, -12], [114, 40], [120, 72], [112, 106], [172, 106]]))}${moleSil(80, 98, .7)}${lan(90, 87, .6)}`,
+  listening: () => `${wash(.55, 80, "#1a0d04")}${S(curve([[-12, -12], [172, -12], [172, 44], [130, 50], [98, 46], [70, 50], [40, 45], [-12, 46]]))}
+    ${[[34, 53, 182], [60, 55, 168], [92, 51, 192], [122, 54, 176]].map(([x, y, a], k) => mothSil(x, y, .62 + (k % 2) * .1, PALE, .9, a)).join("")}
+    ${[...Array(5)].map((_, k) => brush([[28 + k * 24, 40], [32 + k * 24, 36.6], [36 + k * 24, 40]], PALE, .7, .4)).join("")}${ground(92, 17)}`,
+  thread: () => `${wash(1, 80, AM.ink)}${stones([[30, 6, 30, 18], [62, 4, 34, 20], [98, 8, 30, 18], [26, 28, 36, 20], [66, 30, 28, 18], [96, 30, 36, 20], [34, 54, 30, 20], [68, 52, 34, 22], [104, 56, 28, 18], [30, 78, 36, 18], [70, 78, 30, 20], [102, 80, 32, 18]], "#3a2008")}
+    ${[[5, .2], [1.4, 1]].map(([w, op]) => `<path d="M82 -2 L78 22 L84 40 L79 58 L83 76 L80 102" stroke="${PALE}" stroke-width="${w}" fill="none" opacity="${op}" stroke-linejoin="round" ${w > 2 ? `filter="url(#${F}b)"` : ""}/>`).join("")}${spark(84, 40, 1.2, PALE)}`,
+  sprout: () => `${blob(40, 64, 70, 14, AM.glow, .4, 42)}${ground(78, 18, 3)}${stumpSil(80, 79, 1.2, 7)}
+    ${blob(82, 44, 16, 16, AM.glow, .45, 43)}${S(limb(80, 58, 78, 48, 82, 38, 1.4, .6), AM.glow, [-.4, .3])}
+    ${shape(curve([[80, 49], [74, 44], [68, 46], [74, 51]]), AM.glow, AM.mid, [-.4, .4])}${shape(curve([[81, 42], [87, 36], [93, 38], [87, 44]]), AM.glow, AM.mid, [-.4, .4])}`,
+  cart: () => `${wash(.55, 70, AM.ink)}${S(curve([[132, 94], [132, 50], [140, 32], [154, 24], [172, 30], [176, 94]]), "#120801", [-1, .8])}${ground(92, 19, 2)}
+    ${S("M40 58 Q47 45 52 32.6 Q57 46 66 58 Q53 59.4 40 58 Z", AM.mid)}${S(curve([[64, 58], [65, 42], [82, 43], [82, 58]]), AM.mid)}${brush([[48, 30], [48, 44]], AM.ink, 1)}
+    ${shape(curve([[48, 30.4], [57, 32.6], [48, 36]]), AM.glow, AM.mid, [-.4, .3])}${wagon(36, 58)}
+    ${[42, 52, 62, 72, 82].map((x) => spark(x, 53 - Math.sin((x - 36) / 50 * Math.PI) * 4, .9)).join("")}${brush([[36, 54], [60, 47], [86, 54]], AM.ink, .7)}
+    ${S(limb(86, 66, 92, 68, 98, 72, 1.4, 1))}${toadSil(102, 92, 1)}${moleSil(120, 92, .8)}${lan(128, 80, .8)}`,
+  undermoon: () => `${wash(.6, 110, "#120801")}${moonDisc(106, 72, 19)}${brush([[92, 66], [106, 61], [120, 67]], "#d9d2ec", 1, .7)}${brush([[90, 77], [106, 83], [121, 76]], "#d9d2ec", 1, .7)}
+    ${[...Array(8)].map((_, k) => mothSil(70 + (k * 19) % 70, 40 + (k * 13) % 50, .24, PALE, .7, k * 40)).join("")}
+    ${S(curve([[-12, 40], [30, 38], [56, 41], [60, 50], [54, 66], [50, 106], [-12, 106]]))}${rim([[20, 38.6], [44, 39], [57, 44]], .3, 1)}
+    ${toadSil(14, 40, .8)}${moleSil(32, 40, .8)}${S(limb(38, 26, 42, 22, 44, 18, 1.4, 1))}${lan(46, 23, .7)}`,
+  moonbeam: () => `${wash(.55, 80)}${moonDisc(82, 8, 8)}<path d="${curve([[64, -4], [96, -4], [126, 104], [32, 104]])}" fill="${PALE}" opacity=".32" filter="url(#${F}s)"/>
+    ${S(curve([[-12, -12], [62, -12], [52, 40], [40, 106], [-12, 106]]))}${S(curve([[172, -12], [100, -12], [110, 50], [122, 106], [172, 106]]))}
+    ${stones([[22, 30, 16, 9], [126, 46, 14, 9], [14, 62, 18, 10]], AM.mid)}${[[70, 30], [88, 52], [76, 74], [96, 84]].map(([x, y]) => spark(x, y, .7, PALE, .6)).join("")}${ground(94, 20)}`,
+  straight: () => `${wash(.55, 80)}<path d="${curve([[64, -4], [96, -4], [126, 104], [32, 104]])}" fill="${PALE}" opacity=".24" filter="url(#${F}s)"/>
+    ${[...Array(4)].map((_, k) => brush([[48 + k * 21, 98], [48.6 + k * 21, 50], [48 + k * 21, 6]], PALE, .6, .45, `stroke-dasharray="2 4"`)).join("")}
+    ${[...Array(12)].map((_, k) => mothSil(48 + (k % 4) * 21, 86 - Math.floor(k / 4) * 28 - (k % 4) * 4, .44 + (k % 3) * .04, PALE, .95, (k % 2 ? 3 : -3))).join("")}`,
+  wickway: () => { const pts = [[20, 20], [50, 34], [86, 18], [124, 30], [146, 56], [110, 66], [74, 54], [40, 70], [16, 88], [60, 90], [100, 92], [140, 86]];
+    const links = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 1], [6, 7], [7, 8], [7, 9], [9, 10], [10, 5], [10, 11], [11, 4]];
+    return `${wash(.6, 80, "#120801")}${links.map(([a, b]) => { const [x1, y1] = pts[a], [x2, y2] = pts[b], sag = [(x1 + x2) / 2, (y1 + y2) / 2 + Math.hypot(x2 - x1, y2 - y1) * .08];
+      return brush([[x1, y1], sag, [x2, y2]], PALE, 3, .2, `filter="url(#${F}b)"`) + brush([[x1, y1], sag, [x2, y2]], PALE, .9, .7); }).join("")}${pts.map(([x, y], k) => lan(x, y, .7 + (k % 3) * .08)).join("")}`; },
+  youngoak: () => `${blob(80, 62, 90, 18, AM.glow, .4, 44)}${ground(78, 21, -3)}${stumpSil(74, 79, 1.3, 9)}${oakSil(76, 60, .62, .4, 6)}
+    ${[[56, 26], [100, 20], [88, 12], [64, 16], [110, 38]].map(([x, y]) => spark(x, y, 1.1)).join("")}${moleSil(118, 79, .8)}${toadSil(140, 79, .8, -1)}`,
 };
 export function memoryArt(kind, w = 160) {
-  const id = "am" + uid++;
+  const id = "am" + uid++; F = id;
   return `<svg class="memArt" width="${w}" height="${w * .625}" viewBox="0 0 160 100" aria-hidden="true">
-    <defs><radialGradient id="${id}" cx=".5" cy=".45" r=".75"><stop offset="0" stop-color="#c98a2c"/><stop offset=".7" stop-color="#7a4a14"/><stop offset="1" stop-color="#3a2208"/></radialGradient>
+    <defs><radialGradient id="${id}" cx=".44" cy=".42" r=".78"><stop offset="0" stop-color="#c98a2c"/><stop offset=".7" stop-color="#7a4a14"/><stop offset="1" stop-color="#3a2208"/></radialGradient>
       <clipPath id="${id}c"><ellipse cx="80" cy="50" rx="78" ry="48"/></clipPath>
       <radialGradient id="${id}v" cx=".5" cy=".5" r=".6"><stop offset=".62" stop-color="#1a0d04" stop-opacity="0"/><stop offset="1" stop-color="#1a0d04" stop-opacity=".7"/></radialGradient>
+      <filter id="${id}s" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+      <filter id="${id}b" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1"/></filter>
       <filter id="${id}n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 .85  0 0 0 0 .55  0 0 0 1.4 -.5"/></filter></defs>
     <g clip-path="url(#${id}c)"><rect width="160" height="100" fill="url(#${id})"/>${(MEM[kind] || MEM.leaf)()}
       <rect width="160" height="100" fill="url(#${id}v)"/><rect width="160" height="100" filter="url(#${id}n)" opacity=".1"/>
-      <ellipse cx="54" cy="24" rx="38" ry="10" fill="#fff" opacity=".08" transform="rotate(-12 54 24)"/></g>
+      <path d="${curve(ring(52, 22, 38, 8, 10, .12, 1, -.22))}" fill="#fff" opacity=".08" filter="url(#${id}b)"/></g>
     <ellipse cx="80" cy="50" rx="78" ry="48" fill="none" stroke="#3a2208" stroke-width="3"/><ellipse cx="80" cy="50" rx="74" ry="44.5" fill="none" stroke="#ffd27a" stroke-width=".8" opacity=".35"/></svg>`;
 }
 
@@ -603,81 +766,6 @@ export function stumpArt(growth = 0, sprout = false, w = 300, tree = false) {
     <ellipse cx="150" cy="47" rx="30" ry="5" fill="#8a6650" opacity=".5"/><path d="M134 47 Q150 43 166 47 M140 47 Q150 45 160 47" stroke="#5a3a2a" stroke-width="1" fill="none"/>
     <path d="M128 60 L132 72 M170 58 L166 70" stroke="#2a1a10" stroke-width="1.4"/>${moss}${caps}${shoot}${oak}</svg>`;
 }
-
-// ---------- story pictures, Ring One ending onwards ----------
-const PALE = "#f4f0ff";
-const mothSil = (x, y, s = 1, col = AM.ink, op = 1, rot = 0) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})" opacity="${op}" fill="${col}">
-  <path d="M0 0 Q-9 -10 -14 -3 Q-13 3 0 1 Z M0 0 Q9 -10 14 -3 Q13 3 0 1 Z"/><path d="M0 1 Q-8 9 -10 4 Q-7 1 0 1 Z M0 1 Q8 9 10 4 Q7 1 0 1 Z"/>
-  <ellipse cy="1" rx="1.8" ry="4.4"/><path d="M-.6 -3 Q-3 -9 -6 -9 M.6 -3 Q3 -9 6 -9" stroke="${col}" stroke-width="1" fill="none"/></g>`;
-const hole = (x, y, r) => `<path d="M0 0 H160 V${y + r * .3} Q${x + r * 1.6} ${y + r * 1.4} ${x + r} ${y} A${r} ${r * .55} 0 0 0 ${x - r} ${y} Q${x - r * 1.6} ${y + r * 1.4} 0 ${y + r * .3} Z" fill="${AM.ink}"/>`;
-const moonDisc = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r * 2.4}" fill="${PALE}" opacity=".18"/><circle cx="${x}" cy="${y}" r="${r}" fill="${PALE}"/><circle cx="${x - r * .3}" cy="${y - r * .2}" r="${r * .22}" fill="#d9d2ec" opacity=".7"/>`;
-const stones = (rows) => rows.map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h * .4}" fill="${AM.ink}" stroke="${AM.mid}" stroke-width="1"/>`).join("");
-Object.assign(MEM, {
-  market: () => `${ground()}<path d="M30 78 Q28 30 46 8 L114 8 Q132 30 130 78 Z" fill="${AM.ink}"/><path d="M58 78 V50 Q80 30 102 50 V78 Z" fill="#160b03"/>
-    <circle cx="80" cy="62" r="20" fill="${AM.glow}" opacity=".25"/><path d="M62 52 H98 L94 58 H66 Z" fill="${AM.glow}"/><path d="M66 52 v6 M74 52 v6 M82 52 v6 M90 52 v6" stroke="${AM.mid}" stroke-width="1.2"/>
-    ${toadSil(80, 78, .9)}<circle cx="70" cy="66" r="2" fill="${AM.glow}"/><circle cx="91" cy="68" r="1.6" fill="${PALE}"/>`,
-  pull: () => `<rect width="160" height="100" fill="#160b03" opacity=".55"/>${[-60, -30, 0, 30, 60].map((dx) => `<path d="M${80 + dx} 0 Q${80 + dx * .6} 50 80 92" stroke="${AM.glow}" stroke-width="1.6" fill="none" opacity=".55"/>`).join("")}
-    <circle cx="80" cy="92" r="14" fill="${AM.glow}" opacity=".3"/><circle cx="80" cy="92" r="3.5" fill="${PALE}"/>`,
-  scorch: () => `<rect width="160" height="100" fill="#1c0e04" opacity=".55"/><path d="M0 0 Q40 50 60 100 H0 Z M160 0 Q120 50 100 100 H160 Z" fill="${AM.ink}"/>
-    ${[[20, 10], [34, 30], [22, 52], [138, 14], [124, 36], [136, 58]].map(([x, y]) => `<path d="M${x} ${y} l${x < 80 ? 10 : -10} 22 l${x < 80 ? -4 : 4} -14 Z" fill="${AM.hot}" opacity=".6"/>`).join("")}
-    <ellipse cx="80" cy="98" rx="26" ry="10" fill="${AM.hot}" opacity=".35"/><path d="M80 20 V84" stroke="${AM.glow}" stroke-width="1" stroke-dasharray="2 5" opacity=".6"/>`,
-  wings: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><circle cx="96" cy="34" r="22" fill="${AM.hot}" opacity=".28"/>
-    <path d="M80 30 Q56 40 50 100 H110 Q104 40 80 30 Z" fill="${AM.ink}" stroke="${AM.mid}" stroke-width="1.2"/><path d="M80 34 Q66 60 62 100 M80 34 Q94 60 98 100" stroke="${AM.mid}" stroke-width=".8" fill="none"/>
-    <circle cx="80" cy="26" r="9" fill="${AM.ink}"/><path d="M76 19 Q66 4 56 6 M84 19 Q94 4 104 6" stroke="${AM.ink}" stroke-width="1.6" fill="none"/>
-    <path d="M90 42 Q96 36 96 30" stroke="${AM.ink}" stroke-width="3" stroke-linecap="round"/><polygon points="96,22 101,30 96,38 91,30" fill="${AM.hot}" stroke="${AM.ink}" stroke-width="1"/>`,
-  carriers: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/>${[...Array(14)].map((_, k) => { const x = 10 + k * 10.5, y = 12 + k * 5.6 + (k % 3) * 6;
-    return `<circle cx="${x}" cy="${y + 6}" r="3.2" fill="${AM.glow}" opacity=".35"/><circle cx="${x}" cy="${y + 6}" r="1.2" fill="${AM.glow}"/>${mothSil(x, y, .42, PALE, .85, 20)}`; }).join("")}`,
-  spirals: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><circle cx="80" cy="54" r="16" fill="${AM.glow}" opacity=".3"/><polygon points="80,42 87,54 80,66 73,54" fill="${AM.glow}"/>
-    <path d="M80 54 m-26 0 a26 18 0 1 1 52 0 a30 22 0 1 1 -60 4 a36 26 0 1 1 72 -4" stroke="${PALE}" stroke-width=".8" stroke-dasharray="2 3" fill="none" opacity=".6"/>
-    ${[[54, 54, -90], [106, 50, 90], [80, 32, 0], [44, 66, -120], [118, 70, 120], [70, 82, 180]].map(([x, y, r]) => mothSil(x, y, .5, PALE, .9, r)).join("")}`,
-  scalefall: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/>${[...Array(26)].map((_, k) => `<ellipse cx="${(k * 37) % 160}" cy="${(k * 23) % 80}" rx="1.8" ry="1.1" fill="${PALE}" opacity="${.35 + (k % 4) * .15}" transform="rotate(${k * 33} ${(k * 37) % 160} ${(k * 23) % 80})"/>`).join("")}
-    ${ground(86)}${[[40, 84, 10], [70, 85, -14], [104, 83, 22], [128, 85, -8]].map(([x, y, r]) => mothSil(x, y, .55, PALE, .9, r)).join("")}
-    <path d="M30 70 q8 -10 2 -16 q-8 -6 2 -12 M118 66 q-8 -8 -2 -14 q8 -6 -2 -14" stroke="${PALE}" stroke-width=".7" stroke-dasharray="1.5 2.5" fill="none" opacity=".6"/>`,
-  circling: () => `${ground()}${moleSil(64, 78, 1.2)}<path d="M76 56 L82 48" stroke="${AM.ink}" stroke-width="3" stroke-linecap="round"/>${lan(84, 46, 1.4)}
-    <ellipse cx="84" cy="46" rx="26" ry="14" stroke="${PALE}" stroke-width=".8" stroke-dasharray="2 3" fill="none" opacity=".7"/>${mothSil(108, 44, .6, PALE, .95, 70)}`,
-  skyhole: () => `<rect width="160" height="100" fill="#2a1606" opacity=".55"/>${moonDisc(80, 10, 7)}${hole(80, 14, 22)}
-    <path d="M62 14 L98 14 L120 100 H40 Z" fill="${PALE}" opacity=".16"/>${[[70, 50, -10], [92, 38, 15], [80, 70, 0]].map(([x, y, r]) => mothSil(x, y, .5, AM.ink, .9, r)).join("")}${ground(92)}`,
-  cavein: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/>${hole(80, 12, 20)}${stones([[66, 4, 14, 9], [80, 0, 16, 10], [58, 26, 12, 8], [86, 32, 14, 9], [72, 50, 10, 7], [94, 62, 12, 8], [60, 74, 14, 8]])}
-    ${[...Array(10)].map((_, k) => `<circle cx="${50 + k * 7}" cy="${20 + (k * 17) % 60}" r="1" fill="${AM.glow}" opacity=".4"/>`).join("")}${ground(92)}`,
-  bracket: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><circle cx="40" cy="50" r="62" fill="${PALE}" opacity=".12"/><circle cx="20" cy="50" r="56" fill="${PALE}" opacity=".85"/>
-    <path d="M58 22 Q72 30 76 50 Q72 70 58 78" stroke="#c9bfe0" stroke-width="1" fill="none"/><path d="M74 36 H96 V64 H74" stroke="${AM.ink}" stroke-width="5" fill="none" stroke-linejoin="round"/>
-    <path d="M74 36 H96 V64 H74" stroke="#c8a46a" stroke-width="2" fill="none"/>${[[90, 36], [90, 64], [96, 50]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#c8a46a" stroke="${AM.ink}" stroke-width=".8"/>`).join("")}${lan(110, 50, 1)}`,
-  village: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><circle cx="80" cy="40" r="34" fill="${PALE}" opacity=".14"/><circle cx="80" cy="40" r="18" fill="${PALE}"/>
-    <path d="M70 34 Q80 28 90 34 M66 44 Q80 52 94 44" stroke="#d9d2ec" stroke-width="1" fill="none"/>
-    ${[...Array(10)].map((_, k) => { const a = k / 10 * Math.PI * 2; return lan(80 + Math.cos(a) * 34, 40 + Math.sin(a) * 14, .7); }).join("")}${ground(84)}
-    ${[[34, 84], [118, 84], [58, 84]].map(([x, y]) => `<path d="M${x - 8} ${y} V${y - 9} L${x} ${y - 16} L${x + 8} ${y - 9} V${y} Z" fill="${AM.ink}"/><rect x="${x - 2}" y="${y - 8}" width="4" height="4" fill="${AM.glow}"/>`).join("")}`,
-  window: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><rect x="44" y="20" width="72" height="60" rx="4" fill="${AM.ink}"/><circle cx="80" cy="50" r="24" fill="${AM.glow}" opacity=".3"/>
-    <rect x="62" y="34" width="36" height="32" fill="#3a1e08"/><path d="M80 34 V66 M62 50 H98" stroke="${AM.ink}" stroke-width="2.4"/>${lan(80, 56, 1.3)}<path d="M58 66 H102" stroke="${AM.mid}" stroke-width="3"/>`,
-  rubble: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><path d="M70 0 H90 V6 H70 Z" fill="${PALE}" opacity=".35"/>${stones([[50, 8, 22, 12], [72, 6, 20, 13], [92, 10, 18, 11], [44, 22, 18, 12], [62, 21, 26, 14], [88, 24, 24, 12],
-    [48, 38, 24, 13], [72, 37, 18, 12], [90, 39, 22, 13], [44, 54, 20, 12], [64, 52, 26, 14], [90, 55, 22, 12], [50, 69, 24, 13], [74, 68, 22, 13]])}
-    <path d="M0 0 H44 V100 H0 Z M116 0 H160 V100 H116 Z" fill="${AM.ink}"/>${moleSil(82, 98, .7)}${lan(92, 88, .6)}`,
-  listening: () => `<rect width="160" height="100" fill="#1a0d04" opacity=".55"/><path d="M0 0 H160 V44 Q120 52 80 46 Q40 52 0 44 Z" fill="${AM.ink}"/>
-    ${[[36, 52, 180], [62, 54, 170], [92, 52, 190], [120, 54, 180]].map(([x, y, r]) => mothSil(x, y, .7, PALE, .9, r)).join("")}
-    ${[...Array(5)].map((_, k) => `<path d="M${30 + k * 24} 40 q4 -4 8 0" stroke="${PALE}" stroke-width=".7" fill="none" opacity=".4"/>`).join("")}${ground(92)}`,
-  thread: () => `<rect width="160" height="100" fill="${AM.ink}"/>${stones([[30, 6, 30, 18], [62, 4, 34, 20], [98, 8, 30, 18], [26, 28, 36, 20], [66, 30, 28, 18], [96, 30, 36, 20], [34, 54, 30, 20], [68, 52, 34, 22], [104, 56, 28, 18], [30, 78, 36, 18], [70, 78, 30, 20], [102, 80, 32, 18]])}
-    <path d="M82 0 L78 22 L84 40 L79 58 L83 76 L80 100" stroke="${PALE}" stroke-width="5" fill="none" opacity=".2"/><path d="M82 0 L78 22 L84 40 L79 58 L83 76 L80 100" stroke="${PALE}" stroke-width="1.4" fill="none"/>`,
-  sprout: () => `<rect y="50" width="160" height="30" fill="${AM.glow}" opacity=".25"/>${ground()}<path d="M60 78 L62 58 L66 62 L70 55 L74 61 L78 56 L82 61 L86 54 L90 60 L96 57 L98 78 Z" fill="${AM.ink}"/>
-    <circle cx="80" cy="44" r="16" fill="${AM.glow}" opacity=".35"/><path d="M80 57 Q78 48 81 38" stroke="${AM.glow}" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M80 48 Q72 44 70 48 Q75 52 80 48 Z M81 41 Q89 36 91 40 Q86 45 81 41 Z" fill="${AM.glow}"/>`,
-  cart: () => `<rect width="160" height="100" fill="#2a1606" opacity=".55"/><path d="M110 92 V40 Q110 20 135 20 Q160 20 160 40 V92 Z" fill="#120801"/>${ground(92)}
-    <rect x="36" y="58" width="50" height="22" rx="3" fill="${AM.ink}"/><path d="M40 58 L52 34 L64 58 Z" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="1.2"/><rect x="64" y="42" width="18" height="16" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="1"/>
-    <path d="M48 30 V44 M48 30 L58 33 L48 36" stroke="${AM.ink}" stroke-width="1.2" fill="${AM.glow}"/><path d="M36 54 Q60 46 86 54" stroke="${AM.ink}" stroke-width=".8" fill="none"/>${[42, 52, 62, 72, 82].map((x) => `<circle cx="${x}" cy="${53 - Math.sin((x - 36) / 50 * Math.PI) * 4}" r="1.6" fill="${AM.glow}"/>`).join("")}
-    <circle cx="46" cy="84" r="7" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="2"/><circle cx="76" cy="84" r="7" fill="${AM.mid}" stroke="${AM.ink}" stroke-width="2"/>
-    <path d="M86 66 L98 70" stroke="${AM.ink}" stroke-width="2.4"/>${toadSil(102, 92, 1)}${moleSil(122, 92, .8)}${lan(130, 80, .8)}`,
-  undermoon: () => `<rect width="160" height="100" fill="#120801" opacity=".55"/><circle cx="104" cy="72" r="40" fill="${PALE}" opacity=".12"/><circle cx="104" cy="72" r="20" fill="${PALE}" opacity=".9"/>
-    <path d="M90 66 Q104 60 118 66 M88 76 Q104 84 120 76" stroke="#d9d2ec" stroke-width="1" fill="none"/>${[...Array(8)].map((_, k) => mothSil(70 + (k * 19) % 70, 40 + (k * 13) % 50, .25, PALE, .7, k * 40)).join("")}
-    <path d="M0 40 H54 Q60 40 58 48 L50 100 H0 Z" fill="${AM.ink}"/>${moleSil(30, 40, .8)}${lan(40, 30, .7)}${toadSil(14, 40, .8)}`,
-  moonbeam: () => `<rect width="160" height="100" fill="#160b03" opacity=".55"/>${moonDisc(80, 8, 8)}<path d="M66 0 H94 L128 100 H32 Z" fill="${PALE}" opacity=".3"/>
-    <path d="M0 0 H62 L40 100 H0 Z M160 0 H98 L120 100 H160 Z" fill="${AM.ink}"/>${stones([[22, 30, 16, 9], [126, 46, 14, 9], [14, 62, 18, 10]])}${ground(94)}`,
-  straight: () => `<rect width="160" height="100" fill="#160b03" opacity=".55"/><path d="M66 0 H94 L128 100 H32 Z" fill="${PALE}" opacity=".22"/>
-    ${[...Array(12)].map((_, k) => mothSil(48 + (k % 4) * 21, 88 - Math.floor(k / 4) * 28 - (k % 4) * 4, .5, PALE, .95)).join("")}
-    ${[...Array(4)].map((_, k) => `<path d="M${48 + k * 21} 98 V10" stroke="${PALE}" stroke-width=".6" stroke-dasharray="2 4" opacity=".5"/>`).join("")}`,
-  wickway: () => `<rect width="160" height="100" fill="#120801" opacity=".55"/>${(() => { const pts = [[20, 20], [50, 34], [86, 18], [124, 30], [146, 56], [110, 66], [74, 54], [40, 70], [16, 88], [60, 90], [100, 92], [140, 86]];
-    const links = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 1], [6, 7], [7, 8], [7, 9], [9, 10], [10, 5], [10, 11], [11, 4]];
-    return links.map(([a, b]) => `<path d="M${pts[a][0]} ${pts[a][1]} L${pts[b][0]} ${pts[b][1]}" stroke="${PALE}" stroke-width="1.2" opacity=".55"/>`).join("") + pts.map(([x, y]) => lan(x, y, .8)).join(""); })()}`,
-  youngoak: () => `<rect y="40" width="160" height="40" fill="${AM.glow}" opacity=".3"/>${ground()}<path d="M64 78 L66 64 L72 60 L80 64 L88 59 L94 64 L96 78 Z" fill="${AM.ink}"/>${oakSil(80, 62, .7, .4)}
-    ${[[62, 30], [96, 26], [84, 18], [70, 22]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.4" fill="${AM.glow}"/>`).join("")}${moleSil(120, 78, .8)}${toadSil(138, 78, .8)}`,
-});
 
 // Granny Burr: Dibble's grandmother, keeper of the Lantern Moles. Built on Dibble so she reads as family:
 // silver fur, a plum shawl, a bun with a knitting needle, round spectacles, her old lantern.
