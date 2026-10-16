@@ -192,14 +192,17 @@ function hatArt(kind, id) {
 // ---- rubber-hose hybrid toolkit: bold ink, fluffy scalloped silhouettes, pie-cut eyes ----
 export const INK2 = "#1d120c";
 // a fluffy outline: scallops around an ellipse (cx, cy, rx, ry), n bumps, bump depth d
-export function fluff(cx, cy, rx, ry, n, d) {
-  let p = "";
-  for (let k = 0; k <= n; k++) {
-    const a = Math.PI * 2 * (k / n), x = cx + Math.cos(a) * rx, y = cy + Math.sin(a) * ry;
-    if (!k) { p += `M${x.toFixed(2)} ${y.toFixed(2)}`; continue; }
-    const am = Math.PI * 2 * ((k - .5) / n), mx = cx + Math.cos(am) * (rx + d), my = cy + Math.sin(am) * (ry + d);
-    p += ` Q${mx.toFixed(2)} ${my.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)}`;
-  }
+export function fluff(cx, cy, rx, ry, n, d, seed = 3) {
+  let p = "", r = seed;
+  const rnd = () => ((r = (r * 16807) % 2147483647) / 2147483647);
+  const pts = [...Array(n)].map((_, k) => (k + (rnd() - .5) * .45) / n * Math.PI * 2); // uneven spacing
+  pts.push(pts[0] + Math.PI * 2);
+  pts.forEach((a, k) => {
+    const x = cx + Math.cos(a) * rx, y = cy + Math.sin(a) * ry;
+    if (!k) { p += `M${x.toFixed(2)} ${y.toFixed(2)}`; return; }
+    const am = (pts[k - 1] + a) / 2 + (rnd() - .5) * .08, dd = d * (.45 + rnd() * 1.1); // tufts of different sizes, slightly swept
+    p += ` Q${(cx + Math.cos(am) * (rx + dd)).toFixed(2)} ${(cy + Math.sin(am) * (ry + dd)).toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)}`;
+  });
   return p + " Z";
 }
 // pie-cut eye: white oval, big black pupil with a pie-slice glint cut from its upper right; blinks
@@ -217,7 +220,7 @@ const noodle = (d, c, w = 7) => `<path d="${d}" stroke="${INK2}" stroke-width="$
 export function dibble(size = 96, look = {}) {
   const L = { ...DEFAULT_LOOK, ...look }, [f] = FUR[L.fur] || FUR.cocoa, id = "dib" + uid++, fs = shade(f, .32), cream = mix(f, "#fff1e0", .62);
   const glow = LANTERN_GLOW[L.lantern] || LANTERN_GLOW.amber, rim = mix(glow, "#ffffff", .25), pawC = "#f2bfb2";
-  const head = fluff(50, 44, 26, 24, 24, 2.6), body = fluff(50, 78, 19, 15, 16, 2.2);
+  const head = fluff(50, 44, 26, 24, 17, 3.4, 5), body = fluff(50, 78, 19, 15, 11, 2.8, 9);
   const claws = (pts) => `<g fill="#fff6ea" stroke="${INK2}" stroke-width=".8">${pts.map(([x, y, dx]) => `<path d="M${x} ${y} l${dx - 1} 3.2 l2 -2.4 Z"/>`).join("")}</g>`;
   return svg(size, "0 0 100 100", `
     <defs>
@@ -237,7 +240,8 @@ export function dibble(size = 96, look = {}) {
       <path d="M28 76 Q31 92 50 95 Q36 90 34 76 Z" fill="${fs}" opacity=".5"/>
       <path d="M67 66 Q72 77 66 90" stroke="${rim}" stroke-width="1.8" fill="none" opacity=".45" stroke-linecap="round"/>
     </g>
-    <ellipse cx="50" cy="82" rx="11" ry="9" fill="url(#${id}c)" stroke="${INK2}" stroke-width="1.3"/>
+    <ellipse cx="50" cy="82" rx="11" ry="9" fill="url(#${id}c)"/>
+    <g stroke="${fs}" stroke-width="1.1" fill="none" opacity=".55" stroke-linecap="round"><path d="M34 76 q2 2 2 5 M66 76 q-2 2 -2 5"/></g>
     <g stroke="${INK2}" stroke-width=".8" opacity=".35" stroke-linecap="round"><path d="M45 79 l1 2.2 M50 78 v2.4 M55 79 l-1 2.2"/></g>
     ${L.scarf !== "none" ? `<defs>${linear(id + "s", L.scarf, 90)}</defs>
       <path d="M31 64 Q50 73 69 64" stroke="${INK2}" stroke-width="9.6" fill="none" stroke-linecap="round"/><path d="M31 64 Q50 73 69 64" stroke="url(#${id}s)" stroke-width="6.8" fill="none" stroke-linecap="round"/>
@@ -250,13 +254,15 @@ export function dibble(size = 96, look = {}) {
       <path d="M23 42 Q25 64 50 70 Q31 62 30 44 Z" fill="${fs}" opacity=".42"/>
       <path d="M72 28 Q79 42 73 58" stroke="${rim}" stroke-width="2" fill="none" opacity=".4" stroke-linecap="round"/>
       <path d="M35 23 Q43 18 52 19" stroke="#ffffff" stroke-width="2" opacity=".22" fill="none" stroke-linecap="round"/>
+      <g stroke="${fs}" stroke-width="1.1" fill="none" opacity=".6" stroke-linecap="round"><path d="M27 48 q3 -1 4 -4 M29 56 q3 0 5 -3 M71 48 q-3 -1 -4 -4 M70 56 q-3 0 -5 -3 M60 66 q-1 -3 1 -5"/></g>
     </g>
     ${pieEye(41, 41, 5, 7.4, 1)}${pieEye(59, 41, 5, 7.4, 1)}
     <ellipse cx="31" cy="53" rx="5.6" ry="3.4" fill="url(#${id}k)"/><ellipse cx="69" cy="53" rx="5.6" ry="3.4" fill="url(#${id}k)"/>
-    <path d="M41 54 Q50 49 59 54 Q60 62 50 63 Q40 62 41 54 Z" fill="url(#${id}c)" stroke="${INK2}" stroke-width="2"/>
+    <ellipse cx="50" cy="56.4" rx="8.4" ry="6.6" fill="url(#${id}c)"/>
     <ellipse cx="50" cy="53" rx="4.6" ry="3.6" fill="url(#${id}n)" stroke="${INK2}" stroke-width="1.8"/><ellipse cx="48.4" cy="51.7" rx="1.5" ry=".9" fill="#fff" opacity=".95"/>
-    <path d="M45.6 58.4 Q50 61.8 54.4 58.4" stroke="${INK2}" stroke-width="1.7" fill="none" stroke-linecap="round"/>
-    <g stroke="${INK2}" stroke-width=".7" opacity=".5" stroke-linecap="round"><path d="M41 56 L33.6 54.6 M41 58.2 L33.6 59"/><path d="M59 56 L66.4 54.6 M59 58.2 L66.4 59"/></g>
+    <path d="M46.4 58.6 Q50 61.4 53.6 58.6" stroke="${INK2}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M45.6 57.8 q.4 1 1.1 1 M54.4 57.8 q-.4 1 -1.1 1" stroke="${INK2}" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <g stroke="${INK2}" stroke-width=".7" opacity=".45" stroke-linecap="round"><path d="M42.4 56 L35 54.8 M42.4 58 L35 58.8"/><path d="M57.6 56 L65 54.8 M57.6 58 L65 58.8"/></g>
     <g><animateTransform attributeName="transform" type="rotate" values="-2 50 22;2 50 22;-2 50 22" dur="4s" repeatCount="indefinite"/>${hatArt(L.hat, id + "t")}</g>
     ${noodle("M33 69 Q24 72 27 79", f)}
     <path d="M22 79 Q22 74 27.5 74 Q33 74 33 79 Q33 85 27.5 85 Q22 85 22 79 Z" fill="url(#${id}p)" stroke="${INK2}" stroke-width="1.9"/>
