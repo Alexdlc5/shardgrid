@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, deal, rescueCells, breakCells, pureVeinCells } from "./game.js";
+import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, deal, rescueCells, breakCells, pureVeinCells, stoneBreak } from "./game.js";
 
 const root = new URL("..", import.meta.url);
 const cfg = JSON.parse(readFileSync(new URL("sim/generator.json", root)));
@@ -53,6 +53,17 @@ b = Array(64).fill(0);
 for (let c = 0; c < N; c++) { b[c] = 1; b[8 + c] = c < 4 ? 1 : 2; }
 const typeOf = (u) => (u === 1 ? "moss" : "jade");
 assert.equal(pureVeinCells(b, { rows: [0, 1], cols: [] }, typeOf).size, 8);
+// rubble stone, same case as sim/test_sim.py: row 0 clears; stones at (0,3) and (1,5) crack, (2,5) doesn't;
+// a second clear breaks both cracked stones
+b = Array(64).fill(1); b[3] = b[13] = b[21] = 2;
+const isStone = (u) => u === 2, row0 = [...Array(N).keys()];
+let sb = stoneBreak(b, row0, isStone, new Set());
+assert.deepEqual(new Set(sb.cells), new Set(row0.filter((i) => i !== 3)));
+assert.deepEqual(sb.cracked, new Set([3, 13]));
+sb = stoneBreak(b, row0, isStone, sb.cracked);
+assert.deepEqual(new Set(sb.cells), new Set([...row0, 13]));
+assert.equal(sb.cracked.size, 0);
+for (const [m, bm] of Object.entries(cfg.biomes)) assert.equal("rubble" in bm.types, m === "skywell", m);
 console.log("ok");
 
 // story (docs/STORY.md): every mine has memories, chalk and lines; memories come in order and ids are unique

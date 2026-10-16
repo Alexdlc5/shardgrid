@@ -143,3 +143,20 @@ export function pureVeinCells(board, lines, typeOf) {
   for (const c of lines.cols) check([...Array(N)].map((_, r) => r * N + c));
   return pure;
 }
+
+// Rubble stone (Skywell): stone doesn't break with its line. A clear through it or beside it (4 sides)
+// cracks it once; the second crack breaks it. Takes the cells a clear would break and the cracked set,
+// returns the cells that really break and the new cracked set. Same as stone_break in sim/sim.py.
+export function stoneBreak(board, cells, isStone, cracked) {
+  const hit = new Set(), out = [];
+  for (const i of cells) {
+    if (isStone(board[i])) { hit.add(i); continue; }
+    out.push(i);
+    const r = Math.floor(i / N), c = i % N;
+    for (const [rr, cc] of [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]])
+      if (rr >= 0 && rr < N && cc >= 0 && cc < N && isStone(board[rr * N + cc])) hit.add(rr * N + cc);
+  }
+  const next = new Set(cracked);
+  for (const i of hit) if (next.delete(i)) out.push(i); else next.add(i);
+  return { cells: out, cracked: next, hits: hit.size };
+}

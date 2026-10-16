@@ -7,7 +7,7 @@ on:
 jobs:
   band:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40  # 10k games x 11 mines; one PR run hit 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
