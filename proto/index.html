@@ -248,10 +248,26 @@
   .pill, .tile, .mine, .shopItem { box-shadow: inset 0 2px 5px rgba(0,0,0,.45), inset 0 -1px 0 rgba(255,220,170,.08), 0 1px 0 rgba(255,220,170,.1) !important; }
   button { text-shadow: 0 1px 0 rgba(255,255,255,.35); }
   .seg button.on small { color: #5a3a10 !important; opacity: 1; }
+  /* ===== vintage cartoon filter stack: boil on characters, warm grade + vignette + flicker everywhere, dust in menus ===== */
+  svg.dibble, svg.puddock { filter: url(#boil); }
+  #grade { position: fixed; inset: 0; pointer-events: none; z-index: 44;
+    background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(24,12,4,.55) 100%), linear-gradient(180deg, rgba(255,214,150,.07), rgba(120,60,20,.08));
+    mix-blend-mode: multiply; }
+  body::after { animation: filmFlicker .2s steps(2) infinite; }
+  @keyframes filmFlicker { 0% { opacity: .07; transform: translate(0, 0); } 50% { opacity: .1; transform: translate(-2px, 1px); } 100% { opacity: .08; transform: translate(1px, -1px); } }
+  #dust { position: fixed; inset: 0; pointer-events: none; z-index: 46; }
+  body.playing #dust { display: none; }
+  #dust i { position: absolute; background: #2a1a0e; border-radius: 50%; opacity: .45; }
+  #world { filter: sepia(.18) saturate(1.08) contrast(1.04); }
+  @media (prefers-reduced-motion: reduce) { svg.dibble, svg.puddock { filter: none; } body::after { animation: none; } #dust { display: none; } }
 </style>
 </head>
 <body>
-<div id="world"></div><div id="flies"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <!-- line boil: character outlines wobble a few times a second, like hand-inked frames -->
+  <filter id="boil" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence id="boilNoise" type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="1"/>
+    <feDisplacementMap in="SourceGraphic" scale="1.8" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>
+<div id="world"></div><div id="flies"></div><div id="grade"></div><div id="dust"></div>
 <canvas id="cv"></canvas>
 <div class="hud" id="hud">
   <div><small>Haul</small><b><span id="coinHud"></span><span id="haul">0g</span></b></div>
@@ -546,7 +562,7 @@ function drawMoth(m, now) {
   const born = Math.min(1, (now - m.bornAt) / 400), s = cell * .5 * (born < 1 ? .4 + .6 * born : 1);
   const x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t - Math.sin(t * Math.PI) * cell * .35 + Math.sin(now / 280 + m.uid) * cell * .04;
   const flap = Math.sin(now / 70 + m.uid) * .3, wig = now - (m.nibbleAt || 0) < 300 ? Math.sin(now / 25) * .12 : 0;
-  const fur = "#b6a3e6", furLine = mix(fur, "#1a0f08", .62), wing = "#efe6fb", wingLine = mix("#c9b6ff", "#1a0f08", .55);
+  const fur = "#b6a3e6", furLine = "#1d120c", wing = "#efe6fb", wingLine = "#1d120c";
   const radial = (cx, cy, r, c0, c1, c2) => { const g = ctx.createRadialGradient(cx - r * .35, cy - r * .4, 0, cx, cy, r * 1.1); g.addColorStop(0, c0); g.addColorStop(.6, c1); g.addColorStop(1, c2); return g; };
   ctx.save(); ctx.translate(x, y); ctx.rotate(wig); ctx.lineJoin = "round"; ctx.lineCap = "round";
   { const hg = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 1.5); hg.addColorStop(0, "rgba(201,182,255,.16)"); hg.addColorStop(1, "rgba(201,182,255,0)"); ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(0, 0, s * 1.5, 0, 7); ctx.fill(); }
@@ -576,12 +592,14 @@ function drawMoth(m, now) {
   ctx.save(); ctx.beginPath(); ctx.arc(0, 0, s * .6, 0, 7); ctx.clip(); // soft fluffy ruff low on the chest, clipped to the body
   for (const [fx, fy, fr] of [[-.36, .5, .2], [-.18, .56, .22], [0, .58, .23], [.18, .56, .22], [.36, .5, .2]]) { ctx.beginPath(); ctx.arc(fx * s, fy * s, fr * s, 0, 7); ctx.fill(); }
   ctx.restore();
-  for (const side of [-1, 1]) { // matte eyes like Dibble's: one catchlight, soft lid line
-    const ex = side * s * .22, ey = -s * .06;
-    ctx.fillStyle = "#24130a"; ctx.beginPath(); ctx.ellipse(ex, ey, s * .12, s * .155, 0, 0, 7); ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.beginPath(); ctx.arc(ex + s * .04, ey - s * .06, s * .045, 0, 7); ctx.fill();
-    ctx.strokeStyle = "#1a0d06"; ctx.lineWidth = Math.max(.7, s * .03); ctx.beginPath(); ctx.ellipse(ex, ey - s * .02, s * .12, s * .15, 0, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+  for (const side of [-1, 1]) { // pie-cut eyes, like Dibble's
+    const ex = side * s * .22, ey = -s * .07, w = s * .15, h = s * .2, pw = w * .78, ph = h * .8, px = ex + s * .02, py = ey + h * .12;
+    ctx.fillStyle = "#fffaf0"; ctx.strokeStyle = "#1d120c"; ctx.lineWidth = Math.max(1, s * .05);
+    ctx.beginPath(); ctx.ellipse(ex, ey, w, h, 0, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#1d120c"; ctx.beginPath(); ctx.ellipse(px, py, pw, ph, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#fffaf0"; ctx.beginPath(); ctx.moveTo(px, py); ctx.ellipse(px, py, pw, ph, 0, -Math.PI * .42, -Math.PI * .08); ctx.closePath(); ctx.fill();
   }
+
   const bl = ctx.createRadialGradient(0, 0, 0, 0, 0, s * .12); bl.addColorStop(0, "rgba(255,143,163,.55)"); bl.addColorStop(1, "rgba(255,143,163,0)");
   for (const side of [-1, 1]) { ctx.save(); ctx.translate(side * s * .4, s * .08); ctx.fillStyle = bl; ctx.beginPath(); ctx.arc(0, 0, s * .12, 0, 7); ctx.fill(); ctx.restore(); }
   ctx.strokeStyle = furLine; ctx.lineWidth = Math.max(.7, s * .03); ctx.beginPath(); ctx.moveTo(-s * .06, s * .1); ctx.quadraticCurveTo(0, s * .15, s * .06, s * .1); ctx.stroke();
@@ -634,7 +652,7 @@ function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, gly
   ctx.restore();
   // crisp outer line in the stone's own dark tone, and a thin highlight on the lit edges
   ctx.save(); ctx.globalAlpha = alpha; ctx.lineJoin = "round"; ctx.lineCap = "round";
-  ctx.strokeStyle = mix(color, "#1a0f08", .6); ctx.lineWidth = Math.max(1.4, size * .045); outline(); ctx.stroke();
+  ctx.strokeStyle = mix(color, "#1d120c", .82); ctx.lineWidth = Math.max(1.6, size * .055); outline(); ctx.stroke();
   ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = Math.max(1, size * .025); ctx.beginPath();
   for (const [r, c] of cells) { const x = ox + c * size, y = oy + r * size, i = size * .07;
     if (edgeOf(r, c, -1, 0)) { ctx.moveTo(x + i, y + i); ctx.lineTo(x + size - (edgeOf(r, c, 0, 1) ? i : 0), y + i); }
@@ -909,7 +927,7 @@ function renderHome() {
   $("oGlyph").innerHTML = icon("symbols", 20) + "Symbols";
   $("oPrivacy").innerHTML = icon("lock", 20) + "Privacy";
   $("oMusic").innerHTML = icon("note", 20) + "Music"; $("oMusic").classList.toggle("on", save.opt.music);
-  $("dibbleArt").innerHTML = dibble(92, save.look);
+  $("dibbleArt").innerHTML = dibble(116, save.look);
   const done = save.daily.last === today(), st = save.daily.last === today() || save.daily.last === new Date(Date.now() - 864e5).toISOString().slice(0, 10) ? save.daily.streak : 0;
   $("daily").innerHTML = `<span class="btnrow">${icon("calendar", 22)}${done ? `Daily Dig done · best ${save.daily.best}g` : "Daily Dig: today's crystals"}</span>
     <span class="streak" title="streak: ${st} day(s)">${[...Array(7)].map((_, k) => `<i class="${k < Math.min(st, 7) ? "on" : ""}"></i>`).join("")}</span>
@@ -1173,6 +1191,16 @@ function frame(now) {
 
 document.addEventListener("pointerdown", (e) => { if (e.target.closest("button:not(:disabled)")) { ui.tap(); buzz(6); } }, true);
 document.addEventListener("pointerdown", () => soundtrack.setEnabled(save.opt.music), { once: true }); // browsers need a tap before audio
+// line boil re-seeds ~8 times a second (animating "on twos"); dust specks flash in menus and camp
+{ const noise = document.getElementById("boilNoise"), still = matchMedia("(prefers-reduced-motion: reduce)").matches; let seed = 1;
+  if (!still) setInterval(() => { if (!document.hidden) noise.setAttribute("seed", (seed = seed % 4 + 1)); }, 125);
+  const dust = $("dust");
+  if (!still) setInterval(() => {
+    if (document.hidden || document.body.classList.contains("playing")) return;
+    const i = document.createElement("i"), hair = Math.random() < .25, sz = 1 + Math.random() * 2.5;
+    i.style.cssText = `left:${Math.random() * 100}%;top:${Math.random() * 100}%;width:${hair ? 1 : sz}px;height:${hair ? 14 + Math.random() * 26 : sz}px;${hair ? `transform:rotate(${Math.random() * 40 - 20}deg)` : ""}`;
+    dust.appendChild(i); setTimeout(() => i.remove(), 80 + Math.random() * 90);
+  }, 220); }
 if (qs.has("debug")) window.gw = { place: (i, r, c) => commit(i, r, c), get tray() { return tray; }, get board() { return board; },
   get time() { return time; }, set time(v) { time = v; }, canPlace, get state() { return state; },
   get moths() { return moths; }, get stolen() { return stolen; }, get bonus() { return bonus; }, PM };
@@ -1180,7 +1208,7 @@ if (qs.has("debug")) window.gw = { place: (i, r, c) => commit(i, r, c), get tray
 $("world").innerHTML = forest();
 for (const el of document.querySelectorAll(".vineSlot")) el.outerHTML = vine();
 $("flies").innerHTML = [...Array(14)].map((_, k) => `<i class="fly" style="left:${(k * 37) % 100}%;top:${20 + (k * 53) % 70}%;animation-delay:${-k * 0.7}s,${-k * 0.37}s"></i>`).join("");
-$("dibbleArt").innerHTML = dibble(92); $("talkArt").innerHTML = puddock(120); $("icoCamp").innerHTML = icon("campIco", 24); $("icoBack2").innerHTML = icon("back", 20); $("puddockArtEnd").innerHTML = puddock(52); $("puddockArtMkt").innerHTML = puddock(60);
+$("dibbleArt").innerHTML = dibble(116); $("talkArt").innerHTML = puddock(120); $("icoCamp").innerHTML = icon("campIco", 24); $("icoBack2").innerHTML = icon("back", 20); $("puddockArtEnd").innerHTML = puddock(52); $("puddockArtMkt").innerHTML = puddock(60);
 for (const id of ["coinA", "coinB", "coinC"]) $(id).innerHTML = coin(22);
 $("coinHud").innerHTML = coin(26);
 $("icoExp").innerHTML = icon("vine", 26); $("icoCalm").innerHTML = icon("leaf", 26);

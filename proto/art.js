@@ -189,62 +189,83 @@ function hatArt(kind, id) {
     default: return `<path d="M44 20 Q46 13 49 19 Q51 11 54 19 Q57 14 57 21" stroke="${INK}" stroke-width="1.2" fill="none" stroke-linecap="round"/>`; // a little tuft
   }
 }
+// ---- rubber-hose hybrid toolkit: bold ink, fluffy scalloped silhouettes, pie-cut eyes ----
+export const INK2 = "#1d120c";
+// a fluffy outline: scallops around an ellipse (cx, cy, rx, ry), n bumps, bump depth d
+export function fluff(cx, cy, rx, ry, n, d) {
+  let p = "";
+  for (let k = 0; k <= n; k++) {
+    const a = Math.PI * 2 * (k / n), x = cx + Math.cos(a) * rx, y = cy + Math.sin(a) * ry;
+    if (!k) { p += `M${x.toFixed(2)} ${y.toFixed(2)}`; continue; }
+    const am = Math.PI * 2 * ((k - .5) / n), mx = cx + Math.cos(am) * (rx + d), my = cy + Math.sin(am) * (ry + d);
+    p += ` Q${mx.toFixed(2)} ${my.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)}`;
+  }
+  return p + " Z";
+}
+// pie-cut eye: white oval, big black pupil with a pie-slice glint cut from its upper right; blinks
+export function pieEye(cx, cy, w, h, look = 0, dur = 4.4) {
+  const pw = w * .78, ph = h * .8, px = look * .6, py = h * .12, a0 = -Math.PI * .42, a1 = -Math.PI * .08;
+  const wedge = `M${px} ${py} L${px + Math.cos(a0) * pw} ${py + Math.sin(a0) * ph} A${pw} ${ph} 0 0 1 ${px + Math.cos(a1) * pw} ${py + Math.sin(a1) * ph} Z`;
+  return `<g transform="translate(${cx} ${cy})"><g>
+    <animateTransform attributeName="transform" type="scale" values="1 1;1 1;1 .1;1 1" keyTimes="0;.94;.97;1" dur="${dur}s" repeatCount="indefinite"/>
+    <ellipse rx="${w}" ry="${h}" fill="#fffaf0" stroke="${INK2}" stroke-width="2.1"/>
+    <ellipse cx="${px}" cy="${py}" rx="${pw}" ry="${ph}" fill="${INK2}"/><path d="${wedge}" fill="#fffaf0"/></g></g>`;
+}
+const noodle = (d, c, w = 7) => `<path d="${d}" stroke="${INK2}" stroke-width="${w}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="${c}" stroke-width="${w - 3}" fill="none" stroke-linecap="round"/>`;
+
+// Dibble, rubber-hose hybrid: fluffy inked silhouette and pie eyes, with the detailed shading, lanterns, hats and paws kept.
 export function dibble(size = 96, look = {}) {
-  const L = { ...DEFAULT_LOOK, ...look }, [f] = FUR[L.fur] || FUR.cocoa, id = "dib" + uid++, ol = line(f), fs = shade(f, .32), cream = mix(f, "#fff1e0", .62);
+  const L = { ...DEFAULT_LOOK, ...look }, [f] = FUR[L.fur] || FUR.cocoa, id = "dib" + uid++, fs = shade(f, .32), cream = mix(f, "#fff1e0", .62);
   const glow = LANTERN_GLOW[L.lantern] || LANTERN_GLOW.amber, rim = mix(glow, "#ffffff", .25), pawC = "#f2bfb2";
-  const eye = `<ellipse rx="4.2" ry="5.4" fill="url(#${id}i)"/><ellipse cy=".9" rx="2.4" ry="3.1" fill="#1c0e07"/>
-    <circle cx="1.4" cy="-2.3" r="1.4" fill="#fff" opacity=".95"/>
-    <path d="M-4 -4.3 Q0 -6.9 4 -4.3" stroke="#1a0d06" stroke-width="1" fill="none" stroke-linecap="round" opacity=".85"/>`;
+  const head = fluff(50, 44, 26, 24, 24, 2.6), body = fluff(50, 78, 19, 15, 16, 2.2);
+  const claws = (pts) => `<g fill="#fff6ea" stroke="${INK2}" stroke-width=".8">${pts.map(([x, y, dx]) => `<path d="M${x} ${y} l${dx - 1} 3.2 l2 -2.4 Z"/>`).join("")}</g>`;
   return svg(size, "0 0 100 100", `
     <defs>
       <radialGradient id="${id}g"><stop offset="0" stop-color="${glow}" stop-opacity=".7"/><stop offset="1" stop-color="${glow}" stop-opacity="0"/></radialGradient>
       ${radial(id + "h", f)}${radial(id + "b", f, .4, .25)}${radial(id + "c", cream, .45, .3)}${radial(id + "p", pawC, .4, .3)}
-      <linearGradient id="${id}i" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#24130a"/><stop offset=".7" stop-color="#3e2414"/><stop offset="1" stop-color="#6e4526"/></linearGradient>
       <radialGradient id="${id}n" cx=".38" cy=".32"><stop offset="0" stop-color="#ffb3c4"/><stop offset=".6" stop-color="#e8768e"/><stop offset="1" stop-color="#b8475f"/></radialGradient>
-      <radialGradient id="${id}k"><stop offset="0" stop-color="#ff8fa3" stop-opacity=".65"/><stop offset="1" stop-color="#ff8fa3" stop-opacity="0"/></radialGradient>
-      <clipPath id="${id}B"><ellipse cx="50" cy="78" rx="21" ry="17"/></clipPath><clipPath id="${id}H"><circle cx="50" cy="44" r="26"/></clipPath>
+      <radialGradient id="${id}k"><stop offset="0" stop-color="#ff8fa3" stop-opacity=".7"/><stop offset="1" stop-color="#ff8fa3" stop-opacity="0"/></radialGradient>
+      <clipPath id="${id}B"><path d="${body}"/></clipPath><clipPath id="${id}H"><path d="${head}"/></clipPath>
     </defs>
-    <ellipse cx="50" cy="96.5" rx="23" ry="3.4" fill="#000" opacity=".22"/>
-    <circle cx="80" cy="63" r="21" fill="url(#${id}g)"><animate attributeName="r" values="19;22;19" dur="2.6s" repeatCount="indefinite"/></circle>
+    <ellipse cx="50" cy="97" rx="24" ry="3.2" fill="#000" opacity=".24"/>
+    <circle cx="78" cy="63" r="20" fill="url(#${id}g)"><animate attributeName="r" values="18;21;18" dur="2.6s" repeatCount="indefinite"/></circle>
     ${bob(`
-    <path d="M32 91 Q32 97 40 97 Q48 97 47 92 Z M68 91 Q68 97 60 97 Q52 97 53 92 Z" fill="${fs}" stroke="${ol}" stroke-width="1.8" stroke-linejoin="round"/>
-    <ellipse cx="50" cy="78" rx="21" ry="17" fill="url(#${id}b)" stroke="${ol}" stroke-width="2.4"/>
+    <ellipse cx="40" cy="93.6" rx="8.4" ry="4" fill="url(#${id}p)" stroke="${INK2}" stroke-width="2"/><ellipse cx="60" cy="93.6" rx="8.4" ry="4" fill="url(#${id}p)" stroke="${INK2}" stroke-width="2"/>
+    <path d="M35.5 95 v1.6 M39 95.6 v1.6 M57 95.6 v1.6 M60.5 95 v1.6" stroke="${INK2}" stroke-width="1" stroke-linecap="round" opacity=".6"/>
+    <path d="${body}" fill="url(#${id}b)" stroke="${INK2}" stroke-width="2.6" stroke-linejoin="round"/>
     <g clip-path="url(#${id}B)">
-      <path d="M27 76 Q30 92 50 95 Q36 90 33 76 Z" fill="${fs}" opacity=".55"/>
-      <ellipse cx="50" cy="83" rx="12" ry="10" fill="url(#${id}c)"/>
-      <path d="M68.5 66 Q73 77 67 90" stroke="${rim}" stroke-width="1.8" fill="none" opacity=".45" stroke-linecap="round"/>
-      <g stroke="${ol}" stroke-width=".8" opacity=".35" stroke-linecap="round"><path d="M44 77 l1 2.4 M50 76 v2.6 M56 77 l-1 2.4"/></g>
+      <path d="M28 76 Q31 92 50 95 Q36 90 34 76 Z" fill="${fs}" opacity=".5"/>
+      <path d="M67 66 Q72 77 66 90" stroke="${rim}" stroke-width="1.8" fill="none" opacity=".45" stroke-linecap="round"/>
     </g>
+    <ellipse cx="50" cy="82" rx="11" ry="9" fill="url(#${id}c)" stroke="${INK2}" stroke-width="1.3"/>
+    <g stroke="${INK2}" stroke-width=".8" opacity=".35" stroke-linecap="round"><path d="M45 79 l1 2.2 M50 78 v2.4 M55 79 l-1 2.2"/></g>
     ${L.scarf !== "none" ? `<defs>${linear(id + "s", L.scarf, 90)}</defs>
-      <path d="M31 63 Q50 72 69 63" stroke="${line(L.scarf)}" stroke-width="9.2" fill="none" stroke-linecap="round"/><path d="M31 63 Q50 72 69 63" stroke="url(#${id}s)" stroke-width="6.8" fill="none" stroke-linecap="round"/>
-      <path d="M36 65.4 Q50 71 64 65.4" stroke="#fff" stroke-width=".8" stroke-dasharray="1.2 2.2" fill="none" opacity=".45"/>
-      <path d="M58 67 L61.5 80 L67 78 L63 66 Z" fill="url(#${id}s)" stroke="${line(L.scarf)}" stroke-width="1.5" stroke-linejoin="round"/>
-      <path d="M61.5 80 l-.6 2.4 M63.4 79.4 l-.2 2.6 M65.2 78.6 l.3 2.5" stroke="${L.scarf}" stroke-width="1.1" stroke-linecap="round"/>` : ""}
-    <ellipse cx="26.6" cy="36" rx="3.4" ry="2.7" fill="${fs}" stroke="${ol}" stroke-width="1.5"/><ellipse cx="73.4" cy="36" rx="3.4" ry="2.7" fill="${fs}" stroke="${ol}" stroke-width="1.5"/>
-    <path d="M26 46 Q20.6 48 22.8 51 Q20.4 54 26 54.6 Z M74 46 Q79.4 48 77.2 51 Q79.6 54 74 54.6 Z" fill="url(#${id}h)" stroke="${ol}" stroke-width="1.4" stroke-linejoin="round"/>
-    <circle cx="50" cy="44" r="26" fill="url(#${id}h)" stroke="${ol}" stroke-width="2.4"/>
+      <path d="M31 64 Q50 73 69 64" stroke="${INK2}" stroke-width="9.6" fill="none" stroke-linecap="round"/><path d="M31 64 Q50 73 69 64" stroke="url(#${id}s)" stroke-width="6.8" fill="none" stroke-linecap="round"/>
+      <path d="M36 66.4 Q50 72 64 66.4" stroke="#fff" stroke-width=".8" stroke-dasharray="1.2 2.2" fill="none" opacity=".45"/>
+      <path d="M57 68 L60.5 81 L66 79 L62 67 Z" fill="url(#${id}s)" stroke="${INK2}" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M60.5 81 l-.6 2.4 M62.4 80.4 l-.2 2.6 M64.2 79.6 l.3 2.5" stroke="${L.scarf}" stroke-width="1.2" stroke-linecap="round"/>` : ""}
+    <ellipse cx="26.8" cy="38" rx="3.4" ry="2.8" fill="${fs}" stroke="${INK2}" stroke-width="1.6"/><ellipse cx="73.2" cy="38" rx="3.4" ry="2.8" fill="${fs}" stroke="${INK2}" stroke-width="1.6"/>
+    <path d="${head}" fill="url(#${id}h)" stroke="${INK2}" stroke-width="2.8" stroke-linejoin="round"/>
     <g clip-path="url(#${id}H)">
-      <path d="M24 42 Q26 64 50 70 Q32 62 31 44 Z" fill="${fs}" opacity=".45"/>
-      <path d="M71 28 Q78 42 72 58" stroke="${rim}" stroke-width="2" fill="none" opacity=".4" stroke-linecap="round"/>
-      <path d="M36 23 Q44 18 53 19" stroke="#ffffff" stroke-width="2" opacity=".22" fill="none" stroke-linecap="round"/>
+      <path d="M23 42 Q25 64 50 70 Q31 62 30 44 Z" fill="${fs}" opacity=".42"/>
+      <path d="M72 28 Q79 42 73 58" stroke="${rim}" stroke-width="2" fill="none" opacity=".4" stroke-linecap="round"/>
+      <path d="M35 23 Q43 18 52 19" stroke="#ffffff" stroke-width="2" opacity=".22" fill="none" stroke-linecap="round"/>
     </g>
-    <ellipse cx="50" cy="55.5" rx="9.8" ry="8.4" fill="url(#${id}c)"/>
-    <ellipse cx="50" cy="56.8" rx="5.4" ry="2.4" fill="${fs}" opacity=".25"/>
-    ${blink(40.5, 43, 4.8, 0, eye)}${blink(59.5, 43, 4.8, 0, eye)}
-    <ellipse cx="30.6" cy="52.4" rx="6" ry="3.6" fill="url(#${id}k)"/><ellipse cx="69.4" cy="52.4" rx="6" ry="3.6" fill="url(#${id}k)"/>
-    <ellipse cx="50" cy="52.6" rx="4.4" ry="3.3" fill="url(#${id}n)" stroke="#8a3448" stroke-width="1"/><ellipse cx="48.5" cy="51.5" rx="1.4" ry=".85" fill="#fff" opacity=".9"/>
-    <path d="M47.6 59.4 Q50 61.4 52.4 59.4" stroke="${ol}" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-    <g stroke="${ol}" stroke-width=".6" opacity=".55" stroke-linecap="round"><path d="M41 55 L33.5 53.6 M41 57.4 L33.5 58"/><path d="M59 55 L66.5 53.6 M59 57.4 L66.5 58"/></g>
+    ${pieEye(41, 41, 5, 7.4, 1)}${pieEye(59, 41, 5, 7.4, 1)}
+    <ellipse cx="31" cy="53" rx="5.6" ry="3.4" fill="url(#${id}k)"/><ellipse cx="69" cy="53" rx="5.6" ry="3.4" fill="url(#${id}k)"/>
+    <path d="M41 54 Q50 49 59 54 Q60 62 50 63 Q40 62 41 54 Z" fill="url(#${id}c)" stroke="${INK2}" stroke-width="2"/>
+    <ellipse cx="50" cy="53" rx="4.6" ry="3.6" fill="url(#${id}n)" stroke="${INK2}" stroke-width="1.8"/><ellipse cx="48.4" cy="51.7" rx="1.5" ry=".9" fill="#fff" opacity=".95"/>
+    <path d="M45.6 58.4 Q50 61.8 54.4 58.4" stroke="${INK2}" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+    <g stroke="${INK2}" stroke-width=".7" opacity=".5" stroke-linecap="round"><path d="M41 56 L33.6 54.6 M41 58.2 L33.6 59"/><path d="M59 56 L66.4 54.6 M59 58.2 L66.4 59"/></g>
     <g><animateTransform attributeName="transform" type="rotate" values="-2 50 22;2 50 22;-2 50 22" dur="4s" repeatCount="indefinite"/>${hatArt(L.hat, id + "t")}</g>
-    <path d="M33.5 64.5 Q25 66 27 74 L36 74 Q36 69 38.5 66.5 Z" fill="url(#${id}b)" stroke="${ol}" stroke-width="1.8" stroke-linejoin="round"/>
-    <path d="M24 73 Q24 66 32 66 Q40 66 40 73 Q40 80 32 80 Q24 80 24 73 Z" fill="url(#${id}p)" stroke="${line(pawC)}" stroke-width="1.6"/>
-    <g fill="#fff6ea" stroke="${line(pawC)}" stroke-width=".7"><path d="M25.6 78.6 l-1.2 3.4 l2.2 -2.4 Z M29.4 79.8 l-.4 3.6 l1.6 -3 Z M33.4 79.8 l.4 3.6 l1 -3.4 Z M37 78.6 l1.4 3.2 l.2 -3 Z"/></g>
-    <path d="M68 72 Q74 64 79 55" stroke="#4a3824" stroke-width="1.7" fill="none"/>
-    <g><animateTransform attributeName="transform" type="rotate" values="-4 79 54;4 79 54;-4 79 54" dur="3.2s" repeatCount="indefinite"/>${lanternArt(L.lantern, id + "L")}</g>
-    <path d="M61.5 63.5 Q70 65 70 72 L62 73 Q62 68 59.5 65.5 Z" fill="url(#${id}b)" stroke="${ol}" stroke-width="1.8" stroke-linejoin="round"/>
-    <path d="M60 72 Q60 65 67 65 Q74 65 74 72 Q74 79 67 79 Q60 79 60 72 Z" fill="url(#${id}p)" stroke="${line(pawC)}" stroke-width="1.6"/>
-    <path d="M71.4 67 Q73.6 71 71.6 75.6" stroke="${rim}" stroke-width="1.2" fill="none" opacity=".5" stroke-linecap="round"/>
-    <g fill="#fff6ea" stroke="${line(pawC)}" stroke-width=".7"><path d="M62.4 77.6 l-.8 3 l1.8 -2.2 Z M66.4 78.8 l0 3.2 l1.4 -3 Z M70.4 77.8 l1 3 l.4 -2.8 Z"/></g>`)}
+    ${noodle("M33 69 Q24 72 27 79", f)}
+    <path d="M22 79 Q22 74 27.5 74 Q33 74 33 79 Q33 85 27.5 85 Q22 85 22 79 Z" fill="url(#${id}p)" stroke="${INK2}" stroke-width="1.9"/>
+    ${claws([[23.6, 83.6, 0], [26.6, 84.8, 0], [30, 84.6, 1], [32.6, 83, 1.4]])}
+    ${noodle("M67 69 Q78 68 78 57", f)}
+    <g><animateTransform attributeName="transform" type="rotate" values="-4 78 54;4 78 54;-4 78 54" dur="3.2s" repeatCount="indefinite"/>
+      <g transform="translate(-2 0)">${lanternArt(L.lantern, id + "L")}</g></g>
+    <path d="M72.6 55 Q72.6 50 78 50 Q83.4 50 83.4 55 Q83.4 60 78 60 Q72.6 60 72.6 55 Z" fill="url(#${id}p)" stroke="${INK2}" stroke-width="1.9"/>
+    <path d="M81.4 52 Q83.2 55 81.6 58.4" stroke="${rim}" stroke-width="1.2" fill="none" opacity=".55" stroke-linecap="round"/>`)}
   `, "dibble");
 }
 
@@ -269,12 +290,13 @@ export function lookItem(part, val, size = 40) {
 
 // Old Puddock: a wise travelling toad merchant. Straw hat, round spectacles, droopy white brows, patched indigo coat.
 export function puddock(size = 64) {
-  const g = "#86a64e", gs = shade(g, .3), gl = line(g), coat = "#3e4f7c", cl = line(coat), straw = "#e2bf74", sl = line(straw), id = "pud" + uid++;
+  const g = "#86a64e", gs = shade(g, .3), gl = INK2, coat = "#3e4f7c", cl = INK2, straw = "#e2bf74", sl = INK2, id = "pud" + uid++;
   const lid = (cx) => `<g transform="translate(${cx} 36)"><g>
       <animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 3.4;0 0" keyTimes="0;.9;.95;1" dur="5.5s" repeatCount="indefinite"/>
       <path d="M-8 -1 Q0 -9 8 -1 L8 -8 L-8 -8 Z" fill="url(#${id}s)"/><path d="M-7.6 -1.2 Q0 -6.4 7.6 -1.2" stroke="${gl}" stroke-width="1.3" fill="none"/></g></g>`;
-  const eye = (cx) => `<ellipse cx="${cx}" cy="36" rx="6" ry="5" fill="#f6efd4"/><circle cx="${cx + 1}" cy="37" r="3.2" fill="url(#${id}i)"/><circle cx="${cx + 1}" cy="37.4" r="1.6" fill="#140904"/>
-    <circle cx="${cx + 2.1}" cy="35.8" r="1.1" fill="#fff"/>`;
+  const eye = (cx) => { const a0 = -Math.PI * .42, a1 = -Math.PI * .08, px = cx + 1, py = 37.2, pw = 3.6, ph = 3.4;
+    return `<ellipse cx="${cx}" cy="36" rx="6" ry="5.2" fill="#fffaf0" stroke="${INK2}" stroke-width="1.6"/><ellipse cx="${px}" cy="${py}" rx="${pw}" ry="${ph}" fill="${INK2}"/>
+    <path d="M${px} ${py} L${px + Math.cos(a0) * pw} ${py + Math.sin(a0) * ph} A${pw} ${ph} 0 0 1 ${px + Math.cos(a1) * pw} ${py + Math.sin(a1) * ph} Z" fill="#fffaf0"/>`; };
   return svg(size, "0 0 100 100", `
     <defs>${radial(id + "s", g)}${radial(id + "h", g, .4, .25)}${linear(id + "c", coat, 100)}${radial(id + "w", straw, .4, .2)}
       <linearGradient id="${id}i" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a10"/><stop offset="1" stop-color="#b8862a"/></linearGradient>
@@ -482,7 +504,7 @@ export function camp(st, gemFn, dibbleSvg) {
         <circle cx="${x}" cy="${y - r * .6}" r="${r * 1.6}" fill="#9b7cf2" opacity=".2"><animate attributeName="opacity" values=".1;.3;.1" dur="${2.4 + r * .1}s" repeatCount="indefinite"/></circle>`).join("") : ""}
       ${d.jars ? `<rect x="238" y="246" width="26" height="12" rx="3" fill="#6b4a2a"/><g transform="translate(236 222) scale(1)">${ICONS.jar}</g><g transform="translate(252 226) scale(.8)">${ICONS.jar}</g>` : ""}
       ${d.cart ? `<g transform="translate(270 240) scale(1.8)">${ICONS.cart}</g>${st.puddockSvg ? `<g data-tap="puddock"><svg x="252" y="208" width="42" height="42" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}` : ""}
-      <g data-tap="dibble" class="campDibble"><svg x="194" y="208" width="54" height="54" viewBox="0 0 100 100">${strip(dibbleSvg)}</svg></g>
+      <g data-tap="dibble" class="campDibble"><svg x="190" y="196" width="68" height="68" viewBox="0 0 100 100">${strip(dibbleSvg)}</svg></g>
       ${flies}
     </g>
     <ellipse cx="200" cy="286" rx="230" ry="18" fill="#cfe0d0" opacity=".06"><animate attributeName="cx" values="185;215;185" dur="14s" repeatCount="indefinite"/></ellipse>

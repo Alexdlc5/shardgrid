@@ -157,3 +157,17 @@ The bots' think times are guesses; once the prototype has real players, measure 
 - **Camp:** a full-width night scene with parallax layers, a moon, twinkling stars, a flickering fire light, sparks, smoke, swaying lanterns, a rippling banner and fireflies. Tap Dibble (hop), the fire (sparks), the lanterns (chime), shelf gems (each plays its own note), the tent, and Puddock (if his cart is there).
 - **Pilfermoths** (cave critters; tuning in `sim/generator.json → pilfermoths`): after 6 placements, when a tray is dealt, a fluffy moth may flutter onto an empty cell. The chance is 12% in Mossy Hollow, rising to 34% in Heartroot Deep. There's at most 1 at a time (2 in Heartroot). Each new tray, a moth next to crystals nibbles 8% of the haul (a pulsing **!** warns you first), then hops toward glimmer; after 3 nibbles it flies off with the loot. Clearing a line through it, or an ember blast, shoos it: it drops what it took ×1.5 + 4. Never in Calm Grove. Seeded in the Daily Dig. Never affects which pieces are dealt.
 - **Not yet modelled in the sims:** `proto/economy.mjs` and `sim/sim.py` don't include Pilfermoths. The numbers above are first guesses; retune after playtest feedback.
+
+## Art direction (2026-10-15): rubber-hose hybrid
+
+The owner compared three takes on the 1930s rubber-hose cartoon look in a style lab and picked the **hybrid**: today's shaded Dibble, re-inked.
+- **Characters:** a fluffy scalloped silhouette, bold ink (`#1d120c`), pie-cut eyes that blink, noodle arms. Kept the detail: form shading, a warm lantern rim light, detailed lanterns (metal frames, glass, fireflies), shaded hats, knitted scarves, clawed paws. Old Puddock and the Pilfermoth get the same ink and pie eyes.
+- **Board:** gems keep their bevels and glints but get bold ink outlines to sit with the characters. The board itself stays unfiltered so it's easy to read.
+- **Filter stack:**
+  - Line boil on character SVGs: a feTurbulence displacement re-seeded about 8 times a second, like hand-inked frames.
+  - A warm multiply grade with a vignette over everything.
+  - Film grain with flicker.
+  - A subtle sepia on the forest.
+  - Dust specks and hair scratches in menus and camp only.
+  - All motion is off when the device asks for reduced motion.
+- **Borrowed:** only the era's techniques. No Cuphead (Studio MDHR) character designs.
