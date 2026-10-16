@@ -19,7 +19,7 @@ Ads = Google AdMob, purchases = RevenueCat, stats/crashes/remote tuning = Fireba
 | ✅ | A8. AdMob (iOS app) | done 2026-10-16 | App ID + 3 iOS units in the app; W-9 in review; link the store listing after launch |
 | ✅ | A9. Firebase (iOS app) | done 2026-10-16 | plist in the app; Crashlytics on; Remote Config v1 published (ad_grace 3, ad_every_n 2, ad_gap_s 90) |
 | ⏳ | A10. "Remove ads" product + sandbox tester | done 2026-10-16 except the review screenshot | `no_ads`, Non-Consumable, $4.99, all countries, English name and description; review screenshot at submission; sandbox tester still to add |
-| ⏳ | A11. RevenueCat (iOS) | minutes | Test Store: `no_ads` product, `no_ads` entitlement, current offering `default` with one Lifetime package. Still to do: add the App Store app in RevenueCat with an In-App Purchase key, then swap in the `appl_` key |
+| ✅ | A11. RevenueCat (iOS) | done 2026-10-16 | `appl_` key in the app; In-App Purchase key valid; `no_ads` (App Store + Test Store) → `no_ads` entitlement → current offering `default` |
 | ⬜ | A12. App Store listing, privacy labels, review | 1–2 days review | at launch |
 | ✅ | A13. Trademark check | decided 2026-10-16 | keeping **Glimmerwood** (an iOS game "Glimmerwood: Potion Sort" launched 2026-10-13) |
 | ⬜ | B. Google Play (later) | 14+ days of testing | after iOS launch |
