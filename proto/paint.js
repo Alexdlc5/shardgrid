@@ -260,58 +260,90 @@ export function sampleScene() {
 </svg>`;
 }
 
-// Old Puddock in the painterly style, 100x100 box (feet at y 97). Returns { defs, body }.
+// Old Puddock in the painterly style, 100x100 box (feet at y 97). Painted exactly like Dibble at Dibble's on-screen scale
+// (Dibble sits in the same box at .37): the same edge offset, blur sizes, bumpy silhouette (warts where Dibble has fur),
+// two-light shading clipped inside each part, a warm lantern rim on the right and brush-stroke texture. Returns { defs, body }.
 export function puddockBody(id) {
-  const g = "#86a64e", gLine = mix(g, "#1a0f08", .62), gDeep = mix(g, "#1a2a10", .45), gWarm = mix(g, "#e8c070", .35);
-  const coat = "#46598a", coatLine = mix(coat, "#0e1020", .6), straw = "#e2bf74", strawLine = mix(straw, "#3a2410", .6), O = [-.8, .7];
-  const head = ring(50, 46, 31, 19, 18, .04, 81), belly = ring(50, 76, 35, 22, 16, .05, 83);
-  const coatD = curve([[17, 78], [22, 60], [36, 56], [50, 69], [64, 56], [78, 60], [83, 78], [78, 94], [50, 97.5], [22, 94]]);
-  const bump = (cx) => ring(cx, 35, 10, 10, 12, .05, 85 + cx);
-  const lid = (cx) => shape(`M${cx - 6.4} 35 Q${cx} 27.2 ${cx + 6.4} 35 Q${cx} 31.6 ${cx - 6.4} 35 Z`, mix(g, "#c8d890", .15), gLine, [0, .6]);
+  const r = rng(83), g = "#86a64e", gLine = mix(g, "#1a0f08", .62), gDeep = mix(g, "#1a2a10", .45);
+  const C = { warm: mix(g, "#e8a868", .32), cool: mix(g, "#454056", .3), deep: mix(g, "#1a0f08", .5), cream: mix(g, "#f3e2c6", .72) };
+  const coat = "#46598a", coatLine = mix(coat, "#0e1020", .6), straw = "#e2bf74", strawLine = mix(straw, "#3a2410", .6), O = [-.67, .6];
+  const soft = `filter="url(#${id}soft)"`, blur = `filter="url(#${id}blur)"`;
+  const head = ring(50, 45, 28.5, 18.6, 18, .05, 81), coatD = curve([[24, 80], [27, 64], [37, 57.4], [50, 68], [63, 57.4], [73, 64], [76, 80], [74.6, 92], [50, 95.2], [25.4, 92]]);
+  const bump = (cx) => ring(cx, 33.5, 9.4, 9.2, 12, .05, 85 + cx);
+  const lid = (cx) => shape(`M${cx - 6.2} 34 Q${cx} 26.6 ${cx + 6.2} 34 Q${cx} 30.8 ${cx - 6.2} 34 Z`, mix(g, "#c8d890", .15), gLine, [0, .5]);
   const patch = (x, y, w, h, a, c) => `<g transform="rotate(${a} ${x} ${y})">${shape(curve(ring(x, y, w, h, 8, .08, x | 0)), c, mix(c, "#1a0f08", .55), O)}
-    <path d="${curve(ring(x, y, w - 1.3, h - 1.3, 8, .06, (x | 0) + 1))}" fill="none" stroke="${mix(c, "#ffffff", .6)}" stroke-width=".5" stroke-dasharray="1 1"/></g>`;
-  return { defs: `<filter id="${id}soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4"/></filter>
-    <filter id="${id}blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".8"/></filter>
-    <clipPath id="${id}H"><path d="${curve(head)}"/></clipPath><clipPath id="${id}C"><path d="${coatD}"/></clipPath>`,
+    <path d="${curve(ring(x + w * .3, y - h * .3, w * .45, h * .4, 7, .2, (x | 0) + 2))}" fill="${mix(c, "#fff3d0", .3)}" opacity=".45" ${blur}/>
+    ${[...Array(6)].map((_, k) => { const a2 = k / 6 * Math.PI * 2; return stroke(x + Math.cos(a2) * (w - 1), y + Math.sin(a2) * (h - 1), a2 + 1.57, 1, .25, mix(c, "#ffffff", .6), .8, .05); }).join("")}</g>`;
+  // webbed feet poking out under the coat: three rounded toes each, a lighter tip on the lit side
+  const foot = (x, k) => shape(curve([[x - 7, 97.4], [x - 7.6, 94.6], [x - 4, 92.6], [x + 1, 92.4], [x + 6, 93.4], [x + 7.6, 96.2], [x + 5, 97.6], [x + 2.4, 96.6], [x, 97.8], [x - 2.4, 96.8], [x - 4.6, 97.8]]), k ? C.warm : g, gLine, O) +
+    [-4.4, 0, 4.6].map((dx) => stroke(x + dx, 96.4, -1.57, 1.6, .35, C.cream, .55, .05)).join("");
+  // a sleeve ending in a three-fingered hand, warts on the knuckles
+  const arm = (x1, y1, cx, cy, x2, y2, hx, hy, flip, seed) => shape(limb(x1, y1, cx, cy, x2, y2, 4.4, 3.6), coat, coatLine, O) +
+    `<path d="${limb(x1 + 1, y1 + 1, cx + 1, cy + 1, x2, y2, 1.6, .8)}" fill="${flip > 0 ? "#8fa8e0" : "#20283e"}" opacity=".45" ${blur}/>` +
+    shape(curve([[hx - 3.6, hy - 2], [hx + 3.6, hy - 2.2], [hx + 4, hy + 1.6], [hx + 2.8, hy + 4], [hx + 1.4, hy + 3], [hx, hy + 4.4], [hx - 1.4, hy + 3], [hx - 2.8, hy + 4], [hx - 4, hy + 1.6]]), flip > 0 ? C.warm : g, gLine, O) +
+    [-2.8, 0, 2.8].map((dx) => stroke(hx + dx, hy + 3.2, -1.57, 1.4, .3, C.cream, .5, .05)).join("");
+  const headTufts = head.filter((_, k) => [1, 8, 16].includes(k));
+  return { defs: `<filter id="${id}soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.6"/></filter>
+    <filter id="${id}blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".9"/></filter>
+    <clipPath id="${id}H"><path d="${curve(head)}"/></clipPath><clipPath id="${id}C"><path d="${coatD}"/></clipPath>
+    <clipPath id="${id}B"><path d="${curve(ring(50, 21.4, 32, 6.6, 18, .03, 113))}"/></clipPath>`,
   body: `
-    <path d="${curve(ring(50, 97, 34, 2.8, 12, .2, 87))}" fill="#000" opacity=".3" filter="url(#${id}blur)"/>
-    ${shape(curve(belly), g, gLine, O)}
+    <path d="${curve(ring(50, 97.4, 30, 2.6, 12, .2, 87))}" fill="#0f0e0b" opacity=".45" ${blur}/>
+    ${foot(36, 0)}${foot(64, 1)}
     ${shape(coatD, coat, coatLine, O)}
     <g clip-path="url(#${id}C)">
-      <path d="${curve(ring(26, 84, 16, 18, 9, .2, 89))}" fill="#20283e" opacity=".55" filter="url(#${id}soft)"/>
-      <path d="${curve(ring(78, 70, 8, 16, 9, .2, 91))}" fill="#8fa8e0" opacity=".35" filter="url(#${id}soft)"/>
-      ${[0, 1, 2, 3, 4, 5, 6].map((k) => stroke(22 + k * 9, 62, 1.5 + (k - 3) * .03, 34, .35, "#7088c0", .45, .02)).join("")}
+      <path d="${curve(ring(30, 86, 16, 18, 9, .2, 89))}" fill="#20283e" opacity=".6" ${soft}/>
+      <path d="${curve(ring(74, 72, 9, 16, 9, .2, 91))}" fill="#8fa8e0" opacity=".45" ${soft}/>
+      <path d="${curve(ring(46, 62, 12, 5, 9, .2, 92))}" fill="#9aa5c8" opacity=".25" ${soft}/>
+      ${[...Array(14)].map(() => stroke(28 + r() * 44, 66 + r() * 24, 1.5 + (r() - .5) * .3, 3 + r() * 4, .35, "#1e2848", .3, .06)).join("")}
+      ${[[38, 70, 40, 82, 37, 93], [62, 70, 60, 82, 63, 93]].map(([a, b, c, d, e, f]) => `<path d="M${a} ${b} Q${c} ${d} ${e} ${f}" stroke="#2a3558" stroke-width=".8" fill="none" opacity=".5"/>`).join("")}
     </g>
-    ${shape("M36 56 L50 69 L64 56 Q50 61 36 56 Z", "#e9dfb4", mix("#e9dfb4", "#3a2410", .5), O)}
-    ${patch(26.5, 82, 5, 4.6, -8, "#c8553d")}${patch(72, 85.5, 4.6, 4, 10, "#e0b44e")}
-    <path d="M54 76 Q62 82 70 76" stroke="#d9b04a" stroke-width="1.1" fill="none"/>
-    ${shape(curve(ring(70.5, 76, 2.7, 2.7, 9, .05, 93)), "#f0c75a", strawLine, [-.5, .5])}<path d="M69.4 75 q.8 -.8 1.8 -.4" stroke="#fff" stroke-width=".6" fill="none"/>
-    ${[78, 86].map((y) => shape(curve(ring(50, y, 1.9, 1.9, 8, .05, y)), "#f0c75a", strawLine, [-.4, .4])).join("")}
-    ${shape(curve(bump(35)), g, gLine, O)}${shape(curve(bump(65)), g, gLine, O)}
+    <path d="${curve([[73, 64], [76, 76], [75, 90]], false)}" stroke="#ffc98a" stroke-width="1" fill="none" opacity=".5" stroke-linecap="round" ${blur}/>
+    ${shape("M37 57.6 L50 68.6 L63 57.6 Q50 62 37 57.6 Z", C.cream, mix(C.cream, gLine, .4), O)}
+    <path d="M44 61 L50 66.6 L56 61" stroke="${mix(C.cream, "#7a7a80", .3)}" stroke-width="1.6" fill="none" opacity=".5" ${blur}/>
+    ${patch(31.5, 84, 4.6, 4.2, -8, "#c8553d")}${patch(68, 87, 4.2, 3.7, 10, "#e0b44e")}
+    <path d="M54 75 Q61 80 67 75" stroke="#d9b04a" stroke-width=".9" fill="none"/>
+    ${shape(curve(ring(67.6, 75, 2.4, 2.4, 9, .05, 93)), "#f0c75a", strawLine, [-.45, .45])}${stroke(66.6, 74.2, -.6, 1.6, .35, "#fffbe8", .9, .2)}
+    ${[77, 85].map((y) => shape(curve(ring(50, y, 1.7, 1.7, 8, .05, y)), "#f0c75a", strawLine, [-.4, .4]) + stroke(49.4, y - .6, -.6, 1, .3, "#fffbe8", .8, .2)).join("")}
+    ${arm(29, 64, 22, 70, 23, 78, 22.4, 80.4, -1, 121)}
+    ${arm(71, 64, 79, 70, 77.6, 77, 77.4, 79.6, 1, 123)}
+    ${shape(curve(ring(80.6, 77.4, 2.6, 2.6, 10, .04, 125)), "#f0c75a", strawLine, [-.45, .45])}${stroke(79.6, 76.4, -.7, 1.8, .35, "#fffbe8", .9, .2)}
+    ${shape(curve(bump(36)), g, gLine, O)}${shape(curve(bump(64)), g, gLine, O)}
+    ${tuftLine(headTufts, 50, 45, gLine, 37, 1.1, 2.2, O)}
     ${shape(curve(head), g, gLine, O)}
+    ${furEdge(headTufts, 50, 45, [g], 37, 1.1, 2.2)}
     <g clip-path="url(#${id}H)">
-      <path d="${curve(ring(30, 54, 18, 12, 9, .2, 95))}" fill="${gDeep}" opacity=".6" filter="url(#${id}soft)"/>
-      <path d="${curve(ring(72, 40, 12, 14, 9, .2, 97))}" fill="${gWarm}" opacity=".55" filter="url(#${id}soft)"/>
-      ${[[44, 47, 1.4], [57, 50, 1.1], [64, 43, 1.6], [38, 53, 1], [52, 41, .9]].map(([x, y, r]) => `<path d="${curve(ring(x, y, r, r * .85, 7, .2, x))}" fill="${gDeep}" opacity=".5"/>`).join("")}
+      <path d="${curve(ring(32, 55, 18, 12, 10, .2, 95))}" fill="${C.cool}" opacity=".65" ${soft}/>
+      <path d="${curve(ring(70, 42, 13, 15, 10, .2, 97))}" fill="${C.warm}" opacity=".5" ${soft}/>
+      <path d="${curve(ring(40, 32, 12, 5, 8, .25, 98))}" fill="#9aa59a" opacity=".22" ${soft}/>
+      <path d="${curve(ring(50, 59, 18, 5, 10, .2, 99))}" fill="${C.cream}" opacity=".3" ${soft}/>
+      ${[...Array(16)].map(() => stroke(26 + r() * 48, 30 + r() * 28, -2.2 + (r() - .5) * .8, 1.6 + r() * 2, .35, C.deep, .2, .1)).join("")}
+      <path d="${curve(ring(50, 27.6, 26, 3.6, 10, .2, 53))}" fill="${C.deep}" opacity=".5" ${blur}/>
     </g>
-    ${pieEye(35, 36, 101, 5.5, 6, 5.2, gLine, 1.1)}${pieEye(65, 36, 103, 5.9, 6, 5.2, gLine, 1.1)}
-    ${lid(35)}${lid(65)}
-    <g fill="none" stroke="#b8902e" stroke-width="1.5"><path d="${curve(ring(35, 36, 7.8, 7.6, 12, .02, 105))}"/><path d="${curve(ring(65, 36, 7.8, 7.6, 12, .02, 107))}"/><path d="M42.8 36 Q50 33 57.2 36"/></g>
-    <path d="M31 31.4 Q33 30 35.4 30.2 M61 31.4 Q63 30 65.4 30.2" stroke="#fff" stroke-width=".8" opacity=".7" stroke-linecap="round"/>
-    <path d="M60 31 L63 30" stroke="#fff" stroke-width="1.4" stroke-linecap="round"><animate attributeName="opacity" values="0;0;1;0" keyTimes="0;.8;.85;1" dur="6s" repeatCount="indefinite"/></path>
-    ${shape(curve([[25, 30.6], [29, 24.6], [36, 24.4], [41, 27], [36, 27.6], [33, 31], [29, 32.6]]), "#f3eee2", "#9a8e7a", [-.5, .5])}
-    ${shape(curve([[75, 30.6], [71, 24.6], [64, 24.4], [59, 27], [64, 27.6], [67, 31], [71, 32.6]]), "#f3eee2", "#9a8e7a", [-.5, .5])}
-    ${[[30, 27.4, -.5], [33.6, 26.6, -.3], [70, 27.4, -2.6], [66.4, 26.6, -2.8]].map(([x, y, a]) => stroke(x, y, a, 3, .4, "#c8bea8", .8, .1)).join("")}
-    <path d="M33 54 Q50 62.5 67 54" stroke="${gLine}" stroke-width="1.7" fill="none" stroke-linecap="round"/>
-    <path d="M31.4 53 Q30.4 55 32.2 56 M68.6 53 Q69.6 55 67.8 56" stroke="${gLine}" stroke-width="1" fill="none" stroke-linecap="round"/>
-    <path d="${curve(ring(25.6, 50, 5, 2.6, 8, .2, 109))}" fill="#e88f8f" opacity=".35" filter="url(#${id}blur)"/><path d="${curve(ring(74.4, 50, 5, 2.6, 8, .2, 111))}" fill="#e88f8f" opacity=".35" filter="url(#${id}blur)"/>
-    ${shape(curve(ring(50, 22, 33.5, 6.8, 18, .03, 113)), straw, strawLine, O)}
-    <g stroke="#c49a4a" stroke-width=".5" opacity=".7" fill="none"><path d="${curve(ring(50, 22, 28, 5.2, 14, .03, 115))}"/><path d="${curve(ring(50, 22, 22, 4, 12, .03, 117))}"/></g>
-    ${shape(curve([[35, 21], [36.4, 11], [42, 7.4], [50, 6.6], [58, 7.4], [63.6, 11], [65, 21], [50, 22.6]]), mix(straw, "#fff3d0", .15), strawLine, O)}
-    <path d="${curve(ring(44, 12, 6, 4, 8, .2, 119))}" fill="#fff6dc" opacity=".35" filter="url(#${id}blur)"/>
-    <g stroke="#c49a4a" stroke-width=".5" opacity=".65">${[40, 45, 50, 55, 60].map((x) => `<path d="M${x} 8.6 Q${x - .6} 14 ${x} 20"/>`).join("")}</g>
-    <path d="M35.6 18 Q50 22.4 64.4 18" stroke="#c8553d" stroke-width="3" fill="none"/><path d="M37 17.4 Q50 21.2 63 17.4" stroke="#e8836a" stroke-width=".7" fill="none"/>
-    ${shape(curve(ring(21, 76, 6, 6, 9, .1, 121)), g, gLine, O)}<path d="M18 73 q2 -1.4 4 -.6" stroke="${gWarm}" stroke-width=".8" fill="none" opacity=".7"/>` };
+    ${[[42, 47, 1.3], [58, 49.6, 1], [65, 43, 1.4], [35, 52, .9], [53, 41.6, .8], [70, 50, .8], [29, 45, .9]].map(([x, y, s], k) =>
+      shape(curve(ring(x, y, s, s * .85, 7, .2, 40 + k)), mix(g, "#c8d890", .25), gDeep, [-.35, .3]) + stroke(x + s * .2, y - s * .5, -.6, s * .8, .25, "#f3f6d8", .6, .2)).join("")}
+    <path d="${curve(head.slice(14, 18).concat(head.slice(0, 2)), false)}" stroke="#ffc98a" stroke-width="1" fill="none" opacity=".55" stroke-linecap="round" ${blur}/>
+    ${pieEye(36, 35, 101, 5.5, 5.4, 5, "#241812", 1.1)}${pieEye(64, 35, 103, 5.9, 5.4, 5, "#241812", 1.1)}
+    ${lid(36)}${lid(64)}
+    <g fill="none" stroke="#b8902e" stroke-width="1.1"><path d="${curve(ring(36, 35, 7.4, 7.2, 12, .02, 105))}"/><path d="${curve(ring(64, 35, 7.4, 7.2, 12, .02, 107))}"/><path d="M43.4 35 Q50 32.2 56.6 35"/></g>
+    <path d="M32 30.4 Q34 29 36.4 29.2 M62 30.4 Q64 29 66.4 29.2" stroke="#fffbe8" stroke-width=".7" opacity=".7" stroke-linecap="round"/>
+    <path d="M61 30 L64 29" stroke="#fff" stroke-width="1.2" stroke-linecap="round"><animate attributeName="opacity" values="0;0;1;0" keyTimes="0;.8;.85;1" dur="6s" repeatCount="indefinite"/></path>
+    ${shape(curve([[26.4, 29.6], [30, 23.8], [37, 23.6], [42, 26.2], [37, 26.8], [34, 30], [30, 31.6]]), "#f3eee2", "#9a8e7a", [-.45, .45])}
+    ${shape(curve([[73.6, 29.6], [70, 23.8], [63, 23.6], [58, 26.2], [63, 26.8], [66, 30], [70, 31.6]]), "#f3eee2", "#9a8e7a", [-.45, .45])}
+    ${[[31, 26.6, -.5], [34.6, 25.8, -.3], [69, 26.6, -2.6], [65.4, 25.8, -2.8]].map(([x, y, a]) => stroke(x, y, a, 3, .4, "#c8bea8", .8, .1)).join("")}
+    ${shape(`M34.6 53.4 Q50 60.6 65.4 53.4 Q58 58.4 50 58.8 Q42 58.4 34.6 53.4 Z`, "#4a2a22", "#2a1512", [-.3, .3])}
+    ${stroke(34.6, 53, 2.2, 2.4, .35, gLine, .7, .2)}${stroke(65.4, 53, .9, 2.4, .35, gLine, .7, .2)}
+    <path d="${curve(ring(27.4, 49, 4.6, 2.6, 8, .3, 109))}" fill="#d98f8f" opacity=".38" ${blur}/><path d="${curve(ring(72.6, 49, 4.4, 2.4, 8, .3, 111))}" fill="#e39a8c" opacity=".4" ${blur}/>
+    ${shape(curve(ring(50, 21.4, 32, 6.6, 18, .03, 113)), straw, strawLine, O)}
+    <g clip-path="url(#${id}B)">
+      <path d="${curve(ring(30, 24, 14, 4, 9, .2, 114))}" fill="#a07a3a" opacity=".5" ${soft}/><path d="${curve(ring(70, 19, 12, 3, 9, .2, 115))}" fill="#fff0c4" opacity=".6" ${soft}/>
+      ${[...Array(26)].map((_, k) => { const a = k / 26 * Math.PI * 2; return stroke(50 + Math.cos(a) * 22, 21.4 + Math.sin(a) * 4.4, a, 8, .3, "#b8893c", .55, .03); }).join("")}
+    </g>
+    ${shape(curve([[35.4, 20.6], [36.8, 10.6], [42, 7.2], [50, 6.4], [58, 7.2], [63.2, 10.6], [64.6, 20.6], [50, 22.2]]), mix(straw, "#fff3d0", .15), strawLine, O)}
+    <path d="${curve(ring(57, 12, 6, 4, 8, .2, 119))}" fill="#fff6dc" opacity=".45" ${blur}/><path d="${curve(ring(40, 16, 5, 4, 8, .2, 120))}" fill="#a07a3a" opacity=".35" ${blur}/>
+    ${[39.6, 44.6, 49.6, 54.6, 59.6].map((x) => stroke(x, 8.6, 1.57 + (x - 50) * .01, 10.6, .3, "#b8893c", .6, .02)).join("")}
+    ${shape(curve([[36, 16.8], [50, 20.4], [64, 16.8], [64.2, 19.4], [50, 22.6], [35.8, 19.4]]), "#c8553d", mix("#c8553d", "#1a0f08", .55), [-.4, .4])}
+    <path d="M38 17.6 Q50 20.6 62 17.6" stroke="#e8836a" stroke-width=".6" fill="none" opacity=".8"/>` };
 }
 
 // painted crystal shard: base at (x, y), width w, height h, lean a; lit from the right, shaded left, faint ridge
