@@ -200,8 +200,8 @@ const blink = (cx, cy, dur, delay, body) => `<g transform="translate(${cx} ${cy}
 const bob = (body, dur = 3.2, amt = 1.4) => `<g><animateTransform attributeName="transform" type="translate" values="0 0;0 -${amt};0 0" dur="${dur}s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/>${body}</g>`;
 
 // Dibble's wardrobe. Every part is swappable; the Market's Wardrobe tab sells the rest.
-export const FUR = { silver: ["#b8aea4", "#958a80"], cocoa: ["#8a5a44", "#6b4232"], sand: ["#c49a6c", "#a07a50"], slate: ["#7a7584", "#5c5866"], snow: ["#eee6dc", "#cbbfb1"], rosewood: ["#a86a5e", "#87504a"] };
-export const LANTERN_GLOW = { amber: "#f0b543", granny: "#e8f0a0", crystal: "#9fe6ff", jar: "#fff3a0", paper: "#ff9a7a" };
+export const FUR = { silver: ["#b8aea4", "#958a80"], cocoa: ["#8a5a44", "#6b4232"], sand: ["#c49a6c", "#a07a50"], slate: ["#7a7584", "#5c5866"], snow: ["#eee6dc", "#cbbfb1"], rosewood: ["#a86a5e", "#87504a"], blossom: ["#c98d98", "#a86f7a"], midnight: ["#4a4a66", "#363650"] };
+export const LANTERN_GLOW = { amber: "#f0b543", granny: "#e8f0a0", crystal: "#9fe6ff", jar: "#fff3a0", paper: "#ff9a7a", rose: "#ff9dbb" };
 export const DEFAULT_LOOK = { fur: "cocoa", hat: "leaf", scarf: "none", lantern: "amber" };
 
 // Every wardrobe part is painted like Dibble: hand-built shapes from paint.js with a darker edge peeking out down-left
@@ -213,6 +213,7 @@ const shadeIn = (id, d, [cx, cy, rx, ry], cool, warm) => `<clipPath id="${id}"><
   <path d="${curve(ring(cx - rx * .45, cy + ry * .35, rx * .7, ry * .8, 9, .2, 3))}" fill="${cool}" opacity=".5" filter="url(#${id}s)"/>
   <path d="${curve(ring(cx + rx * .5, cy - ry * .4, rx * .45, ry * .55, 9, .2, 5))}" fill="${warm}" opacity=".6" filter="url(#${id}s)"/></g>`;
 function lanternArt(kind, id) {
+  if (EXTRA_LANTERNS[kind]) return EXTRA_LANTERNS[kind](id); // wardrobe additions
   const metal = "#6a5236", f = `filter="url(#${id}b)"`, defs = `<defs>${blurDef(id + "b", 1.4)}</defs>`;
   const cap = (y, w) => part(curve([[80 - w, y + .2], [80 + w, y], [80 + w + .4, y + 2.8], [80 - w - .3, y + 3]]), metal, [-.5, .5]);
   const base = (y, w) => part(curve([[80 - w, y + .1], [80 + w, y], [80 + w - .2, y + 2.6], [80 - w + .1, y + 2.7]]), metal, [-.5, .5]);
@@ -236,6 +237,7 @@ function lanternArt(kind, id) {
     <path d="${curve([[80, 60.4], [81.5, 63.2], [80, 65.8], [78.5, 63.2]])}" fill="#ffffff"/>` + cap(53.6, 6.8) + base(70, 6.2);
 }
 function hatArt(kind, id) {
+  if (EXTRA_HATS[kind]) return EXTRA_HATS[kind](id); // wardrobe additions
   const defs = (sd = 1.6) => `<defs>${blurDef(id + "cs", sd)}${blurDef(id + "b", 1.2)}</defs>`;
   switch (kind) {
     case "leaf": return `<defs>${blurDef(id + "blur2", 2.4)}</defs><g transform="translate(50 28) scale(${(1 / 2.1).toFixed(4)}) translate(-150 -214)">${leafCap(id)}</g>`;
@@ -271,17 +273,18 @@ function hatArt(kind, id) {
 // Dibble in the approved painterly style (proto/paint.js), fitted into the 100x100 box everything else expects.
 export function dibble(size = 96, look = {}) {
   const L = { ...DEFAULT_LOOK, ...look }, [f] = FUR[L.fur] || FUR.cocoa, id = "dib" + uid++, glow = LANTERN_GLOW[L.lantern] || LANTERN_GLOW.amber;
-  const D = dibbleBody(id, { fur: f, scarf: L.scarf, hat: L.hat === "leaf" ? null : hatArt(L.hat, id + "t"), lantern: L.lantern === "amber" ? null : lanternArt(L.lantern, id + "L") });
+  const D = dibbleBody(id, { fur: f, scarf: L.scarf, hat: L.hat === "leaf" ? null : hatArt(L.hat, id + "t"), lantern: L.lantern === "amber" ? null : lanternArt(L.lantern, id + "L") }), W = wearLayers(L, id);
   return svg(size, "0 0 100 100", `
     <defs><radialGradient id="${id}g"><stop offset="0" stop-color="${glow}" stop-opacity=".6"/><stop offset="1" stop-color="${glow}" stop-opacity="0"/></radialGradient>${D.defs}</defs>
     <circle cx="75" cy="77" r="20" fill="url(#${id}g)"><animate attributeName="r" values="18;21;18" dur="2.6s" repeatCount="indefinite"/></circle>
-    ${bob(`<g transform="translate(2 2) scale(.37) translate(-34 -158)">${D.body}</g>`)}
+    ${bob(`<g transform="translate(2 2) scale(.37) translate(-34 -158)">${W[0]}${D.body}${W[1]}</g>`)}
   `, "dibble");
 }
 
 // A wardrobe item on its own (shop tiles): the hat, scarf, lantern, or a jar of fur dye.
 export function lookItem(part, val, size = 40) {
   const id = "li" + uid++;
+  if (part === "trinket" || part === "cloak") return wearTile(part, val, id, size);
   if (part === "hat") return svg(size, val === "miner" || val === "beanie" ? "16 0 68 40" : "18 -2 64 40", hatArt(val, id) || "", "lookItem");
   if (part === "lantern") return svg(size, "66 48 28 30", `<path d="M80 49 Q76 52 79 55" stroke="#4a3824" stroke-width="1.4" fill="none"/>${lanternArt(val, id)}`, "lookItem");
   if (part === "scarf") { const deep = mix(val, "#1a0f08", .12), band = curve([[5.4, 11.6], [12, 16.6], [20, 19.4], [28, 16.6], [34.6, 11.6], [36, 15.4], [29.4, 21.6], [20, 24.6], [10.6, 21.6], [4, 15.4]]);
@@ -303,6 +306,119 @@ export function puddock(size = 64) {
   const P = puddockBody("pud" + uid++);
   return svg(size, "0 0 100 100", `<defs>${P.defs}</defs>${bob(P.body, 3.6, 1.1)}`, "puddock");
 }
+
+// ---------- wardrobe extras: the bow, trinkets, cloaks, and the newer hats and lantern ----------
+// Painted with the paint.js toolkit: hand-built shapes with a darker edge peeking out down-left (no ink outlines),
+// shading clipped inside, soft blurred blobs for light. Hats use the 100-box hat coords, the lantern the lantern coords;
+// trinkets and cloaks are drawn straight onto Dibble's body coords (paint.js dibbleBody, feet at y 418).
+const wBlur = (id, sd = 1.6) => `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${sd}"/></filter>`;
+const wPart = (d, c, o = [-.7, .6], extra = "") => shape(d, c, line(c), o, extra);
+const wSoft = (id, x, y, rx, ry, c, op, seed = 1) => `<path d="${curve(ring(x, y, rx, ry, 9, .2, seed))}" fill="${c}" opacity="${op}" filter="url(#${id})"/>`;
+const wClip = (id, d, body) => `<clipPath id="${id}"><path d="${d}"/></clipPath><g clip-path="url(#${id})">${body}</g>`;
+const EXTRA_HATS = {
+  acorn: (id) => { const d = curve([[24, 31], [25, 19], [33, 10], [50, 6.4], [67, 10], [75, 19], [76, 31], [63, 29], [50, 28.4], [37, 29]]), r = rng(5);
+    return `<defs>${wBlur(id + "s", 2)}</defs>` + wPart(d, "#9a7444", [-1, .9]) + wClip(id + "c", d,
+      [12, 17.4, 22.8].map((y, row) => [...Array(9)].map((_, k) => { const x = 22 + k * 7 + (row % 2) * 3.5 + (r() - .5);
+        return shape(curve(ring(x, y, 3.8, 2.8, 7, .2, row * 9 + k, .1)), mix("#b08a56", "#7a5832", r() * .5), "#5a3e20", [-.5, .5]); }).join("")).join("") +
+      wSoft(id + "s", 36, 24, 14, 6, "#3a2410", .45, 2) + wSoft(id + "s", 60, 12, 10, 5, "#ffe0a8", .45, 3)) +
+      wPart(curve([[22.6, 27.6], [50, 26], [77.4, 27.6], [78, 31.2], [50, 33], [22, 31.2]]), "#7a5832", [-.8, .7]) +
+      `<path d="${curve([[26, 28.4], [50, 27], [74, 28.4]], false)}" stroke="#c49a62" stroke-width="1" fill="none" opacity=".7" stroke-linecap="round"/>` +
+      shape(limb(50, 8, 49, 2, 54, -1.4, 2.2, 1.1), "#6a4a2a", "#2e1e10", [-.5, .5]); },
+  bandana: (id) => { const red = "#c8443a", d = curve([[25, 31], [26, 20], [34, 11], [50, 8], [66, 11], [74, 20], [75, 30], [62, 27.6], [50, 27], [38, 27.6]]), r = rng(8);
+    return `<defs>${wBlur(id + "s", 2)}</defs>` +
+      [[25, 28, 21, 33, 19.6, 38.4, 3, 1.6], [25.6, 29, 24, 34, 25.6, 38.6, 2.6, 1.4]].map((a) => shape(limb(...a), mix(red, "#1a0f08", .12), line(red), [-.5, .5])).join("") +
+      wPart(d, red, [-1, .9]) + wClip(id + "c", d, wSoft(id + "s", 36, 26, 16, 7, "#4a1010", .45, 4) + wSoft(id + "s", 60, 13, 11, 5, "#ff9a84", .5, 5) +
+        [[36, 15], [47, 12], [58, 13], [66, 19], [42, 21], [54, 20], [30, 22], [64, 25], [48, 26]].map(([x, y], k) =>
+          `<path d="${curve(ring(x + (r() - .5), y, 1.5, 1.3, 7, .2, k))}" fill="#f6e8d2"/>`).join("") +
+        [[40, 10, 1.9], [58, 11, 1.3], [70, 16, 1]].map(([x, y, a]) => stroke(x, y, a, 9, .5, "#7a2018", .45, .1)).join("")) +
+      shape(curve(ring(25, 28.6, 3.4, 3, 9, .1, 6)), mix(red, "#1a0f08", .08), line(red), [-.5, .5]); },
+};
+const EXTRA_LANTERNS = {
+  rose: (id) => { const d = curve(ring(80, 64.4, 6.4, 7.8, 12, .05, 7, .1)), brass = "#c8a050";
+    return `<defs>${wBlur(id + "b", 1.4)}</defs>` + wSoft(id + "b", 80, 64, 10, 10.5, "#ff9dbb", .38, 3) + wPart(d, "#ee6f9a", [-.6, .55]) +
+      wClip(id + "c", d, `<path d="M80 56 L87 64 L80 73 Z" fill="#ffc8da" opacity=".5"/><path d="M80 56 L73 64 L80 73 Z" fill="#8a2048" opacity=".25"/>`) +
+      [[-1.2, 4.6], [.4, 3.4], [2.2, 4.2]].map(([a, l], k) => stroke(80 + k * .8 - .8, 64.4 + k * .6 - .6, a, l, .45, "#ffe6ef", .7, .5)).join("") +
+      `<path d="${curve(ring(78, 61, 1.8, 2.4, 7, .2, 9))}" fill="#ffffff" opacity=".8"/>` +
+      [[75.2, 56.6, 71.8, 64.4, 75.4, 72.4], [84.8, 56.6, 88.2, 64.4, 84.6, 72.4]].map((a) => shape(limb(...a, .65, .65), brass, line(brass), [-.35, .3])).join("") +
+      wPart(curve([[75.4, 53], [84.6, 52.8], [85, 56.4], [75, 56.6]]), brass, [-.5, .5]) + wPart(curve([[75.6, 71.6], [84.4, 71.4], [84.8, 74.4], [75.2, 74.6]]), brass, [-.5, .5]); },
+};
+// trinket: drawn on Dibble (head: true rides on his head, under its tilt); vb frames it for the shop tile
+const neckCord = (c) => `<path d="M134 300 Q140 318 151 324 Q162 318 170 302" stroke="${c}" stroke-width="1.6" fill="none" opacity=".9"/>`;
+const TRINKETS = {
+  bow: { head: true, vb: "92 176 58 54", draw: (id) => { const c = "#f28ab2", x = 120, y = 202;
+    return `<defs>${wBlur(id + "s", 2.2)}</defs><g transform="rotate(-14 ${x} ${y})">` +
+      [[x - 2, y + 3, x - 7, y + 12, x - 11, y + 23, 4.4, 3], [x + 2, y + 3, x + 6, y + 13, x + 12, y + 21, 4.2, 3]].map((a) => shape(limb(...a), mix(c, "#5a1030", .15), line(c), [-.8, .7])).join("") +
+      [curve([[x - 2, y - 1], [x - 12, y - 13], [x - 22, y - 11], [x - 23, y + 2], [x - 12, y + 6]]), curve([[x + 2, y - 1], [x + 12, y - 13], [x + 22, y - 9], [x + 22, y + 3], [x + 11, y + 6]])]
+        .map((d, k) => wPart(d, c, [-.9, .8]) + wClip(id + "l" + k, d, wSoft(id + "s", x + (k ? 8 : -9), y + 2, 6, 3.6, "#a83a6a", .55, k) + wSoft(id + "s", x + (k ? 14 : -15), y - 7, 5, 3, "#ffd2e2", .7, k + 2))).join("") +
+      stroke(x - 3, y - 2, -2.4, 13, .7, "#c4507e", .55, .15) + stroke(x + 3, y - 2, -.7, 13, .7, "#c4507e", .55, -.15) +
+      shape(curve(ring(x, y + .6, 5, 5.6, 9, .1, 11)), mix(c, "#5a1030", .08), line(c), [-.6, .5]) + `<path d="${curve(ring(x + 1, y - 1, 1.8, 1.4, 7, .2, 12))}" fill="#ffe0ec" opacity=".8"/></g>`; } },
+  clip: { head: true, vb: "94 180 52 50", draw: (id) => {
+    const bloom = (x, y, s, k) => [0, 72, 144, 216, 288].map((deg) => { const a = (deg + k * 20) * Math.PI / 180;
+      return shape(curve(ring(x + Math.cos(a) * 4.2 * s, y + Math.sin(a) * 4.2 * s, 3.6 * s, 2.4 * s, 8, .1, k * 5 + deg, a)), "#b49af6", "#4a3488", [-.5, .45]); }).join("") +
+      shape(curve(ring(x, y, 2.2 * s, 2.1 * s, 8, .1, k + 40)), "#fff3a0", "#8a6a1a", [-.4, .4]);
+    return `<defs>${wBlur(id + "s", 3)}</defs>` + wSoft(id + "s", 121, 206, 20, 16, "#c9b6ff", .6, 7) +
+      shape(limb(108, 214, 118, 208, 132, 210, 1.6, 1.1), "#c8c0d8", "#4a4060", [-.4, .4]) +
+      [[110, 206, -2.5], [128, 214, .3]].map(([x, y, a]) => shape(limb(x, y, x + Math.cos(a) * 5, y + Math.sin(a) * 5 - 3, x + Math.cos(a) * 10, y + Math.sin(a) * 10, 2.6, .4), "#7fa85e", "#33502a", [-.4, .4])).join("") +
+      bloom(116, 203, 1.35, 1) + bloom(131, 211, .95, 2); } },
+  goggles: { head: true, vb: "98 170 112 64", draw: (id) => { const brass = "#c8963e";
+    const lens = (x, y, k) => shape(curve(ring(x, y, 12, 11.4, 12, .04, 20 + k)), brass, line(brass), [-.9, .8]) +
+      shape(curve(ring(x + .3, y, 8.6, 8.2, 12, .04, 22 + k)), "#7cc0b8", "#1e4a48", [-.4, .4]) +
+      `<path d="${curve(ring(x - 1.6, y + 2, 4, 3, 8, .2, k))}" fill="#2e6a68" opacity=".45" filter="url(#${id}s)"/>` + stroke(x + 2, y - 4.4, .5, 4.6, .9, "#ffffff", .85, .2);
+    return `<defs>${wBlur(id + "s", 1.4)}</defs>` + shape(limb(102, 218, 150, 194, 204, 202, 3.4, 3), "#6a4a30", "#2a1a10", [-.6, .6]) +
+      stroke(110, 211, -.42, 30, .5, "#a07a54", .6, .02) + lens(143, 204, 0) + lens(177, 200, 1) +
+      shape(limb(155, 203, 160, 199, 165, 201, 1.8, 1.8), brass, line(brass), [-.4, .4]); } },
+  locket: { vb: "124 292 56 56", draw: (id) => { const gold = "#e8b84a", d = curve([[151, 344], [142, 335], [140.6, 328], [145, 323.4], [151, 326.6], [157, 323.4], [161.4, 328], [160, 335]]);
+    return `<defs>${wBlur(id + "s", 1.4)}</defs>` + neckCord("#c8963e") + wPart(d, gold, [-.7, .6]) +
+      wPart(curve([[151, 340], [144.6, 333.6], [143.8, 329], [146.6, 326.4], [151, 329], [155.4, 326.4], [158.2, 329], [157.4, 333.6]]), "#ee6f9a", [-.4, .35]) +
+      wSoft(id + "s", 147, 329, 2.6, 2, "#ffd8e6", .9, 2) + shape(curve(ring(151, 323.6, 2, 1.8, 7, .1, 3)), gold, line(gold), [-.3, .3]); } },
+  pendant: { vb: "124 292 56 60", draw: (id) => `<defs>${wBlur(id + "s", 2.6)}</defs>` + neckCord("#c8d0d8") +
+      wSoft(id + "s", 151, 336, 9, 11, "#9fe6ff", .55, 4) + shard(151, 326, 10, 20, Math.PI, "#9fe6ff", rng(5), true) +
+      shape(curve(ring(151, 324.4, 2.4, 2.2, 7, .1, 6)), "#d8e0e8", "#4a5a68", [-.3, .3]) },
+};
+// cloak: a back layer (behind Dibble) and a front layer (over his shoulders); vb frames the whole thing for the tile
+const scallops = (pts, c, hole, seed) => pts.map(([x, y], k) => shape(curve(ring(x, y, 3.4, 2.6, 8, .15, seed + k)), c, mix(c, "#3a2a20", .45), [-.4, .4]) +
+  `<path d="${curve(ring(x, y + .4, .9, .8, 6, .1, k))}" fill="${hole}" opacity=".5"/>`).join("");
+const CLOAKS = {
+  moss: { vb: "60 268 150 150", back: (id) => { const g = "#62853f", d = curve([[112, 290], [150, 296], [188, 288], [198, 330], [196, 384], [178, 404], [150, 408], [112, 408], [84, 398], [74, 360], [88, 318]]), r = rng(3);
+      return `<defs>${wBlur(id + "s", 5)}</defs>` + wPart(d, g, [-1.6, 1.4]) + wClip(id + "c", d, wSoft(id + "s", 92, 380, 26, 30, "#1e3418", .55, 2) + wSoft(id + "s", 186, 320, 16, 30, "#a8c878", .45, 3) +
+        [...Array(26)].map(() => stroke(80 + r() * 116, 300 + r() * 104, 1.6 + (r() - .5) * .9, 6 + r() * 7, 1.2, r() < .5 ? "#7fa456" : "#3e5e2a", .6, .2)).join("")) +
+        [...Array(14)].map((_, k) => stroke(88 + k * 7.6, 402 + Math.sin(k) * 3, 1.5 + (r() - .5) * .8, 6 + r() * 4, 1.6, k % 2 ? "#4e7032" : "#6f9448", .95, .15)).join(""); },
+    front: (id) => { const g = "#6f9448", d = curve([[104, 294], [128, 302], [150, 306], [172, 302], [190, 292], [190, 304], [170, 316], [150, 318], [128, 316], [108, 306]]), r = rng(4);
+      return wPart(d, g, [-1, .9]) + [...Array(16)].map((_, k) => stroke(108 + k * 5.4, 306 + Math.sin(k * 1.7) * 3 + (k > 4 && k < 12 ? 8 : 2), 1.5 + (r() - .5), 5 + r() * 3, 1.5, k % 2 ? "#4e7032" : "#86ac5c", .9, .2)).join("") +
+        shape(curve([[146, 306], [150, 300], [156, 304], [154, 312], [148, 312]]), "#c8a050", "#5a3e18", [-.4, .4]); } },
+  shawl: { vb: "68 262 144 144", back: (id) => { const c = "#f3d4dc", d = curve([[110, 288], [150, 294], [190, 286], [200, 320], [194, 352], [150, 364], [104, 356], [92, 326]]);
+      return `<defs>${wBlur(id + "s", 4)}</defs>` + wPart(d, c, [-1.4, 1.2]) + wClip(id + "c", d, wSoft(id + "s", 100, 344, 22, 18, "#b88898", .5, 2)) +
+        scallops([96, 104, 114, 126, 138, 150, 162, 174, 186].map((x) => [x, 352 + Math.abs(x - 150) * -.08 + (x < 110 || x > 180 ? -6 : 0)]), "#fbeef0", "#b07888", 30); },
+    front: (id) => { const c = "#f6dce2", d = curve([[102, 292], [128, 304], [151, 330], [174, 304], [192, 290], [188, 302], [156, 342], [146, 342], [114, 312]]);
+      return wPart(d, c, [-1, .9]) + wClip(id + "f", d, wSoft(id + "s", 128, 318, 12, 10, "#c890a0", .45, 4) +
+        [[118, 300, 1.05], [134, 312, .9], [166, 314, 2.2], [182, 302, 2.4]].map(([x, y, a]) => stroke(x, y, a, 12, .5, "#d8a8b4", .7, .1)).join("")) +
+        scallops([[114, 314], [124, 324], [134, 333], [143, 341], [151, 345], [159, 341], [168, 333], [178, 322], [186, 310]], "#fdf3f4", "#b07888", 50) +
+        shape(curve(ring(151, 334, 4.2, 4, 9, .12, 61)), "#e86f96", "#7a2a48", [-.4, .4]) + `<path d="${curve(ring(150, 333, 1.6, 1.2, 7, .2, 62))}" fill="#ffd0e0"/>`; } },
+  mothwing: { vb: "36 262 210 150", back: (id) => { const w = "#e6dcf4", wl = mix(w, "#2a1a3a", .5), r = rng(9);
+      const wing = (pts, root, tip, k, eye) => { const d = curve(pts), a = Math.atan2(tip[1] - root[1], tip[0] - root[0]), L = Math.hypot(tip[0] - root[0], tip[1] - root[1]);
+        return wPart(d, eye ? "#efe6f7" : w, [-1.6, 1.4]) + wClip(id + "w" + k, d, wSoft(id + "s", root[0], root[1], 22, 18, "#8a76b4", .5, k) +
+          wSoft(id + "s", tip[0], tip[1], 18, 14, "#b9a6dc", .55, k + 2) + wSoft(id + "s", (root[0] + tip[0]) / 2, (root[1] + tip[1]) / 2 - 8, 12, 8, "#ffffff", .55, k + 4) +
+          [-.32, -.12, .08, .28].map((da) => stroke(root[0], root[1], a + da, L * .92, .7, wl, .35, .04)).join("") +
+          [...Array(10)].map(() => stroke(root[0] + (tip[0] - root[0]) * (.3 + r() * .6), root[1] + (tip[1] - root[1]) * (.3 + r() * .6) + (r() - .5) * 20, a + (r() - .5) * .4, 4 + r() * 4, .5, "#ffffff", .5, .1)).join("")) +
+          (eye ? shape(curve(ring(eye[0], eye[1], 8, 7.4, 10, .1, 70 + k)), "#b8a0d8", wl, [-.5, .5]) + shape(curve(ring(eye[0] + .6, eye[1], 4.2, 3.9, 9, .1, 72 + k)), "#5e4a8a", "#2a1a3a", [-.3, .3]) +
+            `<path d="${curve(ring(eye[0] + 1.4, eye[1] - 1.3, 1.3, 1.1, 6, .1, k))}" fill="#ffffff"/>` : ""); };
+      return `<defs>${wBlur(id + "s", 5)}</defs>` +
+        wing([[120, 318], [92, 322], [64, 338], [58, 362], [74, 382], [102, 384], [122, 360]], [118, 330], [66, 370], 0, [80, 360]) +
+        wing([[124, 300], [100, 282], [70, 266], [42, 260], [36, 276], [50, 300], [80, 318], [114, 320]], [120, 306], [44, 268], 1) +
+        wing([[180, 314], [206, 320], [228, 336], [226, 356], [204, 364], [184, 350]], [182, 322], [220, 354], 2, [210, 344]) +
+        wing([[176, 298], [200, 280], [228, 266], [250, 266], [252, 280], [238, 300], [208, 314], [182, 316]], [180, 304], [246, 272], 3); },
+    front: (id) => { const fluff = "#f4eefc";
+      return shape(curve([[108, 292], [130, 302], [150, 306], [172, 302], [190, 290], [188, 300], [150, 314], [112, 302]]), fluff, mix(fluff, "#3a2a50", .45), [-.8, .7]) +
+        [...Array(13)].map((_, k) => stroke(110 + k * 6.6, 300 + Math.sin(k * 2.1) * 2 + (k > 3 && k < 10 ? 6 : 2), 1.57 + (k - 6) * .08, 6, 1.8, k % 2 ? "#e2d8f2" : "#ffffff", .95, .2)).join("") +
+        shape(`M146 306 A6 6 0 1 0 156 312 A4.6 4.6 0 1 1 146 306 Z`, "#fff6d8", "#8a7a50", [-.4, .4]); } },
+};
+// on Dibble: [behind, in front], both in body coords
+function wearLayers(look, id) {
+  const T = TRINKETS[look.trinket], C = CLOAKS[look.cloak], head = (s) => `<g transform="translate(0 10) rotate(-9 150 236)">${s}</g>`;
+  return [C ? C.back(id + "cb") : "", (C ? C.front(id + "cb") : "") + (T ? (T.head ? head(T.draw(id + "tr")) : T.draw(id + "tr")) : "")];
+}
+const wearTile = (part, val, id, size) => { const W = part === "trinket" ? TRINKETS[val] : CLOAKS[val];
+  return W && svg(size, W.vb, part === "trinket" ? W.draw(id) : W.back(id) + W.front(id), "lookItem"); };
 
 // cave scene per mine (menu postcards): layered rock, stalactites, rails into the dark, crystal clusters
 // with halos, a hanging lantern, and one environment feature per mine with drifting motes.
