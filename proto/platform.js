@@ -2,7 +2,7 @@
 // In the Capacitor app the native plugins are reached through window.Capacitor.Plugins (no bundler needed);
 // in a plain browser everything is a harmless stand-in, so the prototype keeps working as before.
 const cap = window.Capacitor, native = !!cap?.isNativePlatform?.(), os = cap?.getPlatform?.() || "web";
-const { AdMob, Purchases, FirebaseAnalytics } = cap?.Plugins || {};
+const { AdMob, Purchases, FirebaseAnalytics, FirebaseRemoteConfig } = cap?.Plugins || {};
 
 // Fill these from your accounts (docs/SETUP.md). The defaults are Google's public *test* ad units: safe to ship to
 // testers, never earn money. Empty RevenueCat key = purchases switched off.
@@ -18,6 +18,7 @@ export const NO_ADS = "no_ads"; // RevenueCat entitlement id
 // Interstitial pacing (SPEC §4): never in the first 3 expeditions, ≥2 expeditions and ≥90 s apart,
 // and skipped after any expedition where the player already watched a rewarded ad.
 const CAPS = { grace: 3, everyN: 2, gapS: 90 };
+// Firebase Remote Config can retune them without an app update: keys ad_grace, ad_every_n, ad_gap_s (docs/SETUP.md A9).
 let expeditions = 0, sinceInter = 0, lastInter = 0, watchedThisRun = false;
 
 const id = (k) => KEYS[k][os];
@@ -39,6 +40,17 @@ async function load(kind) {
   } catch (e) { track("ad_failed", { format: kind, error: String(e?.message || e).slice(0, 90) }); }
 }
 
+async function remoteCaps() {
+  if (!FirebaseRemoteConfig) return;
+  try {
+    await FirebaseRemoteConfig.fetchAndActivate();
+    for (const [cap, key] of [["grace", "ad_grace"], ["everyN", "ad_every_n"], ["gapS", "ad_gap_s"]]) {
+      const { value, source } = await FirebaseRemoteConfig.getNumber({ key });
+      if (source === "remote") CAPS[cap] = value; // unset keys keep the SPEC defaults
+    }
+  } catch {}
+}
+
 export function track(name, params = {}) {
   log.push([Date.now(), name, params]); if (log.length > 100) log.shift();
   if (FirebaseAnalytics) FirebaseAnalytics.logEvent({ name, params }).catch(() => {});
@@ -51,6 +63,7 @@ export const platform = {
 
   async init() {
     if (!native) return;
+    remoteCaps(); // not awaited: a slow network never delays start-up
     if (AdMob) {
       try { // GDPR/UMP consent first, then (iOS) ATT, then the SDK
         const info = await AdMob.requestConsentInfo();
