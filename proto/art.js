@@ -689,9 +689,9 @@ export function stumpArt(growth = 0, sprout = false, w = 300, tree = false) {
   const rootSvg = roots.map(([x1, y1, cx, cy, x2, y2, wd]) => shape(limb(x1, y1, cx, cy, x2, y2, wd, .8), bark, barkLine, O)).join("") +
     (g ? `<path d="${curve(ring(150, 85, 64, 7, 10, .2, 7))}" fill="#f0b543" opacity="${(g * .3).toFixed(2)}" filter="url(#${id}b)"/>` +
       roots.map(([x1, y1, cx, cy, x2, y2, wd]) => `<path d="${limb(x1, y1 - 1, cx, cy - 1, x2, y2 - .5, wd * .3, .15)}" fill="#ffd27a" opacity="${(.25 + g * .6).toFixed(2)}"/>`).join("") : "");
-  // the trunk: the pale cut face, then the front of the trunk with a ragged lip
+  // the trunk: the pale cut face, then the front of the trunk, its lip following the face
   const body = curve([[120, 48], [117, 60], [114, 72], [107, 82], [128, 85.5], [150, 86.5], [172, 85.5], [193, 82], [186, 72], [183, 60], [180, 48],
-    [174, 53], [166, 55.6], [158, 53.8], [151, 57], [144, 54.6], [136, 55.6], [128, 52.6]]);
+    [173, 52.6], [162, 54.8], [150, 55.4], [138, 54.8], [127, 52.6]]);
   const face = curve(ring(150, 49, 30, 6.4, 14, .04, 9));
   const moss = [...Array(Math.round(g * 9))].map((_, k) => shape(curve(ring(118 + r() * 64, 64 + r() * 16, 4 + r() * 4, 2 + r() * 2, 8, .25, k + 3)), k % 2 ? "#4f7a3a" : "#5f9a45", "#24451f", [-.6, .5])).join("");
   const caps = [[96, 84], [206, 85], [194, 81]].slice(0, g > .35 ? Math.ceil((g - .35) * 5) : 0).map(([x, y], k) =>
@@ -717,7 +717,7 @@ export function stumpArt(growth = 0, sprout = false, w = 300, tree = false) {
     <g clip-path="url(#${id}c)">
       <path d="${curve(ring(122, 74, 22, 26, 10, .2, 13))}" fill="#2a2030" opacity=".55" filter="url(#${id}b)"/>
       <path d="${curve(ring(180, 62, 14, 22, 10, .2, 14))}" fill="#d08850" opacity=".35" filter="url(#${id}b)"/>
-      ${[...Array(9)].map((_, k) => { const x = 117 + k * 8 + (r() - .5) * 3; return stroke(x, 57 + r() * 5, 1.57 + (x - 150) * .006, 18 + r() * 8, 1, barkLine, .45, .06); }).join("")}
+      ${[...Array(6)].map((_, k) => { const x = 122 + k * 11 + (r() - .5) * 3; return stroke(x, 60 + r() * 4, 1.57 + (x - 150) * .006, 16 + r() * 6, .8, barkLine, .25, .1); }).join("")}
     </g>
     <path d="${curve([[181, 50], [184, 62], [188, 74]], false)}" stroke="#ffc98a" stroke-width="1.6" fill="none" opacity=".45" stroke-linecap="round" filter="url(#${id}s)"/>
     ${moss}${caps}${shoot}${oak}</svg>`;
