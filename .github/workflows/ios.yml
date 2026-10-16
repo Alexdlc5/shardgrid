@@ -49,6 +49,8 @@ jobs:
           for v in TEAM KEY_ID ISSUER KEY_P8; do [ -n "${!v}" ] || { echo "missing secret for $v (docs/SETUP.md, part A6)"; exit 1; }; done
           KEY="$RUNNER_TEMP/AuthKey_$KEY_ID.p8"; printf '%s' "$KEY_P8" > "$KEY"
           AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$KEY" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER")
+          pip3 install --quiet --break-system-packages pyjwt cryptography
+          KEY="$KEY" KEY_ID="$KEY_ID" ISSUER="$ISSUER" python3 scripts/revoke-ci-dev-certs.py
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/Glimmerwood.xcarchive" DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}" "${AUTH[@]}" archive | tail -n 30
