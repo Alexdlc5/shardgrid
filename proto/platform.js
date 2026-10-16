@@ -2,7 +2,9 @@
 // In the Capacitor app the native plugins are reached through window.Capacitor.Plugins (no bundler needed);
 // in a plain browser everything is a harmless stand-in, so the prototype keeps working as before.
 const cap = window.Capacitor, native = !!cap?.isNativePlatform?.(), os = cap?.getPlatform?.() || "web";
-const { AdMob, Purchases, FirebaseAnalytics, FirebaseRemoteConfig } = cap?.Plugins || {};
+const { AdMob, Purchases, FirebaseAnalytics, FirebaseRemoteConfig, FirebaseCrashlytics, Preferences } = cap?.Plugins || {};
+export const VERSION = "dev"; // scripts/build-web.mjs writes "1.0 (build)" here
+const PRIVACY_URL = "https://alexdlc5.github.io/privacy.html";
 
 // Fill these from your accounts (docs/SETUP.md). The defaults are Google's public *test* ad units: safe to ship to
 // testers, never earn money. Empty RevenueCat key = purchases switched off.
@@ -11,7 +13,7 @@ const KEYS = {
   interstitial: { android: "ca-app-pub-3940256099942544/1033173712", ios: "ca-app-pub-2020120570370273/7053794160" },
   banner:       { android: "ca-app-pub-3940256099942544/6300978111", ios: "ca-app-pub-2020120570370273/1506698874" },
   revenuecat:   { android: "", ios: "appl_ouESHyvltDiYgjdswFfbJZPEljf" }, // public SDK key; TestFlight buys go through Apple's sandbox (a test_ key closes release builds)
-  testAds: true, // iOS units are real; keep test ads on for TestFlight, flip to false for the App Store build
+  testAds: true, // iOS units are real; test ads stay on for TestFlight. The ios workflow's "appstore" input builds with false
 };
 export const NO_ADS = "no_ads"; // RevenueCat entitlement id
 
@@ -24,11 +26,13 @@ let expeditions = 0, sinceInter = 0, lastInter = 0, watchedThisRun = false;
 const id = (k) => KEYS[k][os];
 const ready = { rewarded: false, interstitial: false };
 const log = [];
-let noAds = false;
+let noAds = false, adsReady = false, privacyRequired = false;
 try { noAds = localStorage.getItem("gw.noAds") === "1"; } catch {}
 
-// the banner's height as --ad on <html> (plus a hasAd class), so the camp and menus lift above it instead of hiding under it
-let adListening = false;
+// the banner's height as --ad on <html> (plus a hasAd class), so the camp and menus lift above it instead of hiding under it.
+// The banner loads once and is then hidden and resumed; one that finishes loading after the player left the menu is hidden
+// again, so it never lands over the board.
+let adListening = false, bannerWant = false, bannerState = "none"; // none | loading | ready
 const setAdHeight = (h) => { const px = Math.max(0, Math.round(+h || 0)); document.documentElement.style.setProperty("--ad", px + "px"); document.documentElement.classList.toggle("hasAd", px > 0); };
 
 async function load(kind) {
@@ -57,7 +61,7 @@ export function track(name, params = {}) {
 }
 
 export const platform = {
-  native, os, log,
+  native, os, log, version: VERSION, privacyUrl: PRIVACY_URL,
   get noAds() { return noAds; },
   get canBuy() { return native && !!Purchases && !!KEYS.revenuecat[os]; },
 
@@ -65,12 +69,19 @@ export const platform = {
     if (!native) return;
     remoteCaps(); // not awaited: a slow network never delays start-up
     if (AdMob) {
-      try { // GDPR/UMP consent first, then (iOS) ATT, then the SDK
-        const info = await AdMob.requestConsentInfo();
-        if (info.isConsentFormAvailable && info.status === "REQUIRED") await AdMob.showConsentForm();
-        if (os === "ios") await AdMob.requestTrackingAuthorization();
+      // GDPR/US consent (UMP) first, then the iOS tracking prompt, then the SDK. Each step is separate, so an offline or failed
+      // form never switches ads off: the SDK then uses the consent saved last time.
+      try {
+        let info = await AdMob.requestConsentInfo();
+        if (info.isConsentFormAvailable && info.status === "REQUIRED") info = await AdMob.showConsentForm();
+        privacyRequired = info.privacyOptionsRequirementStatus === "REQUIRED";
+      } catch (e) { track("consent_failed", { error: String(e?.message || e).slice(0, 90) }); }
+      try { if (os === "ios") await AdMob.requestTrackingAuthorization(); } catch {}
+      try {
         await AdMob.initialize({ initializeForTesting: KEYS.testAds });
+        adsReady = true;
         load("rewarded"); load("interstitial");
+        if (bannerWant) this.banner(true); // a menu opened while the consent form was up
       } catch (e) { track("ads_init_failed", { error: String(e?.message || e).slice(0, 90) }); }
     }
     if (this.canBuy) {
@@ -109,21 +120,37 @@ export const platform = {
   },
 
   async banner(show) { // menus only, never over the board
-    if (!native || !AdMob) return;
+    bannerWant = show && !noAds;
+    if (!native || !AdMob || !adsReady) return;
+    if (!adListening) {
+      adListening = true;
+      AdMob.addListener("bannerAdSizeChanged", (s) => setAdHeight(bannerWant ? s?.height : 0));
+      AdMob.addListener("bannerAdLoaded", () => { bannerState = "ready"; if (!bannerWant) AdMob.hideBanner().catch(() => {}); });
+      AdMob.addListener("bannerAdFailedToLoad", () => { bannerState = "none"; setAdHeight(0); });
+    }
     try {
-      if (!adListening) { adListening = true; AdMob.addListener?.("bannerAdSizeChanged", (s) => setAdHeight(s?.height)); AdMob.addListener?.("bannerAdFailedToLoad", () => setAdHeight(0)); }
-      if (show && !noAds) await AdMob.showBanner({ adId: id("banner"), adSize: "ADAPTIVE_BANNER", position: "BOTTOM_CENTER", isTesting: KEYS.testAds });
-      else { await AdMob.hideBanner(); setAdHeight(0); }
-    } catch {}
+      if (bannerWant && bannerState === "ready") await AdMob.resumeBanner();
+      else if (bannerWant && bannerState === "none") {
+        bannerState = "loading";
+        await AdMob.showBanner({ adId: id("banner"), adSize: "ADAPTIVE_BANNER", position: "BOTTOM_CENTER", isTesting: KEYS.testAds });
+      } else if (!bannerWant) {
+        setAdHeight(0);
+        if (noAds && bannerState !== "none") { bannerState = "none"; await AdMob.removeBanner(); } else await AdMob.hideBanner();
+      }
+    } catch { if (bannerState === "loading") bannerState = "none"; }
   },
 
-  async privacyChoices() { if (native && AdMob) try { await AdMob.showPrivacyOptionsForm(); } catch {} },
+  // Options: the consent form where the player's region needs one (EEA, UK, some US states), otherwise the privacy policy
+  get privacyRequired() { return privacyRequired; },
+  async privacyChoices() {
+    if (privacyRequired) try { return await AdMob.showPrivacyOptionsForm(); } catch {}
+    window.open(PRIVACY_URL, "_blank"); // Capacitor hands _blank links to Safari
+  },
 
   async refreshEntitlements() {
     if (!this.canBuy) return noAds;
     const { customerInfo } = await Purchases.getCustomerInfo();
-    noAds = !!customerInfo.entitlements.active[NO_ADS];
-    try { localStorage.setItem("gw.noAds", noAds ? "1" : "0"); } catch {}
+    setNoAds(!!customerInfo.entitlements.active[NO_ADS]);
     return noAds;
   },
 
@@ -138,16 +165,54 @@ export const platform = {
       const o = await Purchases.getOfferings(), pkg = o.current?.availablePackages?.[0];
       if (!pkg) return false;
       const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
-      noAds = !!customerInfo.entitlements.active[NO_ADS];
-      try { localStorage.setItem("gw.noAds", noAds ? "1" : "0"); } catch {}
+      setNoAds(!!customerInfo.entitlements.active[NO_ADS]);
       track("iap_success", { product: pkg.product.identifier });
-      if (noAds) this.banner(false);
       return noAds;
-    } catch (e) { track("iap_fail", { error: String(e?.message || e).slice(0, 90) }); return false; }
+    } catch (e) { if (!e?.data?.userCancelled && e?.code !== "1") track("iap_fail", { error: String(e?.message || e).slice(0, 90) }); return false; }
   },
 
+  // true: Remove ads is back; false: nothing to restore; null: the App Store couldn't be reached
   async restore() {
-    if (!this.canBuy) return false;
-    try { await Purchases.restorePurchases(); return await this.refreshEntitlements(); } catch { return false; }
+    if (!this.canBuy) return null;
+    try {
+      const { customerInfo } = await Purchases.restorePurchases();
+      setNoAds(!!customerInfo.entitlements.active[NO_ADS]); track("iap_restore", { found: noAds });
+      return noAds;
+    } catch (e) { track("iap_restore_failed", { error: String(e?.message || e).slice(0, 90) }); return null; }
+  },
+
+  // The save lives in localStorage, which WebKit writes to disk lazily and iOS may clear when space runs low.
+  // Each write is mirrored to native Preferences (UserDefaults), and at launch the newer copy wins (restoreSave below).
+  backup(key, json) {
+    if (!native || !Preferences) return;
+    const t = Date.now();
+    try { localStorage.setItem(key + "@", t); } catch {}
+    Preferences.set({ key, value: JSON.stringify([t, json]) }).catch(() => {});
   },
 };
+
+function setNoAds(v) { // hides banners and interstitials the moment Remove ads is bought or restored, and remembers it offline
+  noAds = v;
+  try { localStorage.setItem("gw.noAds", v ? "1" : "0"); } catch {}
+  if (v) platform.banner(false);
+}
+
+// JS errors reach Crashlytics as non-fatal reports (the native SDK only sees native crashes)
+if (native && FirebaseCrashlytics) {
+  const report = (message) => FirebaseCrashlytics.recordException({ message: String(message).slice(0, 500) }).catch(() => {});
+  addEventListener("error", (e) => report(`${e.message} @ ${e.filename?.split("/").pop()}:${e.lineno}:${e.colno}`));
+  addEventListener("unhandledrejection", (e) => report("unhandled: " + (e.reason?.stack || e.reason)));
+}
+
+// Runs before index.html reads the save: restores it from Preferences when localStorage lost it or holds an older copy.
+async function restoreSave(key = "gw.save") {
+  try {
+    const { value } = await Preferences.get({ key });
+    const local = localStorage.getItem(key), localT = +localStorage.getItem(key + "@") || 0;
+    if (value) {
+      const [t, json] = JSON.parse(value);
+      if (!local || t > localT) { localStorage.setItem(key, json); localStorage.setItem(key + "@", t); }
+    } else if (local) platform.backup(key, local); // first launch with the mirror: copy what's already there
+  } catch {}
+}
+if (native && Preferences) await restoreSave();

@@ -273,7 +273,8 @@
   body.playing #dust { display: none; }
   #dust i { position: absolute; background: #2a1a0e; border-radius: 50%; opacity: .45; }
   #world { filter: sepia(.18) saturate(1.08) contrast(1.04); }
-  @media (prefers-reduced-motion: reduce) { svg.dibble, svg.puddock { filter: none; } body::after { animation: none; } #dust { display: none; } }
+  @media (prefers-reduced-motion: reduce) { svg.dibble, svg.puddock { filter: none; } body::after { animation: none; } #dust { display: none; }
+    *, ::before, ::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } } /* K1: idles stop, one-shots land on their end frame */
   /* ===== title screen and the camp hub ===== */
   .titleScr { align-items: center; padding-top: 0 !important; background: radial-gradient(ellipse at 50% 40%, rgba(5,12,8,.1), rgba(5,12,8,.55)); }
   .titleWrap { width: min(400px, calc(100vw - 48px)); margin: auto; text-align: center; }
@@ -507,7 +508,7 @@ const SHOP = [
 
 // ---------- save (per-browser) ----------
 const store = { get(k, d) { try { return JSON.parse(localStorage.getItem("gw." + k)) ?? d; } catch { return d; } },
-                set(k, v) { try { localStorage.setItem("gw." + k, JSON.stringify(v)); } catch {} } };
+                set(k, v) { const s = JSON.stringify(v); try { localStorage.setItem("gw." + k, s); } catch {} platform.backup("gw." + k, s); } }; // backup: a native copy (platform.js)
 const DEFAULTS = { look: { ...DEFAULT_LOOK }, gold: 0, up: { lantern: 0, pick: 0, charm: 0, lens: 0, tongs: 0, sieve: 0 }, owned: [], biomes: ["hollow"], best: {}, sel: "hollow",
   mode: "exp", opt: { music: true, sound: true, vib: true, glyph: false }, daily: { last: "", streak: 0, best: 0 },
   metPuddock: false, trial: [], found: [], camp: { tent: "canvas", banner: "#5fa04e", fire: "ring", hide: [] },
@@ -1202,7 +1203,7 @@ $("mExp").onclick = () => { save.mode = "exp"; persist(); renderMines(); };
 $("mCalm").onclick = () => { save.mode = "calm"; persist(); renderMines(); };
 for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).onclick = () => { save.opt[k] = !save.opt[k]; persist(); renderHome(); };
 $("oMusic").onclick = () => { save.opt.music = !save.opt.music; persist(); soundtrack.setEnabled(save.opt.music); renderHome(); };
-$("oPrivacy").onclick = () => platform.native ? platform.privacyChoices() : toast("Privacy choices open here in the app");
+$("oPrivacy").onclick = () => platform.privacyChoices(); // the consent form where the region needs one, otherwise the privacy policy
 const openMarket = () => save.metPuddock ? (renderMarket(), show("market")) : talk(() => { renderMarket(); show("market"); });
 for (const b of document.querySelectorAll("#mktTabs button")) b.onclick = () => { mktTab = b.dataset.tab; renderMarket(); $("shop").animate([{ opacity: 0, transform: "translateX(14px)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" }); };
 $("campMem").onclick = $("tMem").onclick = () => replayMemories(() => { renderHome(); show(base); });
@@ -1477,6 +1478,39 @@ for (const id of ["coinA", "coinB", "coinC"]) $(id).innerHTML = coin(22);
 $("coinHud").innerHTML = coin(26);
 $("icoExp").innerHTML = icon("vine", 26); $("icoCalm").innerHTML = icon("leaf", 26);
 $("icoDig").innerHTML = icon("pickaxe", 24);
+
+// ===== track 5 (trust and launch): Options extras, version, VoiceOver labels, reduced motion. Keep this block together. =====
+{ // Options: Restore purchases (App Store rule for non-consumables), the privacy policy, the version
+  const card = $("optsSheet").querySelector(".card"), el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls, textContent: text });
+  const restore = el("button", "alt", "Restore purchases"), policy = el("button", "linkBtn", "Privacy policy"), ver = el("div", "note", `Glimmerwood ${platform.version}`);
+  restore.onclick = async () => {
+    if (!platform.canBuy) return toast("Purchases are restored in the app");
+    restore.disabled = true; const r = await platform.restore(); restore.disabled = false;
+    toast(r ? "Remove ads restored. Thank you!" : r === false ? "No purchases to restore on this Apple Account" : "Couldn't reach the App Store. Try again in a moment");
+  };
+  policy.onclick = () => window.open(platform.privacyUrl, "_blank"); policy.style.minHeight = "44px"; // S2 tap target
+  $("toTitle").before(restore); card.append(policy, ver);
+}
+{ // VoiceOver: camp props are painted SVG, so give them a role and a name; mine cards act as buttons
+  const NAMES = { mines: "Go mining", daily: "Daily Dig", wardrobe: "Wardrobe", tent: "Wardrobe", market: "Puddock's market", memories: "Amber Memories",
+    dibble: "Dibble", fire: "Campfire", lanterns: "Lanterns", puddock: "Old Puddock", granny: "Granny Burr" };
+  const name = (t) => { const gem = t.startsWith("gem-") && GEMS[+t.slice(4)]; return gem ? (save.found.includes(gem) ? CRYSTALS[gem].name : "Empty gem slot") : NAMES[t] || t; };
+  const label = () => {
+    document.querySelectorAll('#campArt [data-tap="lanterns"]').forEach((g, k) => k && g.setAttribute("aria-hidden", "true")); // one string of lanterns, read once
+    for (const g of document.querySelectorAll("#campArt [data-tap]:not([role])")) g.setAttribute("role", "button"), g.setAttribute("aria-label", name(g.dataset.tap));
+    for (const m of document.querySelectorAll("#mines .mine:not(.teaser):not([role])")) m.setAttribute("role", "button");
+  };
+  for (const id of ["campArt", "mines"]) new MutationObserver(label).observe($(id), { childList: true });
+  $("hubMenu").setAttribute("aria-label", "Options"); $("cv").setAttribute("aria-label", "Mining board");
+}
+{ // reduced motion (K1): CSS stops the CSS loops; SVG <animate> idles (camp, characters, forest) are paused here as they appear
+  const still = matchMedia("(prefers-reduced-motion: reduce)"), pause = (n) => n.nodeType === 1 && [n, ...n.querySelectorAll("svg")].forEach((s) => s.pauseAnimations?.());
+  if (still.matches) { pause(document.body); new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach(pause))).observe(document.body, { childList: true, subtree: true }); }
+  // J2: during a dig the forest sits blurred at 16% behind the board; its glow pulse re-filtered the whole layer every frame
+  else new MutationObserver(() => document.querySelectorAll("#world svg").forEach((s) => document.body.classList.contains("playing") ? s.pauseAnimations() : s.unpauseAnimations()))
+    .observe(document.body, { attributes: true, attributeFilter: ["class"] });
+}
+// ===== end of track 5 block =====
 
 if (platform.native) $("adNote").textContent = "Green buttons play a short video ad.";
 platform.init().then(() => renderHome());

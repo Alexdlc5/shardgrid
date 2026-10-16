@@ -68,7 +68,7 @@
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-2020120570370273~2491732626</string>
 	<key>NSUserTrackingUsageDescription</key>
-	<string>Lets Glimmerwood show you ads that are more relevant and fewer repeats. You can still play everything if you say no.</string>
+	<string>Lets Glimmerwood show ads that suit you better. If you say no, you still play everything and see the same number of ads.</string>
 	<!-- Google's SKAdNetwork id (AdMob). Add mediation partners' ids when they join. -->
 	<key>SKAdNetworkItems</key>
 	<array>
