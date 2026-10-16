@@ -434,13 +434,13 @@ export function camp(st, gemFn, dibbleSvg) {
     : `${hit(PJ, 200, 360, 240, 406)}${PJ.g(`<circle cx="220" cy="386" r="20" fill="#f0b543" opacity=".22"><animate attributeName="opacity" values=".12;.3;.12" dur="3s" repeatCount="indefinite"/></circle>
       ${shape(curve([[210, 372], [230, 372], [234, 392], [229, 404], [211, 404], [206, 392]]), "#e8a84a", "#6a3a10", [-.8, .7], 'opacity=".9"')}${plank(209, 366, 22, 6, "#8a5a32", r)}
       <path d="M213 378 Q212 390 214 398" stroke="#fff3d0" stroke-width="1.2" fill="none" opacity=".6"/>`)}`}</g>`;
-  const memLabel = st.memories != null ? `<g data-tap="memories">${label(200, yS + F * .7, `Memories ${st.memories}`)}</g>` : "";
+  const memLabel = st.memories != null ? `<g data-tap="memories" role="none" aria-hidden="true">${label(200, yS + F * .7, `Memories ${st.memories}`)}</g>` : "";
 
   const c = Math.min(st.charm, 15), trunk = 14 + c * 2.2, crown = 9 + c * .9, tx = 288, ty = 250, ct = ty - trunk; // the Root Charm sapling grows with each level
   const lobe = (dx, dy, rr, col, seed) => shape(curve(ring(tx + dx * crown, ct + dy * crown, rr * crown, rr * crown * .9, 12, .14, seed)), col, "#1d3a19", [-1.4, 1.2]);
   const ringStones = [-9, -4.5, 0, 4.5, 9].map((dx, k) => shape(curve(ring(tx + dx, ty + 2.5 - Math.abs(dx) * .12, 2.6, 1.7, 8, .25, 80 + k)), k % 2 ? "#6a6458" : "#7a7366", "#2a2620", [-.5, .4])).join("");
   const PS = place(288, 252, 334, yB, 1.7 * kf);
-  const sapling = `<g data-tap="sapling" data-tip="sapling">${hit(PS, tx - crown * 1.2, ct - crown * 1.3, tx + crown * 1.2, ty + 4)}${PS.g(`${ringStones}${c >= 15 ? `<path d="${curve(ring(tx, ct - crown * .4, crown + 12, crown + 10, 10, .15, 90))}" fill="#9be08a" opacity=".2" filter="url(#campBlur)"><animate attributeName="opacity" values=".12;.28;.12" dur="3s" repeatCount="indefinite"/></path>` : ""}
+  const sapling = `<g data-tap="sapling" data-tip="sapling" role="button" aria-label="Root Charm sapling">${hit(PS, tx - crown * 1.2, ct - crown * 1.3, tx + crown * 1.2, ty + 4)}${PS.g(`${ringStones}${c >= 15 ? `<path d="${curve(ring(tx, ct - crown * .4, crown + 12, crown + 10, 10, .15, 90))}" fill="#9be08a" opacity=".2" filter="url(#campBlur)"><animate attributeName="opacity" values=".12;.28;.12" dur="3s" repeatCount="indefinite"/></path>` : ""}
     ${shape(limb(tx, ty + 2, tx - 2, ty - trunk * .5, tx, ct, 2 + c * .3, 1 + c * .15), "#6b4a2a", "#2e1e12", [-1, 1])}
     <g><animateTransform attributeName="transform" type="rotate" values="-1.5 ${tx} ${ct};1.5 ${tx} ${ct};-1.5 ${tx} ${ct}" dur="5s" repeatCount="indefinite"/>
     ${lobe(.5, -.05, .58, "#4f8a3e", 1)}${lobe(-.48, .02, .62, "#4a8239", 2)}${lobe(0, -.35, .82, "#5f9a48", 3)}
@@ -482,7 +482,7 @@ export function camp(st, gemFn, dibbleSvg) {
   const kT = (st.tent === "treehouse" ? 1.05 : 1.45) * kf, PT = place(88, 238, 156, yM - 2 * kf, kT), tentTop = { treehouse: 86, pavilion: 140 }[st.tent] || 156; // the tall treehouse is drawn smaller so it never hides the stump
   const PFl = place(140, 262, 206, PT.y(262), kT); // the banner pole stands at the tent's corner, clear of the fire
   const tent = `<g data-tap="tent">${hit(PT, 44, tentTop, 132, 240)}${PT.g(`${tents}${st.sieve ? `<g transform="translate(98 156) scale(.9)">${ICONS.sieve}</g>` : ""}`)}</g>
-    <g data-tap="flag">${hit(PFl, 132, 148, 174, 262)}${PFl.g(`${shape(limb(140, 262, 139, 206, 140, 150, 1.4, 1.1), "#6b4a2a", "#2e1e12", [-.6, .5])}
+    <g data-tap="flag" role="button" aria-label="Camp banner">${hit(PFl, 132, 148, 174, 262)}${PFl.g(`${shape(limb(140, 262, 139, 206, 140, 150, 1.4, 1.1), "#6b4a2a", "#2e1e12", [-.6, .5])}
       <path fill="${st.banner}" stroke="${mix(st.banner, "#1a0f08", .5)}" stroke-width=".8" d="M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z">
       <animate attributeName="d" values="M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z;M141 152 Q156 157 170 151 L163 162 L170 171 Q156 177 141 172 Z;M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z" dur="2.8s" repeatCount="indefinite"/></path>`)}</g>
     ${d.mushrooms ? PT.g([[106, 268, 8], [120, 273, 6], [94, 276, 5]].map(([x, y, sz]) => `<path d="${curve(ring(x, y + sz * .3, sz * .2, sz * .6, 6, .1, x))}" fill="#e2d8f0"/>
@@ -527,7 +527,7 @@ export function camp(st, gemFn, dibbleSvg) {
     return on ? `${shape(limb(x, 232, x - .4, 214, x, 196, 1.5, 1.1), "#8a5a32", "#3a2418", [-.6, .5])}${shape(curve([[x - 8, 197], [x - 3, 190.6], [x + 3, 190.6], [x + 8, 197], [x, 194]]), tier(st.pick), mix(tier(st.pick), "#1a0f08", .55), [-.7, .6])}`
       : `<path d="M${x} 232 L${x} 206" stroke="#3a2a1a" stroke-width="1" stroke-dasharray="2 2"/>`; }).join("");
   const PK = place(344, 256, 194, yF - 4 * kf, 1.25 * kf);
-  const bench = `<g data-tap="tools">${hit(PK, 300, 186, 388, 258)}${PK.g(`${plank(306, 230, 76, 7, "#5a3b24", r)}${shape(limb(310, 237, 306, 246, 303, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${shape(limb(378, 237, 382, 246, 385, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${picks}
+  const bench = `<g data-tap="tools" role="button" aria-label="Tool bench">${hit(PK, 300, 186, 388, 258)}${PK.g(`${plank(306, 230, 76, 7, "#5a3b24", r)}${shape(limb(310, 237, 306, 246, 303, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${shape(limb(378, 237, 382, 246, 385, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${picks}
     ${st.lens ? `<g transform="translate(330 214) scale(.9)">${ICONS.lens}</g>` : ""}${st.tongs ? `<g transform="translate(352 212) scale(.9)">${ICONS.tongs}</g>` : ""}`)}</g>`;
 
   const stripe = (k) => { const x = 282 + k * 19.3; return shape(curve([[x, 312], [x + 19.3, 312], [x + 19.3, 328], [x + 9.6, 334], [x, 328]]), k % 2 ? "#f1e4c4" : "#c8553d", k % 2 ? "#a08a60" : "#5a1e14", [-.6, .6]); };

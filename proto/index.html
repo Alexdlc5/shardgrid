@@ -1558,7 +1558,6 @@ function drawCamp() {
   const stage = $("campStage"); if (!stage.clientHeight) return; // hidden: the ResizeObserver draws it once it shows
   const barBottom = document.querySelector(".hubBar").getBoundingClientRect().bottom - stage.getBoundingClientRect().top;
   $("campArt").innerHTML = camp({ ...campState(), daily: campDaily, view: [stage.clientWidth, stage.clientHeight, barBottom] }, gem, dibble(100, save.look));
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) $("campArt").firstElementChild.pauseAnimations();
   setTimeout(campTips, 900);
 }
 new ResizeObserver(drawCamp).observe($("campStage"));
