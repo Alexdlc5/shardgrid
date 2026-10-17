@@ -39,7 +39,7 @@ Check your work against every screen at phone resolution: `node scripts/build-we
 
 - Night greens and browns for the world (`#0f1a14` to `#2f5a2f`, wood `#4f331d` to `#8a5a32`), cream for paper and
   text (`#f6ead0`, `#efe9da`), and amber/gold for anything valuable or interactive (`#f0b543`, `#ffd27a`).
-- Crystal colours are the brightest things on screen. Keep props less saturated than the crystals.
+- **Crystals are jewel-bright** (pure, saturated hues: `#5fe85a`, `#00d6a1`, `#ffc414`, `#e8194f`, `#2a6cff`, `#8a52ff`...), shaded toward their own deep tone (never toward grey or teal-black), with a soft light inside. **Their breaks are brighter still** (`vivid()` ×1.8, glows only 10% cream). They're the brightest things on screen: keep props and UI less saturated so the crystals catch the eye.
 - Darken with `mix(c, "#1a0f08", t)` (warm) or `mix(c, "#0e1c1a", t)` (cool, for stones and crystals). Never with grey.
 
 ## 5. Shape

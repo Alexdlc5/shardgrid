@@ -617,18 +617,18 @@ const $ = (id) => document.getElementById(id);
 // ---------- tuning (all Remote Config later) ----------
 const T = cfg0.rootline; // timer tuning, shared with sim/sim.py
 const CRYSTALS = {
-  moss:      { name: "Moss Quartz", color: "#8fd18b", glyph: "●", cut: "brilliant" },
-  jade:      { name: "Leaf Jade",   color: "#35b38a", glyph: "▲", cut: "step" },
-  amber:     { name: "Sun Amber",   color: "#f0b543", glyph: "◆", cut: "pear" },
-  garnet:    { name: "Garnet",      color: "#d0507a", glyph: "■", cut: "trillion" },
-  ember:     { name: "Ember Shard", color: "#ff6a3d", glyph: "✦", cut: "star" },
-  moonstone: { name: "Moonstone",   color: "#d7def5", glyph: "◐", cut: "cabochon" },
-  glowcap:   { name: "Gloamcap", color: "#9b7cf2", glyph: "✿", cut: "round" },
-  sapphire:  { name: "Pine Sapphire", color: "#4f7fe8", glyph: "◇", cut: "step" },
-  frost:     { name: "Frostspar",   color: "#9fe6ff", glyph: "❄", cut: "prism" },
-  topaz:     { name: "Deep Topaz",  color: "#f29f4c", glyph: "▼", cut: "trillion" },
-  geode:     { name: "Geode",       color: "#b06ad8", glyph: "⬢", cut: "geode" },
-  heart:     { name: "Rootheart",  color: "#ff4f7a", glyph: "♥", cut: "heart" },
+  moss:      { name: "Moss Quartz", color: "#5fe85a", glyph: "●", cut: "brilliant" },
+  jade:      { name: "Leaf Jade",   color: "#00d6a1", glyph: "▲", cut: "step" },
+  amber:     { name: "Sun Amber",   color: "#ffc414", glyph: "◆", cut: "pear" },
+  garnet:    { name: "Garnet",      color: "#e8194f", glyph: "■", cut: "trillion" },
+  ember:     { name: "Ember Shard", color: "#ff5414", glyph: "✦", cut: "star" },
+  moonstone: { name: "Moonstone",   color: "#e2eaff", glyph: "◐", cut: "cabochon" },
+  glowcap:   { name: "Gloamcap", color: "#8a52ff", glyph: "✿", cut: "round" },
+  sapphire:  { name: "Pine Sapphire", color: "#2a6cff", glyph: "◇", cut: "step" },
+  frost:     { name: "Frostspar",   color: "#5ce6ff", glyph: "❄", cut: "prism" },
+  topaz:     { name: "Deep Topaz",  color: "#ff8c1a", glyph: "▼", cut: "trillion" },
+  geode:     { name: "Geode",       color: "#d23cff", glyph: "⬢", cut: "geode" },
+  heart:     { name: "Rootheart",  color: "#ff3d9a", glyph: "♥", cut: "heart" },
   rubble:    { name: "Skystone",    color: "#8a8a99", glyph: "", cut: "stone" },
 };
 for (const [k, v] of Object.entries(cfg0.crystals)) Object.assign(CRYSTALS[k], v); // value, ember, bloom, freeze, stone
@@ -996,12 +996,16 @@ function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, gly
       if (edgeOf(r, c, -1, 0)) { ctx.moveTo(x, y); ctx.lineTo(x + size, y); } if (edgeOf(r, c, 1, 0)) { ctx.moveTo(x, y + size); ctx.lineTo(x + size, y + size); }
       if (edgeOf(r, c, 0, -1)) { ctx.moveTo(x, y); ctx.lineTo(x, y + size); } if (edgeOf(r, c, 0, 1)) { ctx.moveTo(x + size, y); ctx.lineTo(x + size, y + size); } } };
   ctx.save(); ctx.globalAlpha = alpha;
-  ctx.fillStyle = mix(color, "#0e1c1a", .55); ctx.beginPath(); for (const [r, c] of cells) ctx.rect(ox + c * size - size * .05, oy + r * size + size * .045, size + .5, size + .5); ctx.fill();
+  ctx.fillStyle = mix(color, "#000000", .55); ctx.beginPath(); for (const [r, c] of cells) ctx.rect(ox + c * size - size * .05, oy + r * size + size * .045, size + .5, size + .5); ctx.fill();
   ctx.beginPath(); for (const [r, c] of cells) ctx.rect(ox + c * size, oy + r * size, size + .5, size + .5);
   const g = ctx.createLinearGradient(x0, y0, x0 + bw, y0 + bh);
-  g.addColorStop(0, mix(color, "#ffffff", .38)); g.addColorStop(.45, color); g.addColorStop(1, mix(color, "#000000", .32));
-  ctx.fillStyle = g; ctx.shadowColor = color; ctx.shadowBlur = size * glow * .7; ctx.fill(); ctx.shadowBlur = 0;
+  g.addColorStop(0, mix(color, "#ffffff", .32)); g.addColorStop(.45, color); g.addColorStop(1, mix(color, "#000000", .22));
+  ctx.fillStyle = g; ctx.shadowColor = color; ctx.shadowBlur = size * glow * .95; ctx.fill(); ctx.shadowBlur = 0;
   ctx.clip();
+  // light inside the stone: its own colour, brighter at the heart, added on top so it glows rather than greys
+  const ig = ctx.createRadialGradient(x0 + bw * .45, y0 + bh * .42, 0, x0 + bw * .45, y0 + bh * .42, Math.max(bw, bh) * .65);
+  ig.addColorStop(0, hexA(lerpHex(color, "#ffffff", .25), .38)); ig.addColorStop(1, hexA(color, 0));
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = ig; ctx.fillRect(x0, y0, bw, bh); ctx.restore();
   // inner bevel: light from the top-left, shadow bottom-right
   ctx.lineWidth = size * .2; ctx.strokeStyle = "rgba(0,0,0,.2)"; ctx.save(); ctx.translate(-size * .05, -size * .05); outline(); ctx.stroke(); ctx.restore();
   ctx.strokeStyle = "rgba(255,255,255,.16)"; ctx.save(); ctx.translate(size * .05, size * .05); outline(); ctx.stroke(); ctx.restore();
@@ -1022,7 +1026,7 @@ function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, gly
   ctx.restore();
   // crisp outer line in the stone's own dark tone, and a thin highlight on the lit edges
   ctx.save(); ctx.globalAlpha = alpha; ctx.lineJoin = "round"; ctx.lineCap = "round";
-  ctx.strokeStyle = mix(color, "#0e1c1a", .6); ctx.lineWidth = Math.max(1.2, size * .05); outline(); ctx.stroke(); // a hard edge, so small stones never read as a glow
+  ctx.strokeStyle = mix(color, "#000000", .5); ctx.lineWidth = Math.max(1.2, size * .05); outline(); ctx.stroke(); // a hard edge, so small stones never read as a glow
   ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = Math.max(1, size * .025); ctx.beginPath();
   for (const [r, c] of cells) { const x = ox + c * size, y = oy + r * size, i = size * .07;
     if (edgeOf(r, c, -1, 0)) { ctx.moveTo(x + i, y + i); ctx.lineTo(x + size - (edgeOf(r, c, 0, 1) ? i : 0), y + i); }
@@ -1376,15 +1380,15 @@ function glowSpr(col, pure = false) { // white-hot core, the colour, then nothin
   r.addColorStop(0, pure ? hexA(col, 1) : "rgba(255,255,250,.95)"); r.addColorStop(pure ? .35 : .2, hexA(col, pure ? .7 : .8)); r.addColorStop(.6, hexA(col, .2)); r.addColorStop(1, hexA(col, 0));
   g.fillStyle = r; g.fillRect(0, 0, 64, 64); glows.set(col + pure, c); return c;
 }
-const vivid = (h) => { const c = hex(h), l = (c[0] + c[1] + c[2]) / 3; // half again as saturated: still paint, not neon
-  return "#" + c.map((v) => Math.max(0, Math.min(255, Math.round(l + (v - l) * 1.45))).toString(16).padStart(2, "0")).join(""); };
-const palOf = (h) => { let p = pals.get(h); if (!p) { const col = vivid(h); pals.set(h, p = { col, lt: lerpHex(col, "#ffffff", .55), dk: lerpHex(col, "#1a1426", .45), glow: lerpHex(col, "#fff4dc", .25) }); } return p; };
+const vivid = (h) => { const c = hex(h), l = (c[0] + c[1] + c[2]) / 3; // pushed well past the stone's own colour: the breaks are the brightest thing on screen
+  return "#" + c.map((v) => Math.max(0, Math.min(255, Math.round(l + (v - l) * 1.8))).toString(16).padStart(2, "0")).join(""); };
+const palOf = (h) => { let p = pals.get(h); if (!p) { const col = vivid(h); pals.set(h, p = { col, lt: lerpHex(col, "#ffffff", .45), dk: lerpHex(col, "#000000", .4), glow: lerpHex(col, "#fff4dc", .1) }); } return p; };
 const FLAVOUR = { // how the specials break: shard shape, gravity, fade per frame, extra motes, their colour
-  frost: { k: "flake", pal: "#cdf3ff", g: .1, fade: .02, motes: 1, mote: "#e6fbff" },
-  ember: { k: "spark", pal: "#ff8a3d", g: .2, fade: .034, motes: 2, mote: "#ffb35c" },
+  frost: { k: "flake", pal: "#6fe8ff", g: .1, fade: .02, motes: 1, mote: "#c4f6ff" },
+  ember: { k: "spark", pal: "#ff6414", g: .2, fade: .034, motes: 2, mote: "#ffa040" },
   geode: { rock: "#6b5a70", sparkle: 4, mote: "#f0dcff" },
-  heart: { pulse: true, motes: 2, mote: "#ffc2d2" },
-  glowcap: { motes: 3, mote: "#d9c9ff", slow: true },
+  heart: { pulse: true, motes: 2, mote: "#ff9ccc" },
+  glowcap: { motes: 3, mote: "#c2a6ff", slow: true },
   rubble: { matte: true },
 };
 // a clear: each cell blooms with light and bursts into faceted shards in its own colour, a light sweeps the line, motes drift up.
@@ -1399,8 +1403,8 @@ function shatter(idxs, typeAt, stagger = 12, power = 1, lines = null) {
     const t = typeAt(i), F = FLAVOUR[t] || {}, P = palOf(F.pal || CRYSTALS[t]?.color || "#c9b6ff"), d = k * stagger;
     const x = bx + (i % N + .5) * cell, y = by + (Math.floor(i / N) + .5) * cell;
     fx.push({ kind: "flash", x: x - cell / 2, y: y - cell / 2, col: P.lt, a: ba * .8, life: 1, dur: .24, delay: d });
-    if (!F.matte) fx.push({ kind: "burst", x, y, col: P.col, s: cell * (1.7 + .5 * big), rays: idxs.length > 16 ? 4 : 7, rot: fxR() * 6, a: Math.min(.85, 4.5 / Math.sqrt(idxs.length)), life: 1, dur: calmMotion ? .3 : .4 + .1 * big, delay: d });
-    if (!F.matte) fx.push({ kind: "bloom", x, y, col: P.glow, s: cell * (2.3 + .7 * big), a: ba * (1 - .35 * big), life: 1, dur: calmMotion ? .35 : .32 + .14 * big, delay: d });
+    if (!F.matte) fx.push({ kind: "burst", x, y, col: P.col, s: cell * (1.7 + .5 * big), rays: idxs.length > 16 ? 4 : 7, rot: fxR() * 6, a: Math.min(1, 5.5 / Math.sqrt(idxs.length)), life: 1, dur: calmMotion ? .3 : .4 + .1 * big, delay: d });
+    if (!F.matte) fx.push({ kind: "bloom", x, y, col: P.glow, s: cell * (2.6 + .8 * big), a: Math.min(1, ba * 1.2) * (1 - .3 * big), life: 1, dur: calmMotion ? .35 : .32 + .14 * big, delay: d });
     if (calmMotion || parts.length > 240) return;
     const rock = F.rock && palOf(F.rock);
     for (let j = 0; j < per; j++) { const a = fxR() * Math.PI * 2, v = 1.5 + fxR() * (2.5 + power), q = rock && j % 2 ? rock : P;
