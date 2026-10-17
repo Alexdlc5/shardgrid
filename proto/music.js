@@ -66,10 +66,14 @@ function init() {
   ctx ??= new (window.AudioContext || window.webkitAudioContext)();
   master = ctx.createGain(); master.gain.value = .55; master.connect(ctx.destination);
   // generated reverb: decaying stereo noise
+  // the room is filled in just after: 250k noise samples are the slowest part of start-up, and a beat without reverb isn't heard
   reverb = ctx.createConvolver();
-  const len = ctx.sampleRate * 2.8, ir = ctx.createBuffer(2, len, ctx.sampleRate);
-  for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len) ** 2.6; }
-  reverb.buffer = ir; const wet = ctx.createGain(); wet.gain.value = .32; reverb.connect(wet).connect(master);
+  const room = reverb, made = ctx, fill = () => { if (made !== ctx) return;
+    const len = made.sampleRate * 2.8, ir = made.createBuffer(2, len, made.sampleRate), r = rng(4242); // own seed: never the game's random stream
+    for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (r() * 2 - 1) * (1 - i / len) ** 2.6; }
+    room.buffer = ir; };
+  window.OfflineAudioContext && ctx instanceof window.OfflineAudioContext ? fill() : setTimeout(fill, 120); // offline renders (trailer, sound check) run faster than real time
+  const wet = ctx.createGain(); wet.gain.value = .32; reverb.connect(wet).connect(master);
   // soft echo for plucks
   echo = ctx.createDelay(1); const fb = ctx.createGain(), ew = ctx.createGain(); fb.gain.value = .28; ew.gain.value = .22;
   echo.connect(fb).connect(echo); echo.connect(ew).connect(master);
@@ -228,14 +232,25 @@ export const soundtrack = {
   // a single gem "note" for the camp shelf: each gem type sings its own pitch
   chime(i) { if ((!enabled && !ctx) || !HAS_AUDIO) return; init(); pluck({ out: music, rev: musicRev, ech: musicEcho }, NOTE(scaleNote(TRACKS.camp, i % 10) + 12), ctx.currentTime + .01, .14, "musicbox", 1); },
   // call from a tap: iOS only lets audio start inside one, and a 1-sample silent buffer is what finally wakes it
-  unlock() { if (!HAS_AUDIO) return; init(); if (ctx.state === "running") return; ctx.resume(); const b = ctx.createBufferSource(); b.buffer = ctx.createBuffer(1, 1, 22050); b.connect(ctx.destination); b.start(); },
+  unlock() { if (!HAS_AUDIO) return; if (stale) rebuild(); init(); if (ctx.state === "running") return; ctx.resume(); const b = ctx.createBufferSource(); b.buffer = ctx.createBuffer(1, 1, 22050); b.connect(ctx.destination); b.start(); },
   // iOS: Web Audio follows the ring/silent switch ("ambient") unless the page asks for a "playback" session (Audio Session API, iOS 17+).
   // Off by default: players hate games (and ads) that ignore the switch; the Options sheet can opt in.
   setIgnoreSilent(on) { try { if (navigator.audioSession) navigator.audioSession.type = on ? "playback" : "ambient"; } catch {} },
   pause() { if (ctx && ctx.state === "running") ctx.suspend(); },
   resume() { if (ctx && enabled) ctx.resume(); },
 };
-document.addEventListener("visibilitychange", () => (document.hidden ? soundtrack.pause() : soundtrack.resume()));
+// iOS takes the audio away while the app is in the background (or the system closes it), and a context can come back
+// "running" yet silent: tapping then did nothing until the app was killed. So the first tap after coming back always builds
+// a fresh context, inside that tap (where iOS lets audio start), and the place's music fades back in.
+let stale = false;
+function rebuild() {
+  stale = false; if (!ctx || (window.OfflineAudioContext && ctx instanceof window.OfflineAudioContext)) return; // the trailer's offline render keeps its own
+  for (const d of decks) clearInterval(d.timer);
+  try { ctx.close(); } catch {}
+  ctx = master = music = musicRev = musicEcho = reverb = echo = tensionGain = sfxBus = noiseBuf = undefined; decks = []; live = 0; playing = null;
+  init(); if (enabled && place) soundtrack.play(place);
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden) { soundtrack.pause(); if (ctx) stale = true; } else soundtrack.resume(); });
 // the trailer (scripts/ad) renders this same synth offline: use() an OfflineAudioContext, then pump() at each suspend
 export const offline = { use(c) { ctx = c; init(); }, pump() { for (const d of decks) if (d.timer) schedule(d); } };
 
