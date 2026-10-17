@@ -139,11 +139,12 @@ const ICONS = {
   board: [0, 1, 2].flatMap((r) => [0, 1, 2].map((c) => I(R(5.8 + c * 6.2, 5.8 + r * 6.2, 2.7, 2.6, 35 + r * 3 + c, .1, .14, 7), (r + c) % 2 ? "#8fd18b" : "#a6dfa0", [-.4, .4]))).join(""),
   regrow: `${I(limb(12, 21.4, 11.4, 16, 12.2, 10.6, 1.3, .9), "#5fa04e")}${leafAt(12, 14, -2.6, 7.4, 2.8, "#7cc46a")}${leafAt(12.2, 11, -.6, 7.4, 2.8, "#9be08a")}`,
   shatter: `${I(star(12, 12, 9.4, 3, 4, 39), "#f0b543")}${hl([[11, 6], [11.6, 9.6]], .8, .7)}`,
-  tent: `${I("M12 2.6 Q16.6 11 22 20 Q12 20.8 2 20 Q7.4 11 12 2.6 Z", "#e8d6aa")}${ln([[12, 3.2], [12.2, 12], [12, 20.2]], "#8a6d3b", .9)}
+  tent: `${I("M12 2.6 Q16.6 11 22 20 Q12 20.8 2 20 Q7.4 11 12 2.6 Z", "#e8d6aa")}<path d="M12 2.6 Q16.6 11 22 20 Q17 20.6 12.2 20.4 Z" fill="#3a2410" opacity=".3"/>${ln([[12, 3.2], [12.2, 12], [12, 20.2]], "#8a6d3b", .9)}
     ${I("M12 11 Q10 15.6 8.8 20.2 Q12 20.6 15.2 20.2 Q14 15.6 12 11 Z", "#5a3b24", [-.3, .3])}${hl([[13.6, 6.4], [17, 12.6]], .8, .45)}`,
-  banner: `${I(limb(5.2, 22, 5, 12, 5.2, 2, 1.1, .8), "#8a6d3b", [-.4, .4])}<path d="M6 4 Q12 3.2 19 4.2 Q16.6 8.4 19 13 Q12 12 6 13 Z" fill="currentColor"/>
+  banner: `${I(limb(5.2, 22, 5, 12, 5.2, 2, 1.1, .8), "#8a6d3b", [-.4, .4])}<path d="M6 4 Q12 3.2 19 4.2 Q16.6 8.4 19 13 Q12 12 6 13 Z" fill="#1a0f08" opacity=".5" transform="translate(-.55 .5)"/><path d="M6 4 Q12 3.2 19 4.2 Q16.6 8.4 19 13 Q12 12 6 13 Z" fill="currentColor"/><path d="M12.4 3.7 Q16 3.8 19 4.2 Q16.6 8.4 19 13 Q15.6 12.4 12.6 12.3 Q14 8.2 12.4 3.7 Z" fill="#3a2410" opacity=".3"/>
     <path d="M6 4 Q12 3.2 19 4.2 L17.8 6.4 Q12 5.6 6 6.6 Z" fill="#ffffff" opacity=".18"/>`,
   mushroom: `${I(limb(12, 21.4, 11.2, 16.6, 12.2, 12.2, 2.3, 1.8), "#e8dcc8")}${I("M3.6 12.6 Q4.8 3.6 12 2.6 Q19.2 3.6 20.4 12.6 Q12 13.8 3.6 12.6 Z", "#9b7cf2")}
+    <path d="M12.6 2.7 Q19.2 3.6 20.4 12.6 Q16.4 13.4 12.8 13.2 Q15.6 8 12.6 2.7 Z" fill="#3a2410" opacity=".3"/><path d="M12.4 13 Q13.4 16.6 13 21.2 L12 21.4 Q12.6 17 11.6 13 Z" fill="#3a2410" opacity=".3"/>${hl([[6, 9.6], [7.4, 6.4], [10, 4.4]], .8, .5)}
     ${[[8.6, 7.8, 1.4], [14.8, 6.6, 1.1], [16.6, 10, .8]].map(([x, y, r], k) => `<path d="${R(x, y, r, r * .85, 41 + k)}" fill="#fff" opacity=".8"/>`).join("")}`,
   jar: `${I(curve([[7.4, 7.4], [16.6, 7.2], [17.6, 13], [16.8, 20.6], [12, 21.2], [7.2, 20.6], [6.4, 13]]), "#9fd7c8", [-.55, .5], 'opacity=".55"')}
     ${halo(11, 13.4, 3.6, "#fff3a0", .35, 43)}<path d="${R(11, 13.4, 1.5, 1.3, 45)}" fill="#fff3a0"/><path d="${R(14, 17, 1.2, 1.1, 46)}" fill="#fff3a0"/>
@@ -155,7 +156,7 @@ const ICONS = {
     ${ln([[5, 12.6], [19, 12.2]], "#5a3b24", .7, 'opacity=".7"')}
     ${[8, 16].map((x, k) => I(R(x, 19.4, 2.6, 2.5, 49 + k), "#3a2a1a", [-.3, .3]) + ln([[x - 1.8, 19.4], [x + 1.8, 19.4]], "#6b5a3a", .5) + ln([[x, 17.6], [x, 21.2]], "#6b5a3a", .5)).join("")}`,
   hammock: `${I(limb(3, 21.6, 3.2, 13, 3, 4.4, 1.1, .9), "#5a3b24", [-.3, .3])}${I(limb(21, 21.6, 20.8, 13, 21, 4.4, 1.1, .9), "#5a3b24", [-.3, .3])}
-    ${I(curve([[3.6, 8.8], [12, 18.8], [20.4, 8.8], [12, 15.4]]), "#e8d6aa")}${ln([[6, 11.6], [12, 16.6], [18, 11.6]], "#c8553d", .6, 'opacity=".7"')}`,
+    ${I(curve([[3.6, 8.8], [12, 18.8], [20.4, 8.8], [12, 15.4]]), "#e8d6aa")}<path d="${curve([[6, 12.4], [12, 18], [18, 12.4], [12, 16]])}" fill="#3a2410" opacity=".3"/>${ln([[6, 11.6], [12, 16.6], [18, 11.6]], "#c8553d", .6, 'opacity=".7"')}${hl([[5, 10], [8, 13]], .7, .45)}`,
   lens: `${I(limb(14.8, 14.8, 18, 18, 21.2, 21.2, 1.7, 1.4), "#8a5a32")}<path d="${R(10, 10, 5.4, 5.3, 51)}" fill="#bfefff" opacity=".4"/>
     <path d="${donut(R(10, 10, 7, 6.9, 52), ring(10, 10, 5.2, 5.1, 10, .06, 53))}" fill="#c9a24a" fill-rule="evenodd"/>${hl([[7, 8.4], [8, 6.6], [10, 6]], 1.1, .85, "#ffffff")}`,
   tongs: `${halo(16.6, 5, 5, "#ff6a3d", .25, 55)}${I(limb(6, 21.4, 9.4, 13, 14, 6.4, 1.1, .8), "#6f7c87", [-.3, .3])}${I(limb(10, 21.4, 12.6, 13.6, 16.2, 7.2, 1.1, .8), "#6f7c87", [-.3, .3])}
@@ -165,7 +166,7 @@ const ICONS = {
     ${I(curve([[18, 15.6], [20.4, 19.2], [15.8, 19.4]]), "#b06ad8", [-.3, .3])}`,
   ticket: `${I("M3 7 Q12 6.4 21 7 V10 A2 2 0 0 0 21 14 V17 Q12 17.6 3 17 V14 A2 2 0 0 0 3 10 Z", "#f0b543")}${ln([[8, 7.4], [8.2, 12], [8, 16.8]], "#8a5a1a", .8, 'stroke-dasharray="1.4 1.6"')}
     ${I(star(14.6, 12, 2.6, 1.1, 4, 63), "#fff3c0", [-.3, .3])}`,
-  campIco: `${halo(18, 18.4, 4, "#ff8a3d", .3, 65)}${I("M3 20.2 Q6.4 13 10 6 Q13.6 13 17 20.2 Q10 20.8 3 20.2 Z", "#e8d6aa")}${I("M10 13 Q8.8 16.6 8 20.4 Q10 20.8 12 20.4 Q11.2 16.6 10 13 Z", "#5a3b24", [-.3, .3])}
+  campIco: `${halo(18, 18.4, 4, "#ff8a3d", .3, 65)}${I("M3 20.2 Q6.4 13 10 6 Q13.6 13 17 20.2 Q10 20.8 3 20.2 Z", "#e8d6aa")}<path d="M10 6 Q13.6 13 17 20.2 Q13.6 20.6 10.2 20.5 Z" fill="#3a2410" opacity=".3"/>${I("M10 13 Q8.8 16.6 8 20.4 Q10 20.8 12 20.4 Q11.2 16.6 10 13 Z", "#5a3b24", [-.3, .3])}${hl([[9.2, 8], [6.6, 13.4]], .7, .4)}
     ${I("M15.8 20.4 Q16 16.8 18 14.4 Q20 16.8 20.2 20.4 Q18 21 15.8 20.4 Z", "#ff8a3d", [-.3, .3])}<path d="M17.2 20.4 Q17.6 18 18 17 Q18.4 18 18.8 20.4 Z" fill="#fff3a0"/>`,
   note: `${ln([[9, 18], [9.1, 11], [9, 5], [14, 4], [19, 3], [19.1, 9.6], [19, 16]], "currentColor", 1.8)}<path d="${R(7, 18, 3, 2.3, 67, -.4)}" fill="currentColor"/><path d="${R(17, 16, 3, 2.3, 68, -.4)}" fill="currentColor"/>`,
   back: ln([[15, 5], [11.4, 8.6], [8, 12], [11.4, 15.4], [15, 19]], "currentColor", 2.4),
@@ -764,6 +765,8 @@ export function camp(st, gemFn, dibbleSvg) {
     if (w < MIN) { x -= (MIN - w) / 2; w = MIN; } if (h < MIN) { y -= (MIN - h) / 2; h = MIN; }
     w = Math.min(w + Math.min(0, x), W - Math.max(0, x)); x = Math.max(0, x); // and never off the sides
     return `<rect x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(h)}" fill="transparent"/>`; };
+  // a soft contact shadow where something stands on the ground (every grounded prop has one, the pets too: docs/ART_STYLE.md)
+  const foot = (x, y, rx) => `<path d="${curve(ring(x, y, rx, rx * .22, 10, .08, (x * 7) | 0))}" fill="#050c07" opacity=".38" filter="url(#campBlur)"/>`;
   // a wooden sign whose text is the same size on every phone (15px unless told), kept clear of the edges
   const label = (x, y, text, f = F, c = "#8a5a32", wt = 700) => { const w = text.length * f * .6 + f * 1.3, h = f * 1.6; x = Math.max(w / 2 + 8, Math.min(W - 8 - w / 2, x));
     return `${plank(x - w / 2, y - h / 2, w, h, c, r)}<text x="${f1(x)}" y="${f1(y + f * .36)}" font-size="${f1(f)}" text-anchor="middle" fill="#fff1d0" font-family="Grandstander, Fredoka, sans-serif" font-weight="${wt}">${text}</text>`; };
@@ -984,6 +987,12 @@ export function camp(st, gemFn, dibbleSvg) {
       <path d="${curve(ring(200, yM, 190, 40, 16, .08, 9))}" fill="${S.ground[2]}" opacity=".6" filter="url(#campBlur)"/>
       ${grass([[60, 260], [120, 282], [250, 276], [330, 268], [160, 292], [290, 290], [30, 286], [370, 284]], 254, yM)}
       ${grass([[20, 414], [90, 424], [170, 410], [250, 422], [300, 430], [370, 418], [130, 436], [230, 440]], 440, yF)}`;
+  const feet = { back: `${foot(PR.x(52), PR.y(398), 34 * kf)}${foot(200, yS - 2 * kf, sw * .32)}${B.wall ? foot(200, yS - 6 * kf, 66 * kf) : ""}
+      ${B.lamps ? foot(136 * kf + 200 * (1 - kf), yS - 2 * kf, 11 * kf) + foot(264 * kf + 200 * (1 - kf), yS - 2 * kf, 11 * kf) : ""}${B.roost ? foot(24, yB - 6 * kf, 16 * kf) : ""}
+      ${B.tower ? foot(xTw, yB - 8 * kf, 24 * kf) : B.mirror ? foot(xTw, yB - 8 * kf, 12 * kf) : ""}${st.grannySvg ? foot(112, yB + 5 * kf, gb * .24) : ""}`,
+    mid: `${foot(PT.x(88), PT.y(241), 46 * kT)}${foot(PFl.x(140), PFl.y(263), 7 * kT)}${foot(PG.x(30), PG.y(266), 16 * kf)}${foot(PF.x(183), PF.y(258), 34 * kf)}
+      ${foot(dx + db * .5, dyy + db * .93, db * .26)}${st.packed || d.cart ? foot(PC.x(292), PC.y(281), 26 * kf) : ""}`,
+    front: `${foot(PB.x(128), PB.y(405), 62 * Math.max(kf, .85))}${foot(PK.x(344), PK.y(259), 56 * kf)}${foot(PSt.x(340), PSt.y(407), 78 * kf)}` };
   // where the pets (index.html) may roam: feet on the ground between the middle and front rows, bodies clear of these boxes
   // (Dibble, the fire, the Daily Dig board, the bench, the stall and its sign, and Puddock when he's out front)
   const box = (P, x0, y0, x1, y1) => [P.x(x0), P.y(y0), P.x(x1), P.y(y1)];
@@ -1002,9 +1011,9 @@ export function camp(st, gemFn, dibbleSvg) {
     <g data-depth=".22">${tall}</g>
     <g data-depth=".3"><g transform="translate(0 ${f1(yH - 180)})">${S.mid}</g></g>
     <g data-depth=".45"><g transform="translate(0 ${f1(yH - 180)})">${S.near}</g></g>
-    <g data-depth=".6">${ground}${wash}${builds.back}${lanternLine}${hammock}${builds.lamps}${keep}${shelf}${rack}${jars}${grannyAt}${sapling}</g>
-    <g data-depth=".75">${fireLight}${tent}${sign}${fire}${cart}${dib}${flies}</g>
-    <g data-depth=".9">${board}${bench}${stall}</g>
+    <g data-depth=".6">${ground}${wash}${feet.back}${builds.back}${lanternLine}${hammock}${builds.lamps}${keep}${shelf}${rack}${jars}${grannyAt}${sapling}</g>
+    <g data-depth=".75">${feet.mid}${fireLight}${tent}${sign}${fire}${cart}${dib}${flies}</g>
+    <g data-depth=".9">${feet.front}${board}${bench}${stall}</g>
     <g data-depth=".6">${memLabel}</g>
     <path d="${curve(ring(200, yM + 40 * kf, 230, 18, 14, .1, 11))}" fill="#cfe0d0" opacity=".06" filter="url(#campBlur)"/>
     <g data-depth="1.1" filter="url(#campBlur1)">${fern(-6, H + 4, -1.1, 80 * kf, "#07130c")}${fern(406, H + 4, -2.05, 80 * kf, "#07130c")}</g>
