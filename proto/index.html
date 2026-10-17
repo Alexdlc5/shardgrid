@@ -25,6 +25,7 @@
   body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5;
     background: repeating-linear-gradient(105deg, transparent 0 90px, rgba(255, 240, 190, .035) 90px 150px, transparent 150px 260px); }
   canvas { display: block; position: relative; }
+  #oLang { position: relative; } #oLang select { position: absolute; inset: 0; width: 100%; opacity: 0; font-size: 16px; }
   .hud { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: 0; right: 0; display: flex; justify-content: space-between;
     padding: 0 18px; pointer-events: none; }
   .hud b { font-size: 30px; font-weight: 700; color: var(--amber); }
@@ -499,7 +500,7 @@
   <div class="sheetBody">
     <div class="optList">
       <button id="oMusic" class="optRow"></button><button id="oSound" class="optRow"></button><button id="oVib" class="optRow"></button>
-      <button id="oGlyph" class="optRow"></button><button id="oPrivacy" class="optRow"></button><button id="oLb" class="optRow" style="display:none"></button>
+      <button id="oGlyph" class="optRow"></button><button id="oPrivacy" class="optRow"></button><div id="oLang" class="optRow" role="group"></div><button id="oLb" class="optRow" style="display:none"></button>
       <details class="optRow" id="oCredits"><summary><span class="icoCredits"></span><span class="lbl">Credits</span></summary>
         <p>Glimmerwood is made by Alex de la Chica.<br>Grandstander typeface by Tyler Finck; Fredoka typeface by Milena Brandão and Hafontia (both SIL Open Font License).<br>Music and sounds are synthesised in the game.</p></details>
       <div id="optsPlatform"></div>
@@ -579,6 +580,8 @@ import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, l
 import { PROLOGUE, MEMORIES, MEMORY_COUNT, nextMemory, memoryById, mineOfMemory, mineDone, CHALK, PUDDOCK_BY_MINE, PUDDOCK_AFTER, PUDDOCK_POSTGAME,
   CAMP_LINES, SCALE_NOTE, SCENES, nextScene, SITES, GIVEN, MAP_GATE, MURMURS, MURMURS_DEEP, MURMURS_AFTER, PETS, PET_HINT, PET_SHOP } from "./story.js";
 import { soundtrack, sfx } from "./music.js";
+import { tx, watch, lang, LANGS, setLang } from "./i18n.js";
+watch(); // every menu, sheet and label in the chosen language (lang-xx.js), as it appears
 import { platform, track, COIN_PACKS } from "./platform.js";
 import { drawLife, lifeDig, lifeStop, lifeTap, campLife, campPrints } from "./ambient.js";
 import { curve, ring, limb, shape, stroke, rng as prng } from "./paint.js";
@@ -1154,7 +1157,7 @@ function drawHint(now) {
   let text = null, a = 1;
   if (tip) { const t = (now - tip.at) / 4500; if (t >= 1) tip = null; else { text = TIPS[tip.k]; a = Math.min(1, t * 8, (1 - t) * 6); } }
   if (!text && !started && !calm && state === "play") text = "Place a crystal to start the Rootline";
-  if (!text) return;
+  if (!text) return; text = tx(text);
   ctx.save(); ctx.globalAlpha = a; ctx.textAlign = "left"; ctx.textBaseline = "middle";
   let px = 15; ctx.font = `600 ${px}px Fredoka, sans-serif`; const room = W - 40 - (tip ? 26 : 0);
   if (ctx.measureText(text).width > room) { px = 13; ctx.font = `600 ${px}px Fredoka, sans-serif`; }
@@ -1178,7 +1181,7 @@ function fossil(cells, size, ox, oy) { // a tiny leaf caught in the amber, in ea
   ctx.restore();
 }
 function drawChalk() { // Granny's marks, scratched into the tunnel floor by a mole's paw: every letter wobbles, scraped twice, signed with a paw print
-  const txt = CHALK[biome?.id]; if (!txt || daily) return;
+  const txt = tx(CHALK[biome?.id]); if (!txt || daily) return;
   const w = cell * N, words = txt.split(" "), lines = [], lh = cell * .62;
   let s = [...txt].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 2147483647, 7) || 1; // seeded from the text: the marks don't shimmer between frames
   const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
@@ -1453,7 +1456,7 @@ function starBurst(x, y, n = 10, col = "#fff6c8") {
   fx.push({ kind: "ring", x, y, r: cell * .4, life: 1, dur: .37 });
 }
 function toast(html, ms = 1500) {
-  const el = $("toast"); el.innerHTML = html; el.style.opacity = 1;
+  const el = $("toast"); el.innerHTML = tx(html); el.style.opacity = 1;
   clearTimeout(toast.t); toast.t = setTimeout(() => (el.style.opacity = 0), ms);
 }
 
@@ -1715,6 +1718,9 @@ function renderHome() {
     if (on !== undefined) { $(id).classList.toggle("on", on); $(id).setAttribute("aria-pressed", on); } };
   optRow("oMusic", "note", "Music", save.opt.music); optRow("oSound", save.opt.sound ? "soundOn" : "soundOff", "Sound", save.opt.sound);
   optRow("oVib", "vibe", "Haptics", save.opt.vib); optRow("oGlyph", "symbols", "Colour-blind symbols", save.opt.glyph); optRow("oPrivacy", "lock", "Privacy choices"); optRow("oLb", "shatter", "Leaderboards");
+  optRow("oLang", "map", "Language"); // the phone's language by default; each one listed in its own words
+  $("oLang").insertAdjacentHTML("beforeend", `<span class="state" data-noi18n>${LANGS[lang]}</span><select data-noi18n aria-label="Language">${Object.entries(LANGS).map(([k, n]) => `<option value="${k}" ${k === lang ? "selected" : ""}>${n}</option>`).join("")}</select>`);
+  $("oLang").querySelector("select").onchange = (e) => setLang(e.target.value);
   $("dibbleArt").innerHTML = titleHero(save.look, STILL);
   const mem = `Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}`;
   $("tMem").textContent = mem; $("campMem").textContent = mem;
@@ -1894,7 +1900,7 @@ const CPS = { dibble: 40, puddock: 28, granny: 32, bidder: 30 }; // letters a se
 let typing = null; // the line typing now: { finish }
 function say(el, html, voice = null) {
   typing?.finish();
-  el.innerHTML = html;
+  el.dataset.noi18n = ""; el.innerHTML = html = tx(html);
   const blip = () => { try { if (sfx.voice(voice)) buzz(4); } catch {} };
   if (calmMotion || qs.has("scene")) { blip(); return Promise.resolve(); }
   const chars = [], wrap = (n) => [...n.childNodes].forEach((c) => {
@@ -2374,14 +2380,14 @@ function frame(now) {
     p.full ??= p.life; p.life -= .016; const t = 1 - p.life / p.full, sc = t < .15 ? .4 + t / .15 * .9 : t < .25 ? 1.3 - (t - .15) * 3 : 1, y = by + cell * 1.1 + k * 36 - Math.max(0, t - .6) * 50;
     ctx.save(); ctx.translate(bx + cell * N / 2, y); ctx.scale(sc, sc); ctx.globalAlpha = Math.min(1, p.life * 2.5);
     ctx.font = "700 30px Fredoka, sans-serif"; ctx.textAlign = "center"; ctx.lineJoin = "round"; ctx.lineWidth = 7; ctx.strokeStyle = "#3a2418";
-    ctx.strokeText(p.text, 0, 0); ctx.fillStyle = p.col; ctx.fillText(p.text, 0, 0); ctx.restore();
+    ctx.strokeText(tx(p.text), 0, 0); ctx.fillStyle = p.col; ctx.fillText(tx(p.text), 0, 0); ctx.restore();
   });
   floats = floats.filter((f) => f.life > 0);
   ctx.textAlign = "center"; ctx.font = "700 22px Fredoka, sans-serif"; ctx.lineJoin = "round"; ctx.lineWidth = 5; ctx.strokeStyle = "rgba(40,24,12,.8)";
   for (const f of floats) { // rise with an ease-out, a little pop at the start, fade at the end
     f.life -= .014; const t = 1 - f.life, sc = t < .12 ? .6 + .4 * easeBack(t / .12) : 1;
     ctx.save(); ctx.translate(f.x, f.y - 46 * easeOut(t)); ctx.scale(sc, sc); ctx.globalAlpha = Math.max(0, Math.min(1, f.life * 3));
-    ctx.strokeText(f.text, 0, 0); ctx.fillStyle = f.color; ctx.fillText(f.text, 0, 0); ctx.restore(); }
+    ctx.strokeText(tx(f.text), 0, 0); ctx.fillStyle = f.color; ctx.fillText(tx(f.text), 0, 0); ctx.restore(); }
   ctx.globalAlpha = 1;
   drawCoins(now);
   if (haul) { // the Haul badge counts up as the coins fly in

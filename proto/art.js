@@ -1,4 +1,5 @@
 // Glimmerwood menu art: every picture is inline SVG drawn in code (no image files until the look is approved).
+import { tx } from "./i18n.js";
 import { dibbleBody, puddockBody, rng, curve, ring, shape, stroke, limb, shard, shardCluster, pieEye, leafCap, amberLantern, furEdge, tuftLine } from "./paint.js";
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 const mix = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * t).toString(16).padStart(2, "0")).join("");
@@ -768,7 +769,7 @@ export function camp(st, gemFn, dibbleSvg) {
   // a soft contact shadow where something stands on the ground (every grounded prop has one, the pets too: docs/ART_STYLE.md)
   const foot = (x, y, rx) => `<path d="${curve(ring(x, y, rx, rx * .22, 10, .08, (x * 7) | 0))}" fill="#050c07" opacity=".38" filter="url(#campBlur)"/>`;
   // a wooden sign whose text is the same size on every phone (15px unless told), kept clear of the edges
-  const label = (x, y, text, f = F, c = "#8a5a32", wt = 700) => { const w = text.length * f * .6 + f * 1.3, h = f * 1.6; x = Math.max(w / 2 + 8, Math.min(W - 8 - w / 2, x));
+  const label = (x, y, text, f = F, c = "#8a5a32", wt = 700) => { text = tx(text); const w = text.length * f * .6 + f * 1.3, h = f * 1.6; x = Math.max(w / 2 + 8, Math.min(W - 8 - w / 2, x));
     return `${plank(x - w / 2, y - h / 2, w, h, c, r)}<text x="${f1(x)}" y="${f1(y + f * .36)}" font-size="${f1(f)}" text-anchor="middle" fill="#fff1d0" font-family="Grandstander, Fredoka, sans-serif" font-weight="${wt}">${text}</text>`; };
 
   // ---- behind: the lantern line (one lantern per Lantern level), the gem shelf, the rack, the stump, the sapling ----
