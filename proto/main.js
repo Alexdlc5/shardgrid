@@ -1724,7 +1724,9 @@ $("campStage").addEventListener("pointermove", (e) => {
 
 // ---------- frame ----------
 let last = performance.now(), shownHaul = 0;
+const frameMs = qs.has("debug") ? [] : null; // debug: how long each frame's work takes (scripts/soak.mjs)
 function frame(now) {
+  const t0 = performance.now();
   const dt = Math.min(.1, (now - last) / 1000); last = now;
   if (state === "play" && started && !calm && !document.hidden) {
     if (now > frozenUntil) time -= dt * T.drain * biome.drain;
@@ -1888,6 +1890,7 @@ function frame(now) {
     const v = haulValue(); shownHaul += (v - shownHaul) * .08; if (Math.abs(v - shownHaul) < .5) shownHaul = v;
     const txt = Math.round(shownHaul) + "g"; if (txt !== frame.haulTxt) $("haul").textContent = frame.haulTxt = txt;
   }
+  frameMs?.push(performance.now() - t0);
   requestAnimationFrame(frame);
 }
 
@@ -1909,6 +1912,7 @@ for (const ev of ["pointerup", "touchend", "click", "keydown"]) document.addEven
 if (qs.has("debug")) window.gw = { place: (i, r, c) => commit(i, r, c), get tray() { return tray; }, get board() { return board; },
   get time() { return time; }, set time(v) { time = v; }, canPlace, get state() { return state; },
   get moths() { return moths; }, get stolen() { return stolen; }, get bonus() { return bonus; }, PM, end: endRound,
+  frameMs: () => frameMs.splice(0),
   get geo() { return { bx, by, cell, trayX, slotW, trayY, trayH, hintY }; },
   // tests: open any screen the way the game does (scripts/smoke.mjs walks them all)
   screen: (id) => { renderHome(); if (id === "memSheet") return replayMemories(); if (id === "talk") return talk(() => show("home"));

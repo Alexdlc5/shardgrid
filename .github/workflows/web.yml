@@ -2,9 +2,9 @@ name: web game at iPhone density
 on:
   push:
     branches: [main]
-    paths: ["proto/**", "scripts/crisp.mjs", "scripts/smoke.mjs", "package*.json", ".github/workflows/web.yml"]
+    paths: ["proto/**", "scripts/crisp.mjs", "scripts/smoke.mjs", "scripts/soak.mjs", "package*.json", ".github/workflows/web.yml"]
   pull_request:
-    paths: ["proto/**", "scripts/crisp.mjs", "scripts/smoke.mjs", "package*.json", ".github/workflows/web.yml"]
+    paths: ["proto/**", "scripts/crisp.mjs", "scripts/smoke.mjs", "scripts/soak.mjs", "package*.json", ".github/workflows/web.yml"]
 jobs:
   screens:
     runs-on: ubuntu-latest
@@ -21,3 +21,16 @@ jobs:
         run: node scripts/crisp.mjs --check 2
       - name: every screen loads at 3x with no errors (WebKit + Chromium)
         run: node scripts/smoke.mjs
+  soak:
+    # 10 minutes of auto-played digs: frame work p95 under the 120 Hz budget (8.3 ms) and no heap growth over 25%
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/soak.mjs --minutes 10 --check
