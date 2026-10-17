@@ -753,7 +753,8 @@ export function camp(st, gemFn, dibbleSvg) {
   const [vw, vh, top] = st.view || [402, 778, 115], strip = (svgStr) => svgStr.replace(/^<svg[^>]*>|<\/svg>$/g, "");
   const W = 400, s = vw / W, H = Math.max(520, vh / s), T = top / s + 4, bot = H - 44 / s, U = bot - T;
   const kf = Math.min(1.08, Math.max(.7, U / 610)); // props shrink on short phones (the SE); labels never do
-  const yL = T + 10, yH = T + .3 * U, yB = T + .4 * U, yM = T + .71 * U, yF = bot, F = 15 / s, MIN = 48 / s;
+  const yL = T + 10, yH = T + .3 * U, yB = T + .4 * U, yM = T + .71 * U, yF = bot, up = 12 * kf, // up: Dibble, the fire and the banner sit a little above the middle row, leaving the pets more ground
+    F = 15 / s, MIN = 48 / s;
   const r = rng(77), O = [-1.2, 1.1], n = Math.min(st.lantern, 15), d = st.decor;
   // place(ox, oy, x, y, k): set down art drawn around (ox, oy) at (x, y), k times bigger; .x() and .y() map its points
   const place = (ox, oy, x, y, k) => ({ x: (u) => x + (u - ox) * k, y: (v) => y + (v - oy) * k,
@@ -867,7 +868,7 @@ export function camp(st, gemFn, dibbleSvg) {
       <circle cx="88" cy="196" r="20" fill="#9fe6ff" opacity=".15"><animate attributeName="opacity" values=".08;.22;.08" dur="3s" repeatCount="indefinite"/></circle>${plank(70, 218, 36, 18, "#5a3b24", r)}`,
   }[st.tent] || "";
   const kT = (st.tent === "treehouse" ? 1.05 : 1.45) * kf, PT = place(88, 238, 156, yM - 2 * kf, kT), tentTop = { treehouse: 86, pavilion: 140 }[st.tent] || 156; // the tall treehouse is drawn smaller so it never hides the stump
-  const PFl = place(140, 262, 206, PT.y(262), kT); // the banner pole stands at the tent's corner, clear of the fire
+  const PFl = place(140, 262, 206, PT.y(262) - up, kT); // the banner pole stands at the tent's corner, clear of the fire
   const tent = `<g data-tap="tent">${hit(PT, 44, tentTop, 132, 240)}${PT.g(`${tents}${st.sieve ? `<g transform="translate(98 156) scale(.9)">${ICONS.sieve}</g>` : ""}`)}</g>
     <g data-tap="flag" role="button" aria-label="Camp banner">${hit(PFl, 132, 148, 174, 262)}${PFl.g(`${shape(limb(140, 262, 139, 206, 140, 150, 1.4, 1.1), "#6b4a2a", "#2e1e12", [-.6, .5])}
       <path fill="${st.banner}" stroke="${mix(st.banner, "#1a0f08", .5)}" stroke-width=".8" d="M141 152 Q156 148 170 153 L163 163 L170 173 Q156 168 141 172 Z">
@@ -880,7 +881,7 @@ export function camp(st, gemFn, dibbleSvg) {
     <animate attributeName="d" values="M${x - h * .32} ${y} Q${x} ${y - h * 1.15} ${x + h * .32} ${y} Z;M${x - h * .3} ${y} Q${x - 2} ${y - h * 1.3} ${x + h * .3} ${y} Z;M${x - h * .33} ${y} Q${x + 2} ${y - h} ${x + h * .33} ${y} Z;M${x - h * .32} ${y} Q${x} ${y - h * 1.15} ${x + h * .32} ${y} Z" dur="${dur}s" repeatCount="indefinite"/></path>`;
   const sparks = [...Array(7)].map((_, k) => `<circle cx="${178 + (k % 4) * 4}" cy="250" r="1.2" fill="#ffd27a"><animate attributeName="cy" values="246;196" dur="${1.6 + k * .23}s" begin="${-k * .4}s" repeatCount="indefinite"/>
     <animate attributeName="cx" values="${178 + (k % 4) * 4};${170 + (k * 7) % 22}" dur="${1.6 + k * .23}s" begin="${-k * .4}s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="${1.6 + k * .23}s" begin="${-k * .4}s" repeatCount="indefinite"/></circle>`).join("");
-  const PF = place(183, 254, 252, yM, 1.55 * kf);
+  const PF = place(183, 254, 252, yM - up, 1.55 * kf);
   const fire = `<g data-tap="fire">${hit(PF, 160, 204, 206, 260)}${PF.g(st.fire === "forge"
     ? `${plank(160, 230, 44, 26, "#7a746a", r)}<path d="M169 256 V244 Q182 232 195 244 V256 Z" fill="#ff8a3d"><animate attributeName="fill" values="#ff8a3d;#ffb15a;#ff8a3d" dur="1.2s" repeatCount="indefinite"/></path>${plank(192, 210, 8, 22, "#5e5850", r)}${sparks}`
     : `${[0, 1, 2, 3, 4, 5].map((k) => shape(curve(ring(167 + k * 6, 254 + (k % 2), 5, 3, 8, .2, 110 + k)), k % 2 ? "#6f6a60" : "#7d776c", "#2a2620", [-.7, .6])).join("")}
@@ -889,7 +890,7 @@ export function camp(st, gemFn, dibbleSvg) {
       <path d="M183 214 Q178 196 186 180 Q192 166 184 150" stroke="#cfd6cc" stroke-width="4" fill="none" opacity=".08"><animate attributeName="opacity" values=".05;.12;.05" dur="4s" repeatCount="indefinite"/></path>`)}</g>`;
   const fireLight = PF.g(`<ellipse cx="183" cy="246" rx="120" ry="58" fill="url(#fireLight)"><animate attributeName="rx" values="112;128;116;112" dur="1.3s" repeatCount="indefinite"/></ellipse>`);
 
-  const db = 108 * kf, dx = 318 - db / 2, dyy = yM + 10 * kf - db;
+  const db = 108 * kf, dx = 318 - db / 2, dyy = yM + 10 * kf - up - db;
   const dib = `<g data-tap="dibble" class="campDibble"><rect x="${f1(dx + db / 2 - Math.max(db * .3, MIN / 2))}" y="${f1(dyy + db * .1)}" width="${f1(Math.max(db * .6, MIN))}" height="${f1(db * .85)}" fill="transparent"/><svg x="${f1(dx)}" y="${f1(dyy)}" width="${f1(db)}" height="${f1(db)}" viewBox="0 0 100 100">${strip(dibbleSvg)}</svg></g>`;
   // Puddock's spare cart (or, after the finale, his packed cart with him beside it), right of Dibble
   const PC = place(292, 276, 374, yM, .95 * kf), pb = 50 * kf;
@@ -988,7 +989,7 @@ export function camp(st, gemFn, dibbleSvg) {
   const box = (P, x0, y0, x1, y1) => [P.x(x0), P.y(y0), P.x(x1), P.y(y1)];
   const roam = [[dx + db * .18, dyy + db * .08, dx + db * .86, dyy + db * .95], box(PF, 162, 228, 204, 260), box(PB, 94, 326, 162, 404), box(PK, 300, 186, 388, 258), box(PSt, 280, 282, 400, 406),
     ...(st.packed && st.puddockSvg ? [[366 - pb / 2, yM + 6 * kf - pb, 366 + pb / 2, yM + 6 * kf]] : [])].map((b) => b.map(f1).join(" ")).join(",");
-  return `<svg class="campArt" viewBox="0 0 ${W} ${f1(H)}" preserveAspectRatio="xMidYMax meet" aria-label="Dibble's camp" data-ground="${f1(yM + 10 * kf)} ${f1(yF)} ${kf.toFixed(3)}" data-keep="${roam}">
+  return `<svg class="campArt" viewBox="0 0 ${W} ${f1(H)}" preserveAspectRatio="xMidYMax meet" aria-label="Dibble's camp" data-ground="${f1(yM - 4 * kf)} ${f1(yF)} ${kf.toFixed(3)}" data-keep="${roam}">
     <defs><linearGradient id="campSky" x1="0" y1="0" x2="0" y2="1">${S.sky.map((col, k) => `<stop offset="${[0, .6, 1][k]}" stop-color="${col}"/>`).join("")}</linearGradient>
       <radialGradient id="fireLight" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb15a" stop-opacity=".42"/><stop offset=".5" stop-color="#ff8a3d" stop-opacity=".12"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/></radialGradient>
       <radialGradient id="lanternGlow"><stop offset="0" stop-color="#ffd27a" stop-opacity=".55"/><stop offset="1" stop-color="#f0b543" stop-opacity="0"/></radialGradient>
