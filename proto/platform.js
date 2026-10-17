@@ -16,6 +16,15 @@ const KEYS = {
   testAds: true, // iOS units are real; test ads stay on for TestFlight. The ios workflow's "appstore" input builds with false
 };
 export const NO_ADS = "no_ads"; // RevenueCat entitlement id
+// Coin packs: consumables in the RevenueCat offering "coins" (no entitlement). Tune gold here. bonus is the "+x% extra" tag:
+// gold per US dollar over the Pouch's, rounded down so it never overstates (proto/check.mjs checks). Sized from proto/economy.mjs:
+// an early dig pays ~500 gold, a late one with tools ~40-60k, so the Pouch is 2-3 early digs and the Hoard ~1% of the cheapest treasure.
+export const COIN_PACKS = {
+  coins_pouch:   { name: "Pouch",   usd: 0.99,  gold: 1200,  bonus: 0 },
+  coins_satchel: { name: "Satchel", usd: 4.99,  gold: 6700,  bonus: 10 },
+  coins_chest:   { name: "Chest",   usd: 9.99,  gold: 14600, bonus: 20 },
+  coins_hoard:   { name: "Hoard",   usd: 19.99, gold: 32800, bonus: 35 },
+};
 
 // Interstitial pacing (SPEC §4): never in the first 3 expeditions, ≥2 expeditions and ≥90 s apart,
 // and skipped after any expedition where the player already watched a rewarded ad.
@@ -172,6 +181,36 @@ export const platform = {
     } catch (e) { if (!e?.data?.userCancelled && e?.code !== "1") track("iap_fail", { error: String(e?.message || e).slice(0, 90) }); return false; }
   },
 
+  // the coin packs on sale, in COIN_PACKS order: [{ id, price, ...COIN_PACKS[id] }]; [] when purchases are off or the store can't be reached
+  async coinPacks() {
+    if (!this.canBuy) return [];
+    try {
+      const pkgs = (await Purchases.getOfferings()).all?.coins?.availablePackages || [];
+      return Object.keys(COIN_PACKS).map((id) => { const p = pkgs.find((x) => x.product.identifier === id);
+        return p && { id, price: p.product.priceString, ...COIN_PACKS[id] }; }).filter(Boolean);
+    } catch { return []; }
+  },
+
+  // Buys one coin pack. Returns the gold to add (0 if cancelled or failed). credited is the save's list of transaction ids
+  // already paid out: new ones are pushed onto it, so each transaction adds gold exactly once (the caller saves right after).
+  async buyCoins(productId, credited) {
+    if (!this.canBuy || !COIN_PACKS[productId]) return 0;
+    try {
+      const pkg = (await Purchases.getOfferings()).all?.coins?.availablePackages?.find((x) => x.product.identifier === productId);
+      if (!pkg) return 0;
+      const { customerInfo, transaction } = await Purchases.purchasePackage({ aPackage: pkg });
+      const gold = claim([...customerInfo.nonSubscriptionTransactions, transaction], credited);
+      track("iap_success", { product: productId, gold });
+      return gold;
+    } catch (e) { if (!e?.data?.userCancelled && e?.code !== "1") track("iap_fail", { product: productId, error: String(e?.message || e).slice(0, 90) }); return 0; }
+  },
+
+  // At launch: gold for coin purchases the store has but the save never paid out (the app closed mid-purchase). 0 if none.
+  async unclaimedCoins(credited) {
+    if (!this.canBuy) return 0;
+    try { return claim((await Purchases.getCustomerInfo()).customerInfo.nonSubscriptionTransactions, credited); } catch { return 0; }
+  },
+
   // true: Remove ads is back; false: nothing to restore; null: the App Store couldn't be reached
   async restore() {
     if (!this.canBuy) return null;
@@ -203,6 +242,15 @@ export const platform = {
     Preferences.set({ key, value: JSON.stringify([t, json]) }).catch(() => {});
   },
 };
+
+// gold for the coin transactions not yet in credited, adding their ids to it
+export function claim(txs, credited) {
+  let gold = 0;
+  for (const t of txs) if (t && COIN_PACKS[t.productIdentifier] && t.transactionIdentifier && !credited.includes(t.transactionIdentifier)) {
+    credited.push(t.transactionIdentifier); gold += COIN_PACKS[t.productIdentifier].gold;
+  }
+  return gold;
+}
 
 function setNoAds(v) { // hides banners and interstitials the moment Remove ads is bought or restored, and remembers it offline
   noAds = v;
