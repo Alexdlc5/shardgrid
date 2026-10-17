@@ -926,21 +926,21 @@ export function camp(st, gemFn, dibbleSvg) {
   const bench = `<g data-tap="tools" role="button" aria-label="Tool bench">${hit(PK, 300, 186, 388, 258)}${PK.g(`${plank(306, 230, 76, 7, "#5a3b24", r)}${shape(limb(310, 237, 306, 246, 303, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${shape(limb(378, 237, 382, 246, 385, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${picks}
     ${st.lens ? `<g transform="translate(330 214) scale(.9)">${ICONS.lens}</g>` : ""}${st.tongs ? `<g transform="translate(352 212) scale(.9)">${ICONS.tongs}</g>` : ""}`)}</g>`;
 
-  const stripe = (k) => { const x = 282 + k * 19.3; return shape(curve([[x, 312], [x + 19.3, 312], [x + 19.3, 328], [x + 9.6, 334], [x, 328]]), k % 2 ? "#f1e4c4" : "#c8553d", k % 2 ? "#a08a60" : "#5a1e14", [-.6, .6]); };
-  const PSt = place(340, 404, 319, yF, 1.3 * kf), bk = 16 / 11 / s; // the Psst! bubble is drawn at a fixed 16px
-  const stall = `<g data-tap="market">${hit(PSt, 280, 294, 400, 406)}${PSt.g(`
-    ${shape(limb(288, 404, 287, 360, 288, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}${shape(limb(388, 404, 389, 360, 388, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}
-    ${st.puddockSvg && !st.packed ? `<g class="pud"><svg x="306" y="312" width="64" height="64" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}
+  const aw = 24, stripe = (k) => { const x = 282 + k * 19.3; return shape(curve([[x, 312 - aw], [x + 19.3, 312 - aw], [x + 19.3, 328 - aw], [x + 9.6, 334 - aw], [x, 328 - aw]]), k % 2 ? "#f1e4c4" : "#c8553d", k % 2 ? "#a08a60" : "#5a1e14", [-.6, .6]); };
+  const PSt = place(340, 404, 319, yF, 1.3 * kf), bk = 16 / 11 / s; // the Psst! bubble is drawn at a fixed 16px; aw: the awning (and sign) ride high so Puddock's head shows
+  const stall = `<g data-tap="market">${hit(PSt, 280, 294 - aw, 400, 406)}${PSt.g(`
+    ${shape(limb(288, 404, 287, 360, 288, 314 - aw, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}${shape(limb(388, 404, 389, 360, 388, 314 - aw, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}
+    ${st.puddockSvg && !st.packed ? `<g class="pud"><svg x="306" y="306" width="64" height="64" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}
     ${[0, 1, 2, 3, 4, 5].map(stripe).join("")}
     ${plank(282, 366, 112, 9, "#8a5a32", r)}${plank(286, 375, 104, 26, "#6b4a2a", r)}
     <path d="M292 381 H384 M292 389 H384" stroke="#4a3220" stroke-width=".8" opacity=".6"/>
     <g transform="translate(290 350) scale(.7)">${ICONS.jar}</g>${shard(352, 367, 5, 11, .2, "#9b7cf2", r)}${shard(360, 367, 4, 8, -.3, "#5fa99b", r)}
-    <path d="M394 326 Q395 332 394 336" stroke="#4a3a2a" stroke-width=".9" fill="none"/>${shape(curve([[390.6, 336], [397.4, 336], [397.8, 345], [390.2, 345]]), "#f7d77a", "#6a4a24", [-.5, .5])}
-    <circle cx="394" cy="341" r="14" fill="url(#lanternGlow)"/>`)}
-    ${!st.metPuddock && !st.firstRun ? place(338, 270, PSt.x(338), PSt.y(304), bk).g(`<g><animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0" dur="1.6s" repeatCount="indefinite"/>
+    <path d="M394 ${326 - aw} Q395 ${332 - aw} 394 ${336 - aw}" stroke="#4a3a2a" stroke-width=".9" fill="none"/>${shape(curve([[390.6, 336 - aw], [397.4, 336 - aw], [397.8, 345 - aw], [390.2, 345 - aw]]), "#f7d77a", "#6a4a24", [-.5, .5])}
+    <circle cx="394" cy="${341 - aw}" r="14" fill="url(#lanternGlow)"/>`)}
+    ${!st.metPuddock && !st.firstRun ? place(338, 270, PSt.x(338), PSt.y(304 - aw), bk).g(`<g><animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0" dur="1.6s" repeatCount="indefinite"/>
       ${shape(curve([[312, 262], [338, 258.4], [364, 262], [367, 271.6], [362, 279.6], [346, 281], [339, 290], [335.4, 281], [316, 280], [309.6, 271.6]]), "#fff4dc", "#8a6a3a", [-.8, .7])}
       <text x="338" y="274.6" font-size="11" text-anchor="middle" fill="#3a2410" font-family="Grandstander, Fredoka, sans-serif" font-weight="700">Psst!</text></g>`)
-      : label(PSt.x(338), PSt.y(304), st.packed ? "Back soon (probably)" : "Puddock's", st.packed ? 13 / s : F)}</g>`; // after the first haul (the signpost comes first), a Psst! hangs where his sign goes until you meet him
+      : label(PSt.x(338), PSt.y(304 - aw), st.packed ? "Back soon (probably)" : "Puddock's", st.packed ? 13 / s : F)}</g>`; // after the first haul (the signpost comes first), a Psst! hangs where his sign goes until you meet him
 
   // ---- the backdrop: sky, far layer, tall trees, the ground, ferns in front ----
   const flies = [...Array(d.flies ? 12 : 5)].map((_, k) => `<circle r="1.9" fill="#fff3a0"><animateMotion dur="${9 + k * 1.7}s" begin="${-k * 1.3}s" repeatCount="indefinite" path="M${40 + k * 30} ${f1(yH + (k % 4) * U * .14)} q30 -20 60 0 t60 0 q-30 25 -60 0 t-60 0"/>
@@ -1007,7 +1007,7 @@ export function camp(st, gemFn, dibbleSvg) {
   const haze = `<defs>${hzFill("campHz1", [["#808080", .16]])}${hzFill("campHz2", [["#ff9682", .54], ["#ffc48c", .26, .6], ["#784678", .35, 1]])}${hzFill("campHz3", [["#583e40", .32]])}</defs>
     <g class="campHaze">${["saturation", "soft-light", "lighten"].map((m, k) => `<rect x="-300" y="-900" width="1000" height="${f1(H + 1200)}" fill="url(#campHz${k + 1})" style="mix-blend-mode:${m}"/>`).join("")}</g>`;
   const box = (P, x0, y0, x1, y1) => [P.x(x0), P.y(y0), P.x(x1), P.y(y1)];
-  const roam = [[dx + db * .18, dyy + db * .08, dx + db * .86, dyy + db * .95], box(PF, 162, 228, 204, 260), box(PB, 94, 326, 162, 404), box(PK, 300, 186, 388, 258), box(PSt, 280, 282, 400, 406),
+  const roam = [[dx + db * .18, dyy + db * .08, dx + db * .86, dyy + db * .95], box(PF, 162, 228, 204, 260), box(PB, 94, 326, 162, 404), box(PK, 300, 186, 388, 258), box(PSt, 280, 282 - aw, 400, 406),
     ...(st.packed && st.puddockSvg ? [[366 - pb / 2, yM + 6 * kf - pb, 366 + pb / 2, yM + 6 * kf]] : [])].map((b) => b.map(f1).join(" ")).join(",");
   return `<svg class="campArt" viewBox="0 0 ${W} ${f1(H)}" preserveAspectRatio="xMidYMax meet" aria-label="Dibble's camp" data-ground="${f1(yM - 4 * kf)} ${f1(yF)} ${kf.toFixed(3)}" data-keep="${roam}">
     <defs><linearGradient id="campSky" x1="0" y1="0" x2="0" y2="1">${S.sky.map((col, k) => `<stop offset="${[0, .6, 1][k]}" stop-color="${col}"/>`).join("")}</linearGradient>
