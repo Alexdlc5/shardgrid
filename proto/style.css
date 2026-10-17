@@ -210,9 +210,11 @@
   .mine.teaser { cursor: default; opacity: .9; }
   .trialTag { position: absolute; left: 50%; top: 50px; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 4px;
     background: #f0b543; color: #3a2208; font-size: var(--fs-small); font-weight: 700; padding: 3px 8px; border-radius: 999px; box-shadow: 0 2px 0 #7a4a12; white-space: nowrap; }
-  .tabs { display: flex; gap: 4px; margin: 12px 0 2px; }
-  .tabs button { margin: 0; padding: 6px 2px; font-size: var(--fs-small); }
-  .tabs button { flex: 1 1 0; min-width: 0; line-height: 1.15; overflow-wrap: anywhere; hyphens: auto; } /* longer languages share the row and wrap, never push a tab off screen */
+  .tabs { display: flex; gap: 4px; margin: 12px 0 2px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs.over { mask-image: linear-gradient(to right, black calc(100% - 24px), transparent); } /* more tabs to the right: a soft edge, not a hard cut */
+  .tabs button { margin: 0; padding: 6px; font-size: var(--fs-small); }
+  .tabs button { flex: 1 0 auto; width: auto; white-space: nowrap; line-height: 1.15; scroll-snap-align: start; } /* labels never break mid-word; longer languages scroll the row instead */
   /* every dialogue step shares one stage, as tall as an amber panel, so the card never jumps; speakers stand on its floor */
   .talkArt { display: flex; justify-content: center; align-items: flex-end; height: min(calc(min(300px, 100vw - 80px) * .625), 22vh); margin-top: -4px; }
   .talkArt > svg { max-height: 100%; width: auto; }
@@ -346,12 +348,17 @@
   /* ===== lo-fi golden-hour haze over the menus, camp and title (the mine board gets it painted into its backdrop, main.js
      lofiGrade, so the crystals stay full colour). Blend layers only, no CSS filter on the art: WebKit softens filtered layers. ===== */
   /* separate layers straight under <body>: each must blend with the page itself (inside a fixed container they'd only blend with each other) */
-  .haze { position: fixed; inset: 0; pointer-events: none; z-index: 59; }
+  .haze { position: fixed; inset: 0; pointer-events: none; z-index: 58; }
   .haze.h1 { background: rgba(128,128,128,.16); mix-blend-mode: saturation; } /* a little colour out */
   .haze.h2 { background: linear-gradient(180deg, rgba(255,150,130,.54), rgba(255,196,140,.26) 45%, rgba(120,70,120,.35)); mix-blend-mode: soft-light; }
   .haze.h3 { background: rgba(88,62,64,.32); mix-blend-mode: lighten; } /* blacks lifted, like old film */
   .haze.h4 { background: radial-gradient(ellipse 120% 50% at 50% 0%, rgba(255,214,170,.07), transparent 60%); mix-blend-mode: screen; } /* sun-haze at the top */
-  body.playing .haze, .noLofi .haze { display: none; } /* the board stays unfiltered: jittering grain over the crystals reads as blur on iPhone */
+  body.playing .haze, .noLofi .haze, .noLofi .campHaze { display: none; } /* the board stays unfiltered: jittering grain over the crystals reads as blur on iPhone */
+  /* the title: the haze fades out above the tree line, so the sky and the moon stay cool; Dibble stands above it (#dibbleArt) */
+  body:has(#title.show):not(:has(.sheet.show)) .haze { -webkit-mask-image: linear-gradient(180deg, transparent 36%, #000 54%); mask-image: linear-gradient(180deg, transparent 36%, #000 54%); }
+  /* the camp paints its own haze into the scene under the props (art.js camp(), .campHaze), so Dibble, the pets, the fire and the
+     lanterns sit above it; a sheet over the camp gets the fixed haze back, and the camp under it isn't hazed twice */
+  body:has(#home.show):not(:has(.sheet.show)) .haze, body:has(.sheet.show) .campHaze { display: none; }
   @keyframes filmFlicker { 0% { opacity: .07; transform: translate(0, 0); } 50% { opacity: .1; transform: translate(-2px, 1px); } 100% { opacity: .08; transform: translate(1px, -1px); } }
   #dust { position: fixed; inset: 0; pointer-events: none; z-index: 46; }
   body.playing #dust { display: none; }
@@ -369,7 +376,8 @@
   .tsLayer svg { display: block; width: 100%; height: 100%; }
   .ts0 { animation: none; } .ts1 { --dx: 3px; } .ts2 { --dx: 7px; } .ts3 { --dx: 12px; }
   @keyframes tsDrift { from { transform: translateX(calc(var(--dx) * -1)); } to { transform: translateX(var(--dx)); } }
-  .titleWrap { position: relative; z-index: 1; }
+  .titleWrap { position: relative; }
+  #dibbleArt { position: relative; z-index: 59; } /* above the haze (58), under the wipe (60) */
   /* Dibble leans in to peer at the crystals, then straightens up */
   #dibbleArt { display: block; height: 150px; }
   .titleHero { display: block; width: 166px; height: 150px; margin: 0 auto; overflow: visible; }
