@@ -56,7 +56,7 @@ try {
   await back(); await campTap("memories"); await shot("08-memories");
   await p.evaluate(() => document.querySelector("#memShelf [data-mem]")?.click()); await shot("09-memory-dialog");
   await p.goto(`http://127.0.0.1:${port}/index.html?debug`, { waitUntil: "networkidle0" }); await tap("#tPlay"); await new Promise((r) => setTimeout(r, 1500));
-  await p.evaluate(() => document.querySelector("#coinPill, .coinPill, [data-coins]")?.click()); await shot("10-coin-purse");
+  await p.evaluate(() => document.querySelector("#homeGoldPill")?.click()); await shot("10-coin-purse");
   for (const id of ["hollow", "ember", "frostpine", "gulch", "roost", "skywell"]) {
     await p.evaluate((m) => window.gw.dig(m), id); await new Promise((r) => setTimeout(r, 1200));
     await p.evaluate(() => { const g = window.gw; for (let n = 0; n < 9; n++) for (let i = 0; i < 3; i++) for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (g.tray[i]) { try { g.place(i, r, c); } catch {} } });
