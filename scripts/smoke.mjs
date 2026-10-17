@@ -18,7 +18,7 @@ if (shots) mkdirSync(shots, { recursive: true });
 // --se: iPhone SE (375x667 @2x), the smallest supported screen
 const LANG = process.argv.includes("--lang") ? process.argv[process.argv.indexOf("--lang") + 1] : null; // --lang xx: in another language
 const SE = process.argv.includes("--se"), VW = SE ? 375 : 402, VH = SE ? 667 : 874, DPR = SE ? 2 : 3;
-const SCREENS = ["title", "home", "mineSheet", "dailySheet", "wardrobe", "optsSheet", "market", "purseSheet", "memSheet", "talk", "dig", "rescueOffer", "end"];
+const SCREENS = ["iris", "title", "home", "mineSheet", "dailySheet", "wardrobe", "optsSheet", "market", "purseSheet", "memSheet", "talk", "dig", "rescueOffer", "end"];
 
 let failed = 0;
 for (const [name, bt] of [["webkit", webkit], ["chromium", chromium]]) {
@@ -36,6 +36,9 @@ for (const [name, bt] of [["webkit", webkit], ["chromium", chromium]]) {
     const r = await page.evaluate(async (id) => {
       const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       // the end of a dig, as a player meets it: the roots close in, the rescue offer, then no thanks -> the haul
+      // the scene transitions themselves, as a player starts them: Play (the iris), then the camp's way back to the title
+      if (id === "iris") { document.getElementById("tPlay").click(); await sleep(1600); document.getElementById("talkSkip")?.click(); await sleep(400); gw.screen("optsSheet"); await sleep(500);
+        document.getElementById("toTitle").click(); await sleep(1600); return { shown: !!document.getElementById("title").classList.contains("show"), offscreen: [], canvas3x: true, brokenImgs: 0 }; }
       if (id === "dig") gw.dig("hollow"); else if (id === "rescueOffer") gw.end("time"); else if (id === "end") document.getElementById("rescueNo").click(); else gw.screen(id);
       await sleep(id === "dig" || id === "rescueOffer" ? 2000 : 800);
       // then let every one-shot animation (sheet slide-ins, wipes) land; looping ones never finish

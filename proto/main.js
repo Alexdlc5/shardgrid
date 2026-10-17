@@ -326,6 +326,7 @@ function startDig(isDaily = false) {
   $("biomeName").textContent = daily ? `Daily Dig · ${today()}` : biome.name + (calm ? " · Calm" : "");
   $("comboTxt").textContent = ""; ending = null; tip = null; coins = []; pops = []; floats = []; parts = []; fx = []; fxR = mulberry(7); shownHaul = 0; layout();
   track("round_start", { mine: biome.id, mode: daily ? "daily" : calm ? "calm" : "expedition" });
+  bgCache = cachedMine(); // paint the cave now, while the transition covers the screen, not as it uncovers
   pawPrints = false; lifeDig(["fur", "hat", "scarf", "lantern"].map((p) => [p, Object.keys(LOOKS[p]).filter((v) => v !== "granny")]), !daily && Object.keys(save.best).length > 0);
 }
 const rawHaul = () => Object.entries(haul).reduce((s, [t, n]) => s + n * CRYSTALS[t].value, 0) + bonus;
@@ -1219,6 +1220,13 @@ for (const b of document.querySelectorAll(".close")) b.onclick = () => { renderH
 // you dig in, crystals glinting in the soil; up: the same earth falls away as you climb out into the lantern light.
 // Reduced motion: a short fade. Taps are held while it plays.
 let wiping = false;
+// the earth as a ready-decoded picture, one per screen size: rasterising the SVG as the wipe began made its first frames stutter
+const earthImgs = new Map();
+function earthImg(w, h) {
+  const k = `${w}x${h}`; let im = earthImgs.get(k);
+  if (!im) { im = new Image(); im.alt = ""; im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(earthArt(w, h).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')); im.decode?.().catch(() => {}); earthImgs.set(k, im); }
+  return im;
+}
 function earthArt(w, h) { // painted soil, 1.5 screens tall: ragged lips top and bottom, strata, stones, a few crystals
   const r = prng(Math.round(w * 7 + h)), lip = (y, dir) => [...Array(13)].map((_, k) => [k / 12 * w, y + dir * (6 + r() * 16)]);
   const top = lip(18, 1), bot = lip(h - 18, -1), body = curve([[-20, top[0][1]], ...top, [w + 20, top[12][1]], [w + 20, bot[12][1]], ...bot.reverse(), [-20, bot[12][1]]]);
@@ -1239,15 +1247,29 @@ function wipe(kind, mid, from = null, to = null) {
   if (calmMotion) { const v = el.appendChild(document.createElement("i")); v.className = "veil";
     v.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, fill: "forwards" }).onfinish = () => { mid();
       v.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "forwards" }).onfinish = done; }; return; }
-  if (kind === "iris") {
-    const hole = el.appendChild(document.createElement("i")); hole.className = "iris";
-    const at = (p) => p || [W / 2, H / 2], box = ([x, y], r) => ({ left: x - r + "px", top: y - r + "px", width: 2 * r + "px", height: 2 * r + "px" });
-    hole.animate([box(at(from), R), box(at(from), 0)], { duration: 520, easing: "cubic-bezier(.55,0,.75,.4)", fill: "forwards" }).onfinish = () => {
+  if (kind === "iris") { // the dark closes in on a lantern: one canvas, filled dark with a lit hole. It used to be an element
+    // resized every frame with a 300vmax box-shadow: a layout and a screen-sized repaint per frame, and on iPhone a layer
+    // too big for one texture, drawn in tiles that showed as black squares
+    const c = el.appendChild(document.createElement("canvas")), d = 1, g = c.getContext("2d"); // 1x: a soft dark mask, a quarter of the pixels of 2x
+    c.width = Math.round(W * d); c.height = Math.round(H * d); g.scale(d, d);
+    const at = (p) => p || [W / 2, H / 2];
+    const hole = ([x, y], r) => {
+      g.globalCompositeOperation = "copy"; g.fillStyle = "#060d09"; g.fillRect(0, 0, W, H);
+      if (r <= 0) return;
+      g.globalCompositeOperation = "destination-out"; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+      g.globalCompositeOperation = "source-over"; const rim = g.createRadialGradient(x, y, Math.max(0, r - 34), x, y, r + 16); // the lantern-warm rim
+      rim.addColorStop(0, "rgba(255,196,110,0)"); rim.addColorStop(.6, "rgba(255,196,110,.42)"); rim.addColorStop(.7, "rgba(255,196,110,.2)"); rim.addColorStop(1, "rgba(255,196,110,0)");
+      g.fillStyle = rim; g.beginPath(); g.arc(x, y, r + 16, 0, 7); g.fill(); };
+    const run = (p, r0, r1, ms, ease) => new Promise((ok) => { const t0 = performance.now();
+      // (a frame's timestamp can be a hair before t0, and k ** 2.6 of a negative is NaN: clamp k)
+      const step = (now) => { const k = Math.max(0, Math.min(1, (now - t0) / ms)); hole(p, r0 + (r1 - r0) * ease(k)); k < 1 ? requestAnimationFrame(step) : ok(); };
+      hole(p, r0); requestAnimationFrame(step); });
+    run(at(from), R, 0, 520, (k) => k ** 2.6).then(() => { // closing speeds up; opening slows down
       mid(); const t = typeof to === "function" ? to() : to; // the point to open on may only exist once the new scene is drawn
-      setTimeout(() => hole.animate([box(at(t), 0), box(at(t), R)], { duration: 620, easing: "cubic-bezier(.2,.6,.35,1)", fill: "forwards" }).onfinish = done, 140); };
+      setTimeout(() => run(at(t), 0, R, 620, (k) => 1 - (1 - k) ** 3).then(done), 140); });
     return;
   }
-  const e = el.appendChild(document.createElement("div")), Ht = H * 1.5; e.className = "earth"; e.style.height = Ht + "px"; e.innerHTML = earthArt(W, Ht);
+  const e = el.appendChild(document.createElement("div")), Ht = H * 1.5; e.className = "earth"; e.style.height = Ht + "px"; e.append(earthImg(W, Ht));
   const y = (v) => ({ transform: `translateY(${v}px)` }), down = kind === "down"; // down: the earth rises past you; up: it falls away
   const a = down ? [y(H), y(-H * .25)] : [y(-Ht), y(-H * .25)], b = down ? [y(-H * .25), y(-Ht - 20)] : [y(-H * .25), y(H + 20)];
   e.animate(a, { duration: 430, easing: "cubic-bezier(.5,0,.8,.5)", fill: "forwards" }).onfinish = () => { mid();
@@ -1993,6 +2015,7 @@ if (qs.has("debug")) window.gw = { place: (i, r, c) => commit(i, r, c), get tray
   dig: (id = "hollow") => { if (!save.biomes.includes(id)) save.biomes.push(id); save.sel = id; startDig(); } }; // in-memory only: screenshots of any mine
 
 $("world").innerHTML = forest();
+setTimeout(() => earthImg(innerWidth, innerHeight * 1.5), 1500); // the dig transition's earth, decoded before the first dig
 // ---------- one clock for the painted scenes' little animations (glows, flames, sparks, fireflies: SMIL in the SVGs) ----------
 // Left alone they tick at the display rate (120 Hz on ProMotion) and every tick repaints the whole picture: the camp has ~66
 // of them, and they were ~95% of its render work (measured: raster 1.77 s -> 0.08 s per 3 s without them). Here they step

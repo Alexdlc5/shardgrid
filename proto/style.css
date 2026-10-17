@@ -16,9 +16,9 @@
   /* scene transitions (wipe()): a lantern iris, and a painted wall of earth you dig down through or climb up out of */
   #wipe { position: fixed; inset: 0; z-index: 60; display: none; overflow: hidden; pointer-events: none; }
   #wipe.on { display: block; pointer-events: auto; }
-  #wipe .iris { position: absolute; border-radius: 50%; box-shadow: 0 0 0 300vmax #060d09, inset 0 0 28px 8px rgba(255,196,110,.5), 0 0 40px 12px rgba(255,196,110,.18); }
+  #wipe canvas { position: absolute; inset: 0; width: 100%; height: 100%; } /* the iris: drawn, not a 300vmax box-shadow (huge layers tiled black on iPhone) */
   #wipe .earth { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
-  #wipe .earth svg { display: block; width: 100%; height: 100%; }
+  #wipe .earth img { display: block; width: 100%; height: 100%; }
   #wipe .veil { position: absolute; inset: 0; background: #060d09; }
   canvas { display: block; position: relative; }
   .hud { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: 0; right: 0; display: flex; justify-content: space-between;
@@ -378,6 +378,7 @@
   @keyframes tsDrift { from { transform: translateX(calc(var(--dx) * -1)); } to { transform: translateX(var(--dx)); } }
   .titleWrap { position: relative; }
   #dibbleArt { position: relative; z-index: 59; } /* above the haze (58), under the wipe (60) */
+  body:has(.sheet.show) #dibbleArt { z-index: auto; } /* but never above a sheet opened over the title (he floated over Options and Amber Memories) */
   /* Dibble leans in to peer at the crystals, then straightens up */
   #dibbleArt { display: block; height: 150px; }
   .titleHero { display: block; width: 166px; height: 150px; margin: 0 auto; overflow: visible; }
