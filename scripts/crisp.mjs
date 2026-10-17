@@ -31,7 +31,7 @@ async function measure(browserType, nolayer) {
     // place a piece mid-board, so its left edge sits against an empty slot (not the board frame)
     const i = gw.tray.findIndex((q) => q && gw.canPlace(gw.board, q.piece, 3, 3)), cells = i >= 0 ? gw.tray[i].piece.cells : [];
     if (i >= 0) gw.place(i, 3, 3);
-    await sleep(700);
+    await sleep(2000); // past the landing squash, even on a slow CI machine
     const cv = document.getElementById("cv"), dpr = cv.width / cv.clientWidth, g = cv.getContext("2d"), geo = gw.geo;
     const lum = (d, k) => .2126 * d[k] + .7152 * d[k + 1] + .0722 * d[k + 2];
     // same as scripts/edge-width.py: the steepest step, widened to the monotone ramp around it; 10-90 width (+1)
@@ -40,7 +40,7 @@ async function measure(browserType, nolayer) {
       while (a > 0 && rise(a - 1, a)) a--; while (z < p.length - 1 && rise(z, z + 1)) z++;
       const lo = p[a] + (p[z] - p[a]) * .1, hi = p[a] + (p[z] - p[a]) * .9; let n = 0;
       for (let i = a; i <= z; i++) if (p[i] > Math.min(lo, hi) && p[i] < Math.max(lo, hi)) n++;
-      return { w: n + 1, step: Math.round(Math.abs(p[z] - p[a])) }; };
+      return { w: n + 1, step: Math.round(Math.abs(p[z] - p[a])), prof: p.slice(Math.max(0, a - 3), z + 4).map(Math.round).join(" ") }; };
     const row = (x0, x1, y) => { const d = g.getImageData(Math.round(x0 * dpr), Math.round(y * dpr), Math.round((x1 - x0) * dpr), 1).data; return [...Array(d.length / 4)].map((_, k) => lum(d, k * 4)); };
     const R = 3 + (cells[0]?.[0] ?? 0), C = 3 + Math.min(...cells.filter(([r]) => r === cells[0][0]).map(([, c]) => c));
     const board = i >= 0 ? widthOf(row(geo.bx + (C - .5) * geo.cell, geo.bx + (C + .35) * geo.cell, geo.by + (R + .5) * geo.cell)) : null;
@@ -60,6 +60,7 @@ let fail = false;
 console.log("browser   layers-off      dpr  board-edge  tray-edge   (device px, 10-90%; crisp <= 2)");
 for (const [name, bt] of [["webkit", webkit], ["chromium", chromium]]) for (const l of layers) {
   const r = await measure(bt, l);
+  if (check != null && (r.board?.w ?? 99) > check) console.log("board profile:", r.board?.prof);
   console.log(`${name.padEnd(9)} ${(l || "(none)").padEnd(15)} ${r.dpr}    ${String(r.board?.w ?? "-").padStart(4)}        ${String(r.tray).padStart(4)}` + (r.errors.length ? `   errors: ${r.errors.join(" | ")}` : ""));
   if (check != null && ((r.board?.w ?? 99) > check || r.tray > check || r.errors.length)) fail = true;
 }

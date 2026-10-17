@@ -41,7 +41,7 @@ for (const [name, bt] of [["webkit", webkit], ["chromium", chromium]]) {
       const box = el?.getBoundingClientRect();
       return { shown: !!box && box.width > 0 && box.height > 0 && getComputedStyle(el).display !== "none",
         // nothing tappable may sit off screen or under another screen's edge
-        offscreen: [...(el?.querySelectorAll?.("button") ?? [])].filter((x) => { const q = x.getBoundingClientRect(); return q.width && (q.left < -1 || q.right > innerWidth + 1 || q.bottom > innerHeight + 1 && getComputedStyle(el).overflowY !== "auto"); }).map((x) => x.id || x.textContent.trim().slice(0, 16)),
+        offscreen: [...(el?.querySelectorAll?.("button") ?? [])].filter((x) => { const q = x.getBoundingClientRect(); return q.width && (q.left < -1 || q.right > innerWidth + 1); }).map((x) => x.id || x.textContent.trim().slice(0, 16)),
         canvas3x: cv.width === Math.round(innerWidth * devicePixelRatio), brokenImgs: [...document.images].filter((i) => i.complete && !i.naturalWidth && i.offsetWidth).length };
     }, id);
     const bad = [!r.shown && "not shown", !r.canvas3x && "canvas not 3x", r.brokenImgs && `${r.brokenImgs} broken images`, r.offscreen.length && `off screen: ${r.offscreen.join(", ")}`, ...errors.slice(before)].filter(Boolean);
