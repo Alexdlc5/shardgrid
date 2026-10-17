@@ -63,3 +63,60 @@ Three sessions in their own worktrees, so none edits the same functions. I merge
 | A. First minute | 1, 4, 7 | `main.js`: `dialog()`, `drawHint()` + `TIPS`, moth spawn gate |
 | B. Daily Dig clock | 2 | `main.js`: `today()`, `sell()` streak, `renderHome()` daily block; docs/SETUP.md note |
 | C. Trust and hygiene | 3, 5, 6, 8, 9, 10, 11 | `main.js`: `showHaul()`, IAP row, diagnostics, HUD tap + leave flow; `art.js` lanterns; `index.html` title; `style.css` mines row; `scripts/art-audit.mjs` |
+
+---
+
+# Pass 2 (2026-10-17, later): visual art, UI, music and sound, game design
+
+Reviewed on `main` (with #53–#55 merged) and on PR #52 (eight languages + the golden-hour haze), the owner's chosen look.
+Same method: every screen at 3×, side by side main vs #52, plus `music.js`, `style.css` and the tuning in `main.js` /
+`sim/generator.json` read in full. Everything below respects two owner decisions: **blocks stay vivid** and **the haze stays**.
+**Every text change must land in all eight languages** (`proto/lang/*.json`, `node scripts/i18n.mjs check`).
+
+## Visual art
+
+| # | Finding | Fix |
+|---|---|---|
+| A1 | **The haze turns the night into sepia.** On #52 the title sky and the moon go flat brown-grey, Mossy Hollow's green backdrop reads as autumn, and the mines lose their palette identity (hollow green, frostpine blue-white, grotto violet). A golden-hour grade should warm the shadows and leave the highlights and sky cool; today it's one global tint. | `lofiGrade()` in main.js and `.haze.h1–h4` in style.css: keep roughly 40% of each mine's own hue (lower `desat`, tint toward the palette's own warm tone rather than one fixed orange), and leave the sky band and moon ungraded on the title and camp. The board frame and blocks are already excluded. |
+| A2 | **Characters and pets are muted by the haze.** On the camp, Dibble, Puddock and the pets sit under the `.haze` layers, so the second thing the eye should land on (after the crystals) is dulled. | Put the characters above the haze: `#campPets` and the character groups get a higher z-index than `.haze` (59), or the haze is drawn under the camp stage. Lit lanterns and the fire too. |
+| A3 | **The camp's "?" gem shelf is twelve flat black discs with question marks** inside a painted world (ART_STYLE §2: no flat tokens). | `camp()` gem cells: an unfound gem is a faint dusty silhouette of its cut (like the memory shelf's unfound ovals), no glyph. |
+| A4 | Checked and fine: the painted-edge style is consistent everywhere, the unlit lanterns now read as lanterns, the Rootline vine, the board frame, the pets peeking from the frame corner, the title composition, the memory ovals. | — |
+
+## UI
+
+| # | Finding | Fix |
+|---|---|---|
+| U1 | **"Wardrobe" breaks mid-word in the market tabs** on #52, in English (`overflow-wrap: anywhere; hyphens: auto` was added for long languages; five tabs at 14px don't fit 360px). German and Portuguese labels are longer still. | `.tabs`: `white-space: nowrap`, the row scrolls horizontally with scroll-snap and a soft right-edge mask when it overflows, the active tab scrolled into view. No mid-word breaks in any language. |
+| U2 | **The Remove-ads card is the first thing on every market tab**, above the tabs, even on Pets and Wardrobe. It makes the cosy shop feel like a storefront. | Move it to the end of the Tools tab (Restore purchases stays in Options). |
+| U3 | Checked and fine: four type sizes on variables, with only the HUD and camp labels fixed; 44pt rows; press states on every button; the coin purse; Options; the mines sheet; the SE size. | — |
+
+## Music and sound
+
+| # | Finding | Fix |
+|---|---|---|
+| M1 | **The low end is tuned for headphones and vanishes on the iPhone speaker.** The Rootline-low heartbeat is a 58 Hz sine, the tick knock is 98 Hz, and the bass sits at root−24 (≈40–60 Hz). The phone speaker rolls off under ~200 Hz, so the one audio cue that says "you're about to lose" is inaudible without headphones. | `music.js`: give the heartbeat an audible body (116 Hz and 174 Hz partials plus a short click) and the tick knock a second partial; the bass gets a quiet octave-up sine. Headphones keep the sub. |
+| M2 | **No dynamics.** Every melody pluck is velocity .11, so twenty tunes play like a music box on rails. | `schedule()`: accent the downbeat (×1.15), soften off-beats (×.85), ±8% random; the swing on odd slots stays. |
+| M3 | **One arrangement for all twenty tunes** (pad every bar, bass on 1 and 5, shaker on 2, sparkle at the turnaround). Variety comes only from key, tempo and voice, so the playlist is samey. | A small per-track `arr` with two or three templates: shaker on or off, a walking bass on some, and on the music-box tracks a pad-chord arpeggio in the second half of each phrase. The crossfade bridge stays as is. |
+| M4 | **The scene transitions are silent.** Digging down through earth and climbing out have no sound; the lantern iris has none. | `wipe()`: down = a low rumble fading into a dry earth hush (noise 300→120 Hz), up = rising air, iris = one soft tine. Under 1 s, through the sfx bus. |
+| M5 | **Most UI taps are silent.** Sheets open and close, tabs and chips switch, options toggle, all with a press animation but no sound (`ui.tap` is used twice). The board and camp are rich; the menus are mute next to them. | One small layer: sheet open = air + a soft knock, close = the reverse, tab or chip = `sfx.tap`, option toggle = two tines (up for on, down for off). Through `show()`, the tabs' onclick and `optRow`. |
+| M6 | Checked and fine: the crossfade bridge on shared pitches, a tune per place with fitting ambience, a voice per character, the clear and combo escalation, the sfx compressor under the music, the silent-switch handling. | — |
+
+## Game design
+
+| # | Finding | Decision |
+|---|---|---|
+| G1 | **Pacing is sound.** A new mine every ~3, 5, 10, 12, 12, 12, 15, 13 digs (map price ÷ mean haul); upgrades 1.6× a level with the last levels at 100–160k; treasures 3.5–30M against ~350k a day late on. The Rootline (60 s + 3.5 s a line) gives a 3-minute median dig in Hollow. Calm Grove at ×0.6 is a fair trade. | Leave it. |
+| G2 | **The Daily Dig streak rewards nothing** (the research's #10): no milestones, no freeze. It's the retention lever this genre runs on. | 1.1, not 1.0: milestones at 3, 7, 14 and 30 days (gold, then a pet accessory) and one earned streak freeze a week. New text in eight languages and new art, so not a launch blocker. |
+| G3 | Undo and a Classic mode (the research's #5 and #6) are the switch-over features. | 1.1. Launch with what's here. |
+
+## Delegation (pass 2)
+
+Three sessions, each in its own worktree, **branched from `claude/languages`** (PR #52) with the PR based on it, so the
+haze and the language files are there. New or changed strings go into all eight `proto/lang/*.json` files and
+`node scripts/i18n.mjs check` must pass.
+
+| Session | Items | Touches |
+|---|---|---|
+| D. Art: haze refinement | A1, A2, A3 | `main.js` `lofiGrade()`, `style.css` `.haze`, `art.js` `camp()` shelf and layer order |
+| E. UI: tabs and the shop | U1, U2 | `style.css` `.tabs`, `main.js` `renderMarket()` IAP row placement |
+| F. Sound: speaker, dynamics, variety, UI | M1–M5 | `music.js`; hooks in `main.js` `wipe()`, `show()`, the tabs' onclick, `optRow` |
