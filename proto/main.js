@@ -760,7 +760,8 @@ function lofiGrade(g, w, h, look, board = false) {
   if (L.glow && !board) { g.globalCompositeOperation = "screen"; const hg = g.createRadialGradient(w / 2, 0, 0, w / 2, 0, h * .6);
     hg.addColorStop(0, "rgba(255,210,170,.4)"); hg.addColorStop(1, "rgba(255,210,170,0)"); g.fillStyle = hg; g.fillRect(0, 0, w, h); }
   if (!grainTile) { grainTile = document.createElement("canvas"); grainTile.width = grainTile.height = 128; const t = grainTile.getContext("2d"), im = t.createImageData(128, 128);
-    for (let i = 0; i < im.data.length; i += 4) { const v = 128 + (Math.random() - .5) * 200; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; } t.putImageData(im, 0, 0); }
+    const nr = prng(97); // its own seed: art never draws on the game's random stream (it would change what gets dealt)
+    for (let i = 0; i < im.data.length; i += 4) { const v = 128 + (nr() - .5) * 200; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; } t.putImageData(im, 0, 0); }
   g.globalCompositeOperation = "overlay"; g.globalAlpha = L.grain; g.fillStyle = g.createPattern(grainTile, "repeat"); g.fillRect(0, 0, w, h);
   g.restore();
 }
