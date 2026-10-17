@@ -1,6 +1,6 @@
 // Block-edge sharpness at iPhone density, read straight from the game canvas's device pixels (1:1, no capture scaling).
 //   node scripts/crisp.mjs                 table: browser x layer-off -> edge width (device px, 10-90%)
-//   node scripts/crisp.mjs --check 2       exit 1 if any baseline edge is wider than 2 device px (CI gate)
+//   node scripts/crisp.mjs --check 2       exit 1 if a block edge (bevel bands off) is wider than 2 device px (CI gate)
 // Edge width = device pixels between 10% and 90% of the contrast step across the block's left edge.
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
@@ -55,7 +55,10 @@ async function measure(browserType, nolayer) {
   return { ...out, errors };
 }
 
-const layers = check != null ? [""] : ["", "glow", "shadow", "inner", "bevel", "bg", "glow,shadow"];
+// The gate measures the block's own edge (outline + fill) with the bevel bands off: those are drawn soft on purpose, and
+// with the hazed (lifted) backdrop the outline no longer stands out from it, so the steepest step became outline-into-bevel.
+// Compositing blur (the iPhone 1x-layer bug) or off-pixel positions would still widen this edge.
+const layers = check != null ? ["bevel"] : ["", "glow", "shadow", "inner", "bevel", "bg", "glow,shadow"];
 let fail = false;
 console.log("browser   layers-off      dpr  board-edge  tray-edge   (device px, 10-90%; crisp <= 2)");
 for (const [name, bt] of [["webkit", webkit], ["chromium", chromium]]) for (const l of layers) {
