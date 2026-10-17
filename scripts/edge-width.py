@@ -13,14 +13,15 @@ def lum(p):
 
 
 def width(profile):
-    # the steepest step in the scan, widened to the monotone ramp around it (a flat band, like a drop shadow, ends it);
+    # the steepest step in the scan, widened while neighbouring steps are >10% of it (a flat band, like a drop shadow, ends it);
     # width = pixels strictly between 10% and 90% of that ramp, +1 so a single-pixel jump counts as 1
     n = len(profile)
     k = max(range(n - 1), key=lambda i: abs(profile[i + 1] - profile[i]))
     up = profile[k + 1] > profile[k]
+    m = max(1, abs(profile[k + 1] - profile[k]) * .1)  # a gentle tail (bevel highlight, glow) isn't the edge
     a, z = k, k + 1
-    while a > 0 and (profile[a] - profile[a - 1] if up else profile[a - 1] - profile[a]) > 1: a -= 1
-    while z < n - 1 and (profile[z + 1] - profile[z] if up else profile[z] - profile[z + 1]) > 1: z += 1
+    while a > 0 and (profile[a] - profile[a - 1] if up else profile[a - 1] - profile[a]) > m: a -= 1
+    while z < n - 1 and (profile[z + 1] - profile[z] if up else profile[z] - profile[z + 1]) > m: z += 1
     lo, hi = profile[a] + (profile[z] - profile[a]) * .1, profile[a] + (profile[z] - profile[a]) * .9
     inside = [i for i in range(a, z + 1) if min(lo, hi) < profile[i] < max(lo, hi)]
     return len(inside) + 1, round(abs(profile[z] - profile[a]), 1)

@@ -34,9 +34,9 @@ async function measure(browserType, nolayer) {
     await sleep(2000); // past the landing squash, even on a slow CI machine
     const cv = document.getElementById("cv"), dpr = cv.width / cv.clientWidth, g = cv.getContext("2d"), geo = gw.geo;
     const lum = (d, k) => .2126 * d[k] + .7152 * d[k + 1] + .0722 * d[k + 2];
-    // same as scripts/edge-width.py: the steepest step, widened to the monotone ramp around it; 10-90 width (+1)
+    // same as scripts/edge-width.py: the steepest step, widened while neighbouring steps are >10% of it; 10-90 width (+1)
     const widthOf = (p) => { let k = 0; for (let i = 1; i < p.length - 1; i++) if (Math.abs(p[i + 1] - p[i]) > Math.abs(p[k + 1] - p[k])) k = i;
-      const up = p[k + 1] > p[k], rise = (i, j) => (up ? p[j] - p[i] : p[i] - p[j]) > 1; let a = k, z = k + 1;
+      const up = p[k + 1] > p[k], min = Math.max(1, Math.abs(p[k + 1] - p[k]) * .1), rise = (i, j) => (up ? p[j] - p[i] : p[i] - p[j]) > min; let a = k, z = k + 1;
       while (a > 0 && rise(a - 1, a)) a--; while (z < p.length - 1 && rise(z, z + 1)) z++;
       const lo = p[a] + (p[z] - p[a]) * .1, hi = p[a] + (p[z] - p[a]) * .9; let n = 0;
       for (let i = a; i <= z; i++) if (p[i] > Math.min(lo, hi) && p[i] < Math.max(lo, hi)) n++;
@@ -45,11 +45,11 @@ async function measure(browserType, nolayer) {
     const R = 3 + (cells[0]?.[0] ?? 0), C = 3 + Math.min(...cells.filter(([r]) => r === cells[0][0]).map(([, c]) => c));
     const board = i >= 0 ? widthOf(row(geo.bx + (C - .5) * geo.cell, geo.bx + (C + .35) * geo.cell, geo.by + (R + .5) * geo.cell)) : null;
     // tray: scan rows through each slot; report the sharpest strong edge per slot, then the worst slot
-    let tray = 0;
+    let tray = 0, worst = [], trayProf = "";
     for (let s = 0; s < 3; s++) { if (!gw.tray[s]) continue; let bestW = 99;
-      for (let y = geo.trayY + 4; y < geo.trayY + geo.trayH - 4; y += 3) { const r = widthOf(row(geo.trayX + s * geo.slotW, geo.trayX + (s + .5) * geo.slotW, y)); if (r.step > 60) bestW = Math.min(bestW, r.w); }  // ponytail: sharpest row per slot; median if one crisp row ever hides a soft piece
-      if (bestW < 99) tray = Math.max(tray, bestW); }
-    return { dpr, board, tray };
+      for (let y = geo.trayY + 4; y < geo.trayY + geo.trayH - 4; y += 3) { const r = widthOf(row(geo.trayX + s * geo.slotW, geo.trayX + (s + .5) * geo.slotW, y)); if (r.step > 60 && r.w < bestW) { bestW = r.w; worst[s] = `slot ${s} y ${y}: ${r.prof}`; } }  // ponytail: sharpest row per slot; median if one crisp row ever hides a soft piece
+      if (bestW < 99 && bestW > tray) { tray = bestW; trayProf = worst[s]; } }
+    return { dpr, board, tray, trayProf };
   });
   await b.close();
   return { ...out, errors };
@@ -61,6 +61,7 @@ console.log("browser   layers-off      dpr  board-edge  tray-edge   (device px, 
 for (const [name, bt] of [["webkit", webkit], ["chromium", chromium]]) for (const l of layers) {
   const r = await measure(bt, l);
   if (check != null && (r.board?.w ?? 99) > check) console.log("board profile:", r.board?.prof);
+  if (check != null && r.tray > check) console.log("tray profile:", r.trayProf);
   console.log(`${name.padEnd(9)} ${(l || "(none)").padEnd(15)} ${r.dpr}    ${String(r.board?.w ?? "-").padStart(4)}        ${String(r.tray).padStart(4)}` + (r.errors.length ? `   errors: ${r.errors.join(" | ")}` : ""));
   if (check != null && ((r.board?.w ?? 99) > check || r.tray > check || r.errors.length)) fail = true;
 }
