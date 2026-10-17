@@ -64,6 +64,8 @@ const HAS_AUDIO = !!(window.AudioContext || window.webkitAudioContext);
 function init() {
   if (master) return;
   ctx ??= new (window.AudioContext || window.webkitAudioContext)();
+  // iOS can interrupt the context (a call, an ad, a system prompt): the next tap then builds a fresh one (see rebuild)
+  if (!(window.OfflineAudioContext && ctx instanceof window.OfflineAudioContext)) ctx.onstatechange = () => { if (ctx.state === "interrupted" || ctx.state === "closed") stale = true; };
   master = ctx.createGain(); master.gain.value = .55; master.connect(ctx.destination);
   // generated reverb: decaying stereo noise
   // the room is filled in just after: 250k noise samples are the slowest part of start-up, and a beat without reverb isn't heard
@@ -232,7 +234,9 @@ export const soundtrack = {
   // a single gem "note" for the camp shelf: each gem type sings its own pitch
   chime(i) { if ((!enabled && !ctx) || !HAS_AUDIO) return; init(); pluck({ out: music, rev: musicRev, ech: musicEcho }, NOTE(scaleNote(TRACKS.camp, i % 10) + 12), ctx.currentTime + .01, .14, "musicbox", 1); },
   // call from a tap: iOS only lets audio start inside one, and a 1-sample silent buffer is what finally wakes it
-  unlock() { if (!HAS_AUDIO) return; if (stale) rebuild(); init(); if (ctx.state === "running") return; ctx.resume(); const b = ctx.createBufferSource(); b.buffer = ctx.createBuffer(1, 1, 22050); b.connect(ctx.destination); b.start(); },
+  unlock() { if (!HAS_AUDIO) return; if (stale) rebuild(); init(); if (ctx.state === "running") return;
+    // if it doesn't wake (iOS can refuse), the next tap rebuilds it
+    const c = ctx; c.resume().catch(() => { stale = true; }); setTimeout(() => { if (c === ctx && c.state !== "running") stale = true; }, 600); const b = ctx.createBufferSource(); b.buffer = ctx.createBuffer(1, 1, 22050); b.connect(ctx.destination); b.start(); },
   // iOS: Web Audio follows the ring/silent switch ("ambient") unless the page asks for a "playback" session (Audio Session API, iOS 17+).
   // Off by default: players hate games (and ads) that ignore the switch; the Options sheet can opt in.
   setIgnoreSilent(on) { try { if (navigator.audioSession) navigator.audioSession.type = on ? "playback" : "ambient"; } catch {} },
