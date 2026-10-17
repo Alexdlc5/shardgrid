@@ -260,6 +260,19 @@
   .iap { display: flex; gap: 10px; align-items: center; margin-top: 10px; padding: 8px 8px 8px 6px; }
   .iap .grow { flex: 1; min-width: 0; } .iap b { display: block; font-size: var(--fs-body); } .iap small { display: block; font-size: var(--fs-small); line-height: 1.25; }
   .iap button { width: auto; margin: 0; padding: 6px 14px; font-size: var(--fs-body); flex: none; }
+  /* Coin purse: four painted packs on a 2x2 board of recesses */
+  .pill[role=button] { cursor: pointer; } .pill .plus { display: grid; place-items: center; width: 20px; height: 20px; margin-right: -6px; border-radius: 50%;
+    background: #ffd27a; color: #3a2208; font-size: 16px; line-height: 1; box-shadow: 0 1px 0 #5a3410; }
+  .packs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .pack { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px; text-align: center;
+    border: 3px solid transparent; border-image: var(--p-recess) 18 fill / 14px stretch; color: #f6ead0; }
+  .pack b { font-family: var(--font-display); font-size: var(--fs-body); line-height: 1.2; }
+  .pack .amt { display: flex; align-items: center; gap: 4px; font-family: var(--font-display); font-weight: 700; color: #ffd27a; font-size: var(--fs-head); }
+  .pack .amt .ico { margin: 0; }
+  .pack .extra { position: absolute; top: 4px; right: 2px; padding: 1px 6px; border-radius: 6px; background: #4f8a3a; color: #eaffd8; font-size: var(--fs-small);
+    font-weight: 700; transform: rotate(6deg); box-shadow: 0 2px 0 #24401a; }
+  .pack button { width: 100%; min-height: 44px; margin: 6px 0 0; padding: 6px 8px; font-size: var(--fs-body); }
+  .purseRow { display: flex; align-items: center; gap: 10px; } .purseRow .pill { flex: none; } #purseState { margin: 0; line-height: 1.25; }
   .linkBtn { background: none !important; border: 0 !important; border-image: none !important; filter: none !important; box-shadow: none !important; color: #d9c49c !important; font-size: var(--fs-small);
     text-decoration: underline; padding: 4px; margin: 4px 0 0; text-shadow: none; }
   /* options: one painted row per setting */
@@ -451,7 +464,7 @@
 
 <section id="home" class="screen hub">
   <div class="campStage" id="campStage"><div id="campArt"></div><div id="campPets" class="campPets"></div><div id="campFx" class="campFx"></div></div>
-  <div class="hubBar"><div class="pill" id="homeGoldPill"><span id="coinA"></span><span id="homeGold">0</span></div>
+  <div class="hubBar"><div class="pill" id="homeGoldPill" role="button" tabindex="0" aria-label="Coin purse"><span id="coinA"></span><span id="homeGold">0</span><span class="plus" aria-hidden="true">+</span></div>
     <span class="siteName" id="campTitle"></span><button id="hubMenu" class="alt iconBtn" aria-label="Menu"></button></div>
   <div class="campHint" id="campHint"></div>
 </section>
@@ -533,10 +546,21 @@
   <div class="sheetHead"><h2>Old Puddock's Market</h2><button class="alt xBtn close" aria-label="Close"><span class="icoX"></span></button></div>
   <div class="sheetBody">
     <div class="speech"><span id="puddockArtMkt"></span><div class="bubble">"Shiny rocks, shiny coins. Fair trade, little mole."</div></div>
-    <div class="pill"><span id="coinC"></span><span id="mktGold">0</span></div>
+    <div class="pill" id="mktGoldPill" role="button" tabindex="0" aria-label="Coin purse"><span id="coinC"></span><span id="mktGold">0</span><span class="plus" aria-hidden="true">+</span></div>
     <div id="iapRow"></div>
     <div class="tabs" id="mktTabs"><button data-tab="tools">Tools</button><button data-tab="wardrobe">Wardrobe</button><button data-tab="camp">Camp</button><button data-tab="maps">Maps</button><button data-tab="pets" id="petTab">Pets</button></div>
     <div id="shop"></div>
+  </div>
+</div></div></section>
+
+<section id="purseSheet" class="screen sheet"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
+  <div class="sheetHead"><h2>Coin purse</h2><button class="alt xBtn" id="purseClose" aria-label="Close"><span class="icoX"></span></button></div>
+  <div class="sheetBody">
+    <div class="speech"><span id="puddockArtPurse"></span><div class="bubble">"Coin's coin, little mole. Fair weight, every pouch."</div></div>
+    <div class="purseRow"><div class="pill" id="purseGoldPill"><span id="coinD"></span><span id="purseGold">0</span></div><div class="tag" id="purseState"></div></div>
+    <div class="packs" id="packs"></div>
+    <div class="note">Fair dealing: crystals are dealt at random. Never by ads, purchases or how close you are to your best. Coins never change what crystals you're dealt.</div>
+    <div class="note">Coins are spent as you use them, so they can't be restored. Restore purchases in the market brings back Remove ads only.</div>
   </div>
 </div></div></section>
 
@@ -556,11 +580,11 @@
 import { N, buildCatalog, canPlace, place, fullLines, lineCells, clearCells, fitsAnywhere, deal,
   rescueCells, breakCells, pureVeinCells, stoneBreak } from "./game.js";
 
-import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, lookItem, DEFAULT_LOOK, FUR, memoryArt, stumpArt, granny, bidder, darkLantern, logoSwash, titleScene, titleHero, logoLetters, pet, PET_KINDS, PET_WEAR_SLOT, buildTile, BUILD_KINDS } from "./art.js";
+import { gem, coin, icon, dibble, puddock, scene, forest, vine, mystery, camp, lookItem, DEFAULT_LOOK, FUR, memoryArt, stumpArt, granny, bidder, darkLantern, logoSwash, titleScene, titleHero, logoLetters, pet, PET_KINDS, PET_WEAR_SLOT, buildTile, BUILD_KINDS, coinPack } from "./art.js";
 import { PROLOGUE, MEMORIES, MEMORY_COUNT, nextMemory, memoryById, mineOfMemory, mineDone, CHALK, PUDDOCK_BY_MINE, PUDDOCK_AFTER, PUDDOCK_POSTGAME,
   CAMP_LINES, SCALE_NOTE, SCENES, nextScene, SITES, GIVEN, MAP_GATE, MURMURS, MURMURS_DEEP, MURMURS_AFTER, PETS, PET_HINT, PET_SHOP } from "./story.js";
 import { soundtrack, sfx } from "./music.js";
-import { platform, track } from "./platform.js";
+import { platform, track, COIN_PACKS } from "./platform.js";
 import { drawLife, lifeDig, lifeStop, lifeTap, campLife, campPrints } from "./ambient.js";
 import { curve, ring, limb, shape, stroke, rng as prng } from "./paint.js";
 
@@ -720,7 +744,7 @@ const DEFAULTS = { look: { ...DEFAULT_LOOK, trinket: "none", cloak: "none" }, go
   mode: "exp", opt: { music: true, sound: true, vib: true, glyph: false }, daily: { last: "", streak: 0, best: 0 },
   metPuddock: false, trial: [], found: [], camp: { tent: "canvas", banner: "#5fa04e", fire: "ring", hide: [] },
   story: { prologue: false, mem: [], confessed: false, sprout: false, site: "stump", ledge: false, finale: false, scale: false },
-  pets: { owned: [], active: [], wear: {} } }; // active: the pets out at camp; wear: { [pet]: { head, neck } }
+  pets: { owned: [], active: [], wear: {} }, coinTx: [] }; // coinTx: coin-pack transactions already paid out (platform.buyCoins); active: the pets out at camp; wear: { [pet]: { head, neck } }
 const stored = store.get("save", {}); if (stored.opt && stored.opt.music === undefined) stored.opt.music = true;
 const save = { ...DEFAULTS, ...stored, up: { ...DEFAULTS.up, ...stored.up }, look: { ...DEFAULTS.look, ...stored.look }, camp: { ...DEFAULTS.camp, ...stored.camp }, story: { ...DEFAULTS.story, ...stored.story }, pets: { ...DEFAULTS.pets, ...stored.pets } };
 if (!Array.isArray(save.pets.active)) save.pets.active = save.pets.active && save.pets.active !== "none" ? [save.pets.active] : []; // older saves had one pet out (or "none")
@@ -1612,20 +1636,21 @@ $("rescueGo").onclick = async () => {
 const bestKey = () => biome.id + (calm ? ":calm" : "");
 // coin rain: coins burst up from the middle of camp and arc into the coin counter, which counts up as they land;
 // then whatever the haul changed in camp (a new gem on the shelf, the stump) sparkles
-function coinRain(v, from, fresh = []) {
-  const pill = $("homeGoldPill").getBoundingClientRect(), n = Math.min(16, 5 + Math.floor(Math.log2(1 + v) * 1.2)), tx = pill.left + 8, ty = pill.top + pill.height / 2 - 13;
-  $("homeGold").textContent = from;
+function coinRain(v, from, fresh = [], pillId = "homeGoldPill", numId = "homeGold") {
+  const pill = $(pillId).getBoundingClientRect(), n = Math.min(16, 5 + Math.floor(Math.log2(1 + v) * 1.2)), tx = pill.left + 8, ty = pill.top + pill.height / 2 - 13;
+  $(numId).textContent = from;
   for (let k = 0; k < n; k++) {
     const el = document.createElement("div"); el.className = "flyCoin"; el.innerHTML = coin(26); document.body.appendChild(el);
     const sx = innerWidth / 2 + (Math.random() - .5) * 120, sy = innerHeight * .6 + (Math.random() - .5) * 60, px = sx + (Math.random() - .5) * 140, py = sy - 90 - Math.random() * 90;
     const at = (t) => { const u = 1 - t; return [u * u * sx + 2 * u * t * px + t * t * tx, u * u * sy + 2 * u * t * py + t * t * ty]; };
     const a = el.animate([0, .2, .45, .7, .88, 1].map((t, j) => { const [x, y] = at(t); return { transform: `translate(${x}px, ${y}px) scale(${j ? 1 - t * .35 : .3})`, opacity: j ? 1 : 0, offset: t }; }),
       { duration: 820, easing: "cubic-bezier(.45,0,.55,1)", delay: k * 55, fill: "backwards" });
-    a.onfinish = () => { el.remove(); if (k < 8) sfx.coin(k); if (k % 3 === 0) buzz(5); $("homeGold").textContent = Math.round(from + v * (k + 1) / n);
-      $("homeGoldPill").animate([{ transform: "scale(1)" }, { transform: "scale(1.15)" }, { transform: "scale(1)" }], { duration: 160, easing: "ease-out" }); };
+    a.onfinish = () => { el.remove(); if (k < 8) sfx.coin(k); if (k % 3 === 0) buzz(5); $(numId).textContent = Math.round(from + v * (k + 1) / n);
+      $(pillId).animate([{ transform: "scale(1)" }, { transform: "scale(1.15)" }, { transform: "scale(1)" }], { duration: 160, easing: "ease-out" }); };
   }
   setTimeout(() => {
-    $("homeGold").textContent = save.gold;
+    $(numId).textContent = save.gold;
+    if (numId !== "homeGold") return;
     for (const t of fresh) { const el = document.querySelector(`#campArt [data-tap="gem-${GEMS.indexOf(t)}"]`); if (el) { sparkleAt(el); soundtrack.chime(GEMS.indexOf(t)); } }
     const stump = document.querySelector('#campArt [data-tap="memories"]'); if (stump && save.story.site === "stump") sparkleAt(stump);
   }, 900 + n * 55);
@@ -1654,7 +1679,7 @@ $("sell").onclick = () => sell(1);
 $("sell2").onclick = async () => (await platform.rewarded("double_deal")) ? sell(2) : toast("No ad ready, try again in a moment");
 
 // ---------- home and market ----------
-const SHEETS = ["mineSheet", "dailySheet", "wardrobe", "optsSheet", "market", "memSheet"];
+const SHEETS = ["mineSheet", "dailySheet", "wardrobe", "optsSheet", "market", "memSheet", "purseSheet"];
 let base = "title"; // the screen popups sit on: the title screen or the camp
 function show(id) {
   if (id === "title" || id === "home") base = id;
@@ -1788,6 +1813,32 @@ const openMarket = () => save.metPuddock ? (renderMarket(), show("market")) : ta
 for (const b of document.querySelectorAll("#mktTabs button")) b.onclick = () => { mktTab = b.dataset.tab; renderMarket(); $("shop").animate([{ opacity: 0, transform: "translateX(14px)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" }); };
 $("campMem").onclick = $("tMem").onclick = () => replayMemories();
 $("hubMenu").onclick = () => show("optsSheet");
+// ---------- Coin purse: coin packs (platform.js COIN_PACKS), opened from any coin counter. Coins never touch dealing ----------
+let purseFrom = "home";
+const openPurse = (from) => { purseFrom = from; renderPurse(); show("purseSheet"); track("purse_open", { from }); };
+$("homeGoldPill").onclick = () => openPurse("home");
+$("mktGoldPill").onclick = () => openPurse("market");
+$("purseClose").onclick = () => { renderHome(); if (purseFrom === "market") { renderMarket(); show("market"); } else show(base); };
+async function renderPurse() {
+  $("purseGold").textContent = save.gold;
+  const cards = (btn) => Object.entries(COIN_PACKS).map(([id, p]) => `<div class="pack">${coinPack(id.slice(6), 56)}<b>${p.name}</b>
+    <span class="amt">${coin(18)}${p.gold.toLocaleString("en-US")}</span>${p.bonus ? `<span class="extra">+${p.bonus}% extra</span>` : ""}${btn(id)}</div>`).join("");
+  const state = (t) => { $("purseState").textContent = t; $("purseState").style.display = t ? "" : "none"; };
+  if (!platform.canBuy) { state("Purchases are available in the app."); $("packs").innerHTML = cards(() => `<button disabled>In the app</button>`); return; }
+  state(""); $("packs").innerHTML = cards(() => `<button disabled>…</button>`);
+  const live = await platform.coinPacks();
+  if (!live.length) { state("Puddock can't reach the App Store just now. Try again in a moment."); $("packs").innerHTML = cards(() => `<button disabled>Unavailable</button>`); return; }
+  const price = Object.fromEntries(live.map((p) => [p.id, p.price]));
+  $("packs").innerHTML = cards((id) => `<button data-id="${id}" ${price[id] ? "" : "disabled"}>${price[id] || "Unavailable"}</button>`);
+  for (const btn of $("packs").querySelectorAll("button[data-id]")) btn.onclick = async () => {
+    const all = $("packs").querySelectorAll("button[data-id]"); all.forEach((b) => (b.disabled = true));
+    const gold = await platform.buyCoins(btn.dataset.id, save.coinTx);
+    all.forEach((b) => (b.disabled = !price[b.dataset.id]));
+    if (!gold) return;
+    save.gold += gold; persist(); // bought gold doesn't grow the stump (save.light): that's the light Dibble gives back
+    ui.buy(); sparkleAt(btn); coinRain(gold, save.gold - gold, [], "purseGoldPill", "purseGold");
+  };
+}
 $("tOpts").onclick = () => show("optsSheet");
 $("toTitle").onclick = () => { renderHome(); show("title"); };
 $("tPlay").onclick = () => save.story.prologue ? home() : prologue();
@@ -2351,11 +2402,11 @@ if (qs.has("debug")) window.gw = { place: (i, r, c) => commit(i, r, c), get tray
 $("world").innerHTML = forest();
 for (const el of document.querySelectorAll(".vineSlot")) el.outerHTML = vine();
 $("flies").innerHTML = [...Array(14)].map((_, k) => `<i class="fly" style="left:${(k * 37) % 100}%;top:${20 + (k * 53) % 70}%;animation-delay:${-k * 0.7}s,${-k * 0.37}s"></i>`).join("");
-$("talkArt").innerHTML = puddock(120); $("puddockArtEnd").innerHTML = puddock(52); $("puddockArtMkt").innerHTML = puddock(60);
+$("talkArt").innerHTML = puddock(120); $("puddockArtEnd").innerHTML = puddock(52); $("puddockArtMkt").innerHTML = puddock(60); $("puddockArtPurse").innerHTML = puddock(60);
 $("hubMenu").innerHTML = icon("gear", 24);
 for (const el of document.querySelectorAll(".icoX")) el.innerHTML = brushX();
 document.querySelector(".icoCredits").innerHTML = icon("leaf", 22);
-for (const id of ["coinA", "coinB", "coinC"]) $(id).innerHTML = coin(22);
+for (const id of ["coinA", "coinB", "coinC", "coinD"]) $(id).innerHTML = coin(22);
 $("coinHud").innerHTML = coin(26);
 
 
@@ -2393,7 +2444,11 @@ $("coinHud").innerHTML = coin(26);
 // ===== end of track 5 block =====
 
 if (platform.native) $("adNote").textContent = "Green buttons play a short video ad.";
-platform.init().then(() => renderHome());
+platform.init().then(async () => { // then pay out any coin pack the app closed before crediting
+  const gold = await platform.unclaimedCoins(save.coinTx);
+  if (gold) { save.gold += gold; persist(); toast(`Puddock found ${gold.toLocaleString("en-US")} coins you'd paid for`, 2500); }
+  renderHome();
+});
 platform.gameCenter.then((ok) => { // Game Center leaderboards (iOS): the entries appear once it's available
   if (!ok) return;
   for (const id of ["dLb", "oLb"]) { $(id).style.display = ""; $(id).onclick = async () => (await platform.showLeaderboards()) || toast("Sign in to Game Center in Settings to see the leaderboards"); }

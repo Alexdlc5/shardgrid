@@ -90,3 +90,13 @@ assert.equal(story.nextScene({ ...st0, site: "skywell", ledge: true, finale: tru
 assert.ok(story.MAP_GATE.loom({ mem: all("roost") }) && !story.MAP_GATE.loom({ mem: [] }));
 for (const sc of Object.values(story.SCENES)) for (const st of sc) assert.ok(st.who || st.art, "scene step needs a speaker or a picture");
 console.log("scenes ok");
+// coin packs (platform.js): each transaction pays out once; bonus tags never overstate gold per dollar
+globalThis.window = {};
+const { claim, COIN_PACKS } = await import("./platform.js");
+const credited = [], tx = (id, p = "coins_pouch") => ({ transactionIdentifier: id, productIdentifier: p });
+assert.equal(claim([tx("a"), tx("a"), tx("b", "coins_hoard"), tx("c", "no_ads"), undefined], credited), 1200 + 32800);
+assert.equal(claim([tx("a"), tx("b", "coins_hoard")], credited), 0);
+assert.deepEqual(credited, ["a", "b"]);
+const perUsd = (p) => p.gold / p.usd, base = perUsd(COIN_PACKS.coins_pouch);
+for (const p of Object.values(COIN_PACKS)) assert.ok(perUsd(p) / base >= 1 + p.bonus / 100 && perUsd(p) / base < 1 + (p.bonus + 5) / 100, p.name);
+console.log("coins ok");
