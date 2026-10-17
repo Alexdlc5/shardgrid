@@ -845,9 +845,11 @@ const dealTray = () => {
 };
 // which pet (if any) sleeps in this tray: ~6% of trays with every pet still to find, ~2% with one left, none once all are found;
 // a mine's own pets are 6x likelier there. Odds in docs/STORY.md ("Pets").
+// The first pet comes quickly: 2% a tray for the first 8 trays (about a dig), then 35%, so it turns up in dig 2 or 3.
 function petFor(mine) {
-  const left = PET_KINDS.filter((k) => !save.pets.owned.includes(k));
-  if (!left.length || Math.random() >= .015 + .045 * left.length / PET_KINDS.length) return null;
+  const left = PET_KINDS.filter((k) => !save.pets.owned.includes(k)), first = left.length === PET_KINDS.length;
+  if (first) save.petDry = (save.petDry || 0) + 1; // trays dealt with no pet yet (saved with the next persist)
+  if (!left.length || Math.random() >= (first ? (save.petDry > 8 ? .35 : .02) : .015 + .045 * left.length / PET_KINDS.length)) return null;
   const w = left.map((k) => (PETS[k].home.includes(mine) ? 6 : 1)); let x = Math.random() * w.reduce((a, b) => a + b);
   return left.find((_, i) => (x -= w[i]) < 0);
 }
