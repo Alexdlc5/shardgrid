@@ -222,11 +222,12 @@ the Daily Dig sheet and in Options). Apple hosts everything: no account, no serv
 
    | Type | Reference name | Leaderboard ID | Display name | Score suffix |
    |---|---|---|---|---|
-   | **Recurring**: start at 00:00 UTC (the game's day turns over then), duration **1 day**, restarts every **1 day** | Daily Dig | **`daily_dig`** | Daily Dig | ` g` |
+   | **Recurring**: start at 00:00 UTC, duration **1 day**, restarts every **1 day** | Daily Dig | **`daily_dig`** | Daily Dig | ` g` |
    | Classic | Best Haul | **`best_haul`** | Best Haul | ` g` |
    | Classic | Amber Memories | **`memories_found`** | Amber Memories | ` of 33` |
 
    `best_haul` takes Expedition and Daily Dig hauls; Calm Grove has no clock, so its hauls stay off the board.
+   `daily_dig` resets at 00:00 UTC while the in-game day is the phone's local day (proto/daily.js), so one board can span two local days; accepted.
 4. **App Store** → the next version's page → **Game Center** section → tick it → **Leaderboards → Add** → select all three → Save.
    They go live with that version. TestFlight builds can already use them before that.
 

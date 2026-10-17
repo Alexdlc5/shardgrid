@@ -780,8 +780,8 @@ export function camp(st, gemFn, dibbleSvg) {
     const t = (k + .5) / 15, lit = k < n, sw = 2 + (k % 3);
     return `<g transform="translate(${f1(sagX(t))} ${f1(sagY(t))}) scale(${q.toFixed(3)})"><g><animateTransform attributeName="transform" type="rotate" values="-${sw};${sw};-${sw}" dur="${2.6 + (k % 4) * .4}s" repeatCount="indefinite"/>
       <path d="M0 0 v5" stroke="#5a4a3a" stroke-width="1"/>${lit ? `<circle cy="11" r="13" fill="url(#lanternGlow)"><animate attributeName="opacity" values=".16;.28;.16" dur="${1.8 + k % 3 * .5}s" repeatCount="indefinite"/></circle>` : ""}
-      ${shape(curve([[-3.4, 5.4], [3.4, 5.4], [3.8, 13.6], [-3.8, 13.6]]), lit ? "#f7d77a" : "#3a3328", lit ? "#8a5a24" : "#1a1610", [-.6, .6])}
-      ${lit ? `<path d="M-1.6 7 v5 M1.6 7 v5" stroke="#c08a3a" stroke-width=".6" opacity=".7"/>` : ""}</g></g>`;
+      ${shape(curve([[-3.4, 5.4], [3.4, 5.4], [3.8, 13.6], [-3.8, 13.6]]), lit ? "#f7d77a" : "#5a4a30", lit ? "#8a5a24" : "#2a2016", [-.6, .6])}
+      ${lit ? `<path d="M-1.6 7 v5 M1.6 7 v5" stroke="#c08a3a" stroke-width=".6" opacity=".7"/>` : `<path d="${curve([[-2.2, 7], [2.2, 7], [2.5, 12.4], [-2.5, 12.4]])}" fill="#f0b543" opacity=".25"/>`}</g></g>`; // unlit: dark warm amber glass, waiting to be lit
   }).join("");
   const wire = `M${sagX(0)} ${f1(sagY(0))} ${[...Array(29)].map((_, k) => `L${f1(sagX((k + 1) / 29))} ${f1(sagY((k + 1) / 29))}`).join(" ")}`;
   const lanternLine = `<g data-tap="lanterns" data-tip="lanterns"><path d="${wire}" transform="translate(0 ${f1(9 * q)})" stroke="transparent" stroke-width="${f1(MIN)}" fill="none"/>

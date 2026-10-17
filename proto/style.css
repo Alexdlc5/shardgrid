@@ -158,7 +158,8 @@
   .pill { background: linear-gradient(180deg, #4a2d18, #3a2212); border: 2px solid #8a5a2a; color: #ffd27a; box-shadow: inset 0 1px 0 rgba(255,220,170,.2); }
   /* mines: a scrolling row of postcards */
   #mines::-webkit-scrollbar { height: 6px; } #mines::-webkit-scrollbar-thumb { background: rgba(255,210,122,.35); border-radius: 3px; }
-  #mines { scrollbar-width: thin; scrollbar-color: rgba(255,210,122,.35) transparent; display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 8px; margin: 10px -4px 0; scroll-snap-type: x mandatory; }
+  #mines { scrollbar-width: thin; scrollbar-color: rgba(255,210,122,.35) transparent; display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 8px; margin: 10px -4px 0; scroll-snap-type: x mandatory;
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent); mask-image: linear-gradient(to right, black calc(100% - 28px), transparent); } /* the cut card fades: more to the right */
   .mine { flex: 0 0 150px; flex-direction: column; align-items: stretch; gap: 6px; padding: 8px; margin: 0; scroll-snap-align: start; }
   .mine .scene { width: 100%; height: 84px; }
   .mine .lockTag { left: 50%; top: 50px; transform: translate(-50%, -50%); flex-direction: row; gap: 4px;
@@ -197,7 +198,7 @@
   .hud .right { max-width: 52%; padding-top: 4px; }
   .hud .right small { color: #f3e1b0; font-size: 15px; font-weight: 600; text-shadow: 0 1px 3px #000; }
   .hud .right small + small { color: #ffd27a; }
-  #rescueOffer { align-items: center; padding-top: 0; z-index: 6; }
+  #rescueOffer, #leaveOffer { align-items: center; padding-top: 0; z-index: 6; }
   .twoBtn { display: flex; gap: 8px; } .twoBtn button { flex: 1; }
   @property --a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
   .mine.legend { border: 2px solid transparent !important; border-image: none;
@@ -234,7 +235,7 @@
   .talkBubble .who { display: block; font-family: var(--font-display); font-style: normal; font-size: var(--fs-small); letter-spacing: .6px; text-transform: uppercase; color: #8a5a32; margin-bottom: 2px; }
   /* talking: letters wait invisible in place; the portrait bobs while it talks; a little arrow nudges once the line is done */
   .tw { opacity: 0; }
-  #talkNext { transition: opacity .2s; } #talkNext.wait { opacity: 0; pointer-events: none; }
+  #talkNext { transition: opacity .2s; } #talkNext.wait { opacity: .8; } /* still a live button while the line types: a tap finishes it and goes on */
   .talkArt.talking > svg:is(.puddock, .granny, .bidder) { animation: chat .32s ease-in-out infinite; }
   @keyframes chat { 50% { transform: translateY(-3px) scaleY(1.015); } }
   .talkBubble.done::after { content: ""; position: absolute; right: 8px; bottom: 3px; border: 5px solid transparent; border-top: 6px solid #8a5a32; border-bottom: 0;

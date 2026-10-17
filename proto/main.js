@@ -10,6 +10,7 @@ import { platform, track, COIN_PACKS } from "./platform.js";
 import { t, LANGS, CHOSEN, letters } from "./i18n.js"; // after platform.js: the save is restored before i18n reads the chosen language
 import { drawLife, lifeDig, lifeStop, lifeTap, campLife, campPrints } from "./ambient.js";
 import { curve, ring, limb, shape, stroke, rng as prng } from "./paint.js";
+import { localDate, streakAfter, untilMidnight } from "./daily.js";
 
 // ---------- painted UI skins: plank, parchment and carved-recess shapes from paint.js, as 9-slice SVGs for CSS border-image (--p-*) ----------
 function uiSkins() {
@@ -188,7 +189,7 @@ function puddockLine() { // half the time a line from this mine's chapter; after
   if (save.story.finale && Math.random() < .6) return quote(pick(PUDDOCK_POSTGAME));
   return save.story.confessed && Math.random() < .6 ? quote(pick(PUDDOCK_AFTER)) : pick(PUDDOCK);
 }
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => localDate(), yesterday = () => localDate(new Date(), -1); // the device's local day (daily.js)
 const mulberry = (a) => () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a);
   t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const qs = new URLSearchParams(location.search);
@@ -243,11 +244,18 @@ addEventListener("resize", layout);
 // which would leave the board on a low-res canvas for the whole session); every dig re-measures too
 visualViewport?.addEventListener("resize", layout);
 const watchDpr = () => matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener("change", () => { layout(); watchDpr(); }, { once: true }); watchDpr();
-// diagnostics: hold a finger on the Haul box for a second and a half to see how the board's canvas is set up
-let diagT; addEventListener("pointerdown", (e) => { const r = $("hud").firstElementChild.getBoundingClientRect();
-  if (e.clientX > r.left && e.clientX < r.right && e.clientY > r.top && e.clientY < r.bottom) diagT = setTimeout(() =>
+// the Haul box is the one part of the HUD that takes touches: a tap (< 400 ms) during a dig asks to climb out (leaveOffer);
+// a hold of a second and a half shows how the board's canvas is set up, only once diagnostics are on (gw.diag, five taps on the version line in Options)
+const haulBox = $("hud").firstElementChild; haulBox.style.pointerEvents = "auto";
+let diagT, haulDown = 0;
+haulBox.addEventListener("pointerdown", () => { haulDown = performance.now(); clearTimeout(diagT);
+  if (localStorage["gw.diag"] === "1") diagT = setTimeout(() =>
     toast(`<small>dpr ${devicePixelRatio} · view ${innerWidth}×${innerHeight} · canvas ${cv.width}×${cv.height} (css ${cv.style.width} × ${cv.style.height}) · scale ${ctx.getTransform().a} · zoom ${(visualViewport?.scale ?? 1).toFixed(2)}</small>`, 7000), 1500); });
-for (const ev of ["pointerup", "pointercancel"]) addEventListener(ev, () => clearTimeout(diagT));
+haulBox.addEventListener("pointerup", () => { clearTimeout(diagT);
+  if (state === "play" && !drag && performance.now() - haulDown < 400) { $("leaveOffer").classList.add("show"); ui.tap(); buzz(6); } });
+haulBox.addEventListener("pointercancel", () => clearTimeout(diagT));
+$("leaveNo").onclick = () => $("leaveOffer").classList.remove("show");
+$("leaveGo").onclick = () => { $("leaveOffer").classList.remove("show"); if (state === "play") { rescueUsed = true; endRound("left"); } }; // no rescue offer: the player chose to stop
 
 // ---------- color helpers ----------
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
@@ -350,7 +358,7 @@ function mothTurn() {
     if (step !== undefined) { board[step] = m.uid; board[m.i] = 0; m.from = m.i; m.i = step; m.hopAt = performance.now(); }
   }
   const max = PM.max_alive[biome.id] || PM.max_alive.default;
-  if (placedN >= PM.grace_placements && moths.length < max && mothRng() < (PM.chance[biome.id] || 0)) { // a new one flutters in
+  if (Object.keys(save.best).length && placedN >= PM.grace_placements && moths.length < max && mothRng() < (PM.chance[biome.id] || 0)) { // a new one flutters in (never on the player's first dig)
     const empty = board.map((u, i) => (u ? -1 : i)).filter((i) => i >= 0).sort((a, b) => crystalNbrs(b) - crystalNbrs(a));
     if (empty.length > 3) {
       const i = empty[Math.floor(mothRng() * Math.min(6, empty.length))], id = 900000 + uid++;
@@ -593,12 +601,13 @@ function special(type, cells, size, ox, oy, alpha = 1, now = performance.now()) 
 // the first time each special turns up, one line under the board says what it does
 const TIPS = { ember: "Ember Shard: shatters its neighbours too", glowcap: "Gloamcap: each one feeds the Rootline +1s",
   frost: "Frostspar: freezes the Rootline a moment", geode: "Geode: rare, and worth a small fortune", heart: "Rootheart: the rarest crystal of all",
-  rubble: "Skystone: two clears beside it crack it open", moth: "Pilfermoth: clear a line through it!", memory: "Amber Memory: clear its line to open it", pet: "Someone's asleep in there! Clear its line" };
+  rubble: "Skystone: two clears beside it crack it open", moth: "Pilfermoth: clear a line through it!", memory: "Amber Memory: clear its line to open it", pet: "Someone's asleep in there! Clear its line",
+  rootline: "The Rootline is closing in. Clear lines to grow it back." }; // rootline: once, the first time it drops under half in a timed dig
 save.seen ??= [];
 let tip = null;
 function drawHint(now) {
   if (!tip && state === "play") { // a new special in the tray (or a moth on the board) gets its line
-    const k = [...(tray || []).filter(Boolean).map((q) => (q.pet ? "pet" : q.memory ? "memory" : q.type)), ...(moths.length ? ["moth"] : [])].find((k) => TIPS[k] && !save.seen.includes(k));
+    const k = [...(tray || []).filter(Boolean).map((q) => (q.pet ? "pet" : q.memory ? "memory" : q.type)), ...(moths.length ? ["moth"] : []), ...(started && !calm && time / maxTime < .5 ? ["rootline"] : [])].find((k) => TIPS[k] && !save.seen.includes(k));
     if (k) { tip = { k, at: now, pet: tray.find((q) => q?.pet)?.pet }; save.seen.push(k); persist(); }
   }
   let text = null, a = 1;
@@ -606,10 +615,11 @@ function drawHint(now) {
   if (!text && !started && !calm && state === "play") text = "Place a crystal to start the Rootline";
   if (!text) return;
   ctx.save(); ctx.globalAlpha = a; ctx.textAlign = "left"; ctx.textBaseline = "middle";
-  let px = 15; ctx.font = `600 ${px}px Fredoka, sans-serif`; const room = W - 40 - (tip ? 26 : 0);
+  const sw = tip && tip.k !== "rootline" ? 26 : 0; // the Rootline tip has no piece to show
+  let px = 15; ctx.font = `600 ${px}px Fredoka, sans-serif`; const room = W - 40 - sw;
   if (ctx.measureText(text).width > room) { px = 13; ctx.font = `600 ${px}px Fredoka, sans-serif`; }
-  const tw = ctx.measureText(text).width, sw = tip ? 26 : 0, x = (W - tw - sw) / 2;
-  if (tip) { const s = 18, y = hintY - s / 2 - 1, tp = tip.k === "memory" ? "amber" : tip.k;
+  const tw = ctx.measureText(text).width, x = (W - tw - sw) / 2;
+  if (sw) { const s = 18, y = hintY - s / 2 - 1, tp = tip.k === "memory" ? "amber" : tip.k;
     if (tip.k === "moth") { ctx.fillStyle = "#c9b6ff"; ctx.beginPath(); ctx.arc(x + s / 2, hintY, s * .4, 0, 7); ctx.fill(); }
     else { drawPiece({ piece: { cells: [[0, 0]], w: 1, h: 1 }, type: tip.k === "pet" ? "moonstone" : tp, memory: tip.k === "memory", pet: tip.k === "pet" && tip.pet, petCell: 0 }, s, x, y, a); ctx.globalAlpha = a; } }
   ctx.lineWidth = 4; ctx.lineJoin = "round"; ctx.strokeStyle = "rgba(20,12,6,.7)"; ctx.strokeText(text, x + sw, hintY);
@@ -1036,7 +1046,8 @@ function endRound(cause) {
   if (state === "play") track("round_end", { mine: biome.id, cause, value: haulValue(), seconds: Math.round(maxTime - time) });
   if (state !== "play") return;
   state = "end"; endCause = cause; drag = null; ending = { cause, at: performance.now() }; lifeStop();
-  pops.push({ text: cause === "time" ? "The roots closed in!" : "No room left!", life: 1.3, col: cause === "time" ? "#ff9d7a" : "#ffd27a" });
+  $("leaveOffer").classList.remove("show");
+  pops.push({ text: cause === "time" ? "The roots closed in!" : cause === "left" ? "Climbing out…" : "No room left!", life: 1.3, col: cause === "time" ? "#ff9d7a" : "#ffd27a" });
   sfx.thud(); buzz(40);
   // first a beat to see what happened, then the rescue offer (once per dig), then the haul
   setTimeout(() => (rescueUsed ? showHaul() : offerRescue()), 1400);
@@ -1055,13 +1066,13 @@ function showHaul() {
   $("rescueOffer").classList.remove("show");
   const cause = endCause;
   {
-    $("endTitle").textContent = cause === "time" ? "The roots closed the tunnel" : "No room left to dig";
-    $("endSub").innerHTML = (cause === "time" && !daily ? `<i>${pick(save.story.finale ? MURMURS_AFTER : save.story.site === "stump" ? MURMURS : MURMURS_DEEP)}</i><br>` : "") + "Dibble climbs out with the haul. Nothing is lost.";
+    $("endTitle").textContent = cause === "time" ? "The roots closed the tunnel" : cause === "left" ? "Dibble climbs out early" : "No room left to dig";
+    $("endSub").innerHTML = (cause === "time" && !daily ? `<i>${pick(save.story.finale ? MURMURS_AFTER : save.story.site === "stump" ? MURMURS : MURMURS_DEEP)}</i><br>` : "") + (cause === "left" ? "The haul comes too. Nothing is lost." : "Dibble climbs out with the haul. Nothing is lost.");
     $("memCard").innerHTML = newMem.map((id) => { const m = memoryById(id), mine = mineOfMemory(id), k = MEMORIES[mine].indexOf(m) + 1;
       return `<div class="memCard">${memoryArt(m.art, 200)}<div class="memCap">${m.text}</div><small>Amber Memory · ${BIOMES.find((b) => b.id === mine).name} ${k}/${MEMORIES[mine].length}</small></div>`; }).join("") +
       newPets.map((k) => `<div class="memCard">${pet(k, 104, wearOf(k))}<div class="memCap">${PETS[k].line}</div><small>${PETS[k].name} · waiting at camp</small></div>`).join("");
     clearTimeout(tallyHaul.t);
-    $("causeIco").innerHTML = cause === "time" ? icon("vine", 34) : icon("board", 34);
+    $("causeIco").innerHTML = icon(cause === "time" ? "vine" : cause === "left" ? "campIco" : "board", 34);
     $("rescue").innerHTML = `<span class="btnrow">${icon(cause === "time" ? "regrow" : "shatter", 22)}${cause === "time" ? `Roots regrow +${T.rescue_time}s` : "Shatter the 3 fullest veins"}</span>`;
     $("rescue").style.display = "none"; // offered before the haul now (offerRescue)
     // Puddock's ledger, one line per gem type; tallyHaul() reveals them one by one
@@ -1072,7 +1083,7 @@ function showHaul() {
     if (bonus) rows.push({ v: Math.round(bonus * mult), html: `${icon(save.up.tongs ? "tongs" : "lens", 26)}<span class="n"></span><span class="nm">Bonuses<small>lens, tongs, shooed moths</small></span>` });
     $("haulList").innerHTML = rows.map((r) => `<div class="haulRow${r.v < 0 ? " neg" : ""}">${r.html}<span class="v">${r.v < 0 ? "−" : ""}${Math.abs(r.v)}g</span></div>`).join("") ||
       `<div class="note">No crystals this time.</div>`;
-    $("sell2").textContent = "Puddock's double deal: ×2";
+    $("sell2").innerHTML = `Puddock's double deal: ×2<small style="display:block;font-weight:600;font-size:13px;opacity:.85">Watch a short ad</small>`;
     $("sell").textContent = "Sell to Old Puddock";
     $("haulTotal").textContent = "0g";
     $("sell2").style.display = haulValue() ? "block" : "none";
@@ -1155,9 +1166,8 @@ function sell(mult) {
   const fresh = Object.keys(haul).filter((t) => GEMS.includes(t) && !save.found.includes(t));
   save.found.push(...fresh);
   if (daily) {
-    const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
-    if (save.daily.last !== today()) save.daily = { last: today(), streak: save.daily.last === y ? save.daily.streak + 1 : 1, best: haulValue() };
-    else save.daily.best = Math.max(save.daily.best, haulValue());
+    const again = save.daily.last === today(); // a second dig today can't start from the sheet, but the rule stays safe
+    save.daily = { last: today(), streak: streakAfter(save.daily.last, save.daily.streak, today(), yesterday()), best: again ? Math.max(save.daily.best, haulValue()) : haulValue() };
   } else save.best[bestKey()] = Math.max(save.best[bestKey()] || 0, haulValue());
   persist();
   if (!calm) platform.submitScore("best_haul", haulValue()); // Game Center keeps each player's best. Calm Grove has no clock, so it stays off the board
@@ -1247,14 +1257,20 @@ function renderHome() {
   $("dibbleArt").innerHTML = titleHero(save.look, STILL);
   const mem = `Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}`;
   $("tMem").textContent = mem; $("campMem").textContent = mem;
-  const done = save.daily.last === today(), st = save.daily.last === today() || save.daily.last === new Date(Date.now() - 864e5).toISOString().slice(0, 10) ? save.daily.streak : 0;
+  campDaily = renderDaily();
+  $("campHint").textContent = !Object.keys(save.best).length ? "Tap the signpost to go mining ✦" : !save.metPuddock ? "Puddock's waving you over to his stall ✦" : "Tap things around camp ✦";
+  renderMines(); renderCamp(); drawCamp();
+}
+let dailyTick = 0;
+function renderDaily() { // the Daily Dig sheet; in the done state the countdown to local midnight ticks once a minute while the sheet is open
+  const done = save.daily.last === today(), st = done || save.daily.last === yesterday() ? save.daily.streak : 0;
   $("dailyInfo").innerHTML = `<span class="streak" title="streak: ${st} day(s)">${[...Array(7)].map((_, k) => `<i class="${k < Math.min(st, 7) ? "on" : ""}"></i>`).join("")}</span>
     <div class="note" style="margin-top:6px"><span>${st ? `${st}-day streak` : "No streak yet"}</span>${done ? `<span> · today's best ${save.daily.best}g</span>` : ""}</div>`; // spans: each part translates on its own
-  $("daily").textContent = done ? "Done for today. Come back tomorrow" : "Start today's dig";
+  $("daily").textContent = done ? `Done for today · new dig in ${untilMidnight()}` : "Start today's dig";
   $("daily").disabled = done;
-  $("campHint").textContent = !Object.keys(save.best).length ? "Tap the signpost to go mining ✦" : !save.metPuddock ? "Puddock's waving you over to his stall ✦" : "Tap things around camp ✦";
-  renderMines(); renderCamp();
-  campDaily = { done, streak: st, best: save.daily.best }; drawCamp();
+  clearInterval(dailyTick);
+  if (done) dailyTick = setInterval(() => $("dailySheet").classList.contains("show") ? renderDaily() : clearInterval(dailyTick), 6e4);
+  return { done, streak: st, best: save.daily.best };
 }
 function renderMines() {
   $("mExp").classList.toggle("on", save.mode === "exp"); $("mCalm").classList.toggle("on", save.mode === "calm");
@@ -1288,10 +1304,10 @@ function sparkleAt(el) { // a burst of little stars from a button or tile
 }
 async function renderIap() {
   const row = $("iapRow");
-  if (platform.noAds) { row.innerHTML = `<div class="iap">${icon("ad", 22)}<span class="grow"><b>Ads removed</b><small>Thanks for supporting Glimmerwood!</small></span></div>`; return; }
-  if (!platform.canBuy) { row.innerHTML = `<div class="iap">${icon("ad", 22)}<span class="grow"><b>Remove ads</b><small>A one-time purchase in the app. Rewarded offers stay, by choice.</small></span></div>`; return; }
+  if (platform.noAds) { row.innerHTML = `<div class="iap">${icon("leaf", 22)}<span class="grow"><b>Ads removed</b><small>Thanks for supporting Glimmerwood!</small></span></div>`; return; }
+  if (!platform.canBuy) { row.innerHTML = `<div class="iap">${icon("lock", 22)}<span class="grow"><b>Remove ads</b><small>A one-time purchase in the app. Rewarded offers stay, by choice.</small></span></div>`; return; }
   const price = (await platform.removeAdsPrice()) || "";
-  row.innerHTML = `<div class="iap">${icon("ad", 22)}<span class="grow"><b>Remove ads</b><small>One-time. Rewarded offers stay, by choice.</small></span>
+  row.innerHTML = `<div class="iap">${icon("lock", 22)}<span class="grow"><b>Remove ads</b><small>One-time. Rewarded offers stay, by choice.</small></span>
     <button id="buyNoAds">${price || "Buy"}</button></div><button id="restoreBtn" class="linkBtn">Restore purchases</button>`;
   $("buyNoAds").onclick = async () => { if (await platform.buyRemoveAds()) { toast("Ads removed. Thank you!"); renderIap(); } };
   $("restoreBtn").onclick = async () => { toast((await platform.restore()) ? "Purchase restored" : "Nothing to restore"); renderIap(); };
@@ -1407,7 +1423,7 @@ function dialog(steps, then, skip = false, k = 0) {
     next.classList.add("wait"); line.classList.remove("done"); art.classList.add("talking");
     text ? say(text, st.say, st.voice).then(() => text.isConnected && shown()) : shown();
   };
-  next.onclick = () => { if (typing) return typing.finish(); if (++k < steps.length) return step(); then(); };
+  next.onclick = () => { typing?.finish(); if (++k < steps.length) return step(); then(); }; // one tap: finish the line and go on
   $("talkSkip").onclick = () => { typing?.finish(); then(); };
   step(); show("talk");
 }
@@ -1737,7 +1753,7 @@ $("campStage").addEventListener("pointerdown", (e) => {
   else if (what.startsWith("gem-")) { soundtrack.chime(+what.slice(4)); campFx(x, y, "✦", "campSpark"); }
   else if (what === "tent" || what === "wardrobe") { tone(520, .08, "triangle", .05); show("wardrobe"); }
   else if (what === "mines") { tone(392, .1, "triangle", .06); renderMines(); show("mineSheet"); }
-  else if (what === "daily") { tone(660, .08, "triangle", .05); show("dailySheet"); }
+  else if (what === "daily") { tone(660, .08, "triangle", .05); renderDaily(); show("dailySheet"); }
   else if (what === "market") { tone(330, .1, "triangle", .06); openMarket(); }
   else if (what === "memories") { tone(440, .14, "sine", .05); replayMemories(home); }
   else if (what === "sapling") { tone(880, .12, "sine", .04); tone(1320, .1, "sine", .03, .06); campFx(x, y - 10, "✦", "campSpark"); buzz(8); }
@@ -1981,6 +1997,9 @@ $("coinHud").innerHTML = coin(26);
   $("oCredits").before(row);
   const pickLang = $("oLang"); pickLang.value = CHOSEN || "";
   pickLang.onchange = () => { save.opt.lang = pickLang.value || null; persist(); track("language", { lang: pickLang.value || "auto" }); location.reload(); };
+  let taps = []; ver.onclick = () => { // five taps within 2 s toggle the canvas diagnostics (the Haul-box hold)
+    const now = performance.now(); taps = [...taps.filter((t) => now - t < 2000), now]; if (taps.length < 5) return;
+    taps = []; const on = localStorage["gw.diag"] !== "1"; localStorage["gw.diag"] = on ? "1" : "0"; toast(on ? "Diagnostics on" : "Diagnostics off"); };
 }
 { // VoiceOver: camp props are painted SVG, so give them a role and a name; mine cards act as buttons
   const NAMES = { mines: "Go mining", daily: "Daily Dig", wardrobe: "Wardrobe", tent: "Wardrobe", market: "Puddock's market", memories: "Amber Memories",
