@@ -1485,11 +1485,14 @@ cv.addEventListener("pointerdown", (e) => {
   back[i] = null; cv.setPointerCapture(e.pointerId); sfx.pick(); buzz(6);
 });
 cv.addEventListener("pointermove", (e) => { if (drag) { drag.x = e.clientX; drag.y = e.clientY; } });
-const drop = () => { if (!drag) return; const t = target();
-  if (!t.bad && state === "play") commit(drag.i, t.r, t.c, t);
+// cancel: an interrupted drag (system alert, app switch, lost focus) never places; the piece glides home
+const drop = (e, cancel) => { if (!drag) return; const t = target();
+  if (!cancel && !t.bad && state === "play") commit(drag.i, t.r, t.c, t);
   else { back[drag.i] = { x: t.x, y: t.y, s: cell, at: performance.now() }; sfx.drop(); }
   drag = null; };
-cv.addEventListener("pointerup", drop); cv.addEventListener("pointercancel", drop);
+const cancelDrag = () => drop(null, true);
+cv.addEventListener("pointerup", drop); cv.addEventListener("pointercancel", cancelDrag);
+addEventListener("blur", cancelDrag); document.addEventListener("visibilitychange", () => { if (document.hidden) cancelDrag(); });
 function target() {
   // touch: the piece rides above the finger (its bottom edge most of a cell above it) so you can see where it goes
   const p = drag.piece, x = drag.x - (p.w * cell) / 2, y = drag.touch ? drag.y - cell * .8 - p.h * cell : drag.y - (p.h * cell) / 2;
