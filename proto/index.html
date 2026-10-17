@@ -348,6 +348,7 @@
     background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(24,12,4,.55) 100%), linear-gradient(180deg, rgba(255,214,150,.07), rgba(120,60,20,.08));
     mix-blend-mode: multiply; }
   body::after { animation: filmFlicker .2s steps(2) infinite; }
+  body.playing::after { display: none; } /* the board stays unfiltered: jittering grain over the crystals reads as blur on iPhone */
   @keyframes filmFlicker { 0% { opacity: .07; transform: translate(0, 0); } 50% { opacity: .1; transform: translate(-2px, 1px); } 100% { opacity: .08; transform: translate(1px, -1px); } }
   #dust { position: fixed; inset: 0; pointer-events: none; z-index: 46; }
   body.playing #dust { display: none; }
