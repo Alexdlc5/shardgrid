@@ -151,7 +151,7 @@ Finishing it:
 
 When the Glimmeroak's light leaked into the ground, it cooled into crystal around whatever was nearby, and a few small round creatures were curled up asleep at the time. They're still asleep. Now and then a crystal in the tray has one faintly visible inside; clear the line through its cell and the crystal cracks, the pet pops out, and it's yours. If the dig ends first, the crystal goes back to the mine with it still asleep.
 
-Odds (`petFor` in index.html): a pet can turn up once 3 crystals have been placed in a dig, one at a time. The **first** pet comes quickly: 2% a tray for the first 8 trays (about one dig), then 35% a tray, so it usually turns up in the second or third dig. After that, about 6% of trays while most pets are still to find, falling to about 2% with one left. A mine's own pets are 6× likelier there.
+Odds (`petFor` in index.html): a pet can turn up once 3 crystals have been placed in a dig, one at a time. The **first** pet comes quickly: 2% a tray for the first 8 trays (about one dig), then 35% a tray, so it usually turns up in the second or third dig. After that pets are rare: about 1.8% of trays with six still to find, falling to about 0.7% with one left, so all seven take about 90 digs (a week or two of regular play; simulated median 89, 10–90% range 51–147). A mine's own pets are 6× likelier there.
 
 | Pet | Turns up most in | Line |
 |---|---|---|
