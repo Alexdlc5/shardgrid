@@ -37,6 +37,8 @@ for (const [name, bt] of [["webkit", webkit], ["chromium", chromium]]) {
       // the end of a dig, as a player meets it: the roots close in, the rescue offer, then no thanks -> the haul
       if (id === "dig") gw.dig("hollow"); else if (id === "rescueOffer") gw.end("time"); else if (id === "end") document.getElementById("rescueNo").click(); else gw.screen(id);
       await sleep(id === "dig" || id === "rescueOffer" ? 2000 : 800);
+      // then let every one-shot animation (sheet slide-ins, wipes) land; looping ones never finish
+      await Promise.race([Promise.all(document.getAnimations().filter((x) => x.effect?.getTiming().iterations !== Infinity).map((x) => x.finished.catch(() => {}))), sleep(4000)]);
       const cv = document.getElementById("cv"), el = id === "dig" ? cv : document.getElementById(id);
       const box = el?.getBoundingClientRect();
       return { shown: !!box && box.width > 0 && box.height > 0 && getComputedStyle(el).display !== "none",

@@ -139,3 +139,17 @@ I review every branch with screenshots at the three sizes, then merge them one a
 
 **My role:** keep the standards (S1–S8), resolve overlaps, run the overlap and safe-area checker plus the screenshot set on
 every branch, and merge in order: 5 → 2 → 1 → 3 → 4 → 6.
+
+## Release-readiness evidence (2026-10-17)
+
+| Check | Result | How to rerun |
+|---|---|---|
+| Block edges at 3× (10–90% width) | Browsers 2 px board and tray (WebKit + Chromium). The owner's iPhone shot before the fix: 9 px, with HTML 1 px beside it, so iOS showed the canvas through a 1× layer. Fixed in PR #49; **confirm on build 95** | `node scripts/crisp.mjs`, then `python scripts/edge-width.py shot.png 160 215 2140` on a device screenshot |
+| Every screen loads at 3× and on iPhone SE | 13 screens × WebKit + Chromium: no errors, no 404s, canvas at full density, nothing off screen sideways | `node scripts/smoke.mjs`, `node scripts/smoke.mjs --se` |
+| Frame time and memory, 10 min of play | Frame work p95 1.9–2.2 ms (60 Hz budget 16.7, 120 Hz budget 8.3); worst frame ~60 ms at each new dig's cave paint, hidden by the transition; heap 3.5 → 4.0 MB, DOM flat; 1,648 placements, 69 digs, 0 errors (desktop Chromium) | `node scripts/soak.mjs --minutes 10` (CI job `soak`); **device: Instruments or TestFlight run** |
+| App Review 2.1 | Test ads only in TestFlight builds (the `appstore` input turns them off); the prototype ad note is replaced in the app | — |
+| App Review 3.1.1 | Remove ads and coin packs go through StoreKit (RevenueCat); Restore purchases is in Options | Sandbox buy + restore on device |
+| App Review 4.1 | Original names, characters and art (checked 2026-10-15/16; trademark desk search in SETUP A13) | — |
+| App Review 5.1.1 / 5.1.2 | No accounts; privacy policy in Options; tracking only after the ATT prompt | — |
+| Privacy manifest vs labels | `ios/App/App/PrivacyInfo.xcprivacy` matches SETUP A12 | Xcode → Archive → Generate Privacy Report |
+| Crash reporting | Crashlytics on; JS errors reported as non-fatals; dSYMs uploaded by the ios workflow (build 95: ok) | — |

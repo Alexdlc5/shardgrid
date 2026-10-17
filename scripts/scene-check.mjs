@@ -17,15 +17,15 @@ const chrome = [process.env.CHROME, "C:/Program Files/Google/Chrome/Application/
 if (!chrome) throw new Error("no Chrome found; set CHROME=/path/to/chrome");
 if (!existsSync("www/index.html")) throw new Error("www/ missing; run npm run build first");
 
-// the phone copy: what sa-test.html does by hand
+// the phone copy: what sa-test.html does by hand (the safe areas are in style.css, the ad class on <html>)
 const phone = (html) => html.replaceAll("max(14px, env(safe-area-inset-bottom))", "34px").replaceAll("env(safe-area-inset-top, 0px)", "59px")
   .replaceAll("env(safe-area-inset-bottom, 0px)", "34px").replace('<html lang="en">', '<html lang="en" class="hasAd" style="--ad:62px">');
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".woff2": "font/woff2", ".png": "image/png" };
+const TYPES = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".woff2": "font/woff2", ".png": "image/png" };
 const server = createServer((req, res) => {
   const path = decodeURIComponent(new URL(req.url, "http://x").pathname), file = join("www", path === "/" ? "index.html" : path);
   if (!existsSync(file)) return res.writeHead(404).end();
   res.writeHead(200, { "content-type": TYPES[extname(file)] || "application/octet-stream" });
-  res.end(file.endsWith("index.html") ? phone(readFileSync(file, "utf8")) : readFileSync(file));
+  res.end(/(index\.html|style\.css)$/.test(file) ? phone(readFileSync(file, "utf8")) : readFileSync(file));
 }).listen(0);
 const base = `http://127.0.0.1:${server.address().port}/index.html`;
 
