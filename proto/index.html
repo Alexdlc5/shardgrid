@@ -1680,7 +1680,11 @@ function sell(mult) {
   if (daily) platform.submitScore("daily_dig", save.daily.best); // a leaderboard that resets daily (docs/SETUP.md)
   state = "home"; renderHome(); show("home");
   track("haul_sold", { mine: biome.id, value: v, doubled: mult > 1 });
-  platform.expeditionDone(); // interstitial, only when the pacing caps allow
+  platform.expeditionDone().then((shown) => { // interstitial, only when the pacing caps allow: sitting through one pays the haul again
+    if (!shown || !v) return;
+    save.gold += v; persist(); track("ad_double", { value: v });
+    toast(`<b>2× gold awarded!</b>`, 2600); coinRain(v, save.gold - v, []);
+  });
   if (v) coinRain(v, save.gold - v, fresh);
   // before the first talk, the stall's "Psst!" bubble and the camp hint invite the player over (tapping the stall starts it)
   if (save.metPuddock) { const sc = nextScene(save.story); if (sc) setTimeout(() => playScene(sc), 900); } // docs/STORY.md, in order

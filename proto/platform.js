@@ -118,15 +118,22 @@ export const platform = {
     finally { load("rewarded"); }
   },
 
-  // Call once per finished expedition, at the haul screen's exit. Shows an interstitial only when the caps allow.
+  // Call once per finished expedition, at the haul screen's exit. Shows an interstitial only when the caps allow, and
+  // resolves true once the player has closed one (the game pays that haul again for sitting through it).
   async expeditionDone() {
     expeditions++; sinceInter++;
     const skip = watchedThisRun; watchedThisRun = false;
-    if (!native || !AdMob || noAds || skip) return;
-    if (expeditions <= CAPS.grace || sinceInter < CAPS.everyN || Date.now() - lastInter < CAPS.gapS * 1000 || !ready.interstitial) return;
+    if (!native || !AdMob || noAds || skip) return false;
+    if (expeditions <= CAPS.grace || sinceInter < CAPS.everyN || Date.now() - lastInter < CAPS.gapS * 1000 || !ready.interstitial) return false;
     ready.interstitial = false; sinceInter = 0; lastInter = Date.now();
-    try { await AdMob.showInterstitial(); track("ad_shown", { format: "interstitial", placement: "haul_exit" }); } catch {}
+    let shown = false, hs = [];
+    const closed = new Promise((done) => { // showInterstitial can resolve as the ad opens: wait for it to be closed (or give up after 2 min)
+      for (const [ev, ok] of [["interstitialAdDismissed", true], ["interstitialAdFailedToShow", false]]) AdMob.addListener(ev, () => done(ok)).then((h) => hs.push(h)).catch(() => {});
+      setTimeout(() => done(true), 120000); });
+    try { await AdMob.showInterstitial(); track("ad_shown", { format: "interstitial", placement: "haul_exit" }); shown = await closed; } catch {}
+    for (const h of hs) h.remove?.();
     load("interstitial");
+    return shown;
   },
 
   async banner(show) { // menus only, never over the board
