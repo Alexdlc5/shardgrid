@@ -1188,10 +1188,12 @@ $("sell2").onclick = async () => (await platform.rewarded("double_deal")) ? wipe
 
 // ---------- home and market ----------
 const SHEETS = ["mineSheet", "dailySheet", "wardrobe", "optsSheet", "market", "memSheet", "purseSheet"];
-let base = "title"; // the screen popups sit on: the title screen or the camp
+let base = "title", shown = null; // base: the screen popups sit on (title or camp); shown: what's up now
 function show(id) {
   if (id === "title" || id === "home") base = id;
   const under = SHEETS.includes(id) ? base : null;
+  if (under && id !== shown) sfx.sheet(true); else if (SHEETS.includes(shown) && !under) sfx.sheet(false);
+  shown = id;
   document.body.classList.toggle("playing", !id);
   for (const s of ["title", "home", "end", "talk", ...SHEETS]) $(s).classList.toggle("show", s === id || s === under);
   $("hud").style.visibility = id && id !== "end" ? "hidden" : "visible";
@@ -1216,6 +1218,7 @@ function earthArt(w, h) { // painted soil, 1.5 screens tall: ragged lips top and
 }
 function wipe(kind, mid, from = null, to = null) {
   if (wiping) return; wiping = true;
+  sfx[kind === "iris" ? "iris" : kind === "down" ? "descend" : "ascend"]();
   const el = $("wipe"), W = innerWidth, H = innerHeight, R = Math.hypot(W, H);
   el.classList.add("on"); el.innerHTML = "";
   const done = () => { el.classList.remove("on"); el.innerHTML = ""; wiping = false; };
@@ -1361,10 +1364,10 @@ $("dig").onclick = () => wipe("down", () => startDig(false));
 $("daily").onclick = () => wipe("down", () => startDig(true));
 $("mExp").onclick = () => { save.mode = "exp"; persist(); renderMines(); };
 $("mCalm").onclick = () => { save.mode = "calm"; persist(); renderMines(); };
-for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).onclick = () => { save.opt[k] = !save.opt[k]; persist(); renderHome(); };
-$("oMusic").onclick = () => { save.opt.music = !save.opt.music; persist(); soundtrack.setEnabled(save.opt.music); renderHome(); };
+for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).onclick = () => { save.opt[k] = !save.opt[k]; persist(); renderHome(); sfx.toggle(save.opt[k]); };
+$("oMusic").onclick = () => { save.opt.music = !save.opt.music; persist(); soundtrack.setEnabled(save.opt.music); renderHome(); sfx.toggle(save.opt.music); };
 soundtrack.setIgnoreSilent(save.opt.silent);
-$("oSilent").onclick = () => { save.opt.silent = !save.opt.silent; persist(); soundtrack.setIgnoreSilent(save.opt.silent); renderHome(); };
+$("oSilent").onclick = () => { save.opt.silent = !save.opt.silent; persist(); soundtrack.setIgnoreSilent(save.opt.silent); renderHome(); sfx.toggle(save.opt.silent); };
 $("oPrivacy").onclick = () => platform.privacyChoices(); // the consent form where the region needs one, otherwise the privacy policy
 const openMarket = () => save.metPuddock ? (renderMarket(), show("market")) : talk(() => { renderMarket(); show("market"); });
 for (const b of document.querySelectorAll("#mktTabs button")) b.onclick = () => { mktTab = b.dataset.tab; renderMarket(); $("shop").animate([{ opacity: 0, transform: "translateX(14px)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" }); };
