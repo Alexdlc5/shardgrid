@@ -1,0 +1,19 @@
+{
+  "locale": "ja",
+  "name": "Glimmerwood",
+  "subtitle": "まったり遊べる水晶ブロックパズル",
+  "promotional_text": "根がせまる前に、光る水晶を掘ろう。収穫はパドックじいさんに売って、居心地のいいキャンプを育て、光をたどって地下へ。アカウント不要。お金で飛ばすタイマーもありません。",
+  "keywords": "ブロック,パズル,癒し,宝石,採掘,まったり,オフライン,モグラ,クリスタル",
+  "description": "小さなモグラと、ひとつのランタン。そして夜に光る森。\n\nGlimmerwoodは、腰を落ち着けて遊べるブロックパズルです。水晶のピースを盤面にドラッグしてラインをそろえ、盤面のまわりにじわじわとせまるツタ「ルートライン」より先を行きましょう。ラインを消すたびに、ルートラインは少しだけ押し返されます。掘り終えたら収穫を持って地上へ。切り株の下で誰よりも長く市場を営んできたヒキガエル、パドックじいさんに売りましょう。\n\n採掘\n• 11の鉱山。それぞれに固有の水晶と、固有のしかけがあります。まわりを砕く残り火、ルートラインを凍らせる霜、ひと財産になるジオード、ラインを通して消すまで収穫をかじり続けるちょろまかしガ。\n• 純鉱脈は報酬が2倍。チェーンは重なります。いいピースがひとつあれば、4ラインまとめて消えることも。\n• デイリー採掘：きょうの水晶はみんな同じ。1日1回掘って、連続記録をのばそう。\n• しずかな森：同じパズルを、タイマーなしで。\n\nキャンプを作る\n• 稼いだゴールドで、明るいランタン、鋭いつるはし、根のお守り、宝石ルーペを。\n• ディブルの着せかえ：帽子、マフラー、ランタン、毛の色、マントも少し。\n• キャンプはあなたと一緒に育ちます。テント、旗、宝石の棚、ハンモック、ホタルのびん。そして水晶から助け出した小さな生きものたちが、あたりを歩きまわり、たき火のそばで昼寝をします。\n\n地下の物語\n• 鉱山の奥で光る、33の琥珀の記憶。ひとつひとつが、グリマーオークが倒れたあの秋に何があったのかの断片です。\n• トンネルの床に残る、バーおばあちゃんのチョークの印。切り株のことを話したがらないヒキガエル。そして、はるか下で、いまも何かが引っぱられています。\n\n公平なルール\n• 水晶はランダムに配られます。広告や購入、ベストまでの近さで変わることはありません。\n• リワード広告は任意。見るタイミングはあなたが決めます。それ以外の広告は、1回の購入で削除できます。\n• アカウント不要。セーブデータはスマートフォンの中に残ります。Game Centerのランキングは、お好みで。\n\n絵本のような手描きのグラフィック。音楽と効果音はすべてオリジナルです。日本語、English、Deutsch、Español、Português (Brasil)、한국어、简体中文、हिन्दी に対応。\n\nランタンを忘れずに。",
+  "whats_new": "初回リリース。11の鉱山、育てるキャンプ、見つけるべき33の琥珀の記憶、そして8つの言語。",
+  "support_url": "https://alexdlc5.github.io",
+  "marketing_url": "https://alexdlc5.github.io",
+  "privacy_policy_url": "https://alexdlc5.github.io/privacy.html",
+  "copyright": "2026 Alex de la Chica",
+  "category_primary": "Games",
+  "category_secondary_subcategories": [
+    "Puzzle",
+    "Casual"
+  ],
+  "review_notes": "(Review notes are in English; bracketed text is what the same button says on a device set to ja.)\n\nGlimmerwood is a single-player block puzzle. No account or sign-in is needed; progress is saved on the device.\n\nOn first launch the app asks for App Tracking Transparency permission (for AdMob personalised ads). Declining changes nothing about gameplay or the number of ads.\n\nAds: a banner on the camp and market screens, an occasional interstitial after a finished expedition (never in the first three expeditions, never more often than every second expedition or within 90 seconds), and optional rewarded video ads the player chooses to watch (e.g. 'Puddock's double deal' to double a haul). The piece generator never reacts to ads or purchases.\n\nIn-app purchases (via RevenueCat / StoreKit): 'Remove ads' [広告を削除] (non-consumable, removes banners and interstitials; rewarded ads stay optional) and four coin packs (consumable). 'Restore purchases' [購入を復元] is in Options. Coins never change which pieces are dealt.\n\nTo see a full expedition quickly: tap Play, skip the prologue, tap the 'Go mining' [採掘に行く] signpost at camp, tap Dig. The round ends when the Rootline closes or no piece fits; 'Sell to Old Puddock' [パドックじいさんに売る] returns to camp.\n\nThe ring/silent switch mutes the game by design; Options › 'Play sound when the phone is on silent' [マナーモードでも音を出す] overrides it.\n\nGame Center: leaderboards only (no multiplayer, no user-generated content)."
+}

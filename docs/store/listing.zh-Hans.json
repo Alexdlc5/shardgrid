@@ -1,0 +1,19 @@
+{
+  "locale": "zh-Hans",
+  "name": "Glimmerwood",
+  "subtitle": "治愈系水晶方块拼图",
+  "promotional_text": "在根须合拢之前，挖出发光的水晶。把收获卖给老帕多克，搭建温馨营地，循着灯光一路向下。无需账号，也没有能花钱跳过的计时器。",
+  "keywords": "方块,拼图,消除,治愈,休闲,益智,水晶,宝石,挖矿,森林,离线,鼹鼠,单机,解压",
+  "description": "一只小鼹鼠，一盏提灯，还有一片夜里会发光的森林。\n\nGlimmerwood 是一款能让你静下心来的方块拼图。把水晶方块拖到棋盘上，消除整行，并赶在根蔓之前——那是一条缓缓向棋盘合拢的藤蔓。每消掉一行，它就会退回去一点。然后带着收获爬出矿井，卖给老帕多克——这只蟾蜍在树桩下经营集市的年头，久得没人记得清。\n\n挖矿\n• 十一座矿井，各有各的水晶，各有各的门道：会炸碎邻格的余烬、能冻住根蔓的霜晶、价值连城的晶洞，还有啃食你收获的偷偷蛾——直到你消掉它们所在的那一行。\n• 纯矿脉双倍收益。连锁可以叠加。一块好方块能一次消掉四行。\n• 每日挖掘：人人相同的水晶，每天一次。保持连续。\n• 静谧林：同样的谜题，完全没有计时。\n\n搭建营地\n• 用金币换更亮的提灯、更锋利的鹤嘴锄、根之护符、宝石放大镜。\n• 给迪布尔换装：帽子、围巾、提灯、毛色，再加一两件斗篷。\n• 营地随你一起成长：帐篷、旗帜、宝石架、吊床、萤火虫罐，还有你从水晶里放出的小动物——它们四处闲逛，在火边打盹。\n\n地下的故事\n• 33 段琥珀记忆，在矿井里发着光，每一段都记着微光橡树倒下的那个秋天。\n• 隧道地面上伯尔奶奶留下的粉笔记号。一只绝口不提树桩的蟾蜍。还有地底深处，仍在被什么拉扯着的东西。\n\n公平发牌\n• 水晶完全随机发放，绝不受广告、购买或你离最佳纪录多近的影响。\n• 激励广告完全可选，看不看、何时看由你决定。其余广告一次购买即可移除。\n• 无需账号。存档只留在你的手机上。想要的话，还有 Game Center 排行榜。\n\n手绘绘本风格，音乐与音效均为原创。支持简体中文、English、Deutsch、Español、Português (Brasil)、日本語、한국어 和 हिन्दी。\n\n带上提灯吧。",
+  "whats_new": "首次发布。十一座矿井、一个可以慢慢壮大的营地、33 段待寻找的琥珀记忆，以及八种语言。",
+  "support_url": "https://alexdlc5.github.io",
+  "marketing_url": "https://alexdlc5.github.io",
+  "privacy_policy_url": "https://alexdlc5.github.io/privacy.html",
+  "copyright": "2026 Alex de la Chica",
+  "category_primary": "Games",
+  "category_secondary_subcategories": [
+    "Puzzle",
+    "Casual"
+  ],
+  "review_notes": "(Review notes are in English; bracketed text is what the same button says on a device set to zh-Hans.)\n\nGlimmerwood is a single-player block puzzle. No account or sign-in is needed; progress is saved on the device.\n\nOn first launch the app asks for App Tracking Transparency permission (for AdMob personalised ads). Declining changes nothing about gameplay or the number of ads.\n\nAds: a banner on the camp and market screens, an occasional interstitial after a finished expedition (never in the first three expeditions, never more often than every second expedition or within 90 seconds), and optional rewarded video ads the player chooses to watch (e.g. 'Puddock's double deal' to double a haul). The piece generator never reacts to ads or purchases.\n\nIn-app purchases (via RevenueCat / StoreKit): 'Remove ads' [移除广告] (non-consumable, removes banners and interstitials; rewarded ads stay optional) and four coin packs (consumable). 'Restore purchases' [恢复购买] is in Options. Coins never change which pieces are dealt.\n\nTo see a full expedition quickly: tap Play, skip the prologue, tap the 'Go mining' [去挖矿] signpost at camp, tap Dig. The round ends when the Rootline closes or no piece fits; 'Sell to Old Puddock' [卖给老帕多克] returns to camp.\n\nThe ring/silent switch mutes the game by design; Options › 'Play sound when the phone is on silent' [手机静音时也播放声音] overrides it.\n\nGame Center: leaderboards only (no multiplayer, no user-generated content)."
+}
