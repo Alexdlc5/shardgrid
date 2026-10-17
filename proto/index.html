@@ -336,8 +336,7 @@
   h2 { text-shadow: 0 2px 0 #5a3410, 0 3px 8px rgba(0,0,0,.4); }
   .pill { box-shadow: inset 0 2px 5px rgba(0,0,0,.45), inset 0 -1px 0 rgba(255,220,170,.08), 0 1px 0 rgba(255,220,170,.1) !important; }
   .seg button.on small { color: #5a3a10 !important; opacity: 1; }
-  /* ===== vintage cartoon filter stack: boil on characters, warm grade + vignette + flicker everywhere, dust in menus ===== */
-  svg.dibble, svg.puddock { filter: url(#boil); }
+  /* ===== vintage cartoon filter stack: warm grade + vignette + flicker everywhere, dust in menus ===== */
   #grade { position: fixed; inset: 0; pointer-events: none; z-index: 44;
     background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(24,12,4,.55) 100%), linear-gradient(180deg, rgba(255,214,150,.07), rgba(120,60,20,.08));
     mix-blend-mode: multiply; }
@@ -347,7 +346,7 @@
   body.playing #dust { display: none; }
   #dust i { position: absolute; background: #2a1a0e; border-radius: 50%; opacity: .45; }
   #world { filter: sepia(.18) saturate(1.08) contrast(1.04); }
-  @media (prefers-reduced-motion: reduce) { svg.dibble, svg.puddock { filter: none; } body::after { animation: none; } #dust { display: none; }
+  @media (prefers-reduced-motion: reduce) { body::after { animation: none; } #dust { display: none; }
     *, ::before, ::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } } /* K1: idles stop, one-shots land on their end frame */
   /* ===== title screen and the camp hub ===== */
   .titleScr { align-items: center; padding-top: 0 !important; background: radial-gradient(ellipse at 50% 40%, rgba(5,12,8,.1), rgba(5,12,8,.55)); }
@@ -365,9 +364,10 @@
   .titleHero { display: block; width: 166px; height: 150px; margin: 0 auto; overflow: visible; }
   .titleHero .peer { transform-box: view-box; transform-origin: 150px 415px; animation: peer 7s ease-in-out infinite; }
   @keyframes peer { 0%, 22% { transform: none; } 40%, 64% { transform: rotate(5deg); } 82%, 100% { transform: none; } }
-  /* painted lettering: lit pale gold at the top right, deep amber down-left, brush grain, a darker edge peeking out down-left */
+  /* painted lettering: lit pale gold at the top right, deep amber down-left, a darker edge peeking out down-left.
+     No SVG filter here: WebKit renders filter: url() at 1x, which blurs it on an iPhone */
   .logo { font-size: min(54px, 13.2vw); margin: 0; padding: 0 6px; color: #ffd27a; text-shadow: none; white-space: nowrap;
-    filter: url(#logoPaint) drop-shadow(-2px 2.2px 0 #5a3410) drop-shadow(0 5px 7px rgba(0,0,0,.45)); }
+    filter: drop-shadow(-2px 2.2px 0 #5a3410) drop-shadow(0 5px 7px rgba(0,0,0,.45)); }
   .logo span { display: inline-block; transform: translateY(var(--y)) rotate(var(--r));
     background: linear-gradient(170deg, #ffe7a8 10%, #ffd27a 40%, #f0b04a 68%, #c97f24 96%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   #logoSwash { display: block; } .logoSwash { display: block; width: 58%; height: auto; margin: 0 auto 4px; }
@@ -428,10 +428,6 @@
 <body>
 <div id="statusScrim" style="position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top, 0px);background:rgba(5,12,8,.55);z-index:40;pointer-events:none" aria-hidden="true"></div>
 <div id="safeProbe" style="position:fixed;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top, 0px);padding-bottom:env(safe-area-inset-bottom, 0px)" aria-hidden="true"></div>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <!-- line boil: character outlines wobble a few times a second, like hand-inked frames -->
-  <filter id="boil" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence id="boilNoise" type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="1"/>
-    <feDisplacementMap in="SourceGraphic" scale="1" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>
 <div id="world"></div><div id="flies"></div><div id="grade"></div><div id="dust"></div>
 <canvas id="cv"></canvas>
 <div class="hud" id="hud">
@@ -448,11 +444,6 @@
 </div></div></section>
 
 <section id="title" class="screen titleScr show"><div class="titleScene" id="titleScene" aria-hidden="true"></div><div class="titleWrap">
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="logoPaint" x="-6%" y="-15%" width="112%" height="140%">
-    <feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="4" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="2.2" result="d"/>
-    <feTurbulence type="fractalNoise" baseFrequency=".012 .2" numOctaves="3" seed="2" result="b"/>
-    <feColorMatrix in="b" values="0 0 0 0 .55  0 0 0 0 .34  0 0 0 0 .12  0 0 0 .32 -.08" result="bb"/><feComposite in="bb" in2="d" operator="in" result="bi"/>
-    <feBlend in="d" in2="bi" mode="multiply"/></filter></svg>
   <span id="dibbleArt"></span>
   <h1 class="logo" id="logo" aria-label="Glimmerwood">Glimmerwood</h1><span id="logoSwash"></span>
   <div class="tag tagline" id="tagline">Mine glowing crystals before the roots close in.</div>
@@ -745,7 +736,10 @@ const DEFAULTS = { look: { ...DEFAULT_LOOK, trinket: "none", cloak: "none" }, go
   metPuddock: false, trial: [], found: [], camp: { tent: "canvas", banner: "#5fa04e", fire: "ring", hide: [] },
   story: { prologue: false, mem: [], confessed: false, sprout: false, site: "stump", ledge: false, finale: false, scale: false },
   pets: { owned: [], active: [], wear: {} }, coinTx: [] }; // coinTx: coin-pack transactions already paid out (platform.buyCoins); active: the pets out at camp; wear: { [pet]: { head, neck } }
-const stored = store.get("save", {}); if (stored.opt && stored.opt.music === undefined) stored.opt.music = true;
+// a one-off fresh start (the owner's play-through, 2026-10-17): runs once per device, the tag lives in the save itself;
+// coinTx stays so no coin pack is paid out twice. Bump the tag to wipe everyone's progress again.
+const RESET = "2026-10-17", kept = store.get("save", {}), stored = kept.reset === RESET ? kept : { reset: RESET, coinTx: kept.coinTx || [] };
+if (stored.opt && stored.opt.music === undefined) stored.opt.music = true;
 const save = { ...DEFAULTS, ...stored, up: { ...DEFAULTS.up, ...stored.up }, look: { ...DEFAULTS.look, ...stored.look }, camp: { ...DEFAULTS.camp, ...stored.camp }, story: { ...DEFAULTS.story, ...stored.story }, pets: { ...DEFAULTS.pets, ...stored.pets } };
 if (!Array.isArray(save.pets.active)) save.pets.active = save.pets.active && save.pets.active !== "none" ? [save.pets.active] : []; // older saves had one pet out (or "none")
 save.light ??= save.gold; // lifetime gold sold: the light Dibble has given back to the roots (grows the stump)
@@ -1061,10 +1055,10 @@ function drawPiece({ piece, type, memory, pet: p, petCell }, size, ox, oy, alpha
   else special(type, piece.cells, size, ox, oy, alpha);
   if (p) { const [r, c] = piece.cells[petCell]; sleeper(p, ox + c * size, oy + r * size, size, alpha); }
 }
-// ---------- pets on the canvas: each look painted once into an image ----------
+// ---------- pets on the canvas: each look painted once into an image, at 3x so a Retina canvas never upscales it ----------
 const petImgs = {}, wearOf = (k) => save.pets.wear[k] || {};
 const petImg = (k, o = wearOf(k)) => petImgs[k + JSON.stringify(o)] ??= Object.assign(new Image(),
-  { src: "data:image/svg+xml;charset=utf-8," + encodeURIComponent(pet(k, 96, o).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')) });
+  { src: "data:image/svg+xml;charset=utf-8," + encodeURIComponent(pet(k, 288, o).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')) });
 function sleeper(k, x, y, s, a = 1) { // curled up asleep in a crystal cell, faintly visible through the stone, breathing
   const im = petImg(k, { sleep: true }), now = performance.now(), b = calmMotion ? 1 : 1 + .04 * Math.sin(now / 600), z = s * .96 * b;
   const g = ctx.createRadialGradient(x + s / 2, y + s / 2, 0, x + s / 2, y + s / 2, s * .7); g.addColorStop(0, `rgba(255,240,248,${.32 + .1 * Math.sin(now / 500)})`); g.addColorStop(1, "rgba(255,240,248,0)");
@@ -1409,7 +1403,7 @@ function shatter(idxs, typeAt, stagger = 12, power = 1, lines = null) {
   });
 }
 // coins pop out of the clear, arc up, and fly into the Haul badge (count grows with the gold)
-const coinImg = new Image(); coinImg.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(coin(48).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" '));
+const coinImg = new Image(); coinImg.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(coin(144).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" '));
 let coins = [], lastBump = 0;
 function coinPop(idxs, gold) {
   const n = Math.max(2, Math.min(14, Math.round(1 + Math.log2(1 + gold) * 1.3))), now = performance.now();
@@ -2383,9 +2377,8 @@ function frame(now) {
 
 document.addEventListener("pointerdown", (e) => { if (e.target.closest("button:not(:disabled)")) { ui.tap(); buzz(6); } }, true);
 document.addEventListener("pointerdown", () => soundtrack.setEnabled(save.opt.music), { once: true }); // browsers need a tap before audio
-// line boil re-seeds ~8 times a second (animating "on twos"); dust specks flash in menus and camp
-{ const noise = document.getElementById("boilNoise"), still = matchMedia("(prefers-reduced-motion: reduce)").matches; let seed = 1;
-  if (!still) setInterval(() => { if (!document.hidden) noise.setAttribute("seed", (seed = seed % 4 + 1)); }, 125);
+// dust specks flash in menus and camp
+{ const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const dust = $("dust");
   if (!still) setInterval(() => {
     if (document.hidden || document.body.classList.contains("playing")) return;
