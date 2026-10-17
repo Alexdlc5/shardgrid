@@ -110,6 +110,8 @@ Apple has **no 12-testers-for-14-days rule**. Internal testers (up to 100 people
    - **US state regulations** → Create message → **Publish**.
    - **IDFA explainer:** skip. The game asks for tracking permission with its own friendly sentence.
 6. **Blocking controls → Content → Sensitive categories:** block **Gambling and betting**, **Dating** and other adult categories (keeps the age rating low).
+   - The app already caps every ad request at **PG** in code (`maxAdContentRating` in `proto/platform.js`). Also set **Blocking controls → Content → Maximum ad content rating** to **PG** (or **G**) in the console, so the cap holds for every ad source.
+   - In App Store Connect, keep the age rating at **4+ or 9+**. Unfiltered ads are what push block puzzles to 17+.
 7. **Settings → Test devices → Add test device:** your iPhone's ID. AdMob prints it in the app log on first run; Claude will read it out of a TestFlight session for you. **Never tap real ads on your own phone.**
 8. **Settings → Account information:** copy your **Publisher ID** (`pub-…`).
 9. Once the game is live: **Apps → Glimmerwood → App settings → link to the App Store listing**. AdMob reviews it and checks `app-ads.txt` on your site.
