@@ -9,26 +9,29 @@ const NOTE = (n) => 440 * 2 ** ((n - 69) / 12);               // MIDI → Hz
 const PENTA = [0, 2, 4, 7, 9], MINPENTA = [0, 3, 5, 7, 10];   // degrees of the scale
 
 // chords as scale-relative semitone stacks above the track's root
+// arr: shaker on/off; walk: a walking bass (root, fifth, octave) instead of root-and-fifth; arp: a quiet pad-chord arpeggio
+// in the second half of each phrase (the music-box tunes). Three templates spread across the tunes, so they don't all march alike.
+const ARR = { plain: { shaker: true }, walk: { shaker: false, walk: true }, box: { shaker: true, arp: true } };
 const TRACKS = {
-  home:      { root: 53, bpm: 72, scale: PENTA,    chords: [[0, 4, 7, 11], [-3, 0, 4, 7], [-7, -3, 0, 4], [-5, -1, 2, 7]], seed: 11, voice: "kalimba", amb: "crickets", bright: 1 },
-  camp:      { root: 51, bpm: 64, scale: PENTA,    chords: [[0, 4, 7, 14], [5, 9, 12, 16], [-3, 0, 4, 7], [-5, 2, 7, 11]], seed: 23, voice: "musicbox", amb: "fire", bright: .8 },
-  hollow:    { root: 55, bpm: 76, scale: PENTA,    chords: [[0, 4, 7, 11], [5, 9, 12, 16], [-3, 0, 4, 7], [2, 5, 9, 12]], seed: 31, voice: "kalimba", amb: "drips", bright: 1 },
-  ember:     { root: 50, bpm: 70, scale: MINPENTA, chords: [[0, 3, 7, 10], [-2, 2, 5, 9], [-4, 0, 3, 7], [-5, -2, 2, 5]], seed: 47, voice: "kalimba", amb: "drips", bright: .7 },
-  grotto:    { root: 57, bpm: 66, scale: PENTA,    chords: [[0, 4, 7, 14], [2, 7, 9, 14], [-3, 2, 4, 9], [-5, 2, 4, 7]], seed: 59, voice: "musicbox", amb: "drips", bright: .9 },
-  frostpine: { root: 57, bpm: 60, scale: PENTA,    chords: [[0, 7, 11, 16], [-3, 4, 7, 12], [5, 9, 12, 19], [-5, 2, 7, 11]], seed: 67, voice: "musicbox", amb: "wind", bright: 1.2 },
-  gulch:     { root: 48, bpm: 80, scale: PENTA,    chords: [[0, 4, 7, 9], [-3, 0, 4, 7], [5, 9, 12, 14], [7, 11, 14, 17]], seed: 79, voice: "marimba", amb: "drips", bright: .85 },
-  heartwood: { root: 52, bpm: 68, scale: MINPENTA, chords: [[0, 3, 7, 10], [-4, 0, 3, 8], [-7, -3, 0, 5], [-2, 2, 5, 10]], seed: 97, voice: "kalimba", amb: "drips", bright: .9 },
+  home:      { root: 53, bpm: 72, scale: PENTA,    chords: [[0, 4, 7, 11], [-3, 0, 4, 7], [-7, -3, 0, 4], [-5, -1, 2, 7]], seed: 11, voice: "kalimba", amb: "crickets", bright: 1, arr: "plain" },
+  camp:      { root: 51, bpm: 64, scale: PENTA,    chords: [[0, 4, 7, 14], [5, 9, 12, 16], [-3, 0, 4, 7], [-5, 2, 7, 11]], seed: 23, voice: "musicbox", amb: "fire", bright: .8, arr: "box" },
+  hollow:    { root: 55, bpm: 76, scale: PENTA,    chords: [[0, 4, 7, 11], [5, 9, 12, 16], [-3, 0, 4, 7], [2, 5, 9, 12]], seed: 31, voice: "kalimba", amb: "drips", bright: 1, arr: "plain" },
+  ember:     { root: 50, bpm: 70, scale: MINPENTA, chords: [[0, 3, 7, 10], [-2, 2, 5, 9], [-4, 0, 3, 7], [-5, -2, 2, 5]], seed: 47, voice: "kalimba", amb: "drips", bright: .7, arr: "walk" },
+  grotto:    { root: 57, bpm: 66, scale: PENTA,    chords: [[0, 4, 7, 14], [2, 7, 9, 14], [-3, 2, 4, 9], [-5, 2, 4, 7]], seed: 59, voice: "musicbox", amb: "drips", bright: .9, arr: "box" },
+  frostpine: { root: 57, bpm: 60, scale: PENTA,    chords: [[0, 7, 11, 16], [-3, 4, 7, 12], [5, 9, 12, 19], [-5, 2, 7, 11]], seed: 67, voice: "musicbox", amb: "wind", bright: 1.2, arr: "box" },
+  gulch:     { root: 48, bpm: 80, scale: PENTA,    chords: [[0, 4, 7, 9], [-3, 0, 4, 7], [5, 9, 12, 14], [7, 11, 14, 17]], seed: 79, voice: "marimba", amb: "drips", bright: .85, arr: "walk" },
+  heartwood: { root: 52, bpm: 68, scale: MINPENTA, chords: [[0, 3, 7, 10], [-4, 0, 3, 8], [-7, -3, 0, 5], [-2, 2, 5, 10]], seed: 97, voice: "kalimba", amb: "drips", bright: .9, arr: "plain" },
   // the playlist: more tunes in the same voices, for the camp (calm), the digs (gentle) and one a little brighter
-  lantern:   { root: 50, bpm: 62, scale: PENTA,    chords: [[0, 4, 7, 14], [-3, 0, 4, 9], [5, 9, 12, 16], [-5, 2, 7, 11]], seed: 151, voice: "musicbox", amb: "fire", bright: .8 },
-  hearth:    { root: 52, bpm: 66, scale: PENTA,    chords: [[0, 4, 7, 11], [5, 9, 12, 14], [2, 5, 9, 12], [-5, -1, 2, 7]], seed: 163, voice: "kalimba", amb: "crickets", bright: .85 },
-  dewfall:   { root: 55, bpm: 68, scale: PENTA,    chords: [[0, 7, 11, 16], [-3, 4, 7, 12], [-7, 0, 4, 9], [-5, 2, 7, 11]], seed: 173, voice: "marimba", amb: "crickets", bright: 1 },
-  burrow:    { root: 48, bpm: 70, scale: PENTA,    chords: [[-3, 0, 4, 9], [-7, -3, 0, 4], [0, 4, 7, 11], [-5, -1, 2, 7]], seed: 181, voice: "kalimba", amb: "drips", bright: .85 },
-  glint:     { root: 53, bpm: 72, scale: PENTA,    chords: [[0, 4, 7, 14], [2, 5, 9, 12], [-3, 0, 4, 7], [5, 9, 12, 16]], seed: 191, voice: "musicbox", amb: "drips", bright: 1.05 },
-  brook:     { root: 57, bpm: 78, scale: PENTA,    chords: [[0, 4, 7, 11], [5, 9, 12, 16], [7, 11, 14, 17], [-3, 0, 4, 7]], seed: 199, voice: "marimba", amb: "drips", bright: 1.15 },
+  lantern:   { root: 50, bpm: 62, scale: PENTA,    chords: [[0, 4, 7, 14], [-3, 0, 4, 9], [5, 9, 12, 16], [-5, 2, 7, 11]], seed: 151, voice: "musicbox", amb: "fire", bright: .8, arr: "box" },
+  hearth:    { root: 52, bpm: 66, scale: PENTA,    chords: [[0, 4, 7, 11], [5, 9, 12, 14], [2, 5, 9, 12], [-5, -1, 2, 7]], seed: 163, voice: "kalimba", amb: "crickets", bright: .85, arr: "walk" },
+  dewfall:   { root: 55, bpm: 68, scale: PENTA,    chords: [[0, 7, 11, 16], [-3, 4, 7, 12], [-7, 0, 4, 9], [-5, 2, 7, 11]], seed: 173, voice: "marimba", amb: "crickets", bright: 1, arr: "plain" },
+  burrow:    { root: 48, bpm: 70, scale: PENTA,    chords: [[-3, 0, 4, 9], [-7, -3, 0, 4], [0, 4, 7, 11], [-5, -1, 2, 7]], seed: 181, voice: "kalimba", amb: "drips", bright: .85, arr: "walk" },
+  glint:     { root: 53, bpm: 72, scale: PENTA,    chords: [[0, 4, 7, 14], [2, 5, 9, 12], [-3, 0, 4, 7], [5, 9, 12, 16]], seed: 191, voice: "musicbox", amb: "drips", bright: 1.05, arr: "box" },
+  brook:     { root: 57, bpm: 78, scale: PENTA,    chords: [[0, 4, 7, 11], [5, 9, 12, 16], [7, 11, 14, 17], [-3, 0, 4, 7]], seed: 199, voice: "marimba", amb: "drips", bright: 1.15, arr: "walk" },
 };
 // the Underroot and the Skywell reuse a mine's voice in a new key and tempo
 Object.assign(TRACKS, { cinder: { ...TRACKS.ember, root: 48, bpm: 64, seed: 113 }, roost: { ...TRACKS.grotto, root: 59, bpm: 62, seed: 127 },
-  loom: { ...TRACKS.frostpine, root: 55, bpm: 58, seed: 131 }, wickhold: { ...TRACKS.hollow, root: 53, bpm: 70, seed: 137 }, skywell: { ...TRACKS.frostpine, root: 60, bpm: 66, seed: 139 } });
+  loom: { ...TRACKS.frostpine, root: 55, bpm: 58, seed: 131 }, wickhold: { ...TRACKS.hollow, root: 53, bpm: 70, seed: 137, arr: "walk" }, skywell: { ...TRACKS.frostpine, root: 60, bpm: 66, seed: 139 } });
 // what can follow in each place: its own tune first, then any of these (a mine: its tune plus the digging set)
 const POOL = { home: ["home", "dewfall", "lantern", "hearth"], camp: ["camp", "lantern", "hearth", "dewfall", "brook"] };
 const pool = (p) => POOL[p] || [p, "burrow", "glint", "brook"];
@@ -108,18 +111,20 @@ function pad(b, freqs, when, dur, vol, held = false) {
     o.connect(g); o.start(when); o.stop(when + dur + .05);
   }
 }
-function bass(b, freq, when, vol) {
-  const o = ctx.createOscillator(), g = ctx.createGain(); o.type = "sine"; o.frequency.value = freq;
-  g.gain.setValueAtTime(.0001, when); g.gain.exponentialRampToValueAtTime(vol, when + .02); g.gain.exponentialRampToValueAtTime(.0001, when + 1.2);
-  o.connect(g).connect(b.out); o.start(when); o.stop(when + 1.3);
+function bass(b, freq, when, vol) { // the sub, plus a quiet octave up: the phone speaker rolls off under ~200 Hz, so that's what it hears
+  for (const [fr, v] of [[freq, vol], [freq * 2, vol / 3]]) {
+    const o = ctx.createOscillator(), g = ctx.createGain(); o.type = "sine"; o.frequency.value = fr;
+    g.gain.setValueAtTime(.0001, when); g.gain.exponentialRampToValueAtTime(v, when + .02); g.gain.exponentialRampToValueAtTime(.0001, when + 1.2);
+    o.connect(g).connect(b.out); o.start(when); o.stop(when + 1.3);
+  }
 }
 let noiseBuf;
-function noise(when, dur, vol, freq, q, out) {
-  if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+const noiseBuffer = () => { if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } return noiseBuf; };
+function noise(when, dur, vol, freq, q, out, off = Math.random() * .5) { // off: where in the buffer to start
   const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-  s.buffer = noiseBuf; f.type = "bandpass"; f.frequency.value = freq; f.Q.value = q;
+  s.buffer = noiseBuffer(); f.type = "bandpass"; f.frequency.value = freq; f.Q.value = q;
   g.gain.setValueAtTime(.0001, when); g.gain.exponentialRampToValueAtTime(vol, when + .005); g.gain.exponentialRampToValueAtTime(.0001, when + dur);
-  s.connect(f).connect(g).connect(out); s.start(when, Math.random() * .5); s.stop(when + dur + .02);
+  s.connect(f).connect(g).connect(out); s.start(when, off); s.stop(when + dur + .02);
 }
 function ambience(d, kind, when, span) {
   const r = Math.random;
@@ -137,7 +142,7 @@ function ambience(d, kind, when, span) {
 
 // lookahead scheduler: one eighth-note slot at a time, a little ahead of the clock, on deck d
 function schedule(d) {
-  const t = d.t, st = d.st, eighth = 60 / t.bpm / 2, ahead = .35;
+  const t = d.t, st = d.st, eighth = 60 / t.bpm / 2, ahead = .35, arr = ARR[t.arr] || ARR.plain;
   while (st.next < ctx.currentTime + ahead) {
     const s = st.slot, bar = Math.floor(s / 8), phrase = Math.floor(s / 16) % 4, pos = s % 16, chord = t.chords[bar % 4];
     const when = st.next, intro = s < st.intro; // intro bars: pad and bass on the one only, so the tempo arrives softly
@@ -148,15 +153,23 @@ function schedule(d) {
     }
     if (!intro) {
       if (s % 8 === 4) bass(d, NOTE(t.root - 24 + chord[0] + 7), when, .07);
+      if (arr.walk && s % 8 === 6) bass(d, NOTE(t.root - 12 + chord[0]), when, .05); // walking: root, fifth, octave
       const m = t.melody[phrase][pos % 8]; // each phrase: stated in bar 1, echoed sparser in bar 2
-      if (m !== null && (pos < 8 || s % 2 === 0)) pluck(d, NOTE(scaleNote(t, m)), when + (s % 2 ? eighth * .06 : 0), .11, t.voice, t.bright);
-      if (s % 4 === 2) noise(when, .05, .018, 7000, 1.2, d.out);                      // whisper shaker
+      // dynamics: the downbeat leans in, off-beats sit back, and every note varies a little, like a hand would
+      const vel = .11 * (s % 8 === 0 ? 1.15 : s % 2 ? .85 : 1) * (1 + (Math.random() * 2 - 1) * .08);
+      if (m !== null && (pos < 8 || s % 2 === 0)) pluck(d, NOTE(scaleNote(t, m)), when + (s % 2 ? eighth * .06 : 0), vel, t.voice, t.bright);
+      if (arr.arp && pos >= 8 && s % 2 === 1) pluck(d, NOTE(t.root + 12 + chord[(pos >> 1) % 4]), when + eighth * .06, .028, "musicbox", t.bright); // music box: chord tones between the echo
+      if (arr.shaker && s % 4 === 2) noise(when, .05, .018, 7000, 1.2, d.out);       // whisper shaker
       if (s % 32 === 30) pluck(d, NOTE(scaleNote(t, 7) + 12), when, .05, "musicbox", t.bright); // sparkle at the turnaround
     }
     if (tension > 0 && s % 2 === 0 && d === decks[live]) { // low Rootline: soft heartbeat under the music
-      const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 58;
-      g.gain.setValueAtTime(.0001, when); g.gain.exponentialRampToValueAtTime(.2 * tension, when + .01); g.gain.exponentialRampToValueAtTime(.0001, when + .16);
-      o.connect(g).connect(tensionGain); o.start(when); o.stop(when + .2);
+      // 58 Hz is the body on headphones; the phone speaker rolls off under ~200 Hz, so partials at 116 and 174 and a short click carry it there
+      for (const [fr, v] of [[58, .2], [116, .12], [174, .07]]) {
+        const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = fr;
+        g.gain.setValueAtTime(.0001, when); g.gain.exponentialRampToValueAtTime(v * tension, when + .01); g.gain.exponentialRampToValueAtTime(.0001, when + .16);
+        o.connect(g).connect(tensionGain); o.start(when); o.stop(when + .2);
+      }
+      noise(when, .012, .08 * tension, 900, 1.2, tensionGain, (s % 7) * .07); // a fixed offset: the beat never moves the tune's random walk
     }
     if (s % 8 === 0) ambience(d, t.amb, when, eighth * 8);
     st.slot++; st.next += eighth;
@@ -257,6 +270,13 @@ function air(when, dur, vol, from, to) { // a soft breath of filtered noise (she
   noise(when, dur, vol, from, .8, sfxBus);
   if (to) noise(when + dur * .3, dur * .7, vol * .7, to, .8, sfxBus);
 }
+function sweep(when, dur, vol, from, to, q = 1) { // filtered noise whose centre glides from -> to (the earth going by, rising air)
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  s.buffer = noiseBuffer(); f.type = "bandpass"; f.Q.value = q;
+  f.frequency.setValueAtTime(from, when); f.frequency.exponentialRampToValueAtTime(to, when + dur);
+  g.gain.setValueAtTime(.0001, when); g.gain.exponentialRampToValueAtTime(vol, when + dur * .15); g.gain.exponentialRampToValueAtTime(.0001, when + dur);
+  s.connect(f).connect(g).connect(sfxBus); s.start(when, Math.random() * .5); s.stop(when + dur + .02);
+}
 // talking blips: one short syllable per letter or two, a voice per speaker, each a little off-pitch so it sounds alive.
 // f: pitch (Hz), wave, lp: lowpass, dur, vol, bend: starts at f*bend and slides to f, wob: vibrato [Hz, depth],
 // croak: chance of a low rasp after the blip, air: breath noise level, shine: faint high partial
@@ -309,13 +329,21 @@ export const sfx = {
   bloom() { if (!on()) return; const t = bus(); [880, 1174.66].forEach((f, k) => tine(f, t + k * .06, .04, .5)); },
   pure() { if (!on()) return; const t = bus() + .14; [1046.5, 1318.51, 1567.98].forEach((f, k) => tine(f, t + k * .05, .05, .6, .6)); },
   crack() { if (!on()) return; const t = bus(); knock(110, t, .12, .16); noise(t, .06, .06, 2400, 1.5, sfxBus); },
-  tick() { if (!on()) return; const t = bus(); knock(98, t, .1, .14); }, // the Rootline running low: a soft heartbeat knock
+  tick() { if (!on()) return; const t = bus(); knock(98, t, .1, .14); knock(196, t, .06, .1); }, // the Rootline running low: a soft heartbeat knock (octave partial for the phone speaker)
   thud() { if (!on()) return; const t = bus(); knock(130, t, .12, .2); knock(98, t + .14, .1, .26); }, // no room / roots closed
   rescue() { if (!on()) return; const t = bus(); [783.99, 1046.5, 1318.51, 1567.98].forEach((f, k) => tine(f, t + k * .07, .05, .6)); },
   moth() { if (!on()) return; const t = bus(); for (let k = 0; k < 3; k++) noise(t + k * .05, .04, .03, 1300 + k * 200, 1.2, sfxBus); tine(1567.98, t + .1, .025, .2); },
   nibble() { if (!on()) return; const t = bus(); knock(260, t, .05, .05); knock(210, t + .07, .05, .05); },
   buy() { if (!on()) return; const t = bus(); [1318.51, 1760, 2093].forEach((f, k) => tine(f, t + k * .05, .045, .3, .35)); knock(300, t, .05, .05); },
   whoosh() { if (!on()) return; air(bus(), .22, .025, 900, 1600); },
+  // scene transitions (main.js wipe): digging in is a low rumble that dries into an earth hush; climbing out is rising air;
+  // the lantern iris is one soft tine. UI: a sheet opens on a breath and a knock and closes on the breath alone;
+  // an option toggles with two tines, up for on and down for off.
+  descend() { if (!on()) return; const t = bus(); sweep(t, .8, .12, 300, 120, .9); noise(t + .45, .4, .035, 2600, .8, sfxBus); },
+  ascend() { if (!on()) return; sweep(bus(), .6, .07, 400, 2400, .9); },
+  iris() { if (!on()) return; tine(1318.51, bus(), .04, .7, .6); },
+  sheet(open) { if (!on()) return; const t = bus(); if (open) { air(t, .18, .02, 700, 1500); knock(380, t + .02, .05, .06); } else air(t, .22, .03, 1500, 600); },
+  toggle(up) { if (!on()) return; const t = bus(), [a, b] = up ? [1046.5, 1567.98] : [1567.98, 1046.5]; tine(a, t, .035, .18, .25); tine(b, t + .07, .035, .22, .25); },
   chirp() { if (!on()) return; const t = bus(); tine(1567.98, t, .04, .12, .2); tine(2093, t + .08, .035, .16, .2); },
   // one talking blip in a speaker's voice (null: narration, a soft high chime); true when Puddock croaked (for a haptic tick)
   voice(who) { if (!on()) return false; const t = bus(); if (VOICES[who]) return blip(VOICES[who], t); tine(PENT[5 + Math.floor(Math.random() * 5)], t, .012, .22, .5); return false; },
