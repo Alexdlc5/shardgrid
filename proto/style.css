@@ -233,7 +233,7 @@
   .talkBubble .who { display: block; font-family: var(--font-display); font-style: normal; font-size: var(--fs-small); letter-spacing: .6px; text-transform: uppercase; color: #8a5a32; margin-bottom: 2px; }
   /* talking: letters wait invisible in place; the portrait bobs while it talks; a little arrow nudges once the line is done */
   .tw { opacity: 0; }
-  #talkNext { transition: opacity .2s; } #talkNext.wait { opacity: 0; pointer-events: none; }
+  #talkNext { transition: opacity .2s; } #talkNext.wait { opacity: .8; } /* still a live button while the line types: a tap finishes it and goes on */
   .talkArt.talking > svg:is(.puddock, .granny, .bidder) { animation: chat .32s ease-in-out infinite; }
   @keyframes chat { 50% { transform: translateY(-3px) scaleY(1.015); } }
   .talkBubble.done::after { content: ""; position: absolute; right: 8px; bottom: 3px; border: 5px solid transparent; border-top: 6px solid #8a5a32; border-bottom: 0;
