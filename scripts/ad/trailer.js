@@ -252,7 +252,7 @@
   function cozyCard() {
     if (!el("adCard")) ad.insertAdjacentHTML("beforeend", `<div id="adCard" class="adCard"><h1 class="logo" aria-label="Glimmerwood">${logoLetters()}</h1>${logoSwash()}
       <div class="tag tagline">Glowing crystals, tiny friends, and a fire that's always lit.</div><div class="adCta">Free on the App Store</div></div>`);
-    el("adCard").style.display = "block"; css(el("adDark"), { opacity: .92, background: "radial-gradient(ellipse 80% 40% at 50% 34%, rgba(6,10,7,.82), rgba(6,10,7,.35) 80%)" });
+    el("adCard").style.display = "block"; $("campFx").style.visibility = "hidden"; // Puddock's hum bubble would sit clipped at the edge under the card css(el("adDark"), { opacity: .92, background: "radial-gradient(ellipse 80% 40% at 50% 34%, rgba(6,10,7,.82), rgba(6,10,7,.35) 80%)" });
   }
   // Granny's chalk, re-drawn bright on its own layer: the game's drawChalk on a borrowed context, a few passes added up
   function drawGlowChalk() {
