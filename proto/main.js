@@ -742,7 +742,7 @@ function paintMine() {
   // the board itself (frame, cells, Granny's chalk) is static too: paint it once, into its own canvas
   const pad = 28, bw = cell * N + pad * 2, b = document.createElement("canvas"); b.width = bw * dpr; b.height = bw * dpr;
   const keep = ctx; ctx = b.getContext("2d"); ctx.scale(dpr, dpr); ctx.translate(pad - bx, pad - by); drawBoard(); drawChalk(); ctx = keep;
-  if (LOFI) { lofiGrade(g, W, H, LOFI);
+  if (LOFI) { lofiGrade(g, W, H, LOFI, false, pal);
     const keepB = Object.assign(document.createElement("canvas"), { width: b.width, height: b.height }); keepB.getContext("2d").drawImage(b, 0, 0);
     const gb = b.getContext("2d"); gb.setTransform(dpr, 0, 0, dpr, 0, 0); lofiGrade(gb, bw, bw, LOFI, true);
     gb.setTransform(1, 0, 0, 1, 0, 0); gb.globalCompositeOperation = "destination-in"; gb.drawImage(keepB, 0, 0); gb.globalCompositeOperation = "source-over"; } // the frame's see-through margin stays see-through
@@ -754,21 +754,25 @@ function paintMine() {
 const LOFI = qs.get("lofi") === "off" ? null : qs.get("lofi") || "haze";
 if (!LOFI) document.documentElement.classList.add("noLofi");
 let grainTile = null;
-function lofiGrade(g, w, h, look, board = false) {
-  const L = { // [top tint, bottom tint] for soft-light, lifted blacks, how much colour to take out, grain
-    lamplight: { top: "rgba(70,44,150,.62)", bot: "rgba(255,150,70,.5)", lift: "rgba(52,36,76,.22)", desat: .28, grain: .16 },
-    rain: { top: "rgba(40,70,170,.66)", bot: "rgba(60,50,140,.5)", lift: "rgba(34,46,84,.24)", desat: .36, grain: .14, pools: true },
-    haze: { top: "rgba(255,140,120,.62)", bot: "rgba(150,80,140,.42)", lift: "rgba(84,52,66,.24)", desat: .2, grain: .1, glow: true },
+// pal (the mine's palette, for the cave only): the haze keeps half of the mine's own colour, so the night stays its own
+// night instead of sepia. The tints lean toward a warm version of its glow (the highlights) and bg (the shadows), the lifted
+// blacks toward its bg, and less colour comes out. The board frame (no pal) is graded as before.
+function lofiGrade(g, w, h, look, board = false, pal = null) {
+  const L = { // [top tint, bottom tint] for soft-light, lifted blacks, how much colour to take out, grain; own: the mine's share
+    lamplight: { top: ["#462c96", .62], bot: ["#ff9646", .5], lift: ["#34244c", .22], desat: .28, grain: .16 },
+    rain: { top: ["#2846aa", .66], bot: ["#3c328c", .5], lift: ["#222e54", .24], desat: .36, grain: .14, pools: true },
+    haze: { top: ["#ff8c78", .62], bot: ["#965078", .42], lift: ["#543442", .24], desat: .2, grain: .1, glow: true, own: .5 },
   }[look]; if (!L) return;
+  const own = pal ? L.own || 0 : 0, tint = ([c, a], k) => `rgba(${hex(own ? lerpHex(c, pal[k], own) : c)},${a})`;
   g.save();
-  g.globalCompositeOperation = "saturation"; g.globalAlpha = L.desat; g.fillStyle = "#808080"; g.fillRect(0, 0, w, h); // softer colour
+  g.globalCompositeOperation = "saturation"; g.globalAlpha = L.desat * (1 - own); g.fillStyle = "#808080"; g.fillRect(0, 0, w, h); // softer colour
   g.globalAlpha = 1; g.globalCompositeOperation = "soft-light";
-  const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, L.top); gr.addColorStop(1, L.bot); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, tint(L.top, "glow")); gr.addColorStop(1, tint(L.bot, "bg")); g.fillStyle = gr; g.fillRect(0, 0, w, h);
   if (L.pools && !board) for (const [x, y, r] of [[w * .18, h * .8, w * .5], [w * .85, h * .25, w * .4]]) {
     const pg = g.createRadialGradient(x, y, 0, x, y, r); pg.addColorStop(0, "rgba(255,180,100,.55)"); pg.addColorStop(1, "rgba(255,180,100,0)"); g.fillStyle = pg; g.fillRect(0, 0, w, h); }
-  g.globalCompositeOperation = "lighten"; g.fillStyle = L.lift; g.fillRect(0, 0, w, h); // blacks lifted, like old film
+  g.globalCompositeOperation = "lighten"; g.fillStyle = tint(L.lift, "bg"); g.fillRect(0, 0, w, h); // blacks lifted, like old film
   if (L.glow && !board) { g.globalCompositeOperation = "screen"; const hg = g.createRadialGradient(w / 2, 0, 0, w / 2, 0, h * .6);
-    hg.addColorStop(0, "rgba(255,210,170,.4)"); hg.addColorStop(1, "rgba(255,210,170,0)"); g.fillStyle = hg; g.fillRect(0, 0, w, h); }
+    hg.addColorStop(0, tint(["#ffd2aa", .4], "glow")); hg.addColorStop(1, "rgba(255,210,170,0)"); g.fillStyle = hg; g.fillRect(0, 0, w, h); } // the light at the top: the mine's own
   if (!grainTile) { grainTile = document.createElement("canvas"); grainTile.width = grainTile.height = 128; const t = grainTile.getContext("2d"), im = t.createImageData(128, 128);
     const nr = prng(97); // its own seed: art never draws on the game's random stream (it would change what gets dealt)
     for (let i = 0; i < im.data.length; i += 4) { const v = 128 + (nr() - .5) * 200; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; } t.putImageData(im, 0, 0); }
@@ -1578,7 +1582,7 @@ function campState() {
   const hub = { metPuddock: save.metPuddock, firstRun: !Object.keys(save.best).length, memories: S.mem.length || null, rackHat: spare("hat"), rackScarf: spare("scarf"),
     stumpSvg: S.site === "stump" ? stumpArt(Math.log10(save.light + 1) / 5.3, S.sprout, 340, S.finale) : "" };
   return { ...hub, ...save.up, mines: BIOMES.filter((b) => save.biomes.includes(b.id)).map((b) => b.pal.glow),
-    found: GEMS.map((t) => save.found.includes(t) ? { color: CRYSTALS[t].color, cut: CRYSTALS[t].cut } : null),
+    found: GEMS.map((t) => ({ cut: CRYSTALS[t].cut, color: save.found.includes(t) ? CRYSTALS[t].color : null })), // no colour: not found yet, a dusty silhouette of its cut
     tent: save.camp.tent, banner: save.camp.banner, fire: save.camp.fire,
     site: save.story.site, sky: save.story.finale, packed: save.story.finale, puddockHere: save.story.site !== "stump",
     grannySvg: save.story.site === "skywell" ? granny(60) : "", puddockSvg: puddock(60), decor: { mushrooms: own("decor:mushrooms"), jars: own("decor:jars"), hammock: own("decor:hammock"), cart: own("decor:cart"), flies: save.owned.includes("fireflies") },

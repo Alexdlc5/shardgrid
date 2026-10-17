@@ -64,6 +64,8 @@ const rough = (frag) => frag
   .replace(/<circle cx="([\d.]+)" cy="([\d.]+)" r="([\d.]+)"/g, (m, x, y, r) => `<path d="${curve(ring(+x, +y, +r, +r, 12, .05, (+x * 7 + +r * 13) | 0))}"`)
   .replace(/<ellipse cx="([\d.]+)" cy="([\d.]+)" rx="([\d.]+)" ry="([\d.]+)"/g, (m, x, y, rx, ry) => `<path d="${curve(ring(+x, +y, +rx, +ry, 12, .05, (+x * 7 + +rx * 13) | 0))}"`);
 const ROUGH = Object.fromEntries(Object.entries(CUTS).map(([k, v]) => [k, { o: rough(v.o), d: (c, lt, dk) => rough(v.d(c, lt, dk)) }]));
+// a gem not found yet: its cut as a faint dusty silhouette in the shelf's dark wood, darker self down-left, no glyph (a 24-box fragment)
+const gemGhost = (cut) => { const k = ROUGH[cut] || ROUGH.brilliant, c = "#3a2616"; return `<g opacity=".35"><g fill="${mix(c, "#1a0f08", .5)}" transform="translate(-.8 .7)">${k.o}</g><g fill="${c}">${k.o}</g></g>`; };
 export function gem(color, size = 22, glyph = "", cut = "brilliant") {
   const k = ROUGH[cut] || ROUGH.brilliant, lt = mix(color, "#fff6e0", .45), dk = mix(color, "#0e1c1a", .35);
   return svg(size, "0 0 24 24", `<g fill="${mix(color, "#1a0f08", .55)}" transform="translate(-.8 .7)">${k.o}</g>${k.d(color, lt, dk)}
@@ -791,7 +793,7 @@ export function camp(st, gemFn, dibbleSvg) {
   const shelf = `<g data-tip="shelf">${PSh.g(`${plank(252, 128, 128, 5, "#8a5a32", r)}${plank(252, 158, 128, 5, "#8a5a32", r)}
     ${shape(limb(254, 126, 253, 146, 254, 167, 1.3, 1.2), "#5a3b24", "#2e1e12", [-.5, .5])}${shape(limb(378, 126, 379, 146, 378, 167, 1.3, 1.2), "#5a3b24", "#2e1e12", [-.5, .5])}
     ${st.found.map((g, k) => { const x = 257 + (k % 6) * 20.5, y = k < 6 ? 108 : 138; // the cells tile the shelf: every tap on it rings a gem
-      return `<g data-tap="gem-${k}"><rect x="${x - 1.25}" y="${y - 4}" width="20.5" height="30" fill="transparent"/><svg x="${x}" y="${y}" width="18" height="18" viewBox="0 0 24 24">${g ? strip(gemFn(g.color, 24, "", g.cut)) : `<path d="${curve(ring(12, 13, 6, 6, 8, .1, k))}" fill="#000" opacity=".3"/><text x="12" y="16" font-size="9" text-anchor="middle" fill="#8a7a5a">?</text>`}</svg></g>`; }).join("")}`)}</g>`;
+      return `<g data-tap="gem-${k}"><rect x="${x - 1.25}" y="${y - 4}" width="20.5" height="30" fill="transparent"/><svg x="${x}" y="${y}" width="18" height="18" viewBox="0 0 24 24">${g.color ? strip(gemFn(g.color, 24, "", g.cut)) : gemGhost(g.cut)}</svg></g>`; }).join("")}`)}</g>`;
 
   const sc = st.rackScarf || "#c8553d", PR = place(52, 396, 58, yB, 1.3 * kf);
   const rack = `<g data-tap="wardrobe">${hit(PR, 18, 318, 86, 398)}${PR.g(`
@@ -998,6 +1000,12 @@ export function camp(st, gemFn, dibbleSvg) {
     front: `${foot(PB.x(128), PB.y(405), 62 * Math.max(kf, .85))}${foot(PK.x(344), PK.y(259), 56 * kf)}${foot(PSt.x(340), PSt.y(407), 78 * kf)}` };
   // where the pets (index.html) may roam: feet on the ground between the middle and front rows, bodies clear of these boxes
   // (Dibble, the fire, the Daily Dig board, the bench, the stall and its sign, and Puddock when he's out front)
+  // the golden-hour haze (style.css .haze's blend layers), painted into the scene under the props, so Dibble, the pets, the fire and
+  // the lanterns keep their colour (the fixed .haze stays off over the camp: style.css). It fades in below the moon: the sky stays cool.
+  const hzIn = f1((T + 60) / H), hzFull = f1(yH / H), hzStops = (s) => `<stop offset="${hzIn}" stop-color="${s[0][0]}" stop-opacity="0"/>${s.map(([c, o, at = hzFull]) => `<stop offset="${at}" stop-color="${c}" stop-opacity="${o}"/>`).join("")}`;
+  const hzFill = (id, s) => `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${f1(H)}">${hzStops(s)}</linearGradient>`;
+  const haze = `<defs>${hzFill("campHz1", [["#808080", .16]])}${hzFill("campHz2", [["#ff9682", .54], ["#ffc48c", .26, .6], ["#784678", .35, 1]])}${hzFill("campHz3", [["#583e40", .32]])}</defs>
+    <g class="campHaze">${["saturation", "soft-light", "lighten"].map((m, k) => `<rect x="-300" y="-900" width="1000" height="${f1(H + 1200)}" fill="url(#campHz${k + 1})" style="mix-blend-mode:${m}"/>`).join("")}</g>`;
   const box = (P, x0, y0, x1, y1) => [P.x(x0), P.y(y0), P.x(x1), P.y(y1)];
   const roam = [[dx + db * .18, dyy + db * .08, dx + db * .86, dyy + db * .95], box(PF, 162, 228, 204, 260), box(PB, 94, 326, 162, 404), box(PK, 300, 186, 388, 258), box(PSt, 280, 282, 400, 406),
     ...(st.packed && st.puddockSvg ? [[366 - pb / 2, yM + 6 * kf - pb, 366 + pb / 2, yM + 6 * kf]] : [])].map((b) => b.map(f1).join(" ")).join(",");
@@ -1014,7 +1022,7 @@ export function camp(st, gemFn, dibbleSvg) {
     <g data-depth=".22">${tall}</g>
     <g data-depth=".3"><g transform="translate(0 ${f1(yH - 180)})">${S.mid}</g></g>
     <g data-depth=".45"><g transform="translate(0 ${f1(yH - 180)})">${S.near}</g></g>
-    <g data-depth=".6">${ground}${wash}${feet.back}${builds.back}${lanternLine}${hammock}${builds.lamps}${keep}${shelf}${rack}${jars}${grannyAt}${sapling}</g>
+    <g data-depth=".6">${ground}${wash}</g>${haze}<g data-depth=".6">${feet.back}${builds.back}${lanternLine}${hammock}${builds.lamps}${keep}${shelf}${rack}${jars}${grannyAt}${sapling}</g>
     <g data-depth=".75">${feet.mid}${fireLight}${tent}${sign}${fire}${cart}${dib}${flies}</g>
     <g data-depth=".9">${feet.front}${board}${bench}${stall}</g>
     <g data-depth=".6">${memLabel}</g>
