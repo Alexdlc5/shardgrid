@@ -1,0 +1,241 @@
+﻿achievement_id,language_code,app_store_connect_language,title,pre_earned_description,earned_description
+gw.ach.first_haul,en,English (U.S.),First Haul,Dig a haul and sell it to Old Puddock.,You sold your first haul to Old Puddock.
+gw.ach.first_haul,de,German,Erste Ausbeute,Grab eine Ausbeute aus und verkauf sie an den alten Puddock.,Du hast deine erste Ausbeute an den alten Puddock verkauft.
+gw.ach.first_haul,es,Spanish (Mexico),Primer botín,Excava un botín y véndelo al viejo Puddock.,Vendiste tu primer botín al viejo Puddock.
+gw.ach.first_haul,pt-BR,Portuguese (Brazil),Primeiro saque,Escave um saque e venda ao velho Puddock.,Você vendeu seu primeiro saque ao velho Puddock.
+gw.ach.first_haul,ja,Japanese,はじめての収穫,掘った収穫をパドックじいさんに売ろう。,はじめての収穫をパドックじいさんに売った。
+gw.ach.first_haul,ko,Korean,첫 수확,수확을 캐서 퍼덕 영감에게 팔아요.,첫 수확을 퍼덕 영감에게 팔았어요.
+gw.ach.first_haul,zh-Hans,Chinese (Simplified),第一份收获,挖一份收获，卖给老帕多克。,你把第一份收获卖给了老帕多克。
+gw.ach.first_haul,hi,Hindi,पहला खज़ाना,खज़ाना खोदो और बूढ़े पडक को बेचो।,तुमने अपना पहला खज़ाना बूढ़े पडक को बेच दिया।
+gw.ach.met_puddock,en,English (U.S.),Coins for Crystals,Meet Old Puddock at his stall.,"You met Old Puddock. Coins for crystals, fair as rain."
+gw.ach.met_puddock,de,German,Münzen für Kristalle,Triff den alten Puddock an seinem Stand.,Du hast den alten Puddock getroffen. Münzen für Kristalle.
+gw.ach.met_puddock,es,Spanish (Mexico),Monedas por cristales,Conoce al viejo Puddock en su puesto.,Conociste al viejo Puddock. Monedas por cristales.
+gw.ach.met_puddock,pt-BR,Portuguese (Brazil),Moedas por cristais,Conheça o velho Puddock na barraca dele.,Você conheceu o velho Puddock. Moedas por cristais.
+gw.ach.met_puddock,ja,Japanese,水晶とコイン,屋台でパドックじいさんに会おう。,パドックじいさんに会った。水晶とコインを交換だ。
+gw.ach.met_puddock,ko,Korean,수정과 동전,노점에서 퍼덕 영감을 만나요.,퍼덕 영감을 만났어요. 수정을 동전으로 바꿔 줘요.
+gw.ach.met_puddock,zh-Hans,Chinese (Simplified),水晶换金币,去小摊见见老帕多克。,你见到了老帕多克。水晶换金币，公平合理。
+gw.ach.met_puddock,hi,Hindi,क्रिस्टल के बदले सिक्के,बूढ़े पडक से उसकी दुकान पर मिलो।,तुम बूढ़े पडक से मिले। क्रिस्टल के बदले सिक्के।
+gw.ach.pure_vein,en,English (U.S.),Pure Vein,Clear a line made of one crystal type.,You cleared a pure vein. Double crystals!
+gw.ach.pure_vein,de,German,Reine Ader,Räum eine Reihe aus nur einer Kristallart.,Du hast eine reine Ader geräumt. Doppelte Kristalle!
+gw.ach.pure_vein,es,Spanish (Mexico),Veta pura,Despeja una línea de un solo tipo de cristal.,Despejaste una veta pura. ¡Cristales dobles!
+gw.ach.pure_vein,pt-BR,Portuguese (Brazil),Veio puro,Limpe uma linha de um só tipo de cristal.,Você limpou um veio puro. Cristais em dobro!
+gw.ach.pure_vein,ja,Japanese,純鉱脈,1種類の水晶だけの列を消そう。,純鉱脈を消した。水晶が2倍！
+gw.ach.pure_vein,ko,Korean,순수 광맥,한 종류 수정으로만 된 줄을 지워요.,순수 광맥을 지웠어요. 수정이 두 배!
+gw.ach.pure_vein,zh-Hans,Chinese (Simplified),纯矿脉,消除一行只有一种水晶的行。,你消除了纯矿脉。水晶翻倍！
+gw.ach.pure_vein,hi,Hindi,शुद्ध शिरा,एक ही किस्म के क्रिस्टल की लाइन साफ़ करो।,तुमने शुद्ध शिरा साफ़ की। दोगुने क्रिस्टल!
+gw.ach.glimmering,en,English (U.S.),Glimmering!,Clear four lines with a single piece.,You cleared four lines with a single piece.
+gw.ach.glimmering,de,German,Funkelnd!,Räum vier Reihen mit einem einzigen Teil.,Du hast vier Reihen mit einem einzigen Teil geräumt.
+gw.ach.glimmering,es,Spanish (Mexico),¡Resplandeciente!,Despeja cuatro líneas con una sola pieza.,Despejaste cuatro líneas con una sola pieza.
+gw.ach.glimmering,pt-BR,Portuguese (Brazil),Cintilante!,Limpe quatro linhas com uma única peça.,Você limpou quatro linhas com uma única peça.
+gw.ach.glimmering,ja,Japanese,キラキラ！,1つのピースで4列を消そう。,1つのピースで4列を消した。
+gw.ach.glimmering,ko,Korean,반짝반짝!,조각 하나로 네 줄을 지워요.,조각 하나로 네 줄을 지웠어요.
+gw.ach.glimmering,zh-Hans,Chinese (Simplified),闪闪发光！,用一个方块消除四行。,你用一个方块消除了四行。
+gw.ach.glimmering,hi,Hindi,जगमग!,एक ही टुकड़े से चार लाइनें साफ़ करो।,तुमने एक ही टुकड़े से चार लाइनें साफ़ कीं।
+gw.ach.combo_5,en,English (U.S.),Combo ×5,Reach a ×5 combo in one dig.,You reached a ×5 combo.
+gw.ach.combo_5,de,German,Kombo ×5,Erreiche in einer Grabung eine ×5-Kombo.,Du hast eine ×5-Kombo erreicht.
+gw.ach.combo_5,es,Spanish (Mexico),Combo ×5,Logra un combo ×5 en una excavación.,Lograste un combo ×5.
+gw.ach.combo_5,pt-BR,Portuguese (Brazil),Combo ×5,Faça um combo ×5 em uma escavação.,Você fez um combo ×5.
+gw.ach.combo_5,ja,Japanese,コンボ ×5,1回の採掘で ×5 コンボを出そう。,×5 コンボを出した。
+gw.ach.combo_5,ko,Korean,콤보 ×5,한 번의 채굴에서 ×5 콤보를 달성해요.,×5 콤보를 달성했어요.
+gw.ach.combo_5,zh-Hans,Chinese (Simplified),连击 ×5,在一次挖掘中达成 ×5 连击。,你达成了 ×5 连击。
+gw.ach.combo_5,hi,Hindi,कॉम्बो ×5,एक खुदाई में ×5 कॉम्बो बनाओ।,तुमने ×5 कॉम्बो बनाया।
+gw.ach.mine_hollow,en,English (U.S.),Mossy Hollow,Find all three Amber Memories in this mine.,You found all three Amber Memories in this mine.
+gw.ach.mine_hollow,de,German,Moosmulde,Finde alle drei Bernsteinerinnerungen in dieser Mine.,Du hast alle drei Bernsteinerinnerungen dieser Mine gefunden.
+gw.ach.mine_hollow,es,Spanish (Mexico),Hondonada Musgosa,Encuentra los tres Recuerdos de Ámbar de esta mina.,Encontraste los tres Recuerdos de Ámbar de esta mina.
+gw.ach.mine_hollow,pt-BR,Portuguese (Brazil),Recanto Musgoso,Encontre as três Memórias de Âmbar desta mina.,Você encontrou as três Memórias de Âmbar desta mina.
+gw.ach.mine_hollow,ja,Japanese,コケのくぼ地,この鉱山の琥珀の記憶を3つすべて見つけよう。,この鉱山の琥珀の記憶を3つすべて見つけた。
+gw.ach.mine_hollow,ko,Korean,이끼 우묵지,이 광산의 호박 기억 세 개를 모두 찾아요.,이 광산의 호박 기억 세 개를 모두 찾았어요.
+gw.ach.mine_hollow,zh-Hans,Chinese (Simplified),苔藓洼地,找到这座矿洞里全部三段琥珀记忆。,你找到了这座矿洞里全部三段琥珀记忆。
+gw.ach.mine_hollow,hi,Hindi,काई भरी खोह,इस खदान की तीनों अंबर स्मृतियाँ ढूँढो।,तुमने इस खदान की तीनों अंबर स्मृतियाँ ढूँढ लीं।
+gw.ach.mine_ember,en,English (U.S.),Cinderroot Caverns,Find all three Amber Memories in this mine.,You found all three Amber Memories in this mine.
+gw.ach.mine_ember,de,German,Aschwurzelhöhlen,Finde alle drei Bernsteinerinnerungen in dieser Mine.,Du hast alle drei Bernsteinerinnerungen dieser Mine gefunden.
+gw.ach.mine_ember,es,Spanish (Mexico),Cavernas Raízceniza,Encuentra los tres Recuerdos de Ámbar de esta mina.,Encontraste los tres Recuerdos de Ámbar de esta mina.
+gw.ach.mine_ember,pt-BR,Portuguese (Brazil),Cavernas Raiz-de-Brasa,Encontre as três Memórias de Âmbar desta mina.,Você encontrou as três Memórias de Âmbar desta mina.
+gw.ach.mine_ember,ja,Japanese,燃え根の洞窟,この鉱山の琥珀の記憶を3つすべて見つけよう。,この鉱山の琥珀の記憶を3つすべて見つけた。
+gw.ach.mine_ember,ko,Korean,잿불뿌리 동굴,이 광산의 호박 기억 세 개를 모두 찾아요.,이 광산의 호박 기억 세 개를 모두 찾았어요.
+gw.ach.mine_ember,zh-Hans,Chinese (Simplified),烬根洞窟,找到这座矿洞里全部三段琥珀记忆。,你找到了这座矿洞里全部三段琥珀记忆。
+gw.ach.mine_ember,hi,Hindi,राखजड़ गुफाएँ,इस खदान की तीनों अंबर स्मृतियाँ ढूँढो।,तुमने इस खदान की तीनों अंबर स्मृतियाँ ढूँढ लीं।
+gw.ach.mine_grotto,en,English (U.S.),Gloamcap Grotto,Find all three Amber Memories in this mine.,You found all three Amber Memories in this mine.
+gw.ach.mine_grotto,de,German,Dämmerhutgrotte,Finde alle drei Bernsteinerinnerungen in dieser Mine.,Du hast alle drei Bernsteinerinnerungen dieser Mine gefunden.
+gw.ach.mine_grotto,es,Spanish (Mexico),Gruta Sombrerillo,Encuentra los tres Recuerdos de Ámbar de esta mina.,Encontraste los tres Recuerdos de Ámbar de esta mina.
+gw.ach.mine_grotto,pt-BR,Portuguese (Brazil),Gruta Chapéu-Crepúsculo,Encontre as três Memórias de Âmbar desta mina.,Você encontrou as três Memórias de Âmbar desta mina.
+gw.ach.mine_grotto,ja,Japanese,よいやみ茸の洞,この鉱山の琥珀の記憶を3つすべて見つけよう。,この鉱山の琥珀の記憶を3つすべて見つけた。
+gw.ach.mine_grotto,ko,Korean,어스름버섯 동굴,이 광산의 호박 기억 세 개를 모두 찾아요.,이 광산의 호박 기억 세 개를 모두 찾았어요.
+gw.ach.mine_grotto,zh-Hans,Chinese (Simplified),暮菇石窟,找到这座矿洞里全部三段琥珀记忆。,你找到了这座矿洞里全部三段琥珀记忆。
+gw.ach.mine_grotto,hi,Hindi,सांझटोपी गुफा,इस खदान की तीनों अंबर स्मृतियाँ ढूँढो।,तुमने इस खदान की तीनों अंबर स्मृतियाँ ढूँढ लीं।
+gw.ach.mine_frostpine,en,English (U.S.),Frostpine Deep,Find all three Amber Memories in this mine.,You found all three Amber Memories in this mine.
+gw.ach.mine_frostpine,de,German,Frostkiefertiefe,Finde alle drei Bernsteinerinnerungen in dieser Mine.,Du hast alle drei Bernsteinerinnerungen dieser Mine gefunden.
+gw.ach.mine_frostpine,es,Spanish (Mexico),Hondura Pinoescarcha,Encuentra los tres Recuerdos de Ámbar de esta mina.,Encontraste los tres Recuerdos de Ámbar de esta mina.
+gw.ach.mine_frostpine,pt-BR,Portuguese (Brazil),Profundeza Pinho-Gelado,Encontre as três Memórias de Âmbar desta mina.,Você encontrou as três Memórias de Âmbar desta mina.
+gw.ach.mine_frostpine,ja,Japanese,霜松の深み,この鉱山の琥珀の記憶を3つすべて見つけよう。,この鉱山の琥珀の記憶を3つすべて見つけた。
+gw.ach.mine_frostpine,ko,Korean,서리소나무 심연,이 광산의 호박 기억 세 개를 모두 찾아요.,이 광산의 호박 기억 세 개를 모두 찾았어요.
+gw.ach.mine_frostpine,zh-Hans,Chinese (Simplified),霜松深处,找到这座矿洞里全部三段琥珀记忆。,你找到了这座矿洞里全部三段琥珀记忆。
+gw.ach.mine_frostpine,hi,Hindi,पालाचीड़ गहराई,इस खदान की तीनों अंबर स्मृतियाँ ढूँढो।,तुमने इस खदान की तीनों अंबर स्मृतियाँ ढूँढ लीं।
+gw.ach.mine_gulch,en,English (U.S.),Geode Gulch,Find all three Amber Memories in this mine.,You found all three Amber Memories in this mine.
+gw.ach.mine_gulch,de,German,Geodenschlucht,Finde alle drei Bernsteinerinnerungen in dieser Mine.,Du hast alle drei Bernsteinerinnerungen dieser Mine gefunden.
+gw.ach.mine_gulch,es,Spanish (Mexico),Barranco Geoda,Encuentra los tres Recuerdos de Ámbar de esta mina.,Encontraste los tres Recuerdos de Ámbar de esta mina.
+gw.ach.mine_gulch,pt-BR,Portuguese (Brazil),Ravina dos Geodos,Encontre as três Memórias de Âmbar desta mina.,Você encontrou as três Memórias de Âmbar desta mina.
+gw.ach.mine_gulch,ja,Japanese,ジオードの谷,この鉱山の琥珀の記憶を3つすべて見つけよう。,この鉱山の琥珀の記憶を3つすべて見つけた。
+gw.ach.mine_gulch,ko,Korean,정동 협곡,이 광산의 호박 기억 세 개를 모두 찾아요.,이 광산의 호박 기억 세 개를 모두 찾았어요.
+gw.ach.mine_gulch,zh-Hans,Chinese (Simplified),晶洞峡谷,找到这座矿洞里全部三段琥珀记忆。,你找到了这座矿洞里全部三段琥珀记忆。
+gw.ach.mine_gulch,hi,Hindi,जियोड घाटी,इस खदान की तीनों अंबर स्मृतियाँ ढूँढो।,तुमने इस खदान की तीनों अंबर स्मृतियाँ ढूँढ लीं।
+gw.ach.mine_heartwood,en,English (U.S.),Heartroot Deep,Find all three Amber Memories in this mine.,You found all three Amber Memories in this mine.
+gw.ach.mine_heartwood,de,German,Herzwurzeltiefe,Finde alle drei Bernsteinerinnerungen in dieser Mine.,Du hast alle drei Bernsteinerinnerungen dieser Mine gefunden.
+gw.ach.mine_heartwood,es,Spanish (Mexico),Hondura Raízcorazón,Encuentra los tres Recuerdos de Ámbar de esta mina.,Encontraste los tres Recuerdos de Ámbar de esta mina.
+gw.ach.mine_heartwood,pt-BR,Portuguese (Brazil),Profundeza Raiz-Coração,Encontre as três Memórias de Âmbar desta mina.,Você encontrou as três Memórias de Âmbar desta mina.
+gw.ach.mine_heartwood,ja,Japanese,心根の深み,この鉱山の琥珀の記憶を3つすべて見つけよう。,この鉱山の琥珀の記憶を3つすべて見つけた。
+gw.ach.mine_heartwood,ko,Korean,심장뿌리 심연,이 광산의 호박 기억 세 개를 모두 찾아요.,이 광산의 호박 기억 세 개를 모두 찾았어요.
+gw.ach.mine_heartwood,zh-Hans,Chinese (Simplified),心根深处,找到这座矿洞里全部三段琥珀记忆。,你找到了这座矿洞里全部三段琥珀记忆。
+gw.ach.mine_heartwood,hi,Hindi,हृदयजड़ गहराई,इस खदान की तीनों अंबर स्मृतियाँ ढूँढो।,तुमने इस खदान की तीनों अंबर स्मृतियाँ ढूँढ लीं।
+gw.ach.mine_cinder,en,English (U.S.),Cinderthread Run,Find all three Amber Memories in this mine.,You found all three Amber Memories in this mine.
+gw.ach.mine_cinder,de,German,Aschefadengang,Finde alle drei Bernsteinerinnerungen in dieser Mine.,Du hast alle drei Bernsteinerinnerungen dieser Mine gefunden.
+gw.ach.mine_cinder,es,Spanish (Mexico),Paso Hiloceniza,Encuentra los tres Recuerdos de Ámbar de esta mina.,Encontraste los tres Recuerdos de Ámbar de esta mina.
+gw.ach.mine_cinder,pt-BR,Portuguese (Brazil),Trilha Fio-de-Brasa,Encontre as três Memórias de Âmbar desta mina.,Você encontrou as três Memórias de Âmbar desta mina.
+gw.ach.mine_cinder,ja,Japanese,燃え糸の道,この鉱山の琥珀の記憶を3つすべて見つけよう。,この鉱山の琥珀の記憶を3つすべて見つけた。
+gw.ach.mine_cinder,ko,Korean,잿불실 통로,이 광산의 호박 기억 세 개를 모두 찾아요.,이 광산의 호박 기억 세 개를 모두 찾았어요.
+gw.ach.mine_cinder,zh-Hans,Chinese (Simplified),烬丝通道,找到这座矿洞里全部三段琥珀记忆。,你找到了这座矿洞里全部三段琥珀记忆。
+gw.ach.mine_cinder,hi,Hindi,राखधागा मार्ग,इस खदान की तीनों अंबर स्मृतियाँ ढूँढो।,तुमने इस खदान की तीनों अंबर स्मृतियाँ ढूँढ लीं।
+gw.ach.mine_roost,en,English (U.S.),Scalefall Roost,Find all three Amber Memories in this mine.,You found all three Amber Memories in this mine.
+gw.ach.mine_roost,de,German,Schuppenfallnest,Finde alle drei Bernsteinerinnerungen in dieser Mine.,Du hast alle drei Bernsteinerinnerungen dieser Mine gefunden.
+gw.ach.mine_roost,es,Spanish (Mexico),Percha Lluviaescamas,Encuentra los tres Recuerdos de Ámbar de esta mina.,Encontraste los tres Recuerdos de Ámbar de esta mina.
+gw.ach.mine_roost,pt-BR,Portuguese (Brazil),Poleiro Chuva-de-Escamas,Encontre as três Memórias de Âmbar desta mina.,Você encontrou as três Memórias de Âmbar desta mina.
+gw.ach.mine_roost,ja,Japanese,鱗ふる止まり木,この鉱山の琥珀の記憶を3つすべて見つけよう。,この鉱山の琥珀の記憶を3つすべて見つけた。
+gw.ach.mine_roost,ko,Korean,비늘비 둥지,이 광산의 호박 기억 세 개를 모두 찾아요.,이 광산의 호박 기억 세 개를 모두 찾았어요.
+gw.ach.mine_roost,zh-Hans,Chinese (Simplified),鳞落栖所,找到这座矿洞里全部三段琥珀记忆。,你找到了这座矿洞里全部三段琥珀记忆。
+gw.ach.mine_roost,hi,Hindi,शल्कवर्षा बसेरा,इस खदान की तीनों अंबर स्मृतियाँ ढूँढो।,तुमने इस खदान की तीनों अंबर स्मृतियाँ ढूँढ लीं।
+gw.ach.mine_loom,en,English (U.S.),The Moonloom,Find all three Amber Memories in this mine.,You found all three Amber Memories in this mine.
+gw.ach.mine_loom,de,German,Der Mondwebstuhl,Finde alle drei Bernsteinerinnerungen in dieser Mine.,Du hast alle drei Bernsteinerinnerungen dieser Mine gefunden.
+gw.ach.mine_loom,es,Spanish (Mexico),El Telar Lunar,Encuentra los tres Recuerdos de Ámbar de esta mina.,Encontraste los tres Recuerdos de Ámbar de esta mina.
+gw.ach.mine_loom,pt-BR,Portuguese (Brazil),O Tear da Lua,Encontre as três Memórias de Âmbar desta mina.,Você encontrou as três Memórias de Âmbar desta mina.
+gw.ach.mine_loom,ja,Japanese,月の機,この鉱山の琥珀の記憶を3つすべて見つけよう。,この鉱山の琥珀の記憶を3つすべて見つけた。
+gw.ach.mine_loom,ko,Korean,달베틀,이 광산의 호박 기억 세 개를 모두 찾아요.,이 광산의 호박 기억 세 개를 모두 찾았어요.
+gw.ach.mine_loom,zh-Hans,Chinese (Simplified),月织机,找到这座矿洞里全部三段琥珀记忆。,你找到了这座矿洞里全部三段琥珀记忆。
+gw.ach.mine_loom,hi,Hindi,चाँद-करघा,इस खदान की तीनों अंबर स्मृतियाँ ढूँढो।,तुमने इस खदान की तीनों अंबर स्मृतियाँ ढूँढ लीं।
+gw.ach.mine_wickhold,en,English (U.S.),Wickhold,Find all three Amber Memories in this mine.,You found all three Amber Memories in this mine.
+gw.ach.mine_wickhold,de,German,Dochtburg,Finde alle drei Bernsteinerinnerungen in dieser Mine.,Du hast alle drei Bernsteinerinnerungen dieser Mine gefunden.
+gw.ach.mine_wickhold,es,Spanish (Mexico),Mechafuerte,Encuentra los tres Recuerdos de Ámbar de esta mina.,Encontraste los tres Recuerdos de Ámbar de esta mina.
+gw.ach.mine_wickhold,pt-BR,Portuguese (Brazil),Forte dos Pavios,Encontre as três Memórias de Âmbar desta mina.,Você encontrou as três Memórias de Âmbar desta mina.
+gw.ach.mine_wickhold,ja,Japanese,ウィックホールド,この鉱山の琥珀の記憶を3つすべて見つけよう。,この鉱山の琥珀の記憶を3つすべて見つけた。
+gw.ach.mine_wickhold,ko,Korean,심지성,이 광산의 호박 기억 세 개를 모두 찾아요.,이 광산의 호박 기억 세 개를 모두 찾았어요.
+gw.ach.mine_wickhold,zh-Hans,Chinese (Simplified),灯芯堡,找到这座矿洞里全部三段琥珀记忆。,你找到了这座矿洞里全部三段琥珀记忆。
+gw.ach.mine_wickhold,hi,Hindi,बातीगढ़,इस खदान की तीनों अंबर स्मृतियाँ ढूँढो।,तुमने इस खदान की तीनों अंबर स्मृतियाँ ढूँढ लीं।
+gw.ach.mine_skywell,en,English (U.S.),The Skywell,Find all three Amber Memories in this mine.,You found all three Amber Memories in this mine.
+gw.ach.mine_skywell,de,German,Der Himmelsschacht,Finde alle drei Bernsteinerinnerungen in dieser Mine.,Du hast alle drei Bernsteinerinnerungen dieser Mine gefunden.
+gw.ach.mine_skywell,es,Spanish (Mexico),El Pozo del Cielo,Encuentra los tres Recuerdos de Ámbar de esta mina.,Encontraste los tres Recuerdos de Ámbar de esta mina.
+gw.ach.mine_skywell,pt-BR,Portuguese (Brazil),O Poço do Céu,Encontre as três Memórias de Âmbar desta mina.,Você encontrou as três Memórias de Âmbar desta mina.
+gw.ach.mine_skywell,ja,Japanese,空の井戸,この鉱山の琥珀の記憶を3つすべて見つけよう。,この鉱山の琥珀の記憶を3つすべて見つけた。
+gw.ach.mine_skywell,ko,Korean,하늘우물,이 광산의 호박 기억 세 개를 모두 찾아요.,이 광산의 호박 기억 세 개를 모두 찾았어요.
+gw.ach.mine_skywell,zh-Hans,Chinese (Simplified),天井,找到这座矿洞里全部三段琥珀记忆。,你找到了这座矿洞里全部三段琥珀记忆。
+gw.ach.mine_skywell,hi,Hindi,आसमान-कुआँ,इस खदान की तीनों अंबर स्मृतियाँ ढूँढो।,तुमने इस खदान की तीनों अंबर स्मृतियाँ ढूँढ लीं।
+gw.ach.reunion,en,English (U.S.),"Found You, Gran",Find Granny Burr in Wickhold.,"You found Granny Burr, still counting lanterns."
+gw.ach.reunion,de,German,"Hab dich gefunden, Oma",Finde Oma Burr in der Dochtburg.,Du hast Oma Burr gefunden. Sie zählt noch immer Laternen.
+gw.ach.reunion,es,Spanish (Mexico),"Te encontré, abuela",Encuentra a la abuela Burr en Mechafuerte.,"Encontraste a la abuela Burr, aún contando faroles."
+gw.ach.reunion,pt-BR,Portuguese (Brazil),"Achei você, vovó",Encontre a Vovó Burr no Forte dos Pavios.,"Você encontrou a Vovó Burr, ainda contando lanternas."
+gw.ach.reunion,ja,Japanese,見つけたよ、おばあちゃん,ウィックホールドでバーおばあちゃんを見つけよう。,バーおばあちゃんを見つけた。今もランタンを数えていた。
+gw.ach.reunion,ko,Korean,"찾았어, 할머니",심지성에서 버 할머니를 찾아요.,버 할머니를 찾았어요. 아직도 등불을 세고 계셨어요.
+gw.ach.reunion,zh-Hans,Chinese (Simplified),找到你了，奶奶,在灯芯堡找到伯尔奶奶。,你找到了伯尔奶奶，她还在数提灯。
+gw.ach.reunion,hi,Hindi,"तुम्हें ढूँढ लिया, दादी",बातीगढ़ में दादी बर को ढूँढो।,"तुमने दादी बर को ढूँढ लिया, अब भी लालटेनें गिनती हुई।"
+gw.ach.finale,en,English (U.S.),The Wickway is Lit,Clear the Skywell and bring back the moon.,Moonlight runs down every old lantern line. The Wickway is lit.
+gw.ach.finale,de,German,Der Dochtweg leuchtet,Räum den Himmelsschacht frei und hol den Mond zurück.,Mondlicht fließt durch alle alten Laternenlinien. Der Dochtweg leuchtet.
+gw.ach.finale,es,Spanish (Mexico),El Camino de Mechas,Despeja el Pozo del Cielo y trae de vuelta la luna.,La luz de luna recorre cada vieja línea de faroles. El Camino de Mechas está encendido.
+gw.ach.finale,pt-BR,Portuguese (Brazil),O Caminho dos Pavios,Libere o Poço do Céu e traga a lua de volta.,O luar desce por todas as velhas linhas de lanternas. O Caminho dos Pavios acendeu.
+gw.ach.finale,ja,Japanese,ウィックウェイに明かりを,空の井戸を掘りあけて、月をとりもどそう。,月の光が古いランタンの道を流れていく。ウィックウェイに明かりがともった。
+gw.ach.finale,ko,Korean,심지길에 불이 켜졌어요,하늘우물을 뚫고 달을 되찾아요.,달빛이 옛 등불 길마다 흘러내려요. 심지길에 불이 켜졌어요.
+gw.ach.finale,zh-Hans,Chinese (Simplified),灯芯路亮了,打通天井，把月亮带回来。,月光流过每一条古老的灯线。灯芯路亮了。
+gw.ach.finale,hi,Hindi,बाती-पथ जगमगा उठा,आसमान-कुआँ खोलो और चाँद वापस लाओ।,चाँदनी हर पुरानी लालटेन-लाइन में बह निकली। बाती-पथ जगमगा उठा।
+gw.ach.all_memories,en,English (U.S.),Every Memory,Find all 33 Amber Memories.,You found all 33 Amber Memories.
+gw.ach.all_memories,de,German,Jede Erinnerung,Finde alle 33 Bernsteinerinnerungen.,Du hast alle 33 Bernsteinerinnerungen gefunden.
+gw.ach.all_memories,es,Spanish (Mexico),Todos los recuerdos,Encuentra los 33 Recuerdos de Ámbar.,Encontraste los 33 Recuerdos de Ámbar.
+gw.ach.all_memories,pt-BR,Portuguese (Brazil),Todas as memórias,Encontre as 33 Memórias de Âmbar.,Você encontrou as 33 Memórias de Âmbar.
+gw.ach.all_memories,ja,Japanese,すべての記憶,琥珀の記憶を33個すべて見つけよう。,琥珀の記憶を33個すべて見つけた。
+gw.ach.all_memories,ko,Korean,모든 기억,호박 기억 33개를 모두 찾아요.,호박 기억 33개를 모두 찾았어요.
+gw.ach.all_memories,zh-Hans,Chinese (Simplified),所有记忆,找到全部 33 段琥珀记忆。,你找到了全部 33 段琥珀记忆。
+gw.ach.all_memories,hi,Hindi,हर स्मृति,सभी 33 अंबर स्मृतियाँ ढूँढो।,तुमने सभी 33 अंबर स्मृतियाँ ढूँढ लीं।
+gw.ach.full_shelf,en,English (U.S.),A Full Shelf,Put all 12 kinds of gem on the camp shelf.,All 12 kinds of gem shine on your shelf.
+gw.ach.full_shelf,de,German,Ein volles Regal,Stell alle 12 Edelsteinarten ins Lagerregal.,Alle 12 Edelsteinarten funkeln in deinem Regal.
+gw.ach.full_shelf,es,Spanish (Mexico),Un estante lleno,Pon los 12 tipos de gema en el estante del campamento.,Los 12 tipos de gema brillan en tu estante.
+gw.ach.full_shelf,pt-BR,Portuguese (Brazil),Uma prateleira cheia,Coloque os 12 tipos de gema na prateleira do acampamento.,Os 12 tipos de gema brilham na sua prateleira.
+gw.ach.full_shelf,ja,Japanese,いっぱいのたな,キャンプのたなに12種類の宝石をぜんぶならべよう。,12種類の宝石がぜんぶたなでかがやいている。
+gw.ach.full_shelf,ko,Korean,가득 찬 선반,캠프 선반에 보석 12종류를 모두 올려요.,보석 12종류가 모두 선반에서 반짝여요.
+gw.ach.full_shelf,zh-Hans,Chinese (Simplified),满满的架子,把全部 12 种宝石摆上营地的架子。,全部 12 种宝石都在你的架子上闪耀。
+gw.ach.full_shelf,hi,Hindi,भरी हुई शेल्फ़,डेरे की शेल्फ़ पर सभी 12 किस्म के रत्न रखो।,सभी 12 किस्म के रत्न तुम्हारी शेल्फ़ पर चमक रहे हैं।
+gw.ach.first_pet,en,English (U.S.),Someone Asleep,Free a pet sleeping inside a crystal.,You woke a pet from its crystal. It's waiting at camp.
+gw.ach.first_pet,de,German,Jemand schläft,"Befrei ein Haustier, das in einem Kristall schläft.",Du hast ein Haustier aus seinem Kristall geweckt. Es wartet im Lager.
+gw.ach.first_pet,es,Spanish (Mexico),Alguien duerme,Libera una mascota dormida dentro de un cristal.,Despertaste a una mascota de su cristal. Te espera en el campamento.
+gw.ach.first_pet,pt-BR,Portuguese (Brazil),Alguém dormindo,Liberte um bichinho dormindo dentro de um cristal.,Você acordou um bichinho do cristal. Ele espera no acampamento.
+gw.ach.first_pet,ja,Japanese,だれかがねむってる,水晶の中でねむるペットを助けだそう。,水晶からペットを起こした。キャンプで待ってる。
+gw.ach.first_pet,ko,Korean,누군가 잠들어 있어요,수정 속에 잠든 펫을 꺼내 줘요.,수정 속 펫을 깨웠어요. 캠프에서 기다리고 있어요.
+gw.ach.first_pet,zh-Hans,Chinese (Simplified),有谁在睡觉,救出睡在水晶里的宠物。,你把宠物从水晶里唤醒了。它在营地等你。
+gw.ach.first_pet,hi,Hindi,कोई सो रहा है,क्रिस्टल में सोए किसी पालतू को आज़ाद करो।,तुमने क्रिस्टल से एक पालतू को जगाया। वो डेरे पर इंतज़ार में है।
+gw.ach.all_pets,en,English (U.S.),All Seven,Free all 7 pets.,All 7 pets are waiting at camp.
+gw.ach.all_pets,de,German,Alle sieben,Befrei alle 7 Haustiere.,Alle 7 Haustiere warten im Lager.
+gw.ach.all_pets,es,Spanish (Mexico),Las siete,Libera las 7 mascotas.,Las 7 mascotas te esperan en el campamento.
+gw.ach.all_pets,pt-BR,Portuguese (Brazil),Todos os sete,Liberte os 7 bichinhos.,Os 7 bichinhos esperam no acampamento.
+gw.ach.all_pets,ja,Japanese,7ひきそろった,ペットを7ひきすべて助けだそう。,7ひきのペットがみんなキャンプで待ってる。
+gw.ach.all_pets,ko,Korean,일곱 친구,펫 7마리를 모두 꺼내 줘요.,펫 7마리가 모두 캠프에서 기다려요.
+gw.ach.all_pets,zh-Hans,Chinese (Simplified),七个都齐了,救出全部 7 只宠物。,全部 7 只宠物都在营地等你。
+gw.ach.all_pets,hi,Hindi,सातों साथी,सभी 7 पालतू आज़ाद करो।,सभी 7 पालतू डेरे पर इंतज़ार में हैं।
+gw.ach.shoo_50,en,English (U.S.),"Shoo, Shoo!",Shoo 50 Pilfermoths by clearing lines through them.,You shooed 50 Pilfermoths. Not one was swatted.
+gw.ach.shoo_50,de,German,"Husch, husch!","Verscheuch 50 Klaumotten, indem du Reihen durch sie räumst.",Du hast 50 Klaumotten verscheucht. Keine wurde geklatscht.
+gw.ach.shoo_50,es,Spanish (Mexico),"¡Fuera, fuera!",Espanta 50 Polilladronas despejando líneas que las crucen.,Espantaste 50 Polilladronas. Sin aplastar ni una.
+gw.ach.shoo_50,pt-BR,Portuguese (Brazil),"Xô, xô!",Espante 50 Mariposas-Ladras limpando linhas que passem por elas.,Você espantou 50 Mariposas-Ladras. Nenhuma foi esmagada.
+gw.ach.shoo_50,ja,Japanese,しっし！,列を消して、ちょろまかしガを50ぴき追いはらおう。,ちょろまかしガを50ぴき追いはらった。1ぴきもたたいていない。
+gw.ach.shoo_50,ko,Korean,"훠이, 훠이!",줄을 지워 도둑나방 50마리를 쫓아내요.,도둑나방 50마리를 쫓아냈어요. 한 마리도 때리지 않았어요.
+gw.ach.shoo_50,zh-Hans,Chinese (Simplified),嘘，嘘！,消除穿过偷偷蛾的行，赶走 50 只偷偷蛾。,你赶走了 50 只偷偷蛾，一只也没拍。
+gw.ach.shoo_50,hi,Hindi,"हुश, हुश!",लाइनें साफ़ करके 50 चोर पतंगे भगाओ।,तुमने 50 चोर पतंगे भगाए। एक को भी मारा नहीं।
+gw.ach.camp_full,en,English (U.S.),Camp in Full Glow,Grow Dibble's camp to 100%.,Dibble's camp is 100% grown.
+gw.ach.camp_full,de,German,Lager in vollem Glanz,Lass Dibbles Lager auf 100% wachsen.,Dibbles Lager ist zu 100% gewachsen.
+gw.ach.camp_full,es,Spanish (Mexico),Campamento radiante,Haz crecer el campamento de Dibble al 100%.,El campamento de Dibble está al 100%.
+gw.ach.camp_full,pt-BR,Portuguese (Brazil),Acampamento radiante,Faça o acampamento de Dibble crescer 100%.,O acampamento de Dibble está 100% crescido.
+gw.ach.camp_full,ja,Japanese,かがやくキャンプ,ディブルのキャンプを100%まで育てよう。,ディブルのキャンプが100%成長した。
+gw.ach.camp_full,ko,Korean,빛나는 캠프,디블의 캠프를 100%까지 키워요.,디블의 캠프가 100% 성장했어요.
+gw.ach.camp_full,zh-Hans,Chinese (Simplified),营地大放光彩,让迪布尔的营地成长到 100%。,迪布尔的营地成长到了 100%。
+gw.ach.camp_full,hi,Hindi,जगमगाता डेरा,डिबल का डेरा 100% तक बढ़ाओ।,डिबल का डेरा 100% बढ़ गया।
+gw.ach.streak_7,en,English (U.S.),A Week of Digs,Play the Daily Dig 7 days in a row.,A 7-day Daily Dig streak!
+gw.ach.streak_7,de,German,Eine Woche Graben,Spiel die Tagesgrabung 7 Tage in Folge.,Eine 7-Tage-Serie bei der Tagesgrabung!
+gw.ach.streak_7,es,Spanish (Mexico),Una semana cavando,Juega la Excavación diaria 7 días seguidos.,¡Racha de 7 días en la Excavación diaria!
+gw.ach.streak_7,pt-BR,Portuguese (Brazil),Uma semana cavando,Jogue a Escavação diária 7 dias seguidos.,7 dias seguidos de Escavação diária!
+gw.ach.streak_7,ja,Japanese,1週間の採掘,デイリー採掘を7日連続で遊ぼう。,デイリー採掘7日連続！
+gw.ach.streak_7,ko,Korean,일주일 채굴,일일 채굴을 7일 연속으로 해요.,일일 채굴 7일 연속!
+gw.ach.streak_7,zh-Hans,Chinese (Simplified),挖了一周,连续 7 天玩每日挖掘。,每日挖掘连续 7 天！
+gw.ach.streak_7,hi,Hindi,हफ़्ते भर की खुदाई,रोज़ की खुदाई लगातार 7 दिन खेलो।,रोज़ की खुदाई की 7 दिन की लड़ी!
+gw.ach.streak_30,en,English (U.S.),A Month of Digs,Play the Daily Dig 30 days in a row.,A 30-day Daily Dig streak!
+gw.ach.streak_30,de,German,Ein Monat Graben,Spiel die Tagesgrabung 30 Tage in Folge.,Eine 30-Tage-Serie bei der Tagesgrabung!
+gw.ach.streak_30,es,Spanish (Mexico),Un mes cavando,Juega la Excavación diaria 30 días seguidos.,¡Racha de 30 días en la Excavación diaria!
+gw.ach.streak_30,pt-BR,Portuguese (Brazil),Um mês cavando,Jogue a Escavação diária 30 dias seguidos.,30 dias seguidos de Escavação diária!
+gw.ach.streak_30,ja,Japanese,1か月の採掘,デイリー採掘を30日連続で遊ぼう。,デイリー採掘30日連続！
+gw.ach.streak_30,ko,Korean,한 달 채굴,일일 채굴을 30일 연속으로 해요.,일일 채굴 30일 연속!
+gw.ach.streak_30,zh-Hans,Chinese (Simplified),挖了一个月,连续 30 天玩每日挖掘。,每日挖掘连续 30 天！
+gw.ach.streak_30,hi,Hindi,महीने भर की खुदाई,रोज़ की खुदाई लगातार 30 दिन खेलो।,रोज़ की खुदाई की 30 दिन की लड़ी!
+gw.ach.gold_100k,en,English (U.S.),A Pouch of Gold,"Sell 100,000 gold of crystals to Old Puddock in all.","You've sold 100,000 gold of crystals."
+gw.ach.gold_100k,de,German,Ein Beutel Gold,Verkauf insgesamt Kristalle für 100.000 Gold an den alten Puddock.,Du hast Kristalle für 100.000 Gold verkauft.
+gw.ach.gold_100k,es,Spanish (Mexico),Una bolsa de oro,Vende cristales por 100.000 de oro en total al viejo Puddock.,Has vendido cristales por 100.000 de oro.
+gw.ach.gold_100k,pt-BR,Portuguese (Brazil),Uma bolsa de ouro,"Venda 100.000 de ouro em cristais ao velho Puddock, no total.",Você vendeu 100.000 de ouro em cristais.
+gw.ach.gold_100k,ja,Japanese,ゴールドひとふくろ,パドックじいさんに合計10万ゴールド分の水晶を売ろう。,合計10万ゴールド分の水晶を売った。
+gw.ach.gold_100k,ko,Korean,금화 한 주머니,퍼덕 영감에게 수정을 모두 합쳐 10만 골드어치 팔아요.,수정을 10만 골드어치 팔았어요.
+gw.ach.gold_100k,zh-Hans,Chinese (Simplified),一袋金币,累计卖给老帕多克价值 10万 金币的水晶。,你已卖出价值 10万 金币的水晶。
+gw.ach.gold_100k,hi,Hindi,सोने की थैली,बूढ़े पडक को कुल 1 लाख सोने के क्रिस्टल बेचो।,तुमने 1 लाख सोने के क्रिस्टल बेच दिए।
+gw.ach.gold_1m,en,English (U.S.),A Cart of Gold,"Sell 1,000,000 gold of crystals to Old Puddock in all.","You've sold 1,000,000 gold of crystals."
+gw.ach.gold_1m,de,German,Ein Karren Gold,Verkauf insgesamt Kristalle für 1.000.000 Gold an den alten Puddock.,Du hast Kristalle für 1.000.000 Gold verkauft.
+gw.ach.gold_1m,es,Spanish (Mexico),Un carro de oro,Vende cristales por 1.000.000 de oro en total al viejo Puddock.,Has vendido cristales por 1.000.000 de oro.
+gw.ach.gold_1m,pt-BR,Portuguese (Brazil),Uma carroça de ouro,"Venda 1.000.000 de ouro em cristais ao velho Puddock, no total.",Você vendeu 1.000.000 de ouro em cristais.
+gw.ach.gold_1m,ja,Japanese,ゴールドひと荷車,パドックじいさんに合計100万ゴールド分の水晶を売ろう。,合計100万ゴールド分の水晶を売った。
+gw.ach.gold_1m,ko,Korean,금화 한 수레,퍼덕 영감에게 수정을 모두 합쳐 100만 골드어치 팔아요.,수정을 100만 골드어치 팔았어요.
+gw.ach.gold_1m,zh-Hans,Chinese (Simplified),一车金币,累计卖给老帕多克价值 100万 金币的水晶。,你已卖出价值 100万 金币的水晶。
+gw.ach.gold_1m,hi,Hindi,सोने की गाड़ी,बूढ़े पडक को कुल 10 लाख सोने के क्रिस्टल बेचो।,तुमने 10 लाख सोने के क्रिस्टल बेच दिए।
+gw.ach.gold_10m,en,English (U.S.),A Mountain of Gold,"Sell 10,000,000 gold of crystals to Old Puddock in all.","You've sold 10,000,000 gold of crystals."
+gw.ach.gold_10m,de,German,Ein Berg aus Gold,Verkauf insgesamt Kristalle für 10.000.000 Gold an den alten Puddock.,Du hast Kristalle für 10.000.000 Gold verkauft.
+gw.ach.gold_10m,es,Spanish (Mexico),Una montaña de oro,Vende cristales por 10.000.000 de oro en total al viejo Puddock.,Has vendido cristales por 10.000.000 de oro.
+gw.ach.gold_10m,pt-BR,Portuguese (Brazil),Uma montanha de ouro,"Venda 10.000.000 de ouro em cristais ao velho Puddock, no total.",Você vendeu 10.000.000 de ouro em cristais.
+gw.ach.gold_10m,ja,Japanese,ゴールドの山,パドックじいさんに合計1000万ゴールド分の水晶を売ろう。,合計1000万ゴールド分の水晶を売った。
+gw.ach.gold_10m,ko,Korean,금화 산더미,퍼덕 영감에게 수정을 모두 합쳐 1000만 골드어치 팔아요.,수정을 1000만 골드어치 팔았어요.
+gw.ach.gold_10m,zh-Hans,Chinese (Simplified),金币堆成山,累计卖给老帕多克价值 1000万 金币的水晶。,你已卖出价值 1000万 金币的水晶。
+gw.ach.gold_10m,hi,Hindi,सोने का पहाड़,बूढ़े पडक को कुल 1 करोड़ सोने के क्रिस्टल बेचो।,तुमने 1 करोड़ सोने के क्रिस्टल बेच दिए।
+gw.ach.calm_grove,en,English (U.S.),Calm Grove,Sell a haul from a Calm Grove dig.,You took it slow in the Calm Grove.
+gw.ach.calm_grove,de,German,Stiller Hain,Verkauf eine Ausbeute aus einer Grabung im Stillen Hain.,Du hast es im Stillen Hain ruhig angehen lassen.
+gw.ach.calm_grove,es,Spanish (Mexico),Arboleda Tranquila,Vende un botín de una excavación en la Arboleda Tranquila.,Te lo tomaste con calma en la Arboleda Tranquila.
+gw.ach.calm_grove,pt-BR,Portuguese (Brazil),Bosque Calmo,Venda um saque de uma escavação no Bosque Calmo.,Você foi com calma no Bosque Calmo.
+gw.ach.calm_grove,ja,Japanese,しずかな森,しずかな森で掘った収穫を売ろう。,しずかな森でのんびり掘った。
+gw.ach.calm_grove,ko,Korean,고요한 숲,고요한 숲에서 캔 수확을 팔아요.,고요한 숲에서 느긋하게 캤어요.
+gw.ach.calm_grove,zh-Hans,Chinese (Simplified),静谧林,卖出一份在静谧林挖到的收获。,你在静谧林里慢慢挖了一回。
+gw.ach.calm_grove,hi,Hindi,शांत उपवन,शांत उपवन की खुदाई का खज़ाना बेचो।,तुमने शांत उपवन में आराम से खुदाई की।
