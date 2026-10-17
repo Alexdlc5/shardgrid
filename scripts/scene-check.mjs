@@ -1,4 +1,4 @@
-// Story fit check: node scripts/scene-check.mjs [--shots <dir>]   (run npm run build first; needs Chrome or Edge)
+// Story fit check: node scripts/scene-check.mjs [--lang xx] [--shots <dir>]   (run npm run build first; needs Chrome or Edge)
 // Serves www/ the way an iPhone shows it (59px top and 34px bottom safe-area insets baked in, a 62px banner ad),
 // opens the title, every prologue panel and every story-scene step in headless Chrome at three iPhone sizes, and
 // fails if anything overlaps, leaves the safe area, makes the card scroll, is too small to read (S1) or to tap (S2).
@@ -11,6 +11,8 @@ import { join, extname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const SIZES = [[375, 667, "se"], [402, 874, "pro"], [440, 956, "max"]];
+// --lang xx: check the screens in another language (proto/lang)
+const LANG = process.argv.includes("--lang") ? process.argv[process.argv.indexOf("--lang") + 1] : null;
 const shots = process.argv.includes("--shots") ? resolve(process.argv[process.argv.indexOf("--shots") + 1]) : null;
 const chrome = [process.env.CHROME, "C:/Program Files/Google/Chrome/Application/chrome.exe", "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser"].find((p) => p && existsSync(p));
@@ -46,7 +48,7 @@ const until = async (expr, ms = 15000) => { for (const t0 = Date.now(); Date.now
 // open ?scene=… on a fresh install (storage cleared) and wait for the page's report
 const open = async (scene) => {
   await cdp("Storage.clearDataForOrigin", { origin: new URL(base).origin, storageTypes: "all" });
-  await cdp("Page.navigate", { url: `${base}?scene=${scene}` });
+  await cdp("Page.navigate", { url: `${base}?scene=${scene}${LANG ? "&lang=" + LANG : ""}` });
   return JSON.parse(await until(`document.getElementById("fitReport")?.textContent`));
 };
 await cdp("Page.enable"); await cdp("Runtime.enable");

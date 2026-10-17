@@ -5,6 +5,7 @@ const out = "www";
 rmSync(out, { recursive: true, force: true });
 mkdirSync(`${out}/fonts`, { recursive: true });
 for (const f of readdirSync("proto").filter((f) => /\.(js|css)$/.test(f))) copyFileSync(`proto/${f}`, `${out}/${f}`);
+mkdirSync(`${out}/lang`); for (const f of readdirSync("proto/lang")) copyFileSync(`proto/lang/${f}`, `${out}/lang/${f}`); // translations (i18n.js)
 copyFileSync("sim/generator.json", `${out}/generator.json`);
 const weights = [400, 600, 700];
 for (const w of weights) copyFileSync(`node_modules/@fontsource/fredoka/files/fredoka-latin-${w}-normal.woff2`, `${out}/fonts/fredoka-${w}.woff2`);

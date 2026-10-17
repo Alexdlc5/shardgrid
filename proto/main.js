@@ -7,6 +7,7 @@ import { PROLOGUE, MEMORIES, MEMORY_COUNT, nextMemory, memoryById, mineOfMemory,
   CAMP_LINES, SCALE_NOTE, SCENES, nextScene, SITES, GIVEN, MAP_GATE, MURMURS, MURMURS_DEEP, MURMURS_AFTER, PETS, PET_HINT, PET_SHOP } from "./story.js";
 import { soundtrack, sfx } from "./music.js";
 import { platform, track, COIN_PACKS } from "./platform.js";
+import { t, LANGS, CHOSEN, letters } from "./i18n.js"; // after platform.js: the save is restored before i18n reads the chosen language
 import { drawLife, lifeDig, lifeStop, lifeTap, campLife, campPrints } from "./ambient.js";
 import { curve, ring, limb, shape, stroke, rng as prng } from "./paint.js";
 import { localDate, streakAfter, untilMidnight } from "./daily.js";
@@ -741,7 +742,38 @@ function paintMine() {
   // the board itself (frame, cells, Granny's chalk) is static too: paint it once, into its own canvas
   const pad = 28, bw = cell * N + pad * 2, b = document.createElement("canvas"); b.width = bw * dpr; b.height = bw * dpr;
   const keep = ctx; ctx = b.getContext("2d"); ctx.scale(dpr, dpr); ctx.translate(pad - bx, pad - by); drawBoard(); drawChalk(); ctx = keep;
+  if (LOFI) { lofiGrade(g, W, H, LOFI);
+    const keepB = Object.assign(document.createElement("canvas"), { width: b.width, height: b.height }); keepB.getContext("2d").drawImage(b, 0, 0);
+    const gb = b.getContext("2d"); gb.setTransform(dpr, 0, 0, dpr, 0, 0); lofiGrade(gb, bw, bw, LOFI, true);
+    gb.setTransform(1, 0, 0, 1, 0, 0); gb.globalCompositeOperation = "destination-in"; gb.drawImage(keepB, 0, 0); gb.globalCompositeOperation = "source-over"; } // the frame's see-through margin stays see-through
   return { mine: c, board: b, x: bx - pad, y: by - pad, w: bw };
+}
+// ---------- lo-fi light: golden-hour haze (owner's pick, 2026-10-17), graded into the painted cave and board only, so the
+// crystals drawn on top keep their full colour and stand out more against the softer backdrop. The menus and camp get the
+// same haze from #haze in style.css. ?lofi=off: the old look; ?lofi=lamplight|rain: the other samples ----------
+const LOFI = qs.get("lofi") === "off" ? null : qs.get("lofi") || "haze";
+if (!LOFI) document.documentElement.classList.add("noLofi");
+let grainTile = null;
+function lofiGrade(g, w, h, look, board = false) {
+  const L = { // [top tint, bottom tint] for soft-light, lifted blacks, how much colour to take out, grain
+    lamplight: { top: "rgba(70,44,150,.62)", bot: "rgba(255,150,70,.5)", lift: "rgba(52,36,76,.22)", desat: .28, grain: .16 },
+    rain: { top: "rgba(40,70,170,.66)", bot: "rgba(60,50,140,.5)", lift: "rgba(34,46,84,.24)", desat: .36, grain: .14, pools: true },
+    haze: { top: "rgba(255,140,120,.62)", bot: "rgba(150,80,140,.42)", lift: "rgba(84,52,66,.24)", desat: .2, grain: .1, glow: true },
+  }[look]; if (!L) return;
+  g.save();
+  g.globalCompositeOperation = "saturation"; g.globalAlpha = L.desat; g.fillStyle = "#808080"; g.fillRect(0, 0, w, h); // softer colour
+  g.globalAlpha = 1; g.globalCompositeOperation = "soft-light";
+  const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, L.top); gr.addColorStop(1, L.bot); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  if (L.pools && !board) for (const [x, y, r] of [[w * .18, h * .8, w * .5], [w * .85, h * .25, w * .4]]) {
+    const pg = g.createRadialGradient(x, y, 0, x, y, r); pg.addColorStop(0, "rgba(255,180,100,.55)"); pg.addColorStop(1, "rgba(255,180,100,0)"); g.fillStyle = pg; g.fillRect(0, 0, w, h); }
+  g.globalCompositeOperation = "lighten"; g.fillStyle = L.lift; g.fillRect(0, 0, w, h); // blacks lifted, like old film
+  if (L.glow && !board) { g.globalCompositeOperation = "screen"; const hg = g.createRadialGradient(w / 2, 0, 0, w / 2, 0, h * .6);
+    hg.addColorStop(0, "rgba(255,210,170,.4)"); hg.addColorStop(1, "rgba(255,210,170,0)"); g.fillStyle = hg; g.fillRect(0, 0, w, h); }
+  if (!grainTile) { grainTile = document.createElement("canvas"); grainTile.width = grainTile.height = 128; const t = grainTile.getContext("2d"), im = t.createImageData(128, 128);
+    const nr = prng(97); // its own seed: art never draws on the game's random stream (it would change what gets dealt)
+    for (let i = 0; i < im.data.length; i += 4) { const v = 128 + (nr() - .5) * 200; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; } t.putImageData(im, 0, 0); }
+  g.globalCompositeOperation = "overlay"; g.globalAlpha = L.grain; g.fillStyle = g.createPattern(grainTile, "repeat"); g.fillRect(0, 0, w, h);
+  g.restore();
 }
 function drawMine(now) { // the painted cave, plus motes drifting through it
   bgCache ??= paintMine(); if (!NOLAYER.has("bg")) ctx.drawImage(bgCache.mine, 0, 0, W, H);
@@ -1075,7 +1107,7 @@ function tallyHaul(rows, best, fresh) {
     $("haulTotal").textContent = haulValue() + "g"; total.classList.add("land"); tone(1319, .18, "triangle", .07); tone(1760, .22, "triangle", .05, .06);
     const moments = [];
     if (best) moments.push($("newBest"));
-    if (fresh.length) { $("newGem").textContent = `New on the shelf: ${fresh.map((t) => CRYSTALS[t].name).join(", ")}`; moments.push($("newGem")); }
+    if (fresh.length) { $("newGem").textContent = `New on the shelf: ${fresh.map((x) => t(CRYSTALS[x].name)).join(", ")}`; moments.push($("newGem")); }
     if (newPets.length) { $("newPet").innerHTML = newPets.map((k) => `${pet(k, 30, wearOf(k))}Found ${aName(k)}!`).join("<br>"); moments.push($("newPet")); }
     for (const el of moments) el.style.display = "block";
     if (moments.length) setTimeout(() => { for (const el of moments) sparkleAt(el); [1047, 1319, 1568, 2093].forEach((f, j) => tone(f, .3, "sine", .06, j * .07)); buzz(20); }, 120);
@@ -1233,7 +1265,7 @@ let dailyTick = 0;
 function renderDaily() { // the Daily Dig sheet; in the done state the countdown to local midnight ticks once a minute while the sheet is open
   const done = save.daily.last === today(), st = done || save.daily.last === yesterday() ? save.daily.streak : 0;
   $("dailyInfo").innerHTML = `<span class="streak" title="streak: ${st} day(s)">${[...Array(7)].map((_, k) => `<i class="${k < Math.min(st, 7) ? "on" : ""}"></i>`).join("")}</span>
-    <div class="note" style="margin-top:6px">${st ? `${st}-day streak` : "No streak yet"}${done ? ` · today's best ${save.daily.best}g` : ""}</div>`;
+    <div class="note" style="margin-top:6px"><span>${st ? `${st}-day streak` : "No streak yet"}</span>${done ? `<span> · today's best ${save.daily.best}g</span>` : ""}</div>`; // spans: each part translates on its own
   $("daily").textContent = done ? `Done for today · new dig in ${untilMidnight()}` : "Start today's dig";
   $("daily").disabled = done;
   clearInterval(dailyTick);
@@ -1405,18 +1437,19 @@ $("talk").addEventListener("click", (e) => { if (talkPress && !e.target.closest(
 // say(el, html, voice) types html into el (tags stay whole, only the text types) and resolves once it's all shown.
 // voice: "dibble" | "puddock" | "granny" | "bidder" | null (narration: a soft chime). Also on window, for scripted sequences.
 // Reduced motion and the fit check (?scene=) get the whole line at once.
-const PAUSE = { ",": 120, ";": 120, ":": 120, "—": 160, ".": 280, "!": 280, "?": 300, "…": 350 };
+const PAUSE = { ",": 120, ";": 120, ":": 120, "—": 160, ".": 280, "!": 280, "?": 300, "…": 350, "、": 120, "，": 120, "。": 280, "！": 280, "？": 300, "।": 280 };
+const CJK_STOP = /[、，。！？।]/; // these pause even with no space after them
 const CPS = { dibble: 40, puddock: 28, granny: 32, bidder: 30 }; // letters a second; narration 36
 let typing = null; // the line typing now: { finish }
 function say(el, html, voice = null) {
-  typing?.finish();
+  typing?.finish(); html = t(html); el.setAttribute("data-notr", ""); // translated here, whole: the page watcher leaves it be
   el.innerHTML = html;
   const blip = () => { try { if (sfx.voice(voice)) buzz(4); } catch {} };
   if (calmMotion || qs.has("scene")) { blip(); return Promise.resolve(); }
   const chars = [], wrap = (n) => [...n.childNodes].forEach((c) => {
     if (c.nodeType !== 3) return wrap(c);
     const f = document.createDocumentFragment();
-    for (const ch of c.data) { const s = f.appendChild(document.createElement("span")); s.className = "tw"; s.textContent = ch; chars.push(s); }
+    for (const ch of letters(c.data)) { const s = f.appendChild(document.createElement("span")); s.className = "tw"; s.textContent = ch; chars.push(s); }
     c.replaceWith(f);
   });
   wrap(el); // every letter in place but invisible, so the line never reflows as it types
@@ -1427,7 +1460,7 @@ function say(el, html, voice = null) {
       const s = chars[i++]; if (!s) return finish();
       const ch = s.textContent, after = chars[i]?.textContent; s.className = "";
       if (/[\p{L}\p{N}]/u.test(ch) && n++ % (voice ? 2 : 3) === 0) blip(); // spaces and stops are silent
-      timer = setTimeout(tick, 1000 / (CPS[voice] || 36) + (PAUSE[ch] && (ch === "…" || !after || /\s/.test(after)) ? PAUSE[ch] : 0));
+      timer = setTimeout(tick, 1000 / (CPS[voice] || 36) + (PAUSE[ch] && (ch === "…" || !after || /\s/.test(after) || CJK_STOP.test(ch)) ? PAUSE[ch] : 0));
     };
     typing = me; tick();
   });
@@ -1482,7 +1515,7 @@ function playScene(name, start = 0) {
 }
 function replayMemories() { // the collection: a shelf per mine, found memories in amber, the rest as dark silhouettes; tap one to replay it
   const found = save.story.mem;
-  $("memCount").textContent = `${found.length} of ${MEMORY_COUNT}`;
+  $("memCount").textContent = `${found.length} of ${MEMORY_COUNT} found.`;
   $("memShelf").innerHTML = BIOMES.filter((b) => MEMORIES[b.id] && (revealed(b) || MEMORIES[b.id].some((m) => found.includes(m.id)))).map((b) => {
     const ms = MEMORIES[b.id], n = ms.filter((m) => found.includes(m.id)).length;
     return `<div class="memMine"><h3 class="subHead">${b.name} · ${n}/${ms.length}</h3><div class="memGrid">${ms.map((m) => found.includes(m.id)
@@ -1957,6 +1990,13 @@ $("coinHud").innerHTML = coin(26);
   };
   policy.onclick = () => window.open(platform.privacyUrl, "_blank"); policy.style.minHeight = "44px"; // S2 tap target
   $("toTitle").before(restore); card.append(policy, ver);
+  // Language: the phone's own picker wheel; a change reloads the game (names and tables are read once, at launch)
+  const row = Object.assign(document.createElement("label"), { className: "optRow langRow" });
+  row.innerHTML = `${icon("speech", 22)}<span class="lbl">Language</span><select id="oLang" data-notr>
+    <option value="">${t("Automatic")}</option>${Object.entries(LANGS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>`;
+  $("oCredits").before(row);
+  const pickLang = $("oLang"); pickLang.value = CHOSEN || "";
+  pickLang.onchange = () => { save.opt.lang = pickLang.value || null; persist(); track("language", { lang: pickLang.value || "auto" }); location.reload(); };
   let taps = []; ver.onclick = () => { // five taps within 2 s toggle the canvas diagnostics (the Haul-box hold)
     const now = performance.now(); taps = [...taps.filter((t) => now - t < 2000), now]; if (taps.length < 5) return;
     taps = []; const on = localStorage["gw.diag"] !== "1"; localStorage["gw.diag"] = on ? "1" : "0"; toast(on ? "Diagnostics on" : "Diagnostics off"); };
