@@ -505,7 +505,7 @@
   <div class="sheetHead"><h2>Options</h2><button class="alt xBtn close" aria-label="Close"><span class="icoX"></span></button></div>
   <div class="sheetBody">
     <div class="optList">
-      <button id="oMusic" class="optRow"></button><button id="oSound" class="optRow"></button><button id="oVib" class="optRow"></button>
+      <button id="oMusic" class="optRow"></button><button id="oSound" class="optRow"></button><button id="oSilent" class="optRow"></button><button id="oVib" class="optRow"></button>
       <button id="oGlyph" class="optRow"></button><button id="oPrivacy" class="optRow"></button><button id="oLb" class="optRow" style="display:none"></button>
       <details class="optRow" id="oCredits"><summary><span class="icoCredits"></span><span class="lbl">Credits</span></summary>
         <p>Glimmerwood is made by Alex de la Chica.<br>Grandstander typeface by Tyler Finck; Fredoka typeface by Milena Brandão and Hafontia (both SIL Open Font License).<br>Music and sounds are synthesised in the game.</p></details>
@@ -743,7 +743,7 @@ const SHOP = [
 const store = { get(k, d) { try { return JSON.parse(localStorage.getItem("gw." + k)) ?? d; } catch { return d; } },
                 set(k, v) { const s = JSON.stringify(v); try { localStorage.setItem("gw." + k, s); } catch {} platform.backup("gw." + k, s); } }; // backup: a native copy (platform.js)
 const DEFAULTS = { look: { ...DEFAULT_LOOK, trinket: "none", cloak: "none" }, gold: 0, up: { lantern: 0, pick: 0, charm: 0, lens: 0, tongs: 0, sieve: 0 }, owned: [], biomes: ["hollow"], best: {}, sel: "hollow",
-  mode: "exp", opt: { music: true, sound: true, vib: true, glyph: false }, daily: { last: "", streak: 0, best: 0 },
+  mode: "exp", opt: { music: true, sound: true, silent: false, vib: true, glyph: false }, daily: { last: "", streak: 0, best: 0 },
   metPuddock: false, trial: [], found: [], camp: { tent: "canvas", banner: "#5fa04e", fire: "ring", hide: [] },
   story: { prologue: false, mem: [], confessed: false, sprout: false, site: "stump", ledge: false, finale: false, scale: false },
   pets: { owned: [], active: [], wear: {} }, coinTx: [] }; // coinTx: coin-pack transactions already paid out (platform.buyCoins); active: the pets out at camp; wear: { [pet]: { head, neck } }
@@ -1769,6 +1769,7 @@ function renderHome() {
     $(id).innerHTML = `${icon(ico, 22)}<span class="lbl">${label}</span>${on === undefined ? "" : `<span class="state">${on ? "On" : "Off"}</span>`}`;
     if (on !== undefined) { $(id).classList.toggle("on", on); $(id).setAttribute("aria-pressed", on); } };
   optRow("oMusic", "note", "Music", save.opt.music); optRow("oSound", save.opt.sound ? "soundOn" : "soundOff", "Sound", save.opt.sound);
+  optRow("oSilent", "soundOn", "Play sound when the phone is on silent", !!save.opt.silent);
   optRow("oVib", "vibe", "Haptics", save.opt.vib); optRow("oGlyph", "symbols", "Colour-blind symbols", save.opt.glyph); optRow("oPrivacy", "lock", "Privacy choices"); optRow("oLb", "shatter", "Leaderboards");
   $("dibbleArt").innerHTML = titleHero(save.look, STILL);
   const mem = `Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}`;
@@ -1873,6 +1874,8 @@ $("mExp").onclick = () => { save.mode = "exp"; persist(); renderMines(); };
 $("mCalm").onclick = () => { save.mode = "calm"; persist(); renderMines(); };
 for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).onclick = () => { save.opt[k] = !save.opt[k]; persist(); renderHome(); };
 $("oMusic").onclick = () => { save.opt.music = !save.opt.music; persist(); soundtrack.setEnabled(save.opt.music); renderHome(); };
+soundtrack.setIgnoreSilent(save.opt.silent);
+$("oSilent").onclick = () => { save.opt.silent = !save.opt.silent; persist(); soundtrack.setIgnoreSilent(save.opt.silent); renderHome(); };
 $("oPrivacy").onclick = () => platform.privacyChoices(); // the consent form where the region needs one, otherwise the privacy policy
 const openMarket = () => save.metPuddock ? (renderMarket(), show("market")) : talk(() => { renderMarket(); show("market"); });
 for (const b of document.querySelectorAll("#mktTabs button")) b.onclick = () => { mktTab = b.dataset.tab; renderMarket(); $("shop").animate([{ opacity: 0, transform: "translateX(14px)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" }); };
