@@ -350,7 +350,7 @@ function mothTurn() {
     if (step !== undefined) { board[step] = m.uid; board[m.i] = 0; m.from = m.i; m.i = step; m.hopAt = performance.now(); }
   }
   const max = PM.max_alive[biome.id] || PM.max_alive.default;
-  if (placedN >= PM.grace_placements && moths.length < max && mothRng() < (PM.chance[biome.id] || 0)) { // a new one flutters in
+  if (Object.keys(save.best).length && placedN >= PM.grace_placements && moths.length < max && mothRng() < (PM.chance[biome.id] || 0)) { // a new one flutters in (never on the player's first dig)
     const empty = board.map((u, i) => (u ? -1 : i)).filter((i) => i >= 0).sort((a, b) => crystalNbrs(b) - crystalNbrs(a));
     if (empty.length > 3) {
       const i = empty[Math.floor(mothRng() * Math.min(6, empty.length))], id = 900000 + uid++;
@@ -593,12 +593,13 @@ function special(type, cells, size, ox, oy, alpha = 1, now = performance.now()) 
 // the first time each special turns up, one line under the board says what it does
 const TIPS = { ember: "Ember Shard: shatters its neighbours too", glowcap: "Gloamcap: each one feeds the Rootline +1s",
   frost: "Frostspar: freezes the Rootline a moment", geode: "Geode: rare, and worth a small fortune", heart: "Rootheart: the rarest crystal of all",
-  rubble: "Skystone: two clears beside it crack it open", moth: "Pilfermoth: clear a line through it!", memory: "Amber Memory: clear its line to open it", pet: "Someone's asleep in there! Clear its line" };
+  rubble: "Skystone: two clears beside it crack it open", moth: "Pilfermoth: clear a line through it!", memory: "Amber Memory: clear its line to open it", pet: "Someone's asleep in there! Clear its line",
+  rootline: "The Rootline is closing in. Clear lines to grow it back." }; // rootline: once, the first time it drops under half in a timed dig
 save.seen ??= [];
 let tip = null;
 function drawHint(now) {
   if (!tip && state === "play") { // a new special in the tray (or a moth on the board) gets its line
-    const k = [...(tray || []).filter(Boolean).map((q) => (q.pet ? "pet" : q.memory ? "memory" : q.type)), ...(moths.length ? ["moth"] : [])].find((k) => TIPS[k] && !save.seen.includes(k));
+    const k = [...(tray || []).filter(Boolean).map((q) => (q.pet ? "pet" : q.memory ? "memory" : q.type)), ...(moths.length ? ["moth"] : []), ...(started && !calm && time / maxTime < .5 ? ["rootline"] : [])].find((k) => TIPS[k] && !save.seen.includes(k));
     if (k) { tip = { k, at: now, pet: tray.find((q) => q?.pet)?.pet }; save.seen.push(k); persist(); }
   }
   let text = null, a = 1;
@@ -606,10 +607,11 @@ function drawHint(now) {
   if (!text && !started && !calm && state === "play") text = "Place a crystal to start the Rootline";
   if (!text) return;
   ctx.save(); ctx.globalAlpha = a; ctx.textAlign = "left"; ctx.textBaseline = "middle";
-  let px = 15; ctx.font = `600 ${px}px Fredoka, sans-serif`; const room = W - 40 - (tip ? 26 : 0);
+  const sw = tip && tip.k !== "rootline" ? 26 : 0; // the Rootline tip has no piece to show
+  let px = 15; ctx.font = `600 ${px}px Fredoka, sans-serif`; const room = W - 40 - sw;
   if (ctx.measureText(text).width > room) { px = 13; ctx.font = `600 ${px}px Fredoka, sans-serif`; }
-  const tw = ctx.measureText(text).width, sw = tip ? 26 : 0, x = (W - tw - sw) / 2;
-  if (tip) { const s = 18, y = hintY - s / 2 - 1, tp = tip.k === "memory" ? "amber" : tip.k;
+  const tw = ctx.measureText(text).width, x = (W - tw - sw) / 2;
+  if (sw) { const s = 18, y = hintY - s / 2 - 1, tp = tip.k === "memory" ? "amber" : tip.k;
     if (tip.k === "moth") { ctx.fillStyle = "#c9b6ff"; ctx.beginPath(); ctx.arc(x + s / 2, hintY, s * .4, 0, 7); ctx.fill(); }
     else { drawPiece({ piece: { cells: [[0, 0]], w: 1, h: 1 }, type: tip.k === "pet" ? "moonstone" : tp, memory: tip.k === "memory", pet: tip.k === "pet" && tip.pet, petCell: 0 }, s, x, y, a); ctx.globalAlpha = a; } }
   ctx.lineWidth = 4; ctx.lineJoin = "round"; ctx.strokeStyle = "rgba(20,12,6,.7)"; ctx.strokeText(text, x + sw, hintY);
@@ -1381,7 +1383,7 @@ function dialog(steps, then, skip = false, k = 0) {
     next.classList.add("wait"); line.classList.remove("done"); art.classList.add("talking");
     text ? say(text, st.say, st.voice).then(() => text.isConnected && shown()) : shown();
   };
-  next.onclick = () => { if (typing) return typing.finish(); if (++k < steps.length) return step(); then(); };
+  next.onclick = () => { typing?.finish(); if (++k < steps.length) return step(); then(); }; // one tap: finish the line and go on
   $("talkSkip").onclick = () => { typing?.finish(); then(); };
   step(); show("talk");
 }
