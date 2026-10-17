@@ -1,0 +1,19 @@
+{
+  "locale": "ko",
+  "name": "Glimmerwood",
+  "subtitle": "포근한 숲속 수정 블록 퍼즐",
+  "promotional_text": "뿌리가 조여 오기 전에 빛나는 수정을 캐요. 수확을 퍼덕 영감에게 팔고, 아늑한 캠프를 가꾸고, 불빛을 따라 아래로 내려가요. 계정도 없고, 돈 내고 건너뛰는 타이머도 없어요.",
+  "keywords": "블록,퍼즐,힐링,보석,채굴,숲,감성,오프라인,두더지,크리스탈,수정,캐주얼",
+  "description": "작은 두더지 한 마리, 등불 하나, 그리고 밤이면 빛나는 숲.\n\nGlimmerwood는 느긋하게 자리 잡고 즐기는 블록 퍼즐이에요. 수정 조각을 보드로 끌어다 놓고, 줄을 지우고, 보드를 천천히 조여 오는 덩굴인 뿌리줄보다 한발 앞서 가요. 줄을 하나 지울 때마다 뿌리줄이 조금씩 물러나요. 그런 다음 수확을 들고 땅 위로 올라와 퍼덕 영감에게 팔아요. 그루터기 아래 시장을 누구도 기억 못 할 만큼 오래 지켜 온 두꺼비죠.\n\n채굴\n• 열한 곳의 광산, 저마다 다른 수정과 다른 비결이 있어요. 이웃을 산산이 부수는 잿불, 뿌리줄을 얼리는 서리, 한밑천이 되는 정동, 줄을 지워 몰아낼 때까지 수확을 갉아먹는 도둑나방까지.\n• 순수 광맥은 두 배로 쳐줘요. 연쇄는 쌓여요. 좋은 조각 하나로 네 줄을 한꺼번에 지울 수도 있어요.\n• 일일 채굴: 하루에 한 번, 모두에게 같은 수정. 연속 기록을 이어 가요.\n• 고요한 숲: 타이머가 전혀 없는 똑같은 퍼즐.\n\n캠프 꾸미기\n• 모은 금화로 더 밝은 등불, 더 날카로운 곡괭이, 뿌리 부적, 보석 돋보기를 장만해요.\n• 디블을 꾸며요: 모자, 목도리, 등불, 털 색깔, 망토 한두 벌.\n• 캠프도 함께 자라요: 텐트, 깃발, 보석 선반, 해먹, 반딧불이 병, 그리고 수정에서 풀어 준 작은 생물들이 돌아다니다 모닥불 곁에서 낮잠을 자요.\n\n땅속 이야기\n• 광산 속에서 빛나는 33개의 호박 기억. 글리머참나무가 쓰러진 그해 가을에 무슨 일이 있었는지, 하나하나가 그 조각이에요.\n• 굴 바닥에 남은 버 할머니의 분필 자국. 그루터기 이야기는 입에 올리지 않는 두꺼비. 그리고 저 아래 깊은 곳에서 아직도 끌려가고 있는 무언가.\n\n공정한 배분\n• 수정은 무작위로 나와요. 광고, 구매, 최고 기록과의 차이는 전혀 영향을 주지 않아요.\n• 보상형 광고는 선택이고, 언제 볼지는 직접 정해요. 나머지 광고는 한 번의 구매로 제거할 수 있어요.\n• 계정은 필요 없어요. 저장 데이터는 휴대폰에만 남아요. 원한다면 Game Center 순위표도 있어요.\n\n동화책 같은 손그림 화풍에, 음악과 효과음은 모두 직접 만든 오리지널이에요. 한국어, English, Deutsch, Español, Português (Brasil), 日本語, 简体中文, हिन्दी 지원.\n\n등불을 챙겨 오세요.",
+  "whats_new": "첫 출시예요. 열한 곳의 광산, 가꿔 나갈 캠프, 찾아낼 33개의 호박 기억, 그리고 여덟 가지 언어.",
+  "support_url": "https://alexdlc5.github.io",
+  "marketing_url": "https://alexdlc5.github.io",
+  "privacy_policy_url": "https://alexdlc5.github.io/privacy.html",
+  "copyright": "2026 Alex de la Chica",
+  "category_primary": "Games",
+  "category_secondary_subcategories": [
+    "Puzzle",
+    "Casual"
+  ],
+  "review_notes": "(Review notes are in English; bracketed text is what the same button says on a device set to ko.)\n\nGlimmerwood is a single-player block puzzle. No account or sign-in is needed; progress is saved on the device.\n\nOn first launch the app asks for App Tracking Transparency permission (for AdMob personalised ads). Declining changes nothing about gameplay or the number of ads.\n\nAds: a banner on the camp and market screens, an occasional interstitial after a finished expedition (never in the first three expeditions, never more often than every second expedition or within 90 seconds), and optional rewarded video ads the player chooses to watch (e.g. 'Puddock's double deal' to double a haul). The piece generator never reacts to ads or purchases.\n\nIn-app purchases (via RevenueCat / StoreKit): 'Remove ads' [광고 제거] (non-consumable, removes banners and interstitials; rewarded ads stay optional) and four coin packs (consumable). 'Restore purchases' [구매 복원] is in Options. Coins never change which pieces are dealt.\n\nTo see a full expedition quickly: tap Play, skip the prologue, tap the 'Go mining' [채굴하러 가기] signpost at camp, tap Dig. The round ends when the Rootline closes or no piece fits; 'Sell to Old Puddock' [퍼덕 영감에게 팔기] returns to camp.\n\nThe ring/silent switch mutes the game by design; Options › 'Play sound when the phone is on silent' [무음 모드에서도 소리 재생] overrides it.\n\nGame Center: leaderboards only (no multiplayer, no user-generated content)."
+}

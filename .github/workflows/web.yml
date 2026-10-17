@@ -2,9 +2,9 @@ name: web game at iPhone density
 on:
   push:
     branches: [main]
-    paths: ["proto/**", "scripts/crisp.mjs", "scripts/smoke.mjs", "scripts/soak.mjs", "scripts/i18n.mjs", "package*.json", ".github/workflows/web.yml"]
+    paths: ["proto/**", "scripts/crisp.mjs", "scripts/smoke.mjs", "scripts/soak.mjs", "scripts/i18n.mjs", "scripts/store-check.mjs", "docs/store/**", "package*.json", ".github/workflows/web.yml"]
   pull_request:
-    paths: ["proto/**", "scripts/crisp.mjs", "scripts/smoke.mjs", "scripts/soak.mjs", "scripts/i18n.mjs", "package*.json", ".github/workflows/web.yml"]
+    paths: ["proto/**", "scripts/crisp.mjs", "scripts/smoke.mjs", "scripts/soak.mjs", "scripts/i18n.mjs", "scripts/store-check.mjs", "docs/store/**", "package*.json", ".github/workflows/web.yml"]
 jobs:
   screens:
     runs-on: ubuntu-latest
@@ -23,6 +23,8 @@ jobs:
         run: node scripts/smoke.mjs
       - name: every language complete, nothing left in English on screen
         run: node scripts/i18n.mjs check
+      - name: App Store listing within Apple's limits, all 8 locales, 1-10 screenshots
+        run: node scripts/store-check.mjs
   soak:
     # 10 minutes of auto-played digs: frame work p95 under the 120 Hz budget (8.3 ms) and no heap growth over 25%
     runs-on: ubuntu-latest
