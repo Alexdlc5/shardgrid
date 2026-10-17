@@ -170,11 +170,11 @@
           ]
         }
       },
-      "cost": 2500,
+      "cost": 1500,
       "richness": 1.33
     },
     "grotto": {
-      "cost": 6000,
+      "cost": 5000,
       "drain": 1.206,
       "types": {
         "moss": 2,
