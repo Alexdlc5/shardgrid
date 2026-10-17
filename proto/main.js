@@ -327,6 +327,9 @@ function startDig(isDaily = false) {
   $("comboTxt").textContent = ""; ending = null; tip = null; coins = []; pops = []; floats = []; parts = []; fx = []; fxR = mulberry(7); shownHaul = 0; layout();
   track("round_start", { mine: biome.id, mode: daily ? "daily" : calm ? "calm" : "expedition" });
   bgCache = cachedMine(); // paint the cave now, while the transition covers the screen, not as it uncovers
+  // iPhone: the ring/silent switch mutes the game unless Options says otherwise, and nothing else would tell you why it's quiet
+  if (platform.native && platform.os === "ios" && save.opt.sound && !save.opt.silent && !save.seen.includes("silentTip")) {
+    save.seen.push("silentTip"); persist(); setTimeout(() => toast("Can't hear the game? The silent switch mutes it.<br><small>Options › Play sound when the phone is on silent</small>", 5200), 1600); }
   pawPrints = false; lifeDig(["fur", "hat", "scarf", "lantern"].map((p) => [p, Object.keys(LOOKS[p]).filter((v) => v !== "granny")]), !daily && Object.keys(save.best).length > 0);
 }
 const rawHaul = () => Object.entries(haul).reduce((s, [t, n]) => s + n * CRYSTALS[t].value, 0) + bonus;
@@ -1829,6 +1832,14 @@ function frame(now) {
     if (f < T.warn && Math.floor(time) !== Math.floor(time + dt * T.drain * biome.drain)) { sfx.tick(); buzz(10); }
     if (time <= 0) { time = 0; endRound("time"); }
   }
+  // off the board with nothing flying (the camp, menus, title): clear once, then leave the canvas alone. Clearing it every
+  // frame re-sent the whole 3x screen-sized surface to the compositor 60-120 times a second for nothing.
+  if (!(state !== "home" && board) && !fx.length && !parts.length && !pops.length && !floats.length && !coins.length) {
+    if (!frame.blank) { ctx.clearRect(0, 0, W, H); frame.blank = true; }
+    if (frame.tns) soundtrack.setTension(frame.tns = 0);
+    frameMs?.push(performance.now() - t0); requestAnimationFrame(frame); return;
+  }
+  frame.blank = false;
   ctx.clearRect(0, 0, W, H);
   if (state === "play" && !calm) { const f = time / maxTime, tns = f < T.warn ? (T.warn - f) / T.warn : 0; if (Math.abs(tns - (frame.tns || 0)) > .05) soundtrack.setTension(frame.tns = tns); }
   else if (frame.tns) soundtrack.setTension(frame.tns = 0);

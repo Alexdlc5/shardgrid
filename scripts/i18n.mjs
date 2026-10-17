@@ -16,7 +16,7 @@ const KEYS = join(ROOT, "proto/lang/en.json");
 // shown as-is in every language: the brand, and strings that are only numbers, symbols or names of fonts/people
 const KEEP = new Set(["Glimmerwood", "Alex de la Chica", "Tyler Finck", "Milena Brandão", "Hafontia", "SIL Open Font License", "Grandstander", "Fredoka", "Game Center", "App Store", "Apple Account"]);
 // developer-only text (the fit report, the density readout, test notes) and CSS class lists aren't for players
-const DEV = /safe area|px tall|minimum\)|card (body )?scrolls|clipped by the card|cut off at the side|^dpr |!important|^gw\.|^\{"|Glimmerwood (dev|Prototype)|^Old$|sans-serif|:not\(|\[data-|^position:|^transform:|dpr \{0\}|real game; free here/;
+const DEV = /safe area|px tall|minimum\)|card (body )?scrolls|clipped by the card|cut off at the side|^dpr |!important|^gw\.|^\{"|Glimmerwood (dev|Prototype)|^Old$|sans-serif|:not\(|\[data-|^position:|^transform:|dpr \{0\}|^animate, animateTransform|real game; free here/;
 const classy = (s) => /^[a-zA-Z]+( [a-zA-Z]+)*$/.test(s) && /[a-z][A-Z]/.test(s);
 const keepable = (s) => KEEP.has(s) || !/[A-Za-z]{2}/.test(s) || DEV.test(s) || classy(s);
 
