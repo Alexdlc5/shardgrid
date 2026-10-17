@@ -1302,15 +1302,17 @@ function sparkleAt(el) { // a burst of little stars from a button or tile
       { duration: 520, easing: "cubic-bezier(.2,.8,.3,1)" }).onfinish = () => s.remove();
   }
 }
+// the Remove-ads card lives at the end of the Tools tab (renderMarket puts it there), not above every tab
+const iapRow = Object.assign(document.createElement("div"), { id: "iapRow" });
 async function renderIap() {
-  const row = $("iapRow");
+  const row = iapRow;
   if (platform.noAds) { row.innerHTML = `<div class="iap">${icon("leaf", 22)}<span class="grow"><b>Ads removed</b><small>Thanks for supporting Glimmerwood!</small></span></div>`; return; }
   if (!platform.canBuy) { row.innerHTML = `<div class="iap">${icon("lock", 22)}<span class="grow"><b>Remove ads</b><small>A one-time purchase in the app. Rewarded offers stay, by choice.</small></span></div>`; return; }
   const price = (await platform.removeAdsPrice()) || "";
   row.innerHTML = `<div class="iap">${icon("lock", 22)}<span class="grow"><b>Remove ads</b><small>One-time. Rewarded offers stay, by choice.</small></span>
     <button id="buyNoAds">${price || "Buy"}</button></div><button id="restoreBtn" class="linkBtn">Restore purchases</button>`;
-  $("buyNoAds").onclick = async () => { if (await platform.buyRemoveAds()) { toast("Ads removed. Thank you!"); renderIap(); } };
-  $("restoreBtn").onclick = async () => { toast((await platform.restore()) ? "Purchase restored" : "Nothing to restore"); renderIap(); };
+  row.querySelector("#buyNoAds").onclick = async () => { if (await platform.buyRemoveAds()) { toast("Ads removed. Thank you!"); renderIap(); } };
+  row.querySelector("#restoreBtn").onclick = async () => { toast((await platform.restore()) ? "Purchase restored" : "Nothing to restore"); renderIap(); };
 }
 // the Someday shelf at the end of the Camp and Wardrobe tabs: locked prices, a lore line, and a bar toward the next one in reach
 const bigG = (n) => n >= 1e6 ? `${+(n / 1e6).toFixed(n < 1e7 ? 2 : 1)}M` : n.toLocaleString("en-US");
@@ -1340,6 +1342,8 @@ function renderMarket() {
       ${it.kind === "up" ? `<span class="pips" title="level ${lvl} of ${it.max}">${[...Array(it.max)].map((_, k) => `<i class="${k < lvl ? "on" : ""}"></i>`).join("")}</span>` : ""}</span>
       ${done ? `<span class="stamp">${it.kind === "up" ? "Max" : "Owned"}</span>` : `<button data-id="${it.id}" ${short > 0 ? "disabled" : ""}>${short > 0 ? icon("lock", 16) : coin(16)}${bigG(cost)}</button>`}</div>`;
   }).join("") + (mktTab === "camp" || mktTab === "wardrobe" ? someday() : "");
+  if (mktTab === "tools") $("shop").append(iapRow);
+  tabsEdge();
   for (const btn of $("shop").querySelectorAll("button")) btn.onclick = () => {
     const it = SHOP.find((s) => s.id === btn.dataset.id), cost = price(it);
     if (save.gold < cost) return;
@@ -1367,7 +1371,10 @@ soundtrack.setIgnoreSilent(save.opt.silent);
 $("oSilent").onclick = () => { save.opt.silent = !save.opt.silent; persist(); soundtrack.setIgnoreSilent(save.opt.silent); renderHome(); };
 $("oPrivacy").onclick = () => platform.privacyChoices(); // the consent form where the region needs one, otherwise the privacy policy
 const openMarket = () => save.metPuddock ? (renderMarket(), show("market")) : talk(() => { renderMarket(); show("market"); });
-for (const b of document.querySelectorAll("#mktTabs button")) b.onclick = () => { mktTab = b.dataset.tab; renderMarket(); $("shop").animate([{ opacity: 0, transform: "translateX(14px)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" }); };
+// the tab row scrolls when the labels outgrow the card; a soft right edge while there is more to the right
+const tabsEdge = () => $("mktTabs").classList.toggle("over", $("mktTabs").scrollLeft + $("mktTabs").clientWidth < $("mktTabs").scrollWidth - 1);
+$("mktTabs").onscroll = tabsEdge; new ResizeObserver(tabsEdge).observe($("mktTabs"));
+for (const b of document.querySelectorAll("#mktTabs button")) b.onclick = () => { mktTab = b.dataset.tab; renderMarket(); b.scrollIntoView({ inline: "nearest", block: "nearest" }); $("shop").animate([{ opacity: 0, transform: "translateX(14px)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" }); };
 $("campMem").onclick = $("tMem").onclick = () => replayMemories();
 $("hubMenu").onclick = () => show("optsSheet");
 // ---------- Coin purse: coin packs (platform.js COIN_PACKS), opened from any coin counter. Coins never touch dealing ----------
