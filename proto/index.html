@@ -13,7 +13,7 @@
 <body>
 <div id="statusScrim" style="position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top, 0px);background:rgba(5,12,8,.55);z-index:40;pointer-events:none" aria-hidden="true"></div>
 <div id="safeProbe" style="position:fixed;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top, 0px);padding-bottom:env(safe-area-inset-bottom, 0px)" aria-hidden="true"></div>
-<div id="wipe" aria-hidden="true"></div><div id="world"></div><div id="flies"></div><div id="grade"></div><div id="dust"></div>
+<div id="wipe" aria-hidden="true"></div><div id="world"></div><div id="flies"></div><div id="grade"></div><i class="haze h1" aria-hidden="true"></i><i class="haze h2" aria-hidden="true"></i><i class="haze h3" aria-hidden="true"></i><i class="haze h4" aria-hidden="true"></i><div id="dust"></div>
 <canvas id="cv"></canvas>
 <div class="hud" id="hud">
   <div><small>Haul</small><b><span id="coinHud"></span><span id="haul">0g</span></b></div>
@@ -93,7 +93,7 @@
 
 <section id="memSheet" class="screen sheet"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">
   <div class="sheetHead"><h2>Amber Memories</h2><button class="alt xBtn close" aria-label="Close"><span class="icoX"></span></button></div>
-  <div class="sheetBody"><div class="tag" style="margin-top:0"><b id="memCount"></b> found. They turn up in the mines, glowing. Tap one to remember it.</div><div id="memShelf"></div></div>
+  <div class="sheetBody"><div class="tag" style="margin-top:0"><b id="memCount"></b> <span>They turn up in the mines, glowing. Tap one to remember it.</span></div><div id="memShelf"></div></div>
 </div></div></section>
 
 <section id="end" class="screen"><div class="hang"><i class="rope l"></i><i class="rope r"></i><span class="vineSlot"></span><div class="card">

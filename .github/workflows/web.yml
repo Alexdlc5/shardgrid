@@ -2,9 +2,9 @@ name: web game at iPhone density
 on:
   push:
     branches: [main]
-    paths: ["proto/**", "scripts/crisp.mjs", "scripts/smoke.mjs", "scripts/soak.mjs", "package*.json", ".github/workflows/web.yml"]
+    paths: ["proto/**", "scripts/crisp.mjs", "scripts/smoke.mjs", "scripts/soak.mjs", "scripts/i18n.mjs", "package*.json", ".github/workflows/web.yml"]
   pull_request:
-    paths: ["proto/**", "scripts/crisp.mjs", "scripts/smoke.mjs", "scripts/soak.mjs", "package*.json", ".github/workflows/web.yml"]
+    paths: ["proto/**", "scripts/crisp.mjs", "scripts/smoke.mjs", "scripts/soak.mjs", "scripts/i18n.mjs", "package*.json", ".github/workflows/web.yml"]
 jobs:
   screens:
     runs-on: ubuntu-latest
@@ -21,6 +21,8 @@ jobs:
         run: node scripts/crisp.mjs --check 2
       - name: every screen loads at 3x with no errors (WebKit + Chromium)
         run: node scripts/smoke.mjs
+      - name: every language complete, nothing left in English on screen
+        run: node scripts/i18n.mjs check
   soak:
     # 10 minutes of auto-played digs: frame work p95 under the 120 Hz budget (8.3 ms) and no heap growth over 25%
     runs-on: ubuntu-latest

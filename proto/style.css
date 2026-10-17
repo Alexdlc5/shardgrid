@@ -211,6 +211,7 @@
     background: #f0b543; color: #3a2208; font-size: var(--fs-small); font-weight: 700; padding: 3px 8px; border-radius: 999px; box-shadow: 0 2px 0 #7a4a12; white-space: nowrap; }
   .tabs { display: flex; gap: 4px; margin: 12px 0 2px; }
   .tabs button { margin: 0; padding: 6px 2px; font-size: var(--fs-small); }
+  .tabs button { flex: 1 1 0; min-width: 0; line-height: 1.15; overflow-wrap: anywhere; hyphens: auto; } /* longer languages share the row and wrap, never push a tab off screen */
   /* every dialogue step shares one stage, as tall as an amber panel, so the card never jumps; speakers stand on its floor */
   .talkArt { display: flex; justify-content: center; align-items: flex-end; height: min(calc(min(300px, 100vw - 80px) * .625), 22vh); margin-top: -4px; }
   .talkArt > svg { max-height: 100%; width: auto; }
@@ -280,6 +281,9 @@
   details.optRow { display: block; padding: 0; cursor: pointer; border: 3px solid transparent; border-image: var(--p-wood) 18 fill / 15px stretch; filter: drop-shadow(0 3px 0 rgba(48,24,6,.55)); }
   details.optRow summary { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 0 12px; list-style: none; font-weight: 700; }
   details.optRow summary::-webkit-details-marker { display: none; }
+  /* Language: a native select (the iOS picker wheel), dressed as an option row */
+  label.langRow { cursor: pointer; font-weight: 700; font-family: var(--font-display); text-shadow: 0 1px 0 #2b1a0e; border: 3px solid transparent; border-image: var(--p-wood) 18 fill / 15px stretch; filter: drop-shadow(0 3px 0 rgba(48,24,6,.55)); }
+  .langRow select { font: inherit; font-size: var(--fs-small); color: #3a2208; background: #f0b543; border: 0; border-radius: 8px; padding: 4px 8px; max-width: 52%; min-height: 32px; }
   details.optRow p { margin: 0 12px 10px; font-size: var(--fs-small); color: #e8d6aa; line-height: 1.4; }
   /* Amber Memories: a collection, one shelf per mine */
   .memMine { margin-top: 12px; } .memMine:first-child { margin-top: 0; }
@@ -337,7 +341,16 @@
     background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(24,12,4,.55) 100%), linear-gradient(180deg, rgba(255,214,150,.07), rgba(120,60,20,.08));
     mix-blend-mode: multiply; }
   body::after { animation: filmFlicker .2s steps(2) infinite; }
-  body.playing::after, body.playing #grade { display: none; } /* the board stays unfiltered: jittering grain over the crystals reads as blur on iPhone */
+  body.playing::after, body.playing #grade { display: none; }
+  /* ===== lo-fi golden-hour haze over the menus, camp and title (the mine board gets it painted into its backdrop, main.js
+     lofiGrade, so the crystals stay full colour). Blend layers only, no CSS filter on the art: WebKit softens filtered layers. ===== */
+  /* separate layers straight under <body>: each must blend with the page itself (inside a fixed container they'd only blend with each other) */
+  .haze { position: fixed; inset: 0; pointer-events: none; z-index: 59; }
+  .haze.h1 { background: rgba(128,128,128,.16); mix-blend-mode: saturation; } /* a little colour out */
+  .haze.h2 { background: linear-gradient(180deg, rgba(255,150,130,.54), rgba(255,196,140,.26) 45%, rgba(120,70,120,.35)); mix-blend-mode: soft-light; }
+  .haze.h3 { background: rgba(88,62,64,.32); mix-blend-mode: lighten; } /* blacks lifted, like old film */
+  .haze.h4 { background: radial-gradient(ellipse 120% 50% at 50% 0%, rgba(255,214,170,.07), transparent 60%); mix-blend-mode: screen; } /* sun-haze at the top */
+  body.playing .haze, .noLofi .haze { display: none; } /* the board stays unfiltered: jittering grain over the crystals reads as blur on iPhone */
   @keyframes filmFlicker { 0% { opacity: .07; transform: translate(0, 0); } 50% { opacity: .1; transform: translate(-2px, 1px); } 100% { opacity: .08; transform: translate(1px, -1px); } }
   #dust { position: fixed; inset: 0; pointer-events: none; z-index: 46; }
   body.playing #dust { display: none; }
@@ -424,3 +437,4 @@
   .petChip { padding-left: 4px; } .petChip svg { margin: -6px -2px; }
   #newPet .ico { margin: -8px 4px -6px -6px; }
   .subHead { margin: 12px 0 0; font-size: var(--fs-small); letter-spacing: .6px; text-transform: uppercase; color: #ffd27a; }
+@media (max-height: 700px) { .logo { font-size: min(42px, 11vw); } } /* iPhone SE: room for the longer languages' fair-dealing note */

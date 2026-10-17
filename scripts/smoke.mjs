@@ -16,6 +16,7 @@ const server = createServer((req, res) => {
 const shots = process.argv.includes("--shots") ? process.argv[process.argv.indexOf("--shots") + 1] : null;
 if (shots) mkdirSync(shots, { recursive: true });
 // --se: iPhone SE (375x667 @2x), the smallest supported screen
+const LANG = process.argv.includes("--lang") ? process.argv[process.argv.indexOf("--lang") + 1] : null; // --lang xx: in another language
 const SE = process.argv.includes("--se"), VW = SE ? 375 : 402, VH = SE ? 667 : 874, DPR = SE ? 2 : 3;
 const SCREENS = ["title", "home", "mineSheet", "dailySheet", "wardrobe", "optsSheet", "market", "purseSheet", "memSheet", "talk", "dig", "rescueOffer", "end"];
 
@@ -28,7 +29,7 @@ for (const [name, bt] of [["webkit", webkit], ["chromium", chromium]]) {
   page.on("requestfailed", (r) => errors.push("request failed: " + r.url()));
   page.on("response", (r) => { if (r.status() >= 400) errors.push(`${r.status()} ${r.url()}`); });
   await page.addInitScript(() => { let a = 7; Math.random = () => ((a = (a * 16807) % 2147483647) / 2147483647); });
-  await page.goto(`http://localhost:${server.address().port}/proto/index.html?debug`);
+  await page.goto(`http://localhost:${server.address().port}/proto/index.html?debug${LANG ? "&lang=" + LANG : ""}`);
   await page.waitForFunction(() => window.gw, null, { timeout: 15000 });
   for (const id of SCREENS) {
     const before = errors.length;

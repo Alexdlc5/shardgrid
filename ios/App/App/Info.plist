@@ -6,6 +6,18 @@
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<!-- the game's languages (proto/i18n.js); also what the web view reports as navigator.language -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>de</string>
+		<string>es</string>
+		<string>pt-BR</string>
+		<string>ja</string>
+		<string>ko</string>
+		<string>zh-Hans</string>
+		<string>hi</string>
+	</array>
 	<key>CFBundleDisplayName</key>
         <string>Glimmerwood</string>
 	<key>CFBundleExecutable</key>

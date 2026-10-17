@@ -129,6 +129,9 @@ const ICONS = {
     ${I(R(20, 4, 2, 1.9, 27), "#d6453d", [-.4, .4])}${hl([[19.2, 3.4], [19.8, 3]], .6, .8)}`,
   leaf: `${I(curve([[4, 20.4], [4.4, 12], [9, 6.4], [19.6, 3.6], [18, 12], [12.6, 17.6]]), "#7cc46a")}${ln([[5, 19.4], [11, 12.4], [16.4, 7]], "#2f6b33", 1.2)}
     ${[[8, 15.6, -2.4], [10.6, 12.6, -2.5], [13.4, 9.8, -2.6], [9.4, 14, .8], [12.4, 11, .7]].map(([x, y, a]) => stroke(x, y, a, 3, .4, "#2f6b33", .7, .1)).join("")}${hl([[8, 8.4], [12.4, 5.6]], .8, .4)}`,
+  // Language: a parchment speech bubble with two little lines of writing
+  speech: `${I("M4.6 5.4 Q12 3.6 19.6 5.6 Q21 10 19.4 14.6 Q14 15.8 10.4 15.4 L6.4 19.6 L7.2 14.8 Q4.6 14.2 3.8 12 Q3.2 8.4 4.6 5.4 Z", "#efe0b8")}
+    ${ln([[7.4, 8.6], [16.4, 8.4]], "#8a6a3a", 1.2)}${ln([[7.4, 11.6], [13.4, 11.4]], "#8a6a3a", 1.2)}${hl([[6, 6.8], [9.6, 6]], .8, .5)}`,
   lock: `${ln([[8, 10.6], [7.8, 7], [12, 3.4], [16.2, 7], [16, 10.6]], "#a8925e", 2.4)}
     ${I(box(5, 10.2, 19, 21.2), "#c9b48a")}
     ${I(R(12, 14.6, 1.8, 1.7, 29), "#5a4a3a", [-.3, .3])}${ln([[12, 15.4], [11.9, 18]], "#5a4a3a", 1.3)}${hl([[6.6, 12], [6.4, 16]], .8, .45)}`,
@@ -1301,14 +1304,15 @@ export function stumpArt(growth = 0, sprout = false, w = 300, tree = false) {
   const g = Math.max(0, Math.min(1, growth)), id = "st" + uid++, r = rng(5);
   const bark = "#6b4a32", barkLine = "#22140c", wood = "#b08a62", O = [-1.4, 1.2];
   // roots spread from the flared base and grip the ground; amber light creeps back into them as the wood heals
-  const roots = [[118, 77, 106, 82, 94, 87, 7], [128, 80, 121, 86, 112, 90, 5], [182, 77, 194, 82, 206, 87, 7], [172, 80, 179, 86, 188, 90.5, 5], [150, 82, 153, 87, 158, 91, 4]];
-  const rootSvg = roots.map(([x1, y1, cx, cy, x2, y2, wd]) => shape(limb(x1, y1, cx, cy, x2, y2, wd, .8), bark, barkLine, O)).join("") +
+  const roots = [[116, 79, 109, 84, 102, 87, 5.5], [130, 83, 125, 87.5, 119, 89.5, 4], [184, 79, 191, 84, 198, 87, 5.5], [170, 83, 175, 87.5, 181, 89.5, 4], [150, 84, 152, 88, 155, 90, 3.4]];
+  const rootSvg = roots.map(([x1, y1, cx, cy, x2, y2, wd]) => shape(limb(x1, y1, cx, cy, x2, y2, wd, 1.2), bark, barkLine, [-.6, .5])).join("") +
     (g ? `<path d="${curve(ring(150, 85, 64, 7, 10, .2, 7))}" fill="#f0b543" opacity="${(g * .3).toFixed(2)}" filter="url(#${id}b)"/>` +
       roots.map(([x1, y1, cx, cy, x2, y2, wd]) => `<path d="${limb(x1, y1 - 1, cx, cy - 1, x2, y2 - .5, wd * .3, .15)}" fill="#ffd27a" opacity="${(.25 + g * .6).toFixed(2)}"/>`).join("") : "");
   // the trunk: the pale cut face, then the front of the trunk, its lip following the face
   const body = curve([[120, 48], [117, 60], [114, 72], [107, 82], [128, 85.5], [150, 86.5], [172, 85.5], [193, 82], [186, 72], [183, 60], [180, 48],
     [173, 52.6], [162, 54.8], [150, 55.4], [138, 54.8], [127, 52.6]]);
   const face = curve(ring(150, 49, 30, 6.4, 14, .04, 9));
+  const rootTops = roots.map(([x1, y1, cx, cy, x2, y2, wd]) => `<path d="${limb(x1 + (150 - x1) * .06, y1 - 4, cx, cy, x2, y2, wd * 1.15, 1.2)}"/>`).join("");
   const moss = [...Array(Math.round(g * 9))].map((_, k) => shape(curve(ring(118 + r() * 64, 64 + r() * 16, 4 + r() * 4, 2 + r() * 2, 8, .25, k + 3)), k % 2 ? "#4f7a3a" : "#5f9a45", "#24451f", [-.6, .5])).join("");
   const caps = [[96, 84], [206, 85], [194, 81]].slice(0, g > .35 ? Math.ceil((g - .35) * 5) : 0).map(([x, y], k) =>
     `<path d="${curve(ring(x, y - 8, 10, 8, 9, .2, 40 + k))}" fill="#9b7cf2" opacity=".25" filter="url(#${id}b)"/>${shape(limb(x, y, x - .4, y - 3, x, y - 6, 1.1, .9), "#d8cbb0", "#7a6e5a", [-.4, .4])}
@@ -1323,19 +1327,20 @@ export function stumpArt(growth = 0, sprout = false, w = 300, tree = false) {
   return `<svg class="stumpArt" width="${w}" height="${w * (tree ? .46 : .3)}" viewBox="0 ${tree ? -48 : 0} 300 ${tree ? 138 : 90}" aria-hidden="true">
     <path d="M0 80 Q150 70 300 80 V90 H0 Z" fill="#14241a"/>
     <defs><filter id="${id}b" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
-      <filter id="${id}s" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.2"/></filter><clipPath id="${id}c"><path d="${body}"/></clipPath></defs>
+      <filter id="${id}s" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.2"/></filter><clipPath id="${id}c"><path d="${body}"/>${rootTops}</clipPath></defs>
     <path d="${curve(ring(150, 86, 52, 4, 12, .2, 3))}" fill="#000" opacity=".35" filter="url(#${id}s)"/>
     ${rootSvg}
     ${shape(face, wood, "#4a2e1a", [-1, .9])}
     <g fill="none" stroke="#7a5638" stroke-width=".8" opacity=".7">${[22, 15, 8].map((rx, k) => `<path d="${curve(ring(151, 49.2, rx, rx * .2, 12, .06, 11 + k))}"/>`).join("")}</g>
     ${stroke(152, 49, -2.9, 14, .7, "#4a2e1a", .6, .05)}
-    ${shape(body, bark, barkLine, O)}
+    ${shape(body, bark, barkLine, [-.6, .5])}
+    <g fill="${bark}">${rootTops}</g><!-- the roots grow out of the trunk: no outline where they join -->
     <g clip-path="url(#${id}c)">
       <path d="${curve(ring(122, 74, 22, 26, 10, .2, 13))}" fill="#2a2030" opacity=".55" filter="url(#${id}b)"/>
       <path d="${curve(ring(180, 62, 14, 22, 10, .2, 14))}" fill="#d08850" opacity=".35" filter="url(#${id}b)"/>
       ${[...Array(6)].map((_, k) => { const x = 122 + k * 11 + (r() - .5) * 3; return stroke(x, 60 + r() * 4, 1.57 + (x - 150) * .006, 16 + r() * 6, .8, barkLine, .25, .1); }).join("")}
     </g>
-    <path d="${curve([[181, 50], [184, 62], [188, 74]], false)}" stroke="#ffc98a" stroke-width="1.6" fill="none" opacity=".45" stroke-linecap="round" filter="url(#${id}s)"/>
+    <path d="${curve([[178.6, 52], [181.4, 63], [185, 75]], false)}" stroke="#ffc98a" stroke-width="4" fill="none" opacity=".16" stroke-linecap="round" clip-path="url(#${id}c)"/>
     ${moss}${caps}${shoot}${oak}</svg>`;
 }
 
