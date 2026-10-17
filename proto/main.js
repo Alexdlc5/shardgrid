@@ -779,8 +779,18 @@ function lofiGrade(g, w, h, look, board = false, pal = null) {
   g.globalCompositeOperation = "overlay"; g.globalAlpha = L.grain; g.fillStyle = g.createPattern(grainTile, "repeat"); g.fillRect(0, 0, w, h);
   g.restore();
 }
+// painting + grading the cave and board is the slow part of starting a dig (measured ~1 s on a 4x-slowed CPU), and it's the
+// same picture every time for a mine at a screen size: keep the last two
+const mineCaches = new Map();
+function cachedMine() {
+  const key = [daily ? "daily" : biome?.id, W, H, devicePixelRatio, bx, by, cell, LOFI].join("|");
+  let c = mineCaches.get(key);
+  if (!c) { c = paintMine(); mineCaches.set(key, c); while (mineCaches.size > 2) mineCaches.delete(mineCaches.keys().next().value); }
+  else { mineCaches.delete(key); mineCaches.set(key, c); } // most recent last
+  return c;
+}
 function drawMine(now) { // the painted cave, plus motes drifting through it
-  bgCache ??= paintMine(); if (!NOLAYER.has("bg")) ctx.drawImage(bgCache.mine, 0, 0, W, H);
+  bgCache ??= cachedMine(); if (!NOLAYER.has("bg")) ctx.drawImage(bgCache.mine, 0, 0, W, H);
   if (state === "play") drawLife(ctx, now, { W, bx, by, bw: cell * N, top: hudTop, low: trayY, feature: look().feature, busy: !!drag }); // ambient.js: what passes, and the other lantern
   const [col, dir, n] = MOTES[look().feature] || MOTES.moss;
   if (calmMotion) return; ctx.fillStyle = col;
@@ -1983,6 +1993,25 @@ if (qs.has("debug")) window.gw = { place: (i, r, c) => commit(i, r, c), get tray
   dig: (id = "hollow") => { if (!save.biomes.includes(id)) save.biomes.push(id); save.sel = id; startDig(); } }; // in-memory only: screenshots of any mine
 
 $("world").innerHTML = forest();
+// ---------- one clock for the painted scenes' little animations (glows, flames, sparks, fireflies: SMIL in the SVGs) ----------
+// Left alone they tick at the display rate (120 Hz on ProMotion) and every tick repaints the whole picture: the camp has ~66
+// of them, and they were ~95% of its render work (measured: raster 1.77 s -> 0.08 s per 3 s without them). Here they step
+// at 24 fps, and not at all where nobody can see them (a screen that's hidden, the camp under a sheet, the forest behind
+// the board while digging). ?smil=live: the browser's own clock, for comparison.
+if (qs.get("smil") !== "live") {
+  const FPS = 24, t0 = performance.now(), held = new WeakSet(), hasAnim = new WeakMap();
+  const animated = (svg) => { let v = hasAnim.get(svg); if (v === undefined) hasAnim.set(svg, v = !!svg.querySelector("animate, animateTransform, animateMotion, set")); return v; };
+  setInterval(() => {
+    if (document.hidden) return;
+    const t = (performance.now() - t0) / 1000, playing = document.body.classList.contains("playing"), covered = !!document.querySelector(".screen.sheet.show");
+    for (const svg of document.getElementsByTagName("svg")) {
+      if (svg.ownerSVGElement || !animated(svg)) continue; // outermost pictures with animations only
+      if (!held.has(svg)) { svg.pauseAnimations(); held.add(svg); }
+      if (!svg.getClientRects().length || (playing && svg.closest("#world")) || (covered && svg.closest("#home, #title, #world"))) continue;
+      svg.setCurrentTime(t);
+    }
+  }, 1000 / FPS);
+}
 for (const el of document.querySelectorAll(".vineSlot")) el.outerHTML = vine();
 $("flies").innerHTML = [...Array(14)].map((_, k) => `<i class="fly" style="left:${(k * 37) % 100}%;top:${20 + (k * 53) % 70}%;animation-delay:${-k * 0.7}s,${-k * 0.37}s"></i>`).join("");
 $("talkArt").innerHTML = puddock(120); $("puddockArtEnd").innerHTML = puddock(52); $("puddockArtMkt").innerHTML = puddock(60); $("puddockArtPurse").innerHTML = puddock(60);
