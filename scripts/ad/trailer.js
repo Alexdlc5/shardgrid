@@ -1,5 +1,5 @@
 // ===== Glimmerwood trailer director =====
-// scripts/ad/render.mjs pastes this at the end of the game's own module (proto/index.html), so it drives the real game:
+// scripts/ad/render.mjs appends this to the game's own module (proto/main.js), so it drives the real game:
 // startDig, the board and its clears, pets waking, the camp, the title, and say() typing with voice blips. It plays a fixed
 // script on the page clock. Under capture (scripts/ad/clock.js) that clock is virtual and every sound is logged instead of
 // played; render.mjs replays the log through music.js offline, so picture and sound come from the same timeline.
@@ -12,7 +12,7 @@
   for (const k of ["play", "setTension", "setVolume", "setEnabled"]) soundtrack[k] = () => {};
   if (capture) for (const k of Object.keys(sfx)) if (k !== "isOn" && typeof sfx[k] === "function") sfx[k] = (...a) => { if (AD.on && sfx.isOn()) AD.log.push({ t: T(), k, a }); return false; };
   const music = (k, ...a) => (capture ? AD.log.push({ t: T(), k: "music." + k, a }) : live[k](...a));
-  Object.assign(save, { metPuddock: true, biomes: ["hollow", "frostpine", "grotto"], mode: "exp", gold: 1240 });
+  Object.assign(save, { metPuddock: true, biomes: ["hollow", "frostpine", "grotto"], mode: "exp", gold: 1240, best: { hollow: 480 } }); // best: not a first run (no nudge arrow over the signpost)
   Object.assign(save.story, { prologue: true }); save.opt.glyph = false; save.seen.push(...Object.keys(TIPS)); // no first-time tips over the shots
   for (const o of [{ sleep: true }, {}, { head: "bow" }]) petImg("glowcap", o); // painted ahead, so they're ready the frame they're needed
 
@@ -51,7 +51,9 @@
     body.adForest .titleWrap { visibility: hidden; }
     body.adForest .titleScene { top: -200px; bottom: 200px; }
     body.adForest #title::after { content: ""; position: fixed; left: 0; right: 0; bottom: 0; height: 202px; background: #0a1710; z-index: 0; }
+    body.adNoCta .adCta { visibility: hidden; } /* the App Store previews: no store or price line (Apple's rule); the layout stays put */
   </style>`);
+  AD.cta = (on) => document.body.classList.toggle("adNoCta", !on);
   const ad = Object.assign(document.createElement("div"), { id: "ad" });
   ad.innerHTML = `<div id="adDark"></div><div id="adPale">${bidder(180, false)}</div><canvas id="adChalk"></canvas>
     <div id="adWalk">${dibble(150, save.look)}</div><div class="adPet" id="adPet"></div><div id="adTouch"></div>
@@ -74,6 +76,7 @@
     return say(el("adLine"), text, who).then(() => { face.classList.remove("talking"); sayEnd = T(); });
   }
   const hideBox = () => el("adBox").classList.remove("on");
+  const under = (pad = 24) => by + cell * N + pad; // a line's top just under the board, wherever this screen's layout put it
 
   // ---------- board helpers: fill a dig with real pieces, and drag a tray piece in like a finger would ----------
   const shapeKey = (cells) => cells.map(([r, c]) => r + "," + c).sort().join(" ");
@@ -125,7 +128,7 @@
         [["XX", "glowcap"], ["X/X", "jade"], ["X", "moss"]]));
       slide(0, 3, 3, 9.2);
       cue(11.02, () => { const f = frees[0]; if (!f) return; frees = []; save.pets.active = []; freed = { x: f.x, y: f.y + cell * .45, s: cell * 1.35, t0: T() }; });
-      cue(10.25, () => line("dibble", "…you were <b>IN</b> there?", 470));
+      cue(10.25, () => line("dibble", "…you were <b>IN</b> there?", under()));
       cue(11.75, () => { sfx.chirp(); freed.hop = T(); });
       cue(12.85, hideBox);
       // 4. Puddock at his stall, drowsy. The pet comes back in a tiny bow.
@@ -139,7 +142,7 @@
       cue(19.35, () => { el("adPet").style.display = "none"; camT = null; applyCam(); document.body.classList.remove("adShot"); dig("hollow", [], [["X", "moss"], ["X", "moss"], ["X", "moss"]]); tray = [null, null, null];
         $("hud").style.visibility = "hidden"; drawGlowChalk(); chalk = T(); fadeTo(0, .45); music("setTension", .55); });
       cue(19.95, () => { pale = T(); sfx.moth(); });
-      cue(21.1, () => line(null, "Something down here is still glowing.", 492));
+      cue(21.1, () => line(null, "Something down here is still glowing.", under(46)));
       cue(21.6, () => sfx.moth());
       cue(23.35, () => { hideBox(); fadeTo(1, .35); });
       // 6. End card: the logo, the tagline, where to get it
@@ -164,12 +167,12 @@
           ["XX", 3, 0, "moss"], ["X/X", 2, 3, "amber"], ["XXX", 3, 5, "jade", 1], ["X", 3, 2, "jade"], ["XX", 0, 5, "moss"], [".X/XX", 4, 1, "amber"], ["X", 1, 7, "moss"]],
         [["XX", "amber"], ["XX", "moss"], ["X/X", "amber"]], "moss"); fadeTo(0, .5); });
       slide(0, 6, 3, 5.4, .7);
-      cue(6.2, () => line("dibble", "No timer. No rush. Just crystals.", 470));
+      cue(6.2, () => line("dibble", "No timer. No rush. Just crystals.", under()));
       slide(1, 7, 4, 7.55, .7);
       cue(8.75, hideBox);
       slide(2, 2, 4, 9.05, .7); // finishes row 3, where the Moss Puff sleeps
       cue(11.15, () => { const f = frees[0]; if (!f) return; frees = []; save.pets.active = []; freed = { x: f.x, y: f.y + cell * .45, s: cell * 1.35, t0: T(), kind: "moss" }; });
-      cue(10.55, () => line("puddock", "Crystals keep things, little mole. Sometimes they keep someone.", 470));
+      cue(10.55, () => line("puddock", "Crystals keep things, little mole. Sometimes they keep someone.", under()));
       cue(13.2, () => { sfx.chirp(); freed.hop = T(); });
       cue(14.1, () => { hideBox(); fadeTo(.9, .45); });
       // 3. Back at camp, dressing up. Then the pet gets a cap to match.
@@ -222,9 +225,13 @@
   function pinPet(k) { // measured before the close-up's transform, in the stage's own coordinates
     const p = campPet[k], st = $("campStage").getBoundingClientRect(), d = $("campArt").querySelector('[data-tap="dibble"]').getBoundingClientRect();
     clearTimeout(p.t); clearTimeout(p.t2); p.t = -1; p.el.classList.remove("doze"); petFace(p, -1);
-    pin = { k, x: d.right - st.left + petGround.w * .2, y: d.bottom - st.top - 3 }; holdPet();
+    const x = d.right - st.left + petGround.w * .2, y = d.bottom - st.top - 3;
+    // the transform and size are kept, not recomputed: the camp's ResizeObserver redraws it under the close-up's transform,
+    // and campPets() then measures the pets twice as big and puts this one back on its patch
+    pin = { k, x, y, at: petAt(x, y), w: petGround.w }; holdPet();
   }
-  function holdPet() { const p = campPet[pin.k]; if (!p) return; [p.x, p.y] = [pin.x, pin.y]; p.el.style.transform = petAt(p.x, p.y); p.el.style.zIndex = Math.round(p.y); }
+  function holdPet() { const p = campPet[pin.k]; if (!p) return; [p.x, p.y] = [pin.x, pin.y]; p.el.classList.remove("doze");
+    Object.assign(p.el.style, { transform: pin.at, width: pin.w + "px", height: pin.w + "px", zIndex: Math.round(pin.y) }); }
   function unpinPet(k) { pin = null; const p = campPet[k]; if (p) { p.t = null; petRest(p); } }
   // the camp redrawn under a close-up: measured unscaled (the pets size themselves from the camp's on-screen scale), then framed again
   function redrawFramed() { const keep = camT; camT = null; applyCam(); renderHome(); camT = keep; applyCam(); if (pin) holdPet(); }
@@ -252,7 +259,8 @@
   function cozyCard() {
     if (!el("adCard")) ad.insertAdjacentHTML("beforeend", `<div id="adCard" class="adCard"><h1 class="logo" aria-label="Glimmerwood">${logoLetters()}</h1>${logoSwash()}
       <div class="tag tagline">Glowing crystals, tiny friends, and a fire that's always lit.</div><div class="adCta">Free on the App Store</div></div>`);
-    el("adCard").style.display = "block"; $("campFx").style.visibility = "hidden"; // Puddock's hum bubble would sit clipped at the edge under the card css(el("adDark"), { opacity: .92, background: "radial-gradient(ellipse 80% 40% at 50% 34%, rgba(6,10,7,.82), rgba(6,10,7,.35) 80%)" });
+    el("adCard").style.display = "block"; $("campFx").style.visibility = "hidden"; // Puddock's hum bubble would sit clipped at the edge under the card
+    css(el("adDark"), { opacity: .92, background: "radial-gradient(ellipse 80% 40% at 50% 34%, rgba(6,10,7,.82), rgba(6,10,7,.35) 80%)" });
   }
   // Granny's chalk, re-drawn bright on its own layer: the game's drawChalk on a borrowed context, a few passes added up
   function drawGlowChalk() {
@@ -298,7 +306,7 @@
 
   AD.go = () => {
     AD.start = performance.now(); AD.on = true; cues.sort((a, b) => a[0] - b[0]);
-    for (const [t, fn] of cues) setTimeout(() => { try { fn(); } catch (e) { console.error(e); } }, t * 1000);
+    for (const [t, fn] of cues) setTimeout(() => { try { fn(); } catch (e) { console.error(`cue ${t}s:`, e.stack || e); } }, t * 1000);
     requestAnimationFrame(tick);
   };
   if (!capture) { // the live preview: tap to start (browsers need a tap before sound)

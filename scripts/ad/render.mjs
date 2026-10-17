@@ -1,8 +1,9 @@
-// Glimmerwood ads: node scripts/ad/render.mjs                 both cuts: ad-out/glimmerwood-<cut>-9x16.mp4, -16x9.mp4, -contact-sheet.jpg
+// Glimmerwood ads: node scripts/ad/render.mjs                 both cuts: ad-out/glimmerwood-<cut>-9x16.mp4, -16x9.mp4, -contact-sheet.jpg,
+//                                                             and the App Store previews -appstore-886x1920.mp4 (6.9") and -appstore-1080x1920.mp4
 //                  node scripts/ad/render.mjs --cut cozy      one cut ("onemore": quick, funny, a little mystery; "cozy": the camp, slow)
-//                  node scripts/ad/render.mjs --stills 1,5.2  just those moments as PNGs in ad-out/stills-<cut> (no audio)
+//                  node scripts/ad/render.mjs --stills 1,5.2  just those moments as PNGs in ad-out/stills-<cut> (no audio); --appstore: at the 6.9" shape
 //                  node scripts/ad/render.mjs --live          serve it: http://127.0.0.1:8812/trailer.html?cut=cozy (tap to play)
-// The trailer is the real game (www/, built first) with scripts/ad/trailer.js pasted into its module and scripts/ad/clock.js
+// The trailer is the real game (www/, built first) with scripts/ad/trailer.js appended to its module (main.js) and scripts/ad/clock.js
 // in front: time is virtual, so each frame is stepped and screenshot exactly. The sounds the timeline logged are then played
 // through music.js in an OfflineAudioContext (same synth, seeded), and ffmpeg muxes the two. Needs Chrome and ffmpeg
 // (CHROME / FFMPEG env vars, or the usual install paths, or imageio-ffmpeg's binary).
@@ -14,6 +15,7 @@ import { join, extname } from "node:path";
 
 const arg = (k) => process.argv.includes(k) ? process.argv[process.argv.indexOf(k) + 1] ?? true : null;
 const OUT = "ad-out", FPS = 30, W = 405, H = 720, DPR = 1080 / 405; // 405×720 CSS px (a phone), 1080×1920 pixels
+const APP = { W: 405, H: 878, DPR: 886 / 405 }; // the 6.9" App Store preview (886×1920): the same phone width, taller
 const find = (list) => list.find((p) => p && existsSync(p));
 const chrome = find([process.env.CHROME, "C:/Program Files/Google/Chrome/Application/chrome.exe", "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/usr/bin/google-chrome", "/usr/bin/chromium"]);
@@ -26,7 +28,7 @@ execFileSync(process.execPath, ["scripts/build-web.mjs"], { stdio: "inherit" });
 const clock = readFileSync("scripts/ad/clock.js", "utf8"), director = readFileSync("scripts/ad/trailer.js", "utf8");
 const page = (live) => { let h = readFileSync("www/index.html", "utf8");
   if (!live) h = h.replace("<head>", `<head><script>${clock}</script>`);
-  const i = h.lastIndexOf("</script>"); return h.slice(0, i) + "\n" + director + "\n" + h.slice(i); };
+  return h.replace('src="main.js"', 'src="trailer-main.js"'); }; // the game's module with the director appended (served below)
 const AUDIO = `<!doctype html><meta charset="utf-8"><script>
 let s = 20261016; Math.random = () => ((s = (s * 16807) % 2147483647) / 2147483647); // seeded, like the picture
 window.setInterval = () => 1; window.clearInterval = () => {}; // the music's scheduler is pumped by hand, on the render clock
@@ -52,12 +54,13 @@ window.renderAudio = async (log, dur) => {
   return { b64: btoa(bin), peak };
 };
 </script>`;
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".woff2": "font/woff2" };
+const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".woff2": "font/woff2" };
 const live = !!arg("--live"), port = live ? 8812 : 0;
 const server = createServer((req, res) => {
   const p = decodeURIComponent(new URL(req.url, "http://x").pathname), send = (type, body) => { res.writeHead(200, { "content-type": type }); res.end(body); };
   if (p === "/trailer.html") return send("text/html", page(live));
   if (p === "/trailer-audio.html") return send("text/html", AUDIO);
+  if (p === "/trailer-main.js") return send("text/javascript", readFileSync("www/main.js", "utf8") + "\n" + director);
   const f = join("www", p === "/" ? "index.html" : p);
   if (!existsSync(f) || statSync(f).isDirectory()) return res.writeHead(404).end();
   send(TYPES[extname(f)] || "application/octet-stream", readFileSync(f));
@@ -72,64 +75,88 @@ const ff = (a) => execFileSync(ffmpeg, ["-y", "-hide_banner", ...a], { stdio: ["
 const LN = "loudnorm=I=-16:TP=-1.5:LRA=11";
 // the screenshots are full-range JPEG; video players and the stores expect BT.709, limited range, tagged as such
 const TAGS = ["-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv"];
-const BT709 = ["-vf", "scale=in_range=pc:out_range=tv:out_color_matrix=bt709,format=yuv420p", ...TAGS];
-const made = [];
-for (const cut of CUTS) {
+const TO709 = "scale=in_range=pc:out_range=tv:out_color_matrix=bt709,format=yuv420p";
+const x264 = (out, vf = TO709) => spawn(ffmpeg, ["-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", FPS, "-i", "-", "-c:v", "libx264", "-preset", "slow", "-crf", "20",
+  "-maxrate", "4M", "-bufsize", "8M", "-vf", vf, ...TAGS, "-profile:v", "high", "-movflags", "+faststart", out], { stdio: ["pipe", "inherit", "inherit"] });
+const feed = async (enc, img) => { if (!enc.stdin.write(img)) await new Promise((r) => enc.stdin.once("drain", r)); };
+const finish = (enc) => { enc.stdin.end(); return new Promise((r) => enc.on("close", r)); };
+
+// the game at a screen size, booted and started on the cut: { tab, dur, beats, frames, toFrame }
+async function open(cut, w, h, dpr) {
   const tab = await browser.newPage();
-  await tab.setViewport({ width: W, height: H, deviceScaleFactor: DPR });
+  await tab.setViewport({ width: w, height: h, deviceScaleFactor: dpr });
   tab.on("pageerror", (e) => console.error("page:", e.message));
   tab.on("console", (m) => m.type() === "error" && !/AudioContext|404/.test(m.text()) && console.error("page:", m.text()));
-  await tab.goto(`${base}/trailer.html?cut=${cut}`); await tab.evaluate(() => document.fonts.ready);
+  await tab.goto(`${base}/trailer.html?cut=${cut}&smil=live`); await tab.evaluate(() => document.fonts.ready); // smil=live: clock.js alone steps the SVG animations
   await tab.evaluate(() => { for (let k = 0; k < 60; k++) __step(1000 / 60); }); // boot settles (a virtual second)
   await new Promise((r) => setTimeout(r, 400)); // let the painted images decode
-  const { dur, beats } = await tab.evaluate(() => (AD.go(), { dur: AD.dur, beats: AD.beats })), frames = Math.round(dur * FPS);
+  const { dur, beats } = await tab.evaluate(() => (AD.go(), { dur: AD.dur, beats: AD.beats }));
   const toFrame = (f) => tab.evaluate((f, fps) => { const end = AD.start + f / fps * 1000; while (__now() < end - 1e-6) __step(Math.min(1000 / 60, end - __now())); }, f, FPS);
+  return { tab, dur, beats, frames: Math.round(dur * FPS), toFrame };
+}
+// picture: every frame, stepped and screenshot, straight into x264. `also` gets the same frames with the "Free on the App Store"
+// line hidden (Apple disallows store and price references inside app previews); only the end card differs, so only it is shot twice
+async function capture(name, g, enc, also = null) {
+  const t0 = Date.now(), shot = () => g.tab.screenshot({ type: "jpeg", quality: 95, optimizeForSpeed: true });
+  for (let f = 0; f < g.frames; f++) {
+    await g.toFrame(f);
+    const img = await shot(); await feed(enc, img);
+    if (also) { let img2 = img;
+      if (await g.tab.evaluate(() => !!document.querySelector(".adCta"))) { await g.tab.evaluate(() => AD.cta(false)); img2 = await shot(); await g.tab.evaluate(() => AD.cta(true)); }
+      await feed(also, img2); }
+    if (f % 150 === 0) console.log(`${name}: frame ${f}/${g.frames}  ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+  }
+  await finish(enc); if (also) await finish(also);
+  return (Date.now() - t0) / 1000;
+}
 
+const made = [], appstore = !!arg("--appstore");
+for (const cut of CUTS) {
   const stills = arg("--stills");
   if (stills) {
+    const g = appstore ? await open(cut, APP.W, APP.H, APP.DPR) : await open(cut, W, H, DPR);
+    if (appstore) await g.tab.evaluate(() => AD.cta(false));
     mkdirSync(`${OUT}/stills-${cut}`, { recursive: true });
     for (const t of String(stills).split(",").map(Number).sort((a, b) => a - b)) {
-      await toFrame(Math.round(t * FPS)); await new Promise((r) => setTimeout(r, 60));
-      await tab.screenshot({ path: `${OUT}/stills-${cut}/t${t.toFixed(2)}.png` });
+      await g.toFrame(Math.round(t * FPS)); await new Promise((r) => setTimeout(r, 60));
+      await g.tab.screenshot({ path: `${OUT}/stills-${cut}/t${t.toFixed(2)}${appstore ? "-app" : ""}.png` });
     }
-    console.log(`${cut}: stills in ${OUT}/stills-${cut}`); await tab.close(); continue;
+    console.log(`${cut}: stills in ${OUT}/stills-${cut}`); await g.tab.close(); continue;
   }
   if (!ffmpeg) throw new Error("no ffmpeg found; set FFMPEG=/path/to/ffmpeg");
 
-  // picture: every frame, stepped and screenshot, straight into x264
-  const silent = `${OUT}/${cut}-video.mp4`, wav = `${OUT}/${cut}-sound.wav`;
-  const enc = spawn(ffmpeg, ["-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", FPS, "-i", "-", "-c:v", "libx264", "-preset", "slow", "-crf", "20",
-    "-maxrate", "4M", "-bufsize", "8M", ...BT709, "-profile:v", "high", "-movflags", "+faststart", silent], { stdio: ["pipe", "inherit", "inherit"] });
-  const t0 = Date.now();
-  for (let f = 0; f < frames; f++) {
-    await toFrame(f);
-    const img = await tab.screenshot({ type: "jpeg", quality: 95, optimizeForSpeed: true });
-    if (!enc.stdin.write(img)) await new Promise((r) => enc.stdin.once("drain", r));
-    if (f % 150 === 0) console.log(`${cut}: frame ${f}/${frames}  ${((Date.now() - t0) / 1000).toFixed(0)}s`);
-  }
-  enc.stdin.end(); await new Promise((r) => enc.on("close", r));
-  const log = await tab.evaluate(() => AD.log);
+  const silent = `${OUT}/${cut}-video.mp4`, silentNo = `${OUT}/${cut}-video-nocta.mp4`, silent886 = `${OUT}/${cut}-video-886.mp4`, wav = `${OUT}/${cut}-sound.wav`;
+  let g = await open(cut, W, H, DPR);
+  const { dur, beats, frames } = g;
+  let took = await capture(cut, g, x264(silent), x264(silentNo));
+  const log = await g.tab.evaluate(() => AD.log);
   writeFileSync(`${OUT}/${cut}-sound-log.json`, JSON.stringify(log));
 
   // sound: the logged cues, replayed through the game's synth offline
-  await tab.goto(`${base}/trailer-audio.html`); await tab.waitForFunction(() => window.renderAudio);
-  const { b64, peak } = await tab.evaluate((log, dur) => renderAudio(log, dur), log, dur);
-  writeFileSync(wav, Buffer.from(b64, "base64")); await tab.close();
+  await g.tab.goto(`${base}/trailer-audio.html`); await g.tab.waitForFunction(() => window.renderAudio);
+  const { b64, peak } = await g.tab.evaluate((log, dur) => renderAudio(log, dur), log, dur);
+  writeFileSync(wav, Buffer.from(b64, "base64")); await g.tab.close();
   // loudness: two-pass loudnorm to -16 LUFS / -1.5 dBTP (a calm ad, but not quiet next to others in a feed)
   const e = spawnSync(ffmpeg, ["-hide_banner", "-i", wav, "-af", `${LN}:print_format=json`, "-f", "null", "-"]).stderr.toString(), j = JSON.parse(e.slice(e.lastIndexOf("{"), e.lastIndexOf("}") + 1));
   const measured = `:measured_I=${j.input_i}:measured_TP=${j.input_tp}:measured_LRA=${j.input_lra}:measured_thresh=${j.input_thresh}:offset=${j.target_offset}:linear=true`;
   console.log(`${cut}: ${log.length} sound cues, raw peak ${peak.toFixed(3)}, ${j.input_i} LUFS → -16`);
 
+  // the 6.9" preview: captured again at that screen's shape (the game lays itself out for the taller phone); same timeline, same sound
+  g = await open(cut, APP.W, APP.H, APP.DPR); await g.tab.evaluate(() => AD.cta(false));
+  took += await capture(`${cut} 886`, g, x264(silent886, `scale=886:1920:flags=lanczos,setsar=1,${TO709}`)); await g.tab.close();
+
   const tall = `${OUT}/glimmerwood-${cut}-9x16.mp4`, wide = `${OUT}/glimmerwood-${cut}-16x9.mp4`;
-  ff(["-i", silent, "-i", wav, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-af", `${LN}${measured},aresample=48000`,
-    "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", tall]);
+  const app1080 = `${OUT}/glimmerwood-${cut}-appstore-1080x1920.mp4`, app886 = `${OUT}/glimmerwood-${cut}-appstore-886x1920.mp4`;
+  const mux = (v, out) => ff(["-i", v, "-i", wav, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-af", `${LN}${measured},aresample=48000`,
+    "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", out]);
+  mux(silent, tall); mux(silentNo, app1080); mux(silent886, app886);
   // 16:9: the same cut centred on a soft, darkened, blurred copy of itself
-  ff(["-i", tall, "-filter_complex", "[0:v]split[a][b];[a]scale=1920:-2,crop=1920:1080,gblur=sigma=28,eq=brightness=-0.12:saturation=0.85[bg];[b]scale=-2:1080[fg];[bg][fg]overlay=(W-w)/2:0,format=yuv420p",
+  ff(["-i", tall, "-filter_complex", "[0:v]split[a][b];[a]scale=1920:-2,crop=1920:1080,gblur=sigma=28,eq=brightness=-0.12:saturation=0.85[bg];[b]scale=-2:1080[fg];[bg][fg]overlay=(W-w)/2:0,setsar=1,format=yuv420p",
     "-c:v", "libx264", "-preset", "slow", "-crf", "20", "-maxrate", "4M", "-bufsize", "8M", ...TAGS, "-profile:v", "high", "-c:a", "copy", "-movflags", "+faststart", wide]);
   // contact sheet: the cut's story beats
   ff(["-i", tall, "-vf", `select='${beats.map((t) => `eq(n\,${Math.round(t * FPS)})`).join("+")}',scale=270:480,tile=6x2:padding=6:color=0x0b140f`, "-frames:v", "1", "-q:v", "3", `${OUT}/glimmerwood-${cut}-contact-sheet.jpg`]);
-  for (const f of [tall, wide]) made.push(`${f}  ${(statSync(f).size / 1e6).toFixed(1)} MB`);
-  console.log(`${cut}: ${dur}s, ${frames} frames, ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+  for (const f of [tall, wide, app1080, app886]) made.push(`${f}  ${(statSync(f).size / 1e6).toFixed(1)} MB`);
+  console.log(`${cut}: ${dur}s, ${frames} frames, captured in ${took.toFixed(0)}s`);
 }
 await browser.close(); server.close();
 if (made.length) console.log(made.join("\n"));
