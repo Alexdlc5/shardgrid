@@ -9,7 +9,8 @@
     "check:story": "npm run build && node scripts/scene-check.mjs",
     "android": "npm run build && npx cap sync android && npx cap open android",
     "assets": "node scripts/app-art.mjs",
-    "test:screens": "node scripts/crisp.mjs --check 2 && node scripts/smoke.mjs"
+    "test:screens": "node scripts/crisp.mjs --check 2 && node scripts/smoke.mjs",
+    "play": "node scripts/play.mjs"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.2.1",

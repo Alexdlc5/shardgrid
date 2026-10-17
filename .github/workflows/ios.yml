@@ -38,9 +38,21 @@ jobs:
       - run: npm ci
       - run: node proto/check.mjs && node scripts/check-save-mirror.mjs
       - run: python3 sim/test_sim.py
-      - name: Build the web bundle (version ${{ github.run_number }}${{ inputs.appstore && ', real ads' || ', test ads' }})
+      - name: The build number must be new (Apple rejects a repeat)
+        if: ${{ inputs.upload }}
+        run: |
+          B=$(tr -dc 0-9 < ios/BUILD); LAST=$(gh api repos/${{ github.repository }}/actions/workflows/ios.yml/runs --paginate -q '[.workflow_runs[] | select(.event=="workflow_dispatch" and .conclusion=="success") | .run_number] | max' 2>/dev/null || echo 0)
+          echo "ios/BUILD=$B, highest run-number upload=$LAST"; [ "$B" -gt 111 ] || { echo "ios/BUILD must be greater than 111 (the last run-counter upload)"; exit 1; }
         env:
-          GW_BUILD: ${{ github.run_number }}
+          GH_TOKEN: ${{ github.token }}
+      # The build number is ios/BUILD, a file in the repo (not the run counter): the release is a number we chose, and every
+      # upload must be higher than the last Apple saw for this version (TestFlight holds up to 111). Bump it in the commit.
+      - name: Read the build number
+        id: ver
+        run: echo "build=$(tr -dc 0-9 < ios/BUILD)" >> "$GITHUB_OUTPUT"
+      - name: Build the web bundle (build ${{ steps.ver.outputs.build }}${{ inputs.appstore && ', real ads' || ', test ads' }})
+        env:
+          GW_BUILD: ${{ steps.ver.outputs.build }}
           GW_APPSTORE: ${{ inputs.appstore && '1' || '' }}
         run: |
           [ "$GW_APPSTORE" != 1 ] || [ "${{ inputs.upload }}" = true ] || { echo "appstore needs upload ticked too"; exit 1; }
@@ -67,7 +79,7 @@ jobs:
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/Glimmerwood.xcarchive" -clonedSourcePackagesDirPath "$RUNNER_TEMP/spm" \
             DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
-            CURRENT_PROJECT_VERSION="${{ github.run_number }}" "${AUTH[@]}" archive | tail -n 30
+            CURRENT_PROJECT_VERSION="${{ steps.ver.outputs.build }}" "${AUTH[@]}" archive | tail -n 30
           cat > "$RUNNER_TEMP/export.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -85,4 +97,4 @@ jobs:
           # Crashlytics needs the dSYMs to turn crash addresses into file and line; a failed upload only warns
           "$RUNNER_TEMP/spm/checkouts/firebase-ios-sdk/Crashlytics/upload-symbols" -gsp ios/App/App/GoogleService-Info.plist \
             -p ios "$RUNNER_TEMP/Glimmerwood.xcarchive/dSYMs" || echo "::warning::Crashlytics dSYM upload failed; crash reports stay unsymbolicated"
-          echo "Uploaded build ${{ github.run_number }}: it appears in App Store Connect > TestFlight after processing (~10-30 min)."
+          echo "Uploaded build ${{ steps.ver.outputs.build }}: it appears in App Store Connect > TestFlight after processing (~10-30 min)."

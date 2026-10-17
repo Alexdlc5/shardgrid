@@ -26,7 +26,8 @@ const appstore = process.env.GW_APPSTORE === "1";
 const ver = readFileSync("ios/App/App.xcodeproj/project.pbxproj", "utf8").match(/MARKETING_VERSION = ([\d.]+);/)?.[1] || "0";
 let plat = readFileSync(`${out}/platform.js`, "utf8");
 const swap = (a, b) => { if (!plat.includes(a)) throw new Error(`platform.js: "${a}" not found`); plat = plat.replace(a, b); };
-swap('export const VERSION = "dev";', `export const VERSION = ${JSON.stringify(`${ver} (${process.env.GW_BUILD || "dev"})${appstore ? "" : " · test ads"}`)};`);
+const build = process.env.GW_BUILD || (existsSync("ios/BUILD") ? readFileSync("ios/BUILD", "utf8").trim() : "dev"); // ios/BUILD: the number TestFlight shows
+swap('export const VERSION = "dev";', `export const VERSION = ${JSON.stringify(`${ver} (${build})${appstore ? "" : " · test ads"}`)};`);
 if (appstore) swap("testAds: true,", "testAds: false,");
 writeFileSync(`${out}/platform.js`, plat);
 // every relative import in the bundle must resolve, or the app boots to a blank screen on the phone
