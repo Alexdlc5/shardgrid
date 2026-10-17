@@ -58,6 +58,8 @@ const scaleNote = (t, step) => t.root + 12 + Math.floor(step / 5) * 12 + t.scale
 // Everything musical then goes through `music` (+ its reverb/echo sends), which is the volume and the on/off switch.
 function init() {
   if (master) return;
+  // iOS: Web Audio follows the ring/silent switch unless the page asks for a "playback" session (Audio Session API, iOS 17+)
+  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}
   ctx ??= new (window.AudioContext || window.webkitAudioContext)();
   master = ctx.createGain(); master.gain.value = .55; master.connect(ctx.destination);
   // generated reverb: decaying stereo noise
@@ -212,6 +214,8 @@ export const soundtrack = {
   },
   // a single gem "note" for the camp shelf: each gem type sings its own pitch
   chime(i) { if (!enabled && !ctx) return; init(); pluck({ out: music, rev: musicRev, ech: musicEcho }, NOTE(scaleNote(TRACKS.camp, i % 10) + 12), ctx.currentTime + .01, .14, "musicbox", 1); },
+  // call from a tap: iOS only lets audio start inside one, and a 1-sample silent buffer is what finally wakes it
+  unlock() { init(); if (ctx.state === "running") return; ctx.resume(); const b = ctx.createBufferSource(); b.buffer = ctx.createBuffer(1, 1, 22050); b.connect(ctx.destination); b.start(); },
   pause() { if (ctx && ctx.state === "running") ctx.suspend(); },
   resume() { if (ctx && enabled) ctx.resume(); },
 };

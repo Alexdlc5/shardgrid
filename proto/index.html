@@ -2392,7 +2392,11 @@ function frame(now) {
 }
 
 document.addEventListener("pointerdown", (e) => { if (e.target.closest("button:not(:disabled)")) { ui.tap(); buzz(6); } }, true);
-document.addEventListener("pointerdown", () => soundtrack.setEnabled(save.opt.music), { once: true }); // browsers need a tap before audio
+// iOS only lets a tap start audio as the touch ends (touchend/pointerup/click), so wake it on those whenever it's asleep
+// (after the app was in the background too); the first one also starts the music
+let heard = false;
+for (const ev of ["pointerup", "touchend", "click", "keydown"]) document.addEventListener(ev, () => {
+  soundtrack.unlock(); if (!heard) { heard = true; soundtrack.setEnabled(save.opt.music); } }, { capture: true, passive: true });
 // dust specks flash in menus and camp
 { const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const dust = $("dust");
