@@ -88,7 +88,8 @@ export const platform = {
       } catch (e) { track("consent_failed", { error: String(e?.message || e).slice(0, 90) }); }
       try { if (os === "ios") await AdMob.requestTrackingAuthorization(); } catch {}
       try {
-        await AdMob.initialize({ initializeForTesting: KEYS.testAds });
+        // PG cap on every ad request keeps mature ads out (and the App Store age rating low); console blocking does the rest (docs/SETUP.md A8)
+        await AdMob.initialize({ initializeForTesting: KEYS.testAds, maxAdContentRating: "ParentalGuidance" });
         adsReady = true;
         load("rewarded"); load("interstitial");
         if (bannerWant) this.banner(true); // a menu opened while the consent form was up
