@@ -1462,3 +1462,34 @@ export function titleHero(look = {}, still = false) {
 // The logo, lettered by hand: each letter its own painted piece, tilted and bounced a little off the baseline.
 export const logoLetters = (word = "Glimmerwood") => { const r = rng(7);
   return [...word].map((c, k) => `<span aria-hidden="true" style="--r:${((r() - .5) * 7).toFixed(1)}deg;--y:${((k % 2 ? -1 : 1) * (1 + r() * 2)).toFixed(1)}px">${c}</span>`).join(""); };
+
+// ---------- coin packs for the Coin purse (48 box): pouch, satchel, chest, hoard ----------
+const gc = (x, y, r, seed, tilt = 1) => `${I(R(x, y, r, r * tilt, seed, 0, .06, 9), "#e0a63a", [-.5, .45])}<path d="${R(x - r * .2, y - r * .22 * tilt, r * .5, r * .42 * tilt, seed + 1, 0, .12, 7)}" fill="#ffe08a" opacity=".7"/>`;
+const heap = (cx, cy, w, rows, seed) => { const r = rng(seed); let o = "";
+  for (let row = 0; row < rows; row++) { const n = Math.max(1, Math.round(w / 5) - row), y = cy - row * 3.6;
+    for (let k = 0; k < n; k++) o += gc(cx + (k - (n - 1) / 2) * (w / (n + .6)) + (r() - .5) * 1.6, y + (r() - .5) * 1.2, 3.3, seed * 7 + row * 13 + k, .55); }
+  return o; };
+const PACKS = {
+  pouch: () => `${halo(24, 30, 18, "#ffd27a", .16, 3)}
+    ${I(curve([[17, 18], [31, 18], [37, 28], [36, 39], [24, 43], [12, 39], [11, 28]]), "#b88a5a", [-.8, .7])}
+    <path d="${curve([[26, 22], [34, 28], [33, 38], [26, 40]])}" fill="#7a5434" opacity=".35"/>${hl([[14, 30], [15, 25], [19, 21]], 1.2, .5)}
+    ${I(curve([[16, 12], [20, 15], [28, 15], [32, 12], [30, 19], [18, 19]]), "#c89a64", [-.5, .45])}
+    ${ln([[16, 18.6], [24, 20], [32, 18.6]], "#6a3f1c", 1.8)}${ln([[30, 19], [35, 22], [36, 26]], "#6a3f1c", 1.2)}${I(R(36.2, 27, 1.6, 1.6, 9), "#d8553d", [-.3, .3])}
+    ${gc(9, 41, 4, 21, .6)}${gc(39, 42, 3.6, 22, .6)}${gc(19.5, 31, 3.8, 23)}${twinkle(21, 29, 2, "#fffbe8")}`,
+  satchel: () => `${halo(24, 30, 19, "#ffd27a", .18, 4)}${ln([[8, 30], [10, 10], [24, 6], [38, 10], [40, 30]], "#5a3418", 2.2)}
+    ${I(curve([[8, 22], [40, 22], [41, 40], [24, 43], [7, 40]]), "#9a5a30", [-.8, .7])}${heap(24, 21, 26, 2, 5)}
+    ${I(curve([[7, 20], [41, 20], [40, 31], [24, 34], [8, 31]]), "#b06a38", [-.6, .55])}${hl([[10, 23], [24, 24.5], [38, 23]], 1, .45)}
+    ${I(curve([[21, 28], [27, 28], [27.5, 34], [20.5, 34]]), "#e8c06a", [-.4, .35])}<path d="${curve([[22.6, 30], [25.4, 30], [25.4, 32.2], [22.6, 32.2]])}" fill="#6a3f1c"/>
+    ${stroke(10, 38, -.1, 28, .5, "#5a3418", .5, .02)}${gc(41, 42, 3.4, 31, .6)}${twinkle(32, 15, 2.2, "#fffbe8")}`,
+  chest: () => `${halo(24, 26, 22, "#ffd27a", .26, 5)}
+    ${I(curve([[7, 10], [41, 10], [42, 14], [41, 19], [7, 19], [6, 14]]), "#7a4a24", [-.7, .6])}<path d="${curve([[10, 13], [38, 13], [38, 17], [10, 17]])}" fill="#3a2010" opacity=".55"/>
+    ${heap(24, 23, 32, 3, 6)}${I(curve([[6, 22], [42, 22], [42, 41], [6, 41]]), "#8a5a2c", [-.8, .7])}
+    ${[27, 34].map((y) => stroke(7, y, 0, 34, .5, "#4a2a12", .55, .01)).join("")}${hl([[8, 24], [24, 24.6], [40, 24]], .9, .4)}
+    ${[9, 39].map((x) => I(curve([[x - 2, 22], [x + 2, 22], [x + 2, 41], [x - 2, 41]]), "#c8a050", [-.3, .3])).join("")}
+    ${I(curve([[21, 25], [27, 25], [27, 31], [24, 33], [21, 31]]), "#e8c870", [-.4, .35])}<path d="M24 27.4 v2.8" stroke="#4a2a12" stroke-width="1.2" stroke-linecap="round"/>
+    ${twinkle(15, 15, 2.4, "#fffbe8")}${twinkle(33, 16, 1.8, "#fffbe8")}`,
+  hoard: () => `${halo(24, 28, 23, "#ffd27a", .32, 6)}${heap(24, 42, 40, 6, 8)}
+    ${gem("#ef6f8a", 13, "", "heart").replace("<svg", '<svg x="9" y="20"')}${gem("#5fd0e8", 12).replace("<svg", '<svg x="27" y="14"')}
+    ${gc(34, 30, 4.2, 41)}${gc(13, 34, 4, 42)}${twinkle(24, 10, 2.8, "#fffbe8")}${twinkle(38, 22, 1.8, "#fffbe8")}${twinkle(8, 28, 1.6, "#fffbe8")}`,
+};
+export const coinPack = (kind, size = 56) => svg(size, "0 0 48 48", PACKS[kind](), "lookItem");
