@@ -9,6 +9,7 @@ import { soundtrack, sfx } from "./music.js";
 import { platform, track, COIN_PACKS } from "./platform.js";
 import { drawLife, lifeDig, lifeStop, lifeTap, campLife, campPrints } from "./ambient.js";
 import { curve, ring, limb, shape, stroke, rng as prng } from "./paint.js";
+import { localDate, streakAfter, untilMidnight } from "./daily.js";
 
 // ---------- painted UI skins: plank, parchment and carved-recess shapes from paint.js, as 9-slice SVGs for CSS border-image (--p-*) ----------
 function uiSkins() {
@@ -187,7 +188,7 @@ function puddockLine() { // half the time a line from this mine's chapter; after
   if (save.story.finale && Math.random() < .6) return quote(pick(PUDDOCK_POSTGAME));
   return save.story.confessed && Math.random() < .6 ? quote(pick(PUDDOCK_AFTER)) : pick(PUDDOCK);
 }
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => localDate(), yesterday = () => localDate(new Date(), -1); // the device's local day (daily.js)
 const mulberry = (a) => () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a);
   t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const qs = new URLSearchParams(location.search);
@@ -1123,9 +1124,8 @@ function sell(mult) {
   const fresh = Object.keys(haul).filter((t) => GEMS.includes(t) && !save.found.includes(t));
   save.found.push(...fresh);
   if (daily) {
-    const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
-    if (save.daily.last !== today()) save.daily = { last: today(), streak: save.daily.last === y ? save.daily.streak + 1 : 1, best: haulValue() };
-    else save.daily.best = Math.max(save.daily.best, haulValue());
+    const again = save.daily.last === today(); // a second dig today can't start from the sheet, but the rule stays safe
+    save.daily = { last: today(), streak: streakAfter(save.daily.last, save.daily.streak, today(), yesterday()), best: again ? Math.max(save.daily.best, haulValue()) : haulValue() };
   } else save.best[bestKey()] = Math.max(save.best[bestKey()] || 0, haulValue());
   persist();
   if (!calm) platform.submitScore("best_haul", haulValue()); // Game Center keeps each player's best. Calm Grove has no clock, so it stays off the board
@@ -1215,14 +1215,20 @@ function renderHome() {
   $("dibbleArt").innerHTML = titleHero(save.look, STILL);
   const mem = `Amber Memories · ${save.story.mem.length}/${MEMORY_COUNT}`;
   $("tMem").textContent = mem; $("campMem").textContent = mem;
-  const done = save.daily.last === today(), st = save.daily.last === today() || save.daily.last === new Date(Date.now() - 864e5).toISOString().slice(0, 10) ? save.daily.streak : 0;
+  campDaily = renderDaily();
+  $("campHint").textContent = !Object.keys(save.best).length ? "Tap the signpost to go mining ✦" : !save.metPuddock ? "Puddock's waving you over to his stall ✦" : "Tap things around camp ✦";
+  renderMines(); renderCamp(); drawCamp();
+}
+let dailyTick = 0;
+function renderDaily() { // the Daily Dig sheet; in the done state the countdown to local midnight ticks once a minute while the sheet is open
+  const done = save.daily.last === today(), st = done || save.daily.last === yesterday() ? save.daily.streak : 0;
   $("dailyInfo").innerHTML = `<span class="streak" title="streak: ${st} day(s)">${[...Array(7)].map((_, k) => `<i class="${k < Math.min(st, 7) ? "on" : ""}"></i>`).join("")}</span>
     <div class="note" style="margin-top:6px">${st ? `${st}-day streak` : "No streak yet"}${done ? ` · today's best ${save.daily.best}g` : ""}</div>`;
-  $("daily").textContent = done ? "Done for today. Come back tomorrow" : "Start today's dig";
+  $("daily").textContent = done ? `Done for today · new dig in ${untilMidnight()}` : "Start today's dig";
   $("daily").disabled = done;
-  $("campHint").textContent = !Object.keys(save.best).length ? "Tap the signpost to go mining ✦" : !save.metPuddock ? "Puddock's waving you over to his stall ✦" : "Tap things around camp ✦";
-  renderMines(); renderCamp();
-  campDaily = { done, streak: st, best: save.daily.best }; drawCamp();
+  clearInterval(dailyTick);
+  if (done) dailyTick = setInterval(() => $("dailySheet").classList.contains("show") ? renderDaily() : clearInterval(dailyTick), 6e4);
+  return { done, streak: st, best: save.daily.best };
 }
 function renderMines() {
   $("mExp").classList.toggle("on", save.mode === "exp"); $("mCalm").classList.toggle("on", save.mode === "calm");
@@ -1704,7 +1710,7 @@ $("campStage").addEventListener("pointerdown", (e) => {
   else if (what.startsWith("gem-")) { soundtrack.chime(+what.slice(4)); campFx(x, y, "✦", "campSpark"); }
   else if (what === "tent" || what === "wardrobe") { tone(520, .08, "triangle", .05); show("wardrobe"); }
   else if (what === "mines") { tone(392, .1, "triangle", .06); renderMines(); show("mineSheet"); }
-  else if (what === "daily") { tone(660, .08, "triangle", .05); show("dailySheet"); }
+  else if (what === "daily") { tone(660, .08, "triangle", .05); renderDaily(); show("dailySheet"); }
   else if (what === "market") { tone(330, .1, "triangle", .06); openMarket(); }
   else if (what === "memories") { tone(440, .14, "sine", .05); replayMemories(home); }
   else if (what === "sapling") { tone(880, .12, "sine", .04); tone(1320, .1, "sine", .03, .06); campFx(x, y - 10, "✦", "campSpark"); buzz(8); }

@@ -100,3 +100,18 @@ assert.deepEqual(credited, ["a", "b"]);
 const perUsd = (p) => p.gold / p.usd, base = perUsd(COIN_PACKS.coins_pouch);
 for (const p of Object.values(COIN_PACKS)) assert.ok(perUsd(p) / base >= 1 + p.bonus / 100 && perUsd(p) / base < 1 + (p.bonus + 5) / 100, p.name);
 console.log("coins ok");
+// Daily Dig (daily.js): the day is the device's local date; the streak counts consecutive local days
+const { localDate, streakAfter, untilMidnight } = await import("./daily.js");
+const at = (y, m, d, h = 12, mi = 0) => new Date(y, m - 1, d, h, mi), day = (...a) => localDate(at(...a)), yday = (...a) => localDate(at(...a), -1);
+assert.equal(day(2026, 3, 9), "2026-03-09"); // zero-padded local date, no UTC shift
+assert.equal(yday(2026, 3, 1), "2026-02-28");
+assert.equal(streakAfter("2026-10-15", 3, day(2026, 10, 16), yday(2026, 10, 16)), 4); // consecutive local days extend it
+assert.equal(streakAfter("2026-10-14", 3, day(2026, 10, 16), yday(2026, 10, 16)), 1); // a two-day gap starts over
+assert.equal(streakAfter("2026-10-16", 3, day(2026, 10, 16), yday(2026, 10, 16)), 3); // the same day doesn't double-count
+assert.equal(streakAfter("", 0, day(2026, 10, 16), yday(2026, 10, 16)), 1); // first ever
+const late = at(2026, 10, 16, 23, 30), early = at(2026, 10, 17, 0, 10); // 23:30 then 00:10: consecutive, whatever UTC says
+assert.equal(streakAfter(localDate(late), 1, localDate(early), localDate(early, -1)), 2);
+assert.equal(untilMidnight(at(2026, 10, 16, 20, 48)), "3h 12m");
+assert.equal(untilMidnight(at(2026, 10, 16, 23, 48)), "12m");
+assert.equal(untilMidnight(new Date(2026, 9, 16, 23, 47, 30)), "13m"); // rounds up
+console.log("daily ok");
