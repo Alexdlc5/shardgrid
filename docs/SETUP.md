@@ -161,7 +161,10 @@ Until then the game behaves exactly as now.
 Claude prepares the text and pictures; you paste them in and press submit.
 - **Screenshots:** 6.9" iPhone (1320×2868). Claude renders them from the game.
 - **Description, subtitle** ("Cozy crystal block puzzle"), **keywords**, **support URL** https://alexdlc5.github.io, **privacy policy URL** https://alexdlc5.github.io/privacy.html.
-- **App Privacy** ("nutrition labels"): Claude writes the answers from the SDKs (identifiers, usage data, diagnostics, purchases; tracking = yes when the player allows it).
+- **App Privacy** ("nutrition labels"): answer exactly as `ios/App/App/PrivacyInfo.xcprivacy` says, so the Xcode privacy report matches.
+  *Data used to track you:* **Device ID**, **Advertising Data** (third-party advertising). *Data not linked to you:* **Product Interaction** (analytics),
+  **Crash Data** and **Performance Data** (app functionality), **Purchase History** (app functionality). Nothing is linked to the player's identity.
+  Check: Xcode → Product → Archive → right-click the archive → **Generate Privacy Report**; every category in the PDF should appear above.
 - **Age rating questionnaire:** no violence, no gambling, no user content. It contains ads. Expect **4+ or 9+**.
 - **Attach the `no_ads` purchase** to the version (first-time purchases must ship with a version).
 - **Review notes** (Claude drafts): the game asks for tracking permission, rewarded ads are optional, and no account is needed.

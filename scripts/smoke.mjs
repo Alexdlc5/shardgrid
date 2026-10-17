@@ -15,12 +15,14 @@ const server = createServer((req, res) => {
 }).listen(0);
 const shots = process.argv.includes("--shots") ? process.argv[process.argv.indexOf("--shots") + 1] : null;
 if (shots) mkdirSync(shots, { recursive: true });
+// --se: iPhone SE (375x667 @2x), the smallest supported screen
+const SE = process.argv.includes("--se"), VW = SE ? 375 : 402, VH = SE ? 667 : 874, DPR = SE ? 2 : 3;
 const SCREENS = ["title", "home", "mineSheet", "dailySheet", "wardrobe", "optsSheet", "market", "purseSheet", "memSheet", "talk", "dig", "rescueOffer", "end"];
 
 let failed = 0;
 for (const [name, bt] of [["webkit", webkit], ["chromium", chromium]]) {
   const b = await bt.launch();
-  const page = await b.newPage({ viewport: { width: 402, height: 874 }, deviceScaleFactor: 3 });
+  const page = await b.newPage({ viewport: { width: VW, height: VH }, deviceScaleFactor: DPR });
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("requestfailed", (r) => errors.push("request failed: " + r.url()));
@@ -38,9 +40,11 @@ for (const [name, bt] of [["webkit", webkit], ["chromium", chromium]]) {
       const cv = document.getElementById("cv"), el = id === "dig" ? cv : document.getElementById(id);
       const box = el?.getBoundingClientRect();
       return { shown: !!box && box.width > 0 && box.height > 0 && getComputedStyle(el).display !== "none",
-        canvas3x: cv.width === Math.round(innerWidth * 3), brokenImgs: [...document.images].filter((i) => i.complete && !i.naturalWidth && i.offsetWidth).length };
+        // nothing tappable may sit off screen or under another screen's edge
+        offscreen: [...(el?.querySelectorAll?.("button") ?? [])].filter((x) => { const q = x.getBoundingClientRect(); return q.width && (q.left < -1 || q.right > innerWidth + 1 || q.bottom > innerHeight + 1 && getComputedStyle(el).overflowY !== "auto"); }).map((x) => x.id || x.textContent.trim().slice(0, 16)),
+        canvas3x: cv.width === Math.round(innerWidth * devicePixelRatio), brokenImgs: [...document.images].filter((i) => i.complete && !i.naturalWidth && i.offsetWidth).length };
     }, id);
-    const bad = [!r.shown && "not shown", !r.canvas3x && "canvas not 3x", r.brokenImgs && `${r.brokenImgs} broken images`, ...errors.slice(before)].filter(Boolean);
+    const bad = [!r.shown && "not shown", !r.canvas3x && "canvas not 3x", r.brokenImgs && `${r.brokenImgs} broken images`, r.offscreen.length && `off screen: ${r.offscreen.join(", ")}`, ...errors.slice(before)].filter(Boolean);
     console.log(`${name.padEnd(9)} ${id.padEnd(11)} ${bad.length ? "FAIL " + bad.join(" | ") : "ok"}`);
     if (bad.length) failed++;
     if (shots) await page.screenshot({ path: join(shots, `${name}-${id}.png`), scale: "css" });
