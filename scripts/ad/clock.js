@@ -28,7 +28,7 @@
       svg.pauseAnimations(); svg.setCurrentTime((now - born.get(svg)) / 1000); svg.__done = frameNo;
     }
   };
-  const run = (fn, a) => { try { fn(...a); } catch (e) { console.error(e); } };
+  const run = (fn, a) => { try { fn(...a); } catch (e) { console.error(e.stack || e); } };
   // advance by ms: fire every timer due on the way, at its own time; then one animation frame at the new time
   window.__step = (ms) => {
     const end = now + ms;
