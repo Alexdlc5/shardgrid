@@ -24,6 +24,13 @@
     background: radial-gradient(120% 70% at 50% 0%, #2b5a3c 0%, var(--forest2) 45%, var(--forest) 100%); }
   body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5;
     background: repeating-linear-gradient(105deg, transparent 0 90px, rgba(255, 240, 190, .035) 90px 150px, transparent 150px 260px); }
+  /* scene transitions (wipe()): a lantern iris, and a painted wall of earth you dig down through or climb up out of */
+  #wipe { position: fixed; inset: 0; z-index: 60; display: none; overflow: hidden; pointer-events: none; }
+  #wipe.on { display: block; pointer-events: auto; }
+  #wipe .iris { position: absolute; border-radius: 50%; box-shadow: 0 0 0 300vmax #060d09, inset 0 0 28px 8px rgba(255,196,110,.5), 0 0 40px 12px rgba(255,196,110,.18); }
+  #wipe .earth { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
+  #wipe .earth svg { display: block; width: 100%; height: 100%; }
+  #wipe .veil { position: absolute; inset: 0; background: #060d09; }
   canvas { display: block; position: relative; }
   .hud { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: 0; right: 0; display: flex; justify-content: space-between;
     padding: 0 18px; pointer-events: none; }
@@ -432,7 +439,7 @@
 <body>
 <div id="statusScrim" style="position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top, 0px);background:rgba(5,12,8,.55);z-index:40;pointer-events:none" aria-hidden="true"></div>
 <div id="safeProbe" style="position:fixed;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top, 0px);padding-bottom:env(safe-area-inset-bottom, 0px)" aria-hidden="true"></div>
-<div id="world"></div><div id="flies"></div><div id="grade"></div><div id="dust"></div>
+<div id="wipe" aria-hidden="true"></div><div id="world"></div><div id="flies"></div><div id="grade"></div><div id="dust"></div>
 <canvas id="cv"></canvas>
 <div class="hud" id="hud">
   <div><small>Haul</small><b><span id="coinHud"></span><span id="haul">0g</span></b></div>
@@ -1689,8 +1696,8 @@ function sell(mult) {
   // before the first talk, the stall's "Psst!" bubble and the camp hint invite the player over (tapping the stall starts it)
   if (save.metPuddock) { const sc = nextScene(save.story); if (sc) setTimeout(() => playScene(sc), 900); } // docs/STORY.md, in order
 }
-$("sell").onclick = () => sell(1);
-$("sell2").onclick = async () => (await platform.rewarded("double_deal")) ? sell(2) : toast("No ad ready, try again in a moment");
+$("sell").onclick = () => wipe("up", () => sell(1));
+$("sell2").onclick = async () => (await platform.rewarded("double_deal")) ? wipe("up", () => sell(2)) : toast("No ad ready, try again in a moment");
 
 // ---------- home and market ----------
 const SHEETS = ["mineSheet", "dailySheet", "wardrobe", "optsSheet", "market", "memSheet", "purseSheet"];
@@ -1704,6 +1711,46 @@ function show(id) {
   platform.banner(id === "home" || id === "market");
   if (id === "title") soundtrack.play("home"); else if (id && id !== "end" && id !== "talk") soundtrack.play("camp"); }
 for (const b of document.querySelectorAll(".close")) b.onclick = () => { renderHome(); show(base); };
+// ---------- scene transitions: cover, switch the scene underneath (mid), uncover ----------
+// iris: the dark closes in on a lantern (from) and opens again on Dibble (to). down: a wall of earth rushes up past you as
+// you dig in, crystals glinting in the soil; up: the same earth falls away as you climb out into the lantern light.
+// Reduced motion: a short fade. Taps are held while it plays.
+let wiping = false;
+function earthArt(w, h) { // painted soil, 1.5 screens tall: ragged lips top and bottom, strata, stones, a few crystals
+  const r = prng(Math.round(w * 7 + h)), lip = (y, dir) => [...Array(13)].map((_, k) => [k / 12 * w, y + dir * (6 + r() * 16)]);
+  const top = lip(18, 1), bot = lip(h - 18, -1), body = curve([[-20, top[0][1]], ...top, [w + 20, top[12][1]], [w + 20, bot[12][1]], ...bot.reverse(), [-20, bot[12][1]]]);
+  const bands = [.18, .34, .5, .66, .82].map((f, k) => `<path d="${curve([...Array(9)].map((_, j) => [j / 8 * (w + 40) - 20, f * h + Math.sin(j * 1.7 + k) * 10]), false)}" stroke="${k % 2 ? "#3a2818" : "#140d07"}" stroke-width="${10 + k * 3}" fill="none" opacity=".45"/>`).join("");
+  const stones = [...Array(16)].map((_, k) => { const x = r() * w, y = h * (.06 + r() * .88), s = 5 + r() * 12;
+    return shape(curve(ring(x, y, s, s * .7, 8, .25, k + 3)), k % 3 ? "#4a3a2c" : "#5e4c3a", "#1a120b", [-1.4, 1.2]); }).join("");
+  const gems = Object.values(CRYSTALS).filter((c) => !c.stone), shards = [...Array(9)].map((_, k) => { const c = gems[k % gems.length].color, x = w * (.08 + r() * .84), y = h * (.1 + r() * .8), s = 7 + r() * 8;
+    return `<path d="${curve(ring(x, y, s * 2.4, s * 2.4, 10, .2, k))}" fill="${c}" opacity=".18"/>${shape(curve([[x - s * .5, y + s * .6], [x, y - s], [x + s * .55, y + s * .5]]), c, mix(c, "#000000", .5), [-1, 1])}<path d="M${x - s * .1} ${y - s * .5} L${x + s * .15} ${y + s * .2}" stroke="#ffffff" stroke-width="1.4" opacity=".7"/>`; }).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><defs><linearGradient id="soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e2014"/><stop offset=".5" stop-color="#22170e"/><stop offset="1" stop-color="#2e2014"/></linearGradient></defs>
+    <path d="${body}" fill="#120b06" transform="translate(-3 4)"/><path d="${body}" fill="url(#soil)"/>${bands}${stones}${shards}</svg>`;
+}
+function wipe(kind, mid, from = null, to = null) {
+  if (wiping) return; wiping = true;
+  const el = $("wipe"), W = innerWidth, H = innerHeight, R = Math.hypot(W, H);
+  el.classList.add("on"); el.innerHTML = "";
+  const done = () => { el.classList.remove("on"); el.innerHTML = ""; wiping = false; };
+  if (calmMotion) { const v = el.appendChild(document.createElement("i")); v.className = "veil";
+    v.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, fill: "forwards" }).onfinish = () => { mid();
+      v.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "forwards" }).onfinish = done; }; return; }
+  if (kind === "iris") {
+    const hole = el.appendChild(document.createElement("i")); hole.className = "iris";
+    const at = (p) => p || [W / 2, H / 2], box = ([x, y], r) => ({ left: x - r + "px", top: y - r + "px", width: 2 * r + "px", height: 2 * r + "px" });
+    hole.animate([box(at(from), R), box(at(from), 0)], { duration: 520, easing: "cubic-bezier(.55,0,.75,.4)", fill: "forwards" }).onfinish = () => {
+      mid(); const t = typeof to === "function" ? to() : to; // the point to open on may only exist once the new scene is drawn
+      setTimeout(() => hole.animate([box(at(t), 0), box(at(t), R)], { duration: 620, easing: "cubic-bezier(.2,.6,.35,1)", fill: "forwards" }).onfinish = done, 140); };
+    return;
+  }
+  const e = el.appendChild(document.createElement("div")), Ht = H * 1.5; e.className = "earth"; e.style.height = Ht + "px"; e.innerHTML = earthArt(W, Ht);
+  const y = (v) => ({ transform: `translateY(${v}px)` }), down = kind === "down"; // down: the earth rises past you; up: it falls away
+  const a = down ? [y(H), y(-H * .25)] : [y(-Ht), y(-H * .25)], b = down ? [y(-H * .25), y(-Ht - 20)] : [y(-H * .25), y(H + 20)];
+  e.animate(a, { duration: 430, easing: "cubic-bezier(.5,0,.8,.5)", fill: "forwards" }).onfinish = () => { mid();
+    setTimeout(() => e.animate(b, { duration: 560, easing: "cubic-bezier(.2,.55,.3,1)", fill: "forwards" }).onfinish = done, 90); };
+}
+// where the lanterns are: the title Dibble's, and Dibble at camp (for the iris)
+const pointOf = (el, fx = .5, fy = .5) => { const b = el?.getBoundingClientRect(); return b && b.width ? [b.left + b.width * fx, b.top + b.height * fy] : null; };
 function teaser() { // the card after the last mine you can see: a hint of what's next
   const S = save.story, [title, text] = S.finale ? ["A dark lantern", "It has a little toad print on it. Not lit yet. Puddock keeps 'meaning to write'."]
     : S.site === "skywell" ? ["Above the rubble", "Somewhere up there: the sky."]
@@ -1816,8 +1863,8 @@ function renderMarket() {
     persist(); renderMarket(); track("market_buy", { item: it.id, cost });
   };
 }
-$("dig").onclick = () => startDig(false);
-$("daily").onclick = () => startDig(true);
+$("dig").onclick = () => wipe("down", () => startDig(false));
+$("daily").onclick = () => wipe("down", () => startDig(true));
 $("mExp").onclick = () => { save.mode = "exp"; persist(); renderMines(); };
 $("mCalm").onclick = () => { save.mode = "calm"; persist(); renderMines(); };
 for (const [id, k] of [["oSound", "sound"], ["oVib", "vib"], ["oGlyph", "glyph"]]) $(id).onclick = () => { save.opt[k] = !save.opt[k]; persist(); renderHome(); };
@@ -1854,8 +1901,9 @@ async function renderPurse() {
   };
 }
 $("tOpts").onclick = () => show("optsSheet");
-$("toTitle").onclick = () => { renderHome(); show("title"); };
-$("tPlay").onclick = () => save.story.prologue ? home() : prologue();
+$("toTitle").onclick = () => wipe("iris", () => { renderHome(); show("title"); }, null, () => pointOf($("dibbleArt"), .72, .78));
+$("tPlay").onclick = () => wipe("iris", () => (save.story.prologue ? home() : prologue()), pointOf($("dibbleArt"), .72, .78),
+  () => save.story.prologue ? pointOf(document.querySelector("#campArt .campDibble"), .5, .55) : null);
 
 // ---------- meeting Old Puddock ----------
 const INTRO = [
