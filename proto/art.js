@@ -759,7 +759,7 @@ export function camp(st, gemFn, dibbleSvg) {
   const [vw, vh, top] = st.view || [402, 778, 115], strip = (svgStr) => svgStr.replace(/^<svg[^>]*>|<\/svg>$/g, "");
   const W = 400, s = vw / W, H = Math.max(520, vh / s), T = top / s + 4, bot = H - 44 / s, U = bot - T;
   const kf = Math.min(1.08, Math.max(.7, U / 610)); // props shrink on short phones (the SE); labels never do
-  const yL = T + 10, yH = T + .3 * U, yB = T + .4 * U, yM = T + .71 * U, yF = bot, up = 12 * kf, // up: Dibble, the fire and the banner sit a little above the middle row, leaving the pets more ground
+  const yL = T + 10, yH = T + .3 * U, yB = T + .4 * U, yM = T + .71 * U, yF = bot, up = 12 * kf, lift = up + 22 * kf, // up: the banner sits a little above the middle row, Dibble and the fire (lift) higher still, leaving the pets more ground
     F = 15 / s, MIN = 48 / s;
   const r = rng(77), O = [-1.2, 1.1], n = Math.min(st.lantern, 15), d = st.decor;
   // place(ox, oy, x, y, k): set down art drawn around (ox, oy) at (x, y), k times bigger; .x() and .y() map its points
@@ -826,7 +826,7 @@ export function camp(st, gemFn, dibbleSvg) {
     ${lobe(.5, -.05, .58, "#4f8a3e", 1)}${lobe(-.48, .02, .62, "#4a8239", 2)}${lobe(0, -.35, .82, "#5f9a48", 3)}
     <path d="${curve(ring(tx - crown * .3, ct - crown * .6, crown * .4, crown * .3, 9, .2, 4))}" fill="#a8dc88" opacity=".35" filter="url(#campBlur)"/>
     ${[...Array(5)].map(() => stroke(tx + (r() - .5) * crown * 1.2, ct - crown * (.1 + r() * .7), -1 - r(), crown * .22, crown * .05, "#2f5a2a", .4)).join("")}</g>`)}</g>`;
-  const hammock = d.hammock ? place(340, 262, 352, yB - 4 * kf, .95 * kf).g(`${shape(limb(380, 262, 381, 214, 380, 168, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}${shape(limb(300, 262, 299, 224, 300, 186, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}<path d="M300 194 Q340 226 380 176" stroke="#e8d6aa" stroke-width="5.5" fill="none"/><path d="M302 196 Q340 222 378 179" stroke="#b8a678" stroke-width="1" fill="none" opacity=".6"/>`) : "";
+  const hammock = d.hammock ? place(340, 262, 352, yB + 40 * kf, .95 * kf).g(`${shape(limb(380, 262, 381, 214, 380, 168, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}${shape(limb(300, 262, 299, 224, 300, 186, 1.8, 1.5), "#5a3b24", "#2e1e12", [-.6, .5])}<path d="M300 194 Q340 226 380 176" stroke="#e8d6aa" stroke-width="5.5" fill="none"/><path d="M302 196 Q340 222 378 179" stroke="#b8a678" stroke-width="1" fill="none" opacity=".6"/>`) : "";
   const jars = d.jars ? place(250, 258, 120, yB + 2 * kf, .9 * kf).g(`${plank(238, 246, 26, 12, "#6b4a2a", r)}<g transform="translate(236 222)">${ICONS.jar}</g><g transform="translate(252 226) scale(.8)">${ICONS.jar}</g>`) : "";
   // the treasures (Market, Someday): lamp posts flank the stump, the wall of names stands just behind it, the moth roost
   // rises behind the rack and the lantern tower behind the sapling, both topping out under the lantern line; the moonlight
@@ -889,7 +889,7 @@ export function camp(st, gemFn, dibbleSvg) {
     <animate attributeName="d" values="M${x - h * .32} ${y} Q${x} ${y - h * 1.15} ${x + h * .32} ${y} Z;M${x - h * .3} ${y} Q${x - 2} ${y - h * 1.3} ${x + h * .3} ${y} Z;M${x - h * .33} ${y} Q${x + 2} ${y - h} ${x + h * .33} ${y} Z;M${x - h * .32} ${y} Q${x} ${y - h * 1.15} ${x + h * .32} ${y} Z" dur="${dur}s" repeatCount="indefinite"/></path>`;
   const sparks = [...Array(7)].map((_, k) => `<circle cx="${178 + (k % 4) * 4}" cy="250" r="1.2" fill="#ffd27a"><animate attributeName="cy" values="246;196" dur="${1.6 + k * .23}s" begin="${-k * .4}s" repeatCount="indefinite"/>
     <animate attributeName="cx" values="${178 + (k % 4) * 4};${170 + (k * 7) % 22}" dur="${1.6 + k * .23}s" begin="${-k * .4}s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="${1.6 + k * .23}s" begin="${-k * .4}s" repeatCount="indefinite"/></circle>`).join("");
-  const PF = place(183, 254, 252, yM - up, 1.55 * kf);
+  const PF = place(183, 254, 252, yM - lift, 1.55 * kf);
   const fire = `<g data-tap="fire">${hit(PF, 160, 204, 206, 260)}${PF.g(st.fire === "forge"
     ? `${plank(160, 230, 44, 26, "#7a746a", r)}<path d="M169 256 V244 Q182 232 195 244 V256 Z" fill="#ff8a3d"><animate attributeName="fill" values="#ff8a3d;#ffb15a;#ff8a3d" dur="1.2s" repeatCount="indefinite"/></path>${plank(192, 210, 8, 22, "#5e5850", r)}${sparks}`
     : `${[0, 1, 2, 3, 4, 5].map((k) => shape(curve(ring(167 + k * 6, 254 + (k % 2), 5, 3, 8, .2, 110 + k)), k % 2 ? "#6f6a60" : "#7d776c", "#2a2620", [-.7, .6])).join("")}
@@ -898,7 +898,7 @@ export function camp(st, gemFn, dibbleSvg) {
       <path d="M183 214 Q178 196 186 180 Q192 166 184 150" stroke="#cfd6cc" stroke-width="4" fill="none" opacity=".08"><animate attributeName="opacity" values=".05;.12;.05" dur="4s" repeatCount="indefinite"/></path>`)}</g>`;
   const fireLight = PF.g(`<ellipse cx="183" cy="246" rx="120" ry="58" fill="url(#fireLight)"><animate attributeName="rx" values="112;128;116;112" dur="1.3s" repeatCount="indefinite"/></ellipse>`);
 
-  const db = 108 * kf, dx = 318 - db / 2, dyy = yM + 10 * kf - up - db;
+  const db = 108 * kf, dx = 318 - db / 2, dyy = yM + 10 * kf - lift - db;
   const dib = `<g data-tap="dibble" class="campDibble"><rect x="${f1(dx + db / 2 - Math.max(db * .3, MIN / 2))}" y="${f1(dyy + db * .1)}" width="${f1(Math.max(db * .6, MIN))}" height="${f1(db * .85)}" fill="transparent"/><svg x="${f1(dx)}" y="${f1(dyy)}" width="${f1(db)}" height="${f1(db)}" viewBox="0 0 100 100">${strip(dibbleSvg)}</svg></g>`;
   // Puddock's spare cart (or, after the finale, his packed cart with him beside it), right of Dibble
   const PC = place(292, 276, 374, yM, .95 * kf), pb = 50 * kf;
@@ -926,21 +926,21 @@ export function camp(st, gemFn, dibbleSvg) {
   const bench = `<g data-tap="tools" role="button" aria-label="Tool bench">${hit(PK, 300, 186, 388, 258)}${PK.g(`${plank(306, 230, 76, 7, "#5a3b24", r)}${shape(limb(310, 237, 306, 246, 303, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${shape(limb(378, 237, 382, 246, 385, 256, 1.6, 1.3), "#5a3b24", "#2e1e12", [-.5, .5])}${picks}
     ${st.lens ? `<g transform="translate(330 214) scale(.9)">${ICONS.lens}</g>` : ""}${st.tongs ? `<g transform="translate(352 212) scale(.9)">${ICONS.tongs}</g>` : ""}`)}</g>`;
 
-  const stripe = (k) => { const x = 282 + k * 19.3; return shape(curve([[x, 312], [x + 19.3, 312], [x + 19.3, 328], [x + 9.6, 334], [x, 328]]), k % 2 ? "#f1e4c4" : "#c8553d", k % 2 ? "#a08a60" : "#5a1e14", [-.6, .6]); };
-  const PSt = place(340, 404, 319, yF, 1.3 * kf), bk = 16 / 11 / s; // the Psst! bubble is drawn at a fixed 16px
-  const stall = `<g data-tap="market">${hit(PSt, 280, 294, 400, 406)}${PSt.g(`
-    ${shape(limb(288, 404, 287, 360, 288, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}${shape(limb(388, 404, 389, 360, 388, 314, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}
-    ${st.puddockSvg && !st.packed ? `<g class="pud"><svg x="306" y="312" width="64" height="64" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}
+  const aw = 24, stripe = (k) => { const x = 282 + k * 19.3; return shape(curve([[x, 312 - aw], [x + 19.3, 312 - aw], [x + 19.3, 328 - aw], [x + 9.6, 334 - aw], [x, 328 - aw]]), k % 2 ? "#f1e4c4" : "#c8553d", k % 2 ? "#a08a60" : "#5a1e14", [-.6, .6]); };
+  const PSt = place(340, 404, 319, yF, 1.3 * kf), bk = 16 / 11 / s; // the Psst! bubble is drawn at a fixed 16px; aw: the awning (and sign) ride high so Puddock's head shows
+  const stall = `<g data-tap="market">${hit(PSt, 280, 294 - aw, 400, 406)}${PSt.g(`
+    ${shape(limb(288, 404, 287, 360, 288, 314 - aw, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}${shape(limb(388, 404, 389, 360, 388, 314 - aw, 2.2, 1.8), "#6b4a2a", "#2e1e12", [-.7, .6])}
+    ${st.puddockSvg && !st.packed ? `<g class="pud"><svg x="306" y="306" width="64" height="64" viewBox="0 0 100 100">${strip(st.puddockSvg)}</svg></g>` : ""}
     ${[0, 1, 2, 3, 4, 5].map(stripe).join("")}
     ${plank(282, 366, 112, 9, "#8a5a32", r)}${plank(286, 375, 104, 26, "#6b4a2a", r)}
     <path d="M292 381 H384 M292 389 H384" stroke="#4a3220" stroke-width=".8" opacity=".6"/>
     <g transform="translate(290 350) scale(.7)">${ICONS.jar}</g>${shard(352, 367, 5, 11, .2, "#9b7cf2", r)}${shard(360, 367, 4, 8, -.3, "#5fa99b", r)}
-    <path d="M394 326 Q395 332 394 336" stroke="#4a3a2a" stroke-width=".9" fill="none"/>${shape(curve([[390.6, 336], [397.4, 336], [397.8, 345], [390.2, 345]]), "#f7d77a", "#6a4a24", [-.5, .5])}
-    <circle cx="394" cy="341" r="14" fill="url(#lanternGlow)"/>`)}
-    ${!st.metPuddock && !st.firstRun ? place(338, 270, PSt.x(338), PSt.y(304), bk).g(`<g><animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0" dur="1.6s" repeatCount="indefinite"/>
+    <path d="M394 ${326 - aw} Q395 ${332 - aw} 394 ${336 - aw}" stroke="#4a3a2a" stroke-width=".9" fill="none"/>${shape(curve([[390.6, 336 - aw], [397.4, 336 - aw], [397.8, 345 - aw], [390.2, 345 - aw]]), "#f7d77a", "#6a4a24", [-.5, .5])}
+    <circle cx="394" cy="${341 - aw}" r="14" fill="url(#lanternGlow)"/>`)}
+    ${!st.metPuddock && !st.firstRun ? place(338, 270, PSt.x(338), PSt.y(304 - aw), bk).g(`<g><animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0" dur="1.6s" repeatCount="indefinite"/>
       ${shape(curve([[312, 262], [338, 258.4], [364, 262], [367, 271.6], [362, 279.6], [346, 281], [339, 290], [335.4, 281], [316, 280], [309.6, 271.6]]), "#fff4dc", "#8a6a3a", [-.8, .7])}
       <text x="338" y="274.6" font-size="11" text-anchor="middle" fill="#3a2410" font-family="Grandstander, Fredoka, sans-serif" font-weight="700">Psst!</text></g>`)
-      : label(PSt.x(338), PSt.y(304), st.packed ? "Back soon (probably)" : "Puddock's", st.packed ? 13 / s : F)}</g>`; // after the first haul (the signpost comes first), a Psst! hangs where his sign goes until you meet him
+      : label(PSt.x(338), PSt.y(304 - aw), st.packed ? "Back soon (probably)" : "Puddock's", st.packed ? 13 / s : F)}</g>`; // after the first haul (the signpost comes first), a Psst! hangs where his sign goes until you meet him
 
   // ---- the backdrop: sky, far layer, tall trees, the ground, ferns in front ----
   const flies = [...Array(d.flies ? 12 : 5)].map((_, k) => `<circle r="1.9" fill="#fff3a0"><animateMotion dur="${9 + k * 1.7}s" begin="${-k * 1.3}s" repeatCount="indefinite" path="M${40 + k * 30} ${f1(yH + (k % 4) * U * .14)} q30 -20 60 0 t60 0 q-30 25 -60 0 t-60 0"/>
@@ -1007,7 +1007,7 @@ export function camp(st, gemFn, dibbleSvg) {
   const haze = `<defs>${hzFill("campHz1", [["#808080", .16]])}${hzFill("campHz2", [["#ff9682", .54], ["#ffc48c", .26, .6], ["#784678", .35, 1]])}${hzFill("campHz3", [["#583e40", .32]])}</defs>
     <g class="campHaze">${["saturation", "soft-light", "lighten"].map((m, k) => `<rect x="-300" y="-900" width="1000" height="${f1(H + 1200)}" fill="url(#campHz${k + 1})" style="mix-blend-mode:${m}"/>`).join("")}</g>`;
   const box = (P, x0, y0, x1, y1) => [P.x(x0), P.y(y0), P.x(x1), P.y(y1)];
-  const roam = [[dx + db * .18, dyy + db * .08, dx + db * .86, dyy + db * .95], box(PF, 162, 228, 204, 260), box(PB, 94, 326, 162, 404), box(PK, 300, 186, 388, 258), box(PSt, 280, 282, 400, 406),
+  const roam = [[dx + db * .18, dyy + db * .08, dx + db * .86, dyy + db * .95], box(PF, 162, 228, 204, 260), box(PB, 94, 326, 162, 404), box(PK, 300, 186, 388, 258), box(PSt, 280, 282 - aw, 400, 406),
     ...(st.packed && st.puddockSvg ? [[366 - pb / 2, yM + 6 * kf - pb, 366 + pb / 2, yM + 6 * kf]] : [])].map((b) => b.map(f1).join(" ")).join(",");
   return `<svg class="campArt" viewBox="0 0 ${W} ${f1(H)}" preserveAspectRatio="xMidYMax meet" aria-label="Dibble's camp" data-ground="${f1(yM - 4 * kf)} ${f1(yF)} ${kf.toFixed(3)}" data-keep="${roam}">
     <defs><linearGradient id="campSky" x1="0" y1="0" x2="0" y2="1">${S.sky.map((col, k) => `<stop offset="${[0, .6, 1][k]}" stop-color="${col}"/>`).join("")}</linearGradient>
@@ -1022,7 +1022,7 @@ export function camp(st, gemFn, dibbleSvg) {
     <g data-depth=".22">${tall}</g>
     <g data-depth=".3"><g transform="translate(0 ${f1(yH - 180)})">${S.mid}</g></g>
     <g data-depth=".45"><g transform="translate(0 ${f1(yH - 180)})">${S.near}</g></g>
-    <g data-depth=".6">${ground}${wash}</g>${haze}<g data-depth=".6">${feet.back}${builds.back}${lanternLine}${hammock}${builds.lamps}${keep}${shelf}${rack}${jars}${grannyAt}${sapling}</g>
+    <g data-depth=".6">${ground}${wash}</g>${haze}<g data-depth=".6">${feet.back}${builds.back}${lanternLine}${builds.lamps}${keep}${shelf}${rack}${jars}${grannyAt}${sapling}${hammock}</g>
     <g data-depth=".75">${feet.mid}${fireLight}${tent}${sign}${fire}${cart}${dib}${flies}</g>
     <g data-depth=".9">${feet.front}${board}${bench}${stall}</g>
     <g data-depth=".6">${memLabel}</g>
