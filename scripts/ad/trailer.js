@@ -98,7 +98,7 @@
   const cues = [];
   const cue = (t, fn) => cues.push([t, fn]);
   const walk = { on: false };
-  let petAt = null, pale = null, chalk = null; // per-frame props
+  let freed = null, pale = null, chalk = null; // per-frame props
 
   const CUTS = {
     // "Just one more crystal": quick, funny, a little mystery (the first ad)
@@ -124,19 +124,19 @@
           ["X/X", 1, 2, "jade"], ["XX", 6, 5, "glowcap"], ["X", 0, 6, "moss"], [".X/XX", 1, 5, "moonstone"], ["X", 6, 0, "glowcap"]],
         [["XX", "glowcap"], ["X/X", "jade"], ["X", "moss"]]));
       slide(0, 3, 3, 9.2);
-      cue(11.02, () => { const f = frees[0]; if (!f) return; frees = []; save.pets.active = "none"; petAt = { x: f.x, y: f.y + cell * .45, s: cell * 1.35, t0: T() }; });
+      cue(11.02, () => { const f = frees[0]; if (!f) return; frees = []; save.pets.active = []; freed = { x: f.x, y: f.y + cell * .45, s: cell * 1.35, t0: T() }; });
       cue(10.25, () => line("dibble", "…you were <b>IN</b> there?", 470));
-      cue(11.75, () => { sfx.chirp(); petAt.hop = T(); });
+      cue(11.75, () => { sfx.chirp(); freed.hop = T(); });
       cue(12.85, hideBox);
       // 4. Puddock at his stall, drowsy. The pet comes back in a tiny bow.
-      cue(13.1, () => { petAt = null; el("adPet").style.display = "none"; document.body.classList.add("adShot"); show("home"); renderHome(); frameCamp(["market", "dibble"]); });
+      cue(13.1, () => { freed = null; el("adPet").style.display = "none"; document.body.classList.add("adShot"); show("home"); renderHome(); frameCamp(["market", "dibble"]); });
       cue(13.35, () => line("puddock", "Shiny rocks, shiny coins. Fair trade, little mole.", 80));
       cue(16.25, () => { sfx.buy(); petBow(); });
       cue(16.55, () => sfx.chirp());
       cue(16.85, () => line("puddock", "Everything fits. They're all round.", 80));
       cue(19.05, () => { hideBox(); fadeTo(1, .3); music("setVolume", .14); });
       // 5. The music drops. Granny's chalk glows on the tunnel floor; something pale passes in the dark.
-      cue(19.35, () => { el("adPet").style.display = "none"; css($("campArt"), { transform: "" }); document.body.classList.remove("adShot"); dig("hollow", [], [["X", "moss"], ["X", "moss"], ["X", "moss"]]); tray = [null, null, null];
+      cue(19.35, () => { el("adPet").style.display = "none"; camT = null; applyCam(); document.body.classList.remove("adShot"); dig("hollow", [], [["X", "moss"], ["X", "moss"], ["X", "moss"]]); tray = [null, null, null];
         $("hud").style.visibility = "hidden"; drawGlowChalk(); chalk = T(); fadeTo(0, .45); music("setTension", .55); });
       cue(19.95, () => { pale = T(); sfx.moth(); });
       cue(21.1, () => line(null, "Something down here is still glowing.", 492));
@@ -151,7 +151,7 @@
     cozy() {
       AD.dur = 28.4; AD.beats = [2.8, 4.0, 5.9, 7.6, 10.2, 13.7, 15.5, 16.9, 19.2, 21.0, 22.6, 26.0];
       Object.assign(save, { owned: [...save.owned, "tent:patchwork", "decor:mushrooms", "decor:jars", "decor:hammock"], found: ["moss", "jade", "amber", "garnet", "moonstone"] });
-      Object.assign(save.camp, { tent: "patchwork" }); save.up.lantern = 9; save.pets = { owned: [], active: "none", wear: {} };
+      Object.assign(save.camp, { tent: "patchwork" }); save.up.lantern = 9; save.pets = { owned: [], active: [], wear: {} };
       save.campSeen = { lanterns: 99, shelf: 99, sapling: 99, memories: 99, told: Object.keys(CAMP_TIPS) }; // no "another lantern lit!" tip over the shots
       // 1. The camp at night, the fire going
       cue(0, () => { document.body.classList.add("adShot"); show("home"); renderHome(); lanterns(3); music("play", "camp"); fadeTo(0, 1.2, 1); });
@@ -168,20 +168,20 @@
       slide(1, 7, 4, 7.55, .7);
       cue(8.75, hideBox);
       slide(2, 2, 4, 9.05, .7); // finishes row 3, where the Moss Puff sleeps
-      cue(11.15, () => { const f = frees[0]; if (!f) return; frees = []; save.pets.active = "none"; petAt = { x: f.x, y: f.y + cell * .45, s: cell * 1.35, t0: T(), kind: "moss" }; });
+      cue(11.15, () => { const f = frees[0]; if (!f) return; frees = []; save.pets.active = []; freed = { x: f.x, y: f.y + cell * .45, s: cell * 1.35, t0: T(), kind: "moss" }; });
       cue(10.55, () => line("puddock", "Crystals keep things, little mole. Sometimes they keep someone.", 470));
-      cue(13.2, () => { sfx.chirp(); petAt.hop = T(); });
+      cue(13.2, () => { sfx.chirp(); freed.hop = T(); });
       cue(14.1, () => { hideBox(); fadeTo(.9, .45); });
       // 3. Back at camp, dressing up. Then the pet gets a cap to match.
-      cue(14.55, () => { petAt = null; el("adPet").style.display = "none"; document.body.classList.add("adShot"); save.mode = "exp";
-        Object.assign(save.pets, { owned: ["moss"], active: "moss" }); show("home"); renderHome(); lanterns(3); frameCamp(["dibble", "pet", "fire"], 2.1, .6); fadeTo(0, .45); });
+      cue(14.55, () => { freed = null; el("adPet").style.display = "none"; document.body.classList.add("adShot"); save.mode = "exp";
+        Object.assign(save.pets, { owned: ["moss"], active: ["moss"] }); show("home"); renderHome(); lanterns(3); pinPet("moss"); frameCamp(["dibble", "pet", "fire"], 2.1, .6); fadeTo(0, .45); });
       const outfits = [{ hat: "beanie", scarf: "#c8553d" }, { hat: "mushroom", scarf: "#ef8fb0" }, { hat: "flowers", scarf: "none", cloak: "shawl" }, { hat: "leaf", cloak: "none" }];
-      outfits.forEach((o, k) => cue(15.2 + k * .62, () => { Object.assign(save.look, o); renderHome(); lanterns(3); sfx.chirp(); sparkle("dibble"); }));
-      cue(17.75, () => { save.pets.wear.moss = { head: "leaf" }; renderHome(); lanterns(3); sfx.buy(); sparkle("pet"); });
+      outfits.forEach((o, k) => cue(15.2 + k * .62, () => { Object.assign(save.look, o); redrawFramed(); sfx.chirp(); sparkle("dibble"); }));
+      cue(17.75, () => { save.pets.wear.moss = { head: "leaf" }; redrawFramed(); sfx.buy(); sparkle("pet"); });
       cue(18.15, () => line("dibble", "Matching is the whole point.", 96));
       cue(19.55, () => { hideBox(); fadeTo(.9, .45); });
       // 4. The whole camp; the lanterns come on one by one
-      cue(20.0, () => { css($("campArt"), { transform: "" }); renderHome(); lanterns(3); fadeTo(0, .45); });
+      cue(20.0, () => { camT = null; applyCam(); renderHome(); lanterns(3); unpinPet("moss"); fadeTo(0, .45); });
       [3, 4, 5, 6, 7, 8].forEach((n, k) => cue(20.5 + k * .3, () => { lanterns(n + 1); sfx.tone([1046.5, 1174.66, 1318.51, 1567.98, 1760, 2093][k], .3, "sine", .06); }));
       cue(20.9, () => line(null, "Every crystal brings a little light home.", 238));
       cue(23.3, () => { hideBox(); });
@@ -200,7 +200,8 @@
     const x0 = Math.min(...rs.map((r) => r.left)), x1 = Math.max(...rs.map((r) => r.right)), y0 = Math.min(...rs.map((r) => r.top)), y1 = Math.max(...rs.map((r) => r.bottom));
     const k = Math.min(maxK, innerWidth / ((x1 - x0) * 1.12)), cx = (x0 + x1) / 2 - s0.left, cy = (y0 + y1) / 2 - s0.top;
     const tx = innerWidth / 2 - s0.left - cx * k, ty = innerHeight * yAt - s0.top - cy * k;
-    css($("campArt"), { transformOrigin: "0 0", transform: `translate(${tx}px, ${ty}px) scale(${k})` }); // the art, not the stage: the stage's size and rect stay put
+    camT = `translate(${tx}px, ${ty}px) scale(${k})`; // on the art and the pets, not the stage: the stage's size and rect stay put (tick applies it)
+    applyCam();
     const a = rs[0]; AD.stall = { x: s0.left + tx + ((a.left + a.right) / 2 - s0.left) * k, y: s0.top + ty + (a.bottom - s0.top) * k, k };
   }
   function petBow() { // hops up onto the counter, in a bow
@@ -215,6 +216,20 @@
     p.innerHTML = pet("glowcap", s, { head: "bow" }); p.dataset.hop = T();
     css(p, { display: "block", left: h.left + h.width / 2 + 52 + "px", top: h.bottom - s - 4 + "px" });
   }
+  // a camp pet held just right of Dibble for the close shot, every frame (the game puts pets back on their walkable patch
+  // whenever the camp redraws), then let go to hop about again
+  let pin = null;
+  function pinPet(k) { // measured before the close-up's transform, in the stage's own coordinates
+    const p = campPet[k], st = $("campStage").getBoundingClientRect(), d = $("campArt").querySelector('[data-tap="dibble"]').getBoundingClientRect();
+    clearTimeout(p.t); clearTimeout(p.t2); p.t = -1; p.el.classList.remove("doze"); petFace(p, -1);
+    pin = { k, x: d.right - st.left + petGround.w * .2, y: d.bottom - st.top - 3 }; holdPet();
+  }
+  function holdPet() { const p = campPet[pin.k]; if (!p) return; [p.x, p.y] = [pin.x, pin.y]; p.el.style.transform = petAt(p.x, p.y); p.el.style.zIndex = Math.round(p.y); }
+  function unpinPet(k) { pin = null; const p = campPet[k]; if (p) { p.t = null; petRest(p); } }
+  // the camp redrawn under a close-up: measured unscaled (the pets size themselves from the camp's on-screen scale), then framed again
+  function redrawFramed() { const keep = camT; camT = null; applyCam(); renderHome(); camT = keep; applyCam(); if (pin) holdPet(); }
+  let camT = null; // the camp close-up's frame, kept on every frame (the pets layer resets its transform when the camp redraws)
+  const applyCam = () => { for (const id of ["campArt", "campPets"]) { const e = $(id); if (camT) { e.style.transformOrigin = "0 0"; e.style.transform = camT; } else if (e.style.transformOrigin) e.style.transform = e.style.transformOrigin = ""; } };
   // the camp's lantern string with only the first n lit: the camp is drawn with them all lit, and tick dims the rest every
   // frame (the camp redraws itself when it first shows)
   let litN = null;
@@ -229,7 +244,7 @@
   // a little burst of stars over a camp prop (drawn on the overlay, moved by tick)
   let sparks = [];
   function sparkle(key) {
-    const r = $("campArt").querySelector(`[data-tap="${key}"]`).getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height * .4;
+    const r = $("campStage").querySelector(`[data-tap="${key}"]`).getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height * .4;
     for (let k = 0; k < 9; k++) { const d = document.createElement("i"); d.className = "spark"; d.style.zIndex = 1; ad.appendChild(d);
       sparks.push({ d, x, y, a: k / 9 * Math.PI * 2 + .3, r: 34 + (k % 3) * 12, t0: T() }); }
   }
@@ -261,16 +276,17 @@
     if (path) { const k = ease(clamp((t - path.t0) / path.dur)); drag.x = path.x0 + (path.x1 - path.x0) * k; drag.y = path.y0 + (path.y1 - path.y0) * k;
       css(touch, { display: "block", left: drag.x + "px", top: drag.y + "px" }); } else touch.style.display = "none";
     const p = el("adPet");
-    if (petAt) { // the freed pet, after the game's pop-out: lands, idles, hops once when it squeaks
-      if (!p.firstChild || p.dataset.k !== "free") { p.innerHTML = pet(petAt.kind || "glowcap", petAt.s); p.dataset.k = "free"; }
-      const u = t - petAt.t0, land = Math.max(0, 1 - u / .25), hop = petAt.hop ? Math.max(0, Math.sin(clamp((t - petAt.hop) / .4) * Math.PI)) * cell * .6 : 0;
-      css(p, { display: "block", left: petAt.x - petAt.s / 2 + "px", top: petAt.y - petAt.s * .92 - hop + "px", transform: `scale(${1 + .066 * land}, ${1 - .06 * land})` });
+    if (freed) { // the freed pet, after the game's pop-out: lands, idles, hops once when it squeaks
+      if (!p.firstChild || p.dataset.k !== "free") { p.innerHTML = pet(freed.kind || "glowcap", freed.s); p.dataset.k = "free"; }
+      const u = t - freed.t0, land = Math.max(0, 1 - u / .25), hop = freed.hop ? Math.max(0, Math.sin(clamp((t - freed.hop) / .4) * Math.PI)) * cell * .6 : 0;
+      css(p, { display: "block", left: freed.x - freed.s / 2 + "px", top: freed.y - freed.s * .92 - hop + "px", transform: `scale(${1 + .066 * land}, ${1 - .06 * land})` });
     } else if (p.style.display === "block" && p.dataset.hop) { // the bow: pop in, then a hop on the squeak
       const u = t - +p.dataset.hop, sc = u < .3 ? .3 + .7 * Math.sin(clamp(u / .3) * Math.PI / 2) * 1.08 : 1, hop = Math.max(0, Math.sin(clamp(u / .45) * Math.PI)) * 22;
       css(p, { transform: `translateY(${-hop}px) scale(${Math.min(1.08, sc)})` }); p.dataset.k = "";
     }
     sparks = sparks.filter((s) => { const u = (t - s.t0) / .6; if (u >= 1) { s.d.remove(); return false; }
       const e = 1 - (1 - u) ** 3; css(s.d, { transform: `translate(${s.x + Math.cos(s.a) * s.r * e}px, ${s.y + Math.sin(s.a) * s.r * e}px) scale(${.4 + .7 * e}) rotate(${u * 90}deg)`, opacity: 1 - u }); return true; });
+    applyCam(); if (pin) holdPet();
     if (litN != null) dimLanterns();
     if (fade) { const k = clamp((t - fade.t0) / fade.dur); el("adFade").style.opacity = fade.from + (fade.to - fade.from) * ease(k); if (k >= 1) fade = null; }
     if (chalk != null) { const u = t - chalk; css(el("adDark"), { opacity: clamp(u / .6) });
