@@ -8,7 +8,8 @@
     "check": "node proto/check.mjs && node scripts/check-save-mirror.mjs && python sim/test_sim.py",
     "check:story": "npm run build && node scripts/scene-check.mjs",
     "android": "npm run build && npx cap sync android && npx cap open android",
-    "assets": "node scripts/app-art.mjs"
+    "assets": "node scripts/app-art.mjs",
+    "test:screens": "node scripts/crisp.mjs --check 2 && node scripts/smoke.mjs"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.2.1",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@capacitor/cli": "^8.5.3",
     "@resvg/resvg-js": "^2.6.2",
+    "playwright": "^1.56.1",
     "puppeteer-core": "^25.14.0"
   }
 }

@@ -803,6 +803,10 @@ function layout() {
   const sb = parseFloat(getComputedStyle($("safeProbe")).paddingBottom) || 0;
   cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.width = W + "px"; cv.style.height = H + "px";
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // iOS: if the web view starts at 1x (before it's on screen), WebKit keeps showing the canvas through a 1x layer even after
+  // the canvas is resized to 3x: the HTML is crisp and the board looks like a 3x upscale (measured: 9 px edges vs 2 px in WebKit).
+  // Taking the canvas out of the render tree and back makes WebKit build a fresh layer at today's scale. The pixels survive.
+  cv.style.display = "none"; void cv.offsetWidth; cv.style.display = "";
   hudTop = $("hud").getBoundingClientRect().top;
   const top = $("hud").getBoundingClientRect().bottom + 30, bottom = H - sb - 8, GAP = 54, TR = 3.1; // 30: Rootline + leaves; GAP: Rootline + hint line
   cell = Math.floor(Math.min((W - 64) / N, (bottom - top - GAP) / (N + TR)));
@@ -822,7 +826,7 @@ const watchDpr = () => matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEv
 // diagnostics: hold a finger on the Haul box for a second and a half to see how the board's canvas is set up
 let diagT; addEventListener("pointerdown", (e) => { const r = $("hud").firstElementChild.getBoundingClientRect();
   if (e.clientX > r.left && e.clientX < r.right && e.clientY > r.top && e.clientY < r.bottom) diagT = setTimeout(() =>
-    toast(`<small>dpr ${devicePixelRatio} · view ${innerWidth}×${innerHeight} · canvas ${cv.width}×${cv.height} (css ${cv.style.width} × ${cv.style.height}) · zoom ${(visualViewport?.scale ?? 1).toFixed(2)}</small>`, 7000), 1500); });
+    toast(`<small>dpr ${devicePixelRatio} · view ${innerWidth}×${innerHeight} · canvas ${cv.width}×${cv.height} (css ${cv.style.width} × ${cv.style.height}) · scale ${ctx.getTransform().a} · zoom ${(visualViewport?.scale ?? 1).toFixed(2)}</small>`, 7000), 1500); });
 for (const ev of ["pointerup", "pointercancel"]) addEventListener(ev, () => clearTimeout(diagT));
 
 // ---------- color helpers ----------
@@ -1005,8 +1009,12 @@ function drawMoth(m, now) {
 
 
 // ---------- crystal drawing ----------
+// ?nolayer=glow,shadow,inner,bevel,bg switches drawing layers off, for measuring edge sharpness (scripts/crisp.mjs)
+const NOLAYER = new Set((new URLSearchParams(location.search).get("nolayer") || "").split(","));
 function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, glyph = "", cut = "brilliant") {
   if (!cells.length) return;
+  { // land every cell edge on a whole device pixel (whatever scale the context is under), so edges never straddle two pixels
+    const m = ctx.getTransform(); if (m.a > 0 && !m.b && !m.c) { size = Math.round(size * m.a) / m.a; ox = (Math.round(ox * m.a + m.e) - m.e) / m.a; oy = (Math.round(oy * m.d + m.f) - m.f) / m.d; } }
   const x0 = ox + box.c * size, y0 = oy + box.r * size, bw = box.w * size, bh = box.h * size;
   const own = new Set(cells.map(([r, c]) => r * 100 + c)), edgeOf = (r, c, dr, dc) => !own.has((r + dr) * 100 + c + dc);
   const outline = () => { ctx.beginPath(); // the piece's outer edges only (no grid lines inside)
@@ -1016,9 +1024,9 @@ function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, gly
   ctx.save(); ctx.globalAlpha = alpha;
   // its glow: the baked sprite behind each cell, never canvas shadowBlur (iOS draws that far wider, a soft halo over every edge)
   ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = alpha * Math.min(1, glow * 1.1);
-  for (const [r, c] of cells) { const gs = size * 1.9; ctx.drawImage(glowSpr(color, true), ox + (c + .5) * size - gs / 2, oy + (r + .5) * size - gs / 2, gs, gs); }
+  if (!NOLAYER.has("glow")) for (const [r, c] of cells) { const gs = size * 1.9; ctx.drawImage(glowSpr(color, true), ox + (c + .5) * size - gs / 2, oy + (r + .5) * size - gs / 2, gs, gs); }
   ctx.restore();
-  ctx.fillStyle = mix(color, "#000000", .55); ctx.beginPath(); for (const [r, c] of cells) ctx.rect(ox + c * size - size * .05, oy + r * size + size * .045, size + .5, size + .5); ctx.fill();
+  if (!NOLAYER.has("shadow")) { ctx.fillStyle = mix(color, "#000000", .55); ctx.beginPath(); } for (const [r, c] of cells) if (!NOLAYER.has("shadow")) ctx.rect(ox + c * size - size * .05, oy + r * size + size * .045, size + .5, size + .5); if (!NOLAYER.has("shadow")) ctx.fill();
   ctx.beginPath(); for (const [r, c] of cells) ctx.rect(ox + c * size, oy + r * size, size + .5, size + .5);
   const g = ctx.createLinearGradient(x0, y0, x0 + bw, y0 + bh);
   g.addColorStop(0, mix(color, "#ffffff", .26)); g.addColorStop(.45, color); g.addColorStop(1, mix(color, "#000000", .16));
@@ -1027,10 +1035,10 @@ function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, gly
   // light inside the stone: its own colour, brighter at the heart, added on top so it glows rather than greys
   const ig = ctx.createRadialGradient(x0 + bw * .45, y0 + bh * .42, 0, x0 + bw * .45, y0 + bh * .42, Math.max(bw, bh) * .65);
   ig.addColorStop(0, hexA(lerpHex(color, "#ffffff", .2), .5)); ig.addColorStop(1, hexA(color, 0));
-  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = ig; ctx.fillRect(x0, y0, bw, bh); ctx.restore();
+  if (!NOLAYER.has("inner")) { ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = ig; ctx.fillRect(x0, y0, bw, bh); ctx.restore(); }
   // inner bevel: light from the top-left, shadow bottom-right
-  ctx.lineWidth = size * .2; ctx.strokeStyle = "rgba(0,0,0,.2)"; ctx.save(); ctx.translate(-size * .05, -size * .05); outline(); ctx.stroke(); ctx.restore();
-  ctx.strokeStyle = "rgba(255,255,255,.16)"; ctx.save(); ctx.translate(size * .05, size * .05); outline(); ctx.stroke(); ctx.restore();
+  if (!NOLAYER.has("bevel")) { ctx.lineWidth = size * .2; ctx.strokeStyle = "rgba(0,0,0,.2)"; ctx.save(); ctx.translate(-size * .05, -size * .05); outline(); ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = "rgba(255,255,255,.16)"; ctx.save(); ctx.translate(size * .05, size * .05); outline(); ctx.stroke(); ctx.restore(); }
   // refraction bands across the whole stone
   ctx.fillStyle = "rgba(255,255,255,.13)"; ctx.beginPath();
   ctx.moveTo(x0, y0 + bh * .55); ctx.lineTo(x0 + bw * .55, y0); ctx.lineTo(x0 + bw * .72, y0); ctx.lineTo(x0, y0 + bh * .72); ctx.fill();
@@ -1307,7 +1315,7 @@ function paintMine() {
   return { mine: c, board: b, x: bx - pad, y: by - pad, w: bw };
 }
 function drawMine(now) { // the painted cave, plus motes drifting through it
-  bgCache ??= paintMine(); ctx.drawImage(bgCache.mine, 0, 0, W, H);
+  bgCache ??= paintMine(); if (!NOLAYER.has("bg")) ctx.drawImage(bgCache.mine, 0, 0, W, H);
   if (state === "play") drawLife(ctx, now, { W, bx, by, bw: cell * N, top: hudTop, low: trayY, feature: look().feature, busy: !!drag }); // ambient.js: what passes, and the other lantern
   const [col, dir, n] = MOTES[look().feature] || MOTES.moss;
   if (calmMotion) return; ctx.fillStyle = col;
@@ -2313,7 +2321,7 @@ function frame(now) {
   ctx.save();
   if (shakeAmp > .2) { ctx.translate((fxR() - .5) * shakeAmp, (fxR() - .5) * shakeAmp); if (!frozenFx) shakeAmp *= .86; }
   if (onBoard) {
-    ctx.drawImage(bgCache.board, bgCache.x, bgCache.y, bgCache.w, bgCache.w);
+    if (!NOLAYER.has("bg")) ctx.drawImage(bgCache.board, bgCache.x, bgCache.y, bgCache.w, bgCache.w);
     if (!calm) drawRootline(now);
     drawPeek(now);
     const groups = {}, dim = state === "end" ? 1 - .55 * endT : 1;
@@ -2483,6 +2491,9 @@ if (qs.has("debug")) window.gw = { place: (i, r, c) => commit(i, r, c), get tray
   get time() { return time; }, set time(v) { time = v; }, canPlace, get state() { return state; },
   get moths() { return moths; }, get stolen() { return stolen; }, get bonus() { return bonus; }, PM, end: endRound,
   get geo() { return { bx, by, cell, trayX, slotW, trayY, trayH, hintY }; },
+  // tests: open any screen the way the game does (scripts/smoke.mjs walks them all)
+  screen: (id) => { renderHome(); if (id === "memSheet") return replayMemories(); if (id === "talk") return talk(() => show("home"));
+    ({ market: renderMarket, purseSheet: renderPurse, mineSheet: renderMines })[id]?.(); show(id); },
   dig: (id = "hollow") => { if (!save.biomes.includes(id)) save.biomes.push(id); save.sel = id; startDig(); } }; // in-memory only: screenshots of any mine
 
 $("world").innerHTML = forest();
