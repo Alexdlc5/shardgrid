@@ -1019,6 +1019,7 @@ function drawCrystal(cells, color, box, size, ox, oy, alpha = 1, glow = .35, gly
   ctx.restore();
   // crisp outer line in the stone's own dark tone, and a thin highlight on the lit edges
   ctx.save(); ctx.globalAlpha = alpha; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  ctx.strokeStyle = mix(color, "#0e1c1a", .6); ctx.lineWidth = Math.max(1.2, size * .05); outline(); ctx.stroke(); // a hard edge, so small stones never read as a glow
   ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = Math.max(1, size * .025); ctx.beginPath();
   for (const [r, c] of cells) { const x = ox + c * size, y = oy + r * size, i = size * .07;
     if (edgeOf(r, c, -1, 0)) { ctx.moveTo(x + i, y + i); ctx.lineTo(x + size - (edgeOf(r, c, 0, 1) ? i : 0), y + i); }
