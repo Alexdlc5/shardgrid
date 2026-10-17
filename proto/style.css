@@ -210,9 +210,11 @@
   .mine.teaser { cursor: default; opacity: .9; }
   .trialTag { position: absolute; left: 50%; top: 50px; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 4px;
     background: #f0b543; color: #3a2208; font-size: var(--fs-small); font-weight: 700; padding: 3px 8px; border-radius: 999px; box-shadow: 0 2px 0 #7a4a12; white-space: nowrap; }
-  .tabs { display: flex; gap: 4px; margin: 12px 0 2px; }
-  .tabs button { margin: 0; padding: 6px 2px; font-size: var(--fs-small); }
-  .tabs button { flex: 1 1 0; min-width: 0; line-height: 1.15; overflow-wrap: anywhere; hyphens: auto; } /* longer languages share the row and wrap, never push a tab off screen */
+  .tabs { display: flex; gap: 4px; margin: 12px 0 2px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs.over { mask-image: linear-gradient(to right, black calc(100% - 24px), transparent); } /* more tabs to the right: a soft edge, not a hard cut */
+  .tabs button { margin: 0; padding: 6px; font-size: var(--fs-small); }
+  .tabs button { flex: 1 0 auto; width: auto; white-space: nowrap; line-height: 1.15; scroll-snap-align: start; } /* labels never break mid-word; longer languages scroll the row instead */
   /* every dialogue step shares one stage, as tall as an amber panel, so the card never jumps; speakers stand on its floor */
   .talkArt { display: flex; justify-content: center; align-items: flex-end; height: min(calc(min(300px, 100vw - 80px) * .625), 22vh); margin-top: -4px; }
   .talkArt > svg { max-height: 100%; width: auto; }
