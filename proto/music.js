@@ -56,6 +56,8 @@ const scaleNote = (t, step) => t.root + 12 + Math.floor(step / 5) * 12 + t.scale
 // Routing: notes play into a "bus" { out, rev, ech } (dry, reverb send, echo send). There are two decks, A and B, made once
 // and reused: each has its own bus with a fade gain on all three paths, so a deck fades out with its reverb tail.
 // Everything musical then goes through `music` (+ its reverb/echo sends), which is the volume and the on/off switch.
+// no Web Audio at all (some locked-down or headless browsers): the game runs silent instead of throwing
+const HAS_AUDIO = !!(window.AudioContext || window.webkitAudioContext);
 function init() {
   if (master) return;
   ctx ??= new (window.AudioContext || window.webkitAudioContext)();
@@ -196,7 +198,7 @@ export const soundtrack = {
   // name: "home" | "camp" | a mine id: the place. Its own tune comes in over a short crossfade; a playlist follows.
   play(name) {
     place = name;
-    if (!enabled) return;
+    if (!enabled || !HAS_AUDIO) return;
     init(); if (ctx.state === "suspended") ctx.resume();
     if (playing === name && decks[live].timer) return; // already here (sheets call this on every open)
     playing = name; crossfade(TRACKS[name] ? name : "home", ctx.currentTime + .05, 2.5, 1);
@@ -211,9 +213,9 @@ export const soundtrack = {
     setLevel(volume, .5); playing = null; if (place) this.play(place);
   },
   // a single gem "note" for the camp shelf: each gem type sings its own pitch
-  chime(i) { if (!enabled && !ctx) return; init(); pluck({ out: music, rev: musicRev, ech: musicEcho }, NOTE(scaleNote(TRACKS.camp, i % 10) + 12), ctx.currentTime + .01, .14, "musicbox", 1); },
+  chime(i) { if ((!enabled && !ctx) || !HAS_AUDIO) return; init(); pluck({ out: music, rev: musicRev, ech: musicEcho }, NOTE(scaleNote(TRACKS.camp, i % 10) + 12), ctx.currentTime + .01, .14, "musicbox", 1); },
   // call from a tap: iOS only lets audio start inside one, and a 1-sample silent buffer is what finally wakes it
-  unlock() { init(); if (ctx.state === "running") return; ctx.resume(); const b = ctx.createBufferSource(); b.buffer = ctx.createBuffer(1, 1, 22050); b.connect(ctx.destination); b.start(); },
+  unlock() { if (!HAS_AUDIO) return; init(); if (ctx.state === "running") return; ctx.resume(); const b = ctx.createBufferSource(); b.buffer = ctx.createBuffer(1, 1, 22050); b.connect(ctx.destination); b.start(); },
   // iOS: Web Audio follows the ring/silent switch ("ambient") unless the page asks for a "playback" session (Audio Session API, iOS 17+).
   // Off by default: players hate games (and ads) that ignore the switch; the Options sheet can opt in.
   setIgnoreSilent(on) { try { if (navigator.audioSession) navigator.audioSession.type = on ? "playback" : "ambient"; } catch {} },
@@ -281,7 +283,7 @@ function blip(v, t) {
   noise(w, .1, v.vol * .4, 380, 2.5, sfxBus);
   return true;
 }
-const on = () => sfx.isOn();
+const on = () => HAS_AUDIO && sfx.isOn();
 export const sfx = {
   isOn: () => true, // index.html points this at the Sound option
   // the old one-line synth calls, softened into the same set: square/saw become a woody knock, the rest a tine
